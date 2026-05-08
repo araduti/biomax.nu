@@ -1,3 +1,5 @@
+import Script from "next/script";
+
 export default function Home() {
   const categories = [
     "Hjärna & Minne",
@@ -36,7 +38,7 @@ export default function Home() {
               Handla produkter
             </a>
             <a
-              href="/om-oss-2"
+              href="/om-oss"
               className="rounded-full border border-emerald-300 px-6 py-3 text-sm font-semibold text-emerald-900 transition hover:bg-emerald-50"
             >
               Om Biomax
@@ -101,25 +103,24 @@ export default function Home() {
             <p className="mt-2 text-sm text-emerald-900/80">
               Prenumerera på nyhetsbrevet för forskningsinsikter, erbjudanden och produktnyheter.
             </p>
-            <form className="mt-4 flex flex-col gap-2 sm:flex-row" action="#">
+            <div className="mt-4 flex flex-col gap-2 sm:flex-row">
               <input
                 type="email"
                 placeholder="din@email.se"
                 className="min-w-0 flex-1 rounded-full border border-emerald-200 bg-white px-4 py-2 text-sm outline-none ring-emerald-600 focus:ring-2"
               />
-              <button
-                type="submit"
-                className="rounded-full bg-emerald-700 px-4 py-2 text-sm font-semibold text-white"
-              >
+              <button className="rounded-full bg-emerald-700 px-4 py-2 text-sm font-semibold text-white">
                 Prenumerera
               </button>
-            </form>
+            </div>
           </div>
         </div>
       </section>
 
-      <script
+      <Script
+        id="organization-schema"
         type="application/ld+json"
+        strategy="afterInteractive"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             "@context": "https://schema.org",
