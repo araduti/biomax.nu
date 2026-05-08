@@ -79,9 +79,13 @@ export default function Home() {
               <p className="text-sm text-emerald-700">Storsäljare</p>
               <h3 className="mt-2 text-lg font-semibold text-emerald-950">{item.name}</h3>
               <p className="mt-2 text-sm text-emerald-900/80">{item.benefit}</p>
-              <button className="mt-4 rounded-full bg-emerald-700 px-4 py-2 text-sm font-semibold text-white">
+              <a
+                href="/produkter"
+                aria-label={`Lägg ${item.name} i varukorg`}
+                className="mt-4 rounded-full bg-emerald-700 px-4 py-2 text-sm font-semibold text-white"
+              >
                 Lägg i varukorg
-              </button>
+              </a>
             </article>
           ))}
         </div>
@@ -106,10 +110,16 @@ export default function Home() {
             <div className="mt-4 flex flex-col gap-2 sm:flex-row">
               <input
                 type="email"
+                id="newsletter-email"
+                name="email"
+                aria-label="E-postadress för nyhetsbrev"
                 placeholder="din@email.se"
                 className="min-w-0 flex-1 rounded-full border border-emerald-200 bg-white px-4 py-2 text-sm outline-none ring-emerald-600 focus:ring-2"
               />
-              <button className="rounded-full bg-emerald-700 px-4 py-2 text-sm font-semibold text-white">
+              <button
+                type="button"
+                className="rounded-full bg-emerald-700 px-4 py-2 text-sm font-semibold text-white"
+              >
                 Prenumerera
               </button>
             </div>
