@@ -1,0 +1,42 @@
+{
+  "$schema": "https://googlechrome.github.io/lighthouse-ci/schema.json",
+  "ci": {
+    "collect": {
+      "url": [
+        "http://localhost:3000/",
+        "http://localhost:3000/produkter",
+        "http://localhost:3000/produkter/q10-100mg-100-kapslar",
+        "http://localhost:3000/kunskap",
+        "http://localhost:3000/kunskap/ingredienser/koenzym-q10",
+        "http://localhost:3000/kop/koenzym-q10",
+        "http://localhost:3000/om-oss",
+        "http://localhost:3000/faq"
+      ],
+      "numberOfRuns": 3,
+      "settings": {
+        "preset": "desktop",
+        "chromeFlags": "--no-sandbox --headless=new"
+      }
+    },
+    "upload": {
+      "target": "filesystem",
+      "outputDir": ".lighthouseci"
+    },
+    "assert": {
+      "preset": "lighthouse:no-pwa",
+      "assertions": {
+        "categories:performance": ["warn", { "minScore": 0.8 }],
+        "categories:accessibility": ["error", { "minScore": 0.9 }],
+        "categories:best-practices": ["warn", { "minScore": 0.85 }],
+        "categories:seo": ["error", { "minScore": 0.95 }],
+        "uses-text-compression": "warn",
+        "modern-image-formats": "warn",
+        "uses-responsive-images": "warn",
+        "color-contrast": "error",
+        "html-has-lang": "error",
+        "meta-description": "warn",
+        "image-alt": "error"
+      }
+    }
+  }
+}

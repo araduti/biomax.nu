@@ -8,26 +8,44 @@
     "start": "next start",
     "lint": "eslint",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev"
+    "prisma:migrate": "prisma migrate dev",
+    "db:reset": "prisma migrate reset --force",
+    "db:import-wp": "tsx scripts/import-wordpress.ts",
+    "img:normalize": "tsx scripts/normalize-product-images.ts",
+    "make-admin": "tsx scripts/make-admin.ts"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
+    "@sentry/nextjs": "^10.52.0",
+    "@tiptap/extension-link": "^3.23.1",
+    "@tiptap/pm": "^3.23.1",
+    "@tiptap/react": "^3.23.1",
+    "@tiptap/starter-kit": "^3.23.1",
+    "better-auth": "^1.6.10",
     "clsx": "^2.1.1",
+    "google-auth-library": "^10.6.2",
     "next": "16.2.6",
+    "pg": "^8.20.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "tailwind-merge": "^3.4.0",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
+    "@axe-core/puppeteer": "^4.11.3",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/pg": "^8.20.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "prisma": "^7.8.0",
+    "puppeteer": "^24.43.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "tsx": "^4.21.0",
+    "typescript": "^5",
+    "wait-on": "^9.0.6"
   }
 }

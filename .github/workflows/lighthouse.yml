@@ -1,0 +1,110 @@
+# Lighthouse CI — performance + accessibility + SEO regression guard.
+#
+# Runs on every PR + on push to main. Fails the build if accessibility or SEO
+# scores drop below the thresholds in `.lighthouserc.json`. Performance is
+# warn-only (network noise on shared runners makes hard fails flaky); the
+# scores are still archived as an artefact so we can spot drift over weeks.
+#
+# What gets audited (per .lighthouserc.json):
+#   - Home, /produkter, a representative product, /kunskap, an ingredient
+#     monograph, a /kop landing, /om-oss, /faq.
+#
+# Why these eight: covers every distinct page archetype the site renders, so
+# regressions show up wherever they happen.
+
+name: lighthouse-ci
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: biomax
+          POSTGRES_PASSWORD: biomax
+          POSTGRES_DB: biomax_dev
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://biomax:biomax@localhost:5433/biomax_dev
+      # Disable production integrations during the audit — we want the public
+      # surfaces to render, not call out to GSC / Brevo / Klarna / LLMs.
+      NEXT_PUBLIC_PLAUSIBLE_DOMAIN: ""
+      NEXT_PUBLIC_SENTRY_DSN: ""
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prisma generate + migrate (CI database)
+        run: |
+          npx prisma migrate deploy
+          npx prisma generate
+
+      - name: Seed minimal data so audited pages have content
+        run: |
+          # We need at least one product + monograph reachable. Use the
+          # WordPress-import seed if available; fallback is fine if the
+          # commit didn't ship one.
+          if [ -f scripts/import-wordpress.ts ]; then
+            echo "Skipping full WordPress import in CI — too slow."
+          fi
+          if [ -f scripts/import-innehall.ts ] && [ -f /tmp/biomax_innehall.json ]; then
+            npx tsx scripts/import-innehall.ts /tmp/biomax_innehall.json || true
+          fi
+
+      - name: Build production bundle
+        run: npm run build
+        env:
+          # Build-time env. Sentry source-map upload is intentionally off in CI
+          # so a missing token never blocks the build.
+          SENTRY_AUTH_TOKEN: ""
+
+      - name: Start production server
+        run: |
+          npm run start -- -p 3000 &
+          # Give the server a beat to become reachable.
+          npx wait-on http://localhost:3000 --timeout 60000
+
+      - name: Run Lighthouse CI
+        run: npx --yes @lhci/cli@0.14.x autorun
+        env:
+          # Public LHCI temporary storage if they ever want a hosted dashboard;
+          # the local filesystem upload still happens regardless.
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+      - name: Run axe-core a11y audit
+        # Fails the build on serious/critical violations; minor/moderate are
+        # written to the artefact for review without blocking the merge.
+        run: node scripts/run-axe-audit.mjs http://localhost:3000
+
+      - name: Upload Lighthouse + axe artefacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-audit-${{ github.run_id }}
+          path: .lighthouseci/
+          retention-days: 30

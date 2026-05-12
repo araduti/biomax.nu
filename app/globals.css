@@ -1,27 +1,160 @@
 @import "tailwindcss";
 
-:root {
-  --background: #f8faf8;
-  --foreground: #193126;
-  --font-sans: "Inter", "Avenir Next", "Segoe UI", Arial, sans-serif;
-  --font-heading: "Poppins", "Inter", "Avenir Next", "Segoe UI", Arial, sans-serif;
+/*
+ * Biomax design tokens — single source of truth.
+ * Locked in ADR 0007 (Design System Foundations).
+ *
+ * Token naming follows Tailwind v4 conventions:
+ *   --color-{name}     → bg-{name}, text-{name}, border-{name}
+ *   --font-{name}      → font-{name}
+ *   --radius-{name}    → rounded-{name}
+ */
+@theme {
+  /* Brand */
+  --color-primary: #1e3a5f;
+  --color-primary-deep: #0f2440;
+  --color-primary-soft: #2c5384;
+
+  /* Accent — lichen sage */
+  --color-accent: #7a8b6f;
+  --color-accent-deep: #5c6e55;
+
+  /* Surfaces */
+  --color-surface: #fbfaf7;
+  --color-surface-alt: #ffffff;
+  --color-surface-warm: #f4f0e8;
+
+  /* Ink — text colors */
+  --color-ink: #0a0a0a;
+  --color-ink-body: #1f2530;
+  --color-ink-mute: #525860;
+  --color-ink-soft: #7a8290;
+
+  /* Borders */
+  --color-border: #e8e5de;
+  --color-border-soft: #f0ede5;
+
+  /* Trustpilot brand color (for the Utmärkt rating) */
+  --color-trustpilot: #00b67a;
+
+  /* Typography — names map next/font CSS variables */
+  --font-display: var(--font-playfair);
+  --font-sans: var(--font-inter);
+
+  /* Editorial italic accent — lets us write `text-accent-deep italic font-display` */
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-}
+/* Body defaults already applied via Tailwind classes in app/layout.tsx */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0f1713;
-    --foreground: #ecf7ef;
+/* Editorial typography helpers */
+@layer base {
+  /* Smooth scrolling with anchor offsets when needed */
+  html {
+    scroll-behavior: smooth;
+  }
+  /* Reduced motion respect */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+  /* Visible focus rings in primary blue (WCAG) */
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans);
+/*
+ * Long-form prose styling for product longDescription and articles.
+ * Applied to elements wrapped in `prose-biomax`. We use a custom class
+ * (not @tailwindcss/typography) to keep typography on-brand without a plugin.
+ */
+.prose-biomax p {
+  margin-block: 0 1.25em;
+}
+.prose-biomax p:last-child {
+  margin-bottom: 0;
+}
+.prose-biomax ul,
+.prose-biomax ol {
+  margin-block: 0 1.25em;
+  padding-inline-start: 1.5em;
+}
+.prose-biomax ul {
+  list-style: disc;
+}
+.prose-biomax ol {
+  list-style: decimal;
+}
+.prose-biomax li {
+  margin-block: 0.35em;
+}
+.prose-biomax li::marker {
+  color: var(--color-accent-deep);
+}
+.prose-biomax a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
+  transition: text-decoration-color 0.2s;
+}
+.prose-biomax a:hover {
+  text-decoration-color: var(--color-primary);
+}
+.prose-biomax strong {
+  color: var(--color-primary-deep);
+  font-weight: 600;
+}
+.prose-biomax em {
+  font-style: italic;
+}
+.prose-biomax h2,
+.prose-biomax h3,
+.prose-biomax h4 {
+  font-family: var(--font-display);
+  color: var(--color-primary-deep);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin-block: 1.5em 0.5em;
+}
+.prose-biomax h2 {
+  font-size: 1.75rem;
+}
+.prose-biomax h3 {
+  font-size: 1.4rem;
+}
+.prose-biomax h4 {
+  font-size: 1.2rem;
+}
+
+/* Tiptap editor — placeholder for empty paragraph */
+.prose-biomax.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--color-ink-soft);
+  pointer-events: none;
+  height: 0;
+}
+
+/* Hide native scrollbar on horizontal scroll strips (category filter,
+   admin section-nav mobile). Keeps the affordance functional while
+   removing visual chrome that competes with content. */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }

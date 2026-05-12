@@ -1,28 +1,41 @@
 import type { Metadata } from "next";
+import { Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
+import { CartDrawer } from "@/components/cart/cart-drawer";
+import { Analytics } from "@/components/site/analytics";
+import { WebVitalsReporter } from "@/components/site/web-vitals-reporter";
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
+  variable: "--font-playfair",
+  display: "swap",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-inter",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.biomax.nu"),
   title: {
-    default: "Biomax.nu | Livskvalitet i fokus",
-    template: "%s | Biomax.nu",
+    default: "Biomax — Livskvalitet i fokus sedan 2001",
+    template: "%s | Biomax",
   },
   description:
-    "Vetenskapligt baserade hälsokosttillskott för hjärna, immunförsvar, hjärta-kärl och vardaglig livskvalitet.",
-  alternates: {
-    canonical: "/",
-    languages: {
-      sv: "/",
-      en: "/en",
-    },
-  },
+    "Vetenskapligt baserade naturpreparat från svensk familjeägd hälsofackhandel sedan 2001. Kliniskt dokumenterade ingredienser, tydligt deklarerat innehåll, snabb leverans i hela Sverige.",
+  alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     locale: "sv_SE",
-    siteName: "Biomax.nu",
-    title: "Biomax.nu | Livskvalitet i fokus",
+    siteName: "Biomax",
+    title: "Biomax — Livskvalitet i fokus sedan 2001",
     description:
-      "Premiumtillskott med hög transparens och kliniskt inspirerade formuleringar.",
+      "Vetenskapligt baserade naturpreparat från svensk familjeägd hälsofackhandel sedan 2001.",
   },
 };
 
@@ -32,8 +45,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="sv" className="h-full antialiased">
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html
+      lang="sv"
+      data-scroll-behavior="smooth"
+      className={`${playfair.variable} ${inter.variable} h-full antialiased`}
+    >
+      <body className="min-h-full bg-surface text-ink font-sans">
+        {children}
+        <CartDrawer />
+        <Analytics />
+        <WebVitalsReporter />
+      </body>
     </html>
   );
 }

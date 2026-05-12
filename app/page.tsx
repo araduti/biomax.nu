@@ -1,146 +1,86 @@
-import Script from "next/script";
+import { prisma } from "@/lib/prisma";
+import { currentSeason, type Season } from "@/lib/seasons";
+import { publicProductWhere } from "@/lib/products/availability";
+// Last-resort fallback when no editor has marked any product as featured for
+// the current season. Kept narrow — the goal is "homepage never blank", not
+// "match every season perfectly". Editors should claim this with the
+// "Säsongsval" toggle in the product editor.
+const SEASONAL_FALLBACK_SLUG: Record<Season, string> = {
+  var: "bjorkglukos",
+  sommar: "balans",
+  host: "beta-glucan",
+  vinter: "balans",
+};
+import { TopBar } from "@/components/site/top-bar";
+import { Header } from "@/components/site/header";
+import { Footer } from "@/components/site/footer";
+import { TrustpilotBar } from "@/components/site/trustpilot-bar";
+import { Hero } from "@/components/marketing/hero";
+import { Bestsellers } from "@/components/marketing/bestsellers";
+import { Categories } from "@/components/marketing/categories";
+import { FounderBand } from "@/components/marketing/founder-band";
+import { KnowledgeTeaser } from "@/components/marketing/knowledge-teaser";
+import { Newsletter } from "@/components/marketing/newsletter";
 
-export default function Home() {
-  const categories = [
-    "Hjärna & Minne",
-    "Immunförsvar",
-    "Hjärta-Kärl",
-    "Leder",
-    "Mage-Tarm",
-    "Energi & Återhämtning",
-  ];
+export const revalidate = 300; // ISR: refresh hero/bestsellers data every 5 min
 
-  const bestsellers = [
-    { name: "Omega-3 Premium", benefit: "Hjärta, hjärna & syn" },
-    { name: "Magnesium Plus", benefit: "Muskler, sömn & återhämtning" },
-    { name: "Immun Boost C+D3", benefit: "Stöd för immunförsvar året runt" },
-  ];
+export default async function Home() {
+  const season = currentSeason();
+
+  // Editorial first: most-recently-updated featured product wins. Fallback
+  // to the seasonal slug map only if no editor has claimed the slot. The
+  // featured pool is small enough that this query is essentially free.
+  const editorPicked = await prisma.product.findFirst({
+    where: { ...publicProductWhere(), featured: true, price: { gt: 0 } },
+    orderBy: { updatedAt: "desc" },
+    select: { id: true, slug: true, name: true, price: true, imageUrl: true },
+  });
+
+  const [bestsellers, fallbackFeatured, categories] = await Promise.all([
+    prisma.product.findMany({
+      where: { ...publicProductWhere(), price: { gt: 0 } },
+      orderBy: { totalSales: "desc" },
+      take: 3,
+      include: { categories: { select: { name: true }, take: 1 } },
+    }),
+    editorPicked
+      ? Promise.resolve(null)
+      : prisma.product.findUnique({
+          where: { slug: SEASONAL_FALLBACK_SLUG[season] },
+          select: { id: true, slug: true, name: true, price: true, imageUrl: true },
+        }),
+    prisma.category.findMany({
+      where: {
+        slug: { not: "uncategorized" },
+        products: { some: publicProductWhere() },
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        // Count only the products that would actually render publicly,
+        // so the chip number never overstates what the user can browse.
+        _count: { select: { products: { where: publicProductWhere() } } },
+      },
+    }),
+  ]);
+
+  const featured = editorPicked ?? fallbackFeatured;
 
   return (
-    <div className="flex flex-col bg-gradient-to-b from-[#f5fbf7] to-white">
-      <section className="mx-auto w-full max-w-6xl px-4 pb-12 pt-10 md:px-8 md:pt-16">
-        <div className="rounded-3xl border border-emerald-100 bg-white p-6 shadow-sm md:p-10">
-          <p className="inline-flex rounded-full bg-emerald-50 px-4 py-1 text-sm font-medium text-emerald-700">
-            Vetenskapligt baserat • Svensk hälsokost
-          </p>
-          <h1 className="mt-6 max-w-2xl text-4xl font-semibold tracking-tight text-emerald-950 md:text-6xl">
-            Livskvalitet i fokus
-          </h1>
-          <p className="mt-4 max-w-2xl text-lg text-emerald-900/80">
-            Premiumtillskott för dig som vill må bättre varje dag – med tydliga
-            ingredienser, trygg betalning med Klarna och snabb leverans.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <a
-              href="/produkter"
-              className="rounded-full bg-emerald-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-800"
-            >
-              Handla produkter
-            </a>
-            <a
-              href="/om-oss"
-              className="rounded-full border border-emerald-300 px-6 py-3 text-sm font-semibold text-emerald-900 transition hover:bg-emerald-50"
-            >
-              Om Biomax
-            </a>
-          </div>
-          <div className="mt-8 grid grid-cols-2 gap-3 text-sm text-emerald-900 md:grid-cols-4">
-            <p className="rounded-xl bg-emerald-50 px-4 py-3">Klarna Checkout</p>
-            <p className="rounded-xl bg-emerald-50 px-4 py-3">Fri frakt över 499 kr</p>
-            <p className="rounded-xl bg-emerald-50 px-4 py-3">30 dagars nöjd-kund-garanti</p>
-            <p className="rounded-xl bg-emerald-50 px-4 py-3">4.8/5 kundomdömen</p>
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8">
-        <h2 className="text-2xl font-semibold text-emerald-950">Populära kategorier</h2>
-        <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-3">
-          {categories.map((category) => (
-            <a
-              key={category}
-              href="/produkter"
-              className="rounded-2xl border border-emerald-100 bg-white px-4 py-5 text-sm font-medium text-emerald-900 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-            >
-              {category}
-            </a>
-          ))}
-        </div>
-      </section>
-
-      <section className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8">
-        <h2 className="text-2xl font-semibold text-emerald-950">Bästsäljare</h2>
-        <div className="mt-5 grid gap-4 md:grid-cols-3">
-          {bestsellers.map((item) => (
-            <article
-              key={item.name}
-              className="rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm"
-            >
-              <p className="text-sm text-emerald-700">Storsäljare</p>
-              <h3 className="mt-2 text-lg font-semibold text-emerald-950">{item.name}</h3>
-              <p className="mt-2 text-sm text-emerald-900/80">{item.benefit}</p>
-              <a
-                href="/produkter"
-                aria-label={`Lägg ${item.name} i varukorg`}
-                className="mt-4 rounded-full bg-emerald-700 px-4 py-2 text-sm font-semibold text-white"
-              >
-                Lägg i varukorg
-              </a>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8">
-        <div className="grid gap-4 rounded-3xl border border-emerald-100 bg-white p-6 shadow-sm md:grid-cols-2">
-          <div>
-            <h2 className="text-2xl font-semibold text-emerald-950">Vad våra kunder säger</h2>
-            <blockquote className="mt-4 text-emerald-900/80">
-              “Känner mig piggare, sover bättre och uppskattar tydligheten kring ingredienserna.”
-            </blockquote>
-            <p className="mt-2 text-sm font-medium text-emerald-700">– Maria, verifierad kund</p>
-          </div>
-          <div className="rounded-2xl bg-emerald-50 p-5">
-            <h3 className="text-lg font-semibold text-emerald-950">
-              Få 10 % på första köpet
-            </h3>
-            <p className="mt-2 text-sm text-emerald-900/80">
-              Prenumerera på nyhetsbrevet för forskningsinsikter, erbjudanden och produktnyheter.
-            </p>
-            <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-              <input
-                type="email"
-                id="newsletter-email"
-                name="email"
-                aria-label="E-postadress för nyhetsbrev"
-                placeholder="din@email.se"
-                className="min-w-0 flex-1 rounded-full border border-emerald-200 bg-white px-4 py-2 text-sm outline-none ring-emerald-600 focus:ring-2"
-              />
-              <button
-                type="button"
-                className="rounded-full bg-emerald-700 px-4 py-2 text-sm font-semibold text-white"
-              >
-                Prenumerera
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <Script
-        id="organization-schema"
-        type="application/ld+json"
-        strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Organization",
-            name: "Biomax.nu",
-            slogan: "Livskvalitet i fokus",
-            url: "https://www.biomax.nu",
-          }),
-        }}
-      />
-    </div>
+    <>
+      <TopBar />
+      <Header />
+      <main>
+        <Hero season={season} featured={featured} />
+        <TrustpilotBar />
+        <Bestsellers products={bestsellers} />
+        <Categories categories={categories} />
+        <FounderBand />
+        <KnowledgeTeaser />
+        <Newsletter />
+      </main>
+      <Footer />
+    </>
   );
 }

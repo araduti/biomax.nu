@@ -27,20 +27,76 @@ enum PaymentProvider {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  firstName    String?
-  lastName     String?
-  role         String    @default("customer")
-  locale       String    @default("sv-SE")
-  phone        String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  addresses    Address[]
-  orders       Order[]
-  reviews      Review[]
-  wishlist     Wishlist?
-  blogPosts    BlogPost[] @relation("author_posts")
+  id            String     @id @default(cuid())
+  email         String     @unique
+  emailVerified Boolean    @default(false)
+  name          String?
+  firstName     String?
+  lastName      String?
+  image         String?
+  role          String     @default("customer")
+  locale        String     @default("sv-SE")
+  phone         String?
+  legacyWpId    Int?       @unique
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  addresses     Address[]
+  orders        Order[]
+  reviews       Review[]
+  wishlist      Wishlist?
+  blogPosts     BlogPost[] @relation("author_posts")
+  sessions      Session[]
+  accounts      Account[]
+}
+
+// ──────────────────────────────────────────────── Better Auth tables
+// The schema below is dictated by Better Auth's Prisma adapter.
+// Don't rename fields; the library queries them by name.
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([token])
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@unique([providerId, accountId])
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
 }
 
 model Category {
@@ -51,35 +107,85 @@ model Category {
   imageUrl    String?
   seoTitle    String?
   seoDesc     String?
+  legacyWpId  Int?      @unique
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-  products    Product[]
+  products    Product[] @relation("product_categories")
 }
 
 model Product {
-  id               String          @id @default(cuid())
-  sku              String          @unique
-  slug             String          @unique
+  id               String             @id @default(cuid())
+  sku              String             @unique
+  slug             String             @unique
   name             String
   shortDescription String
   longDescription  String
-  status           ProductStatus   @default(DRAFT)
-  price            Decimal         @db.Decimal(10, 2)
-  compareAtPrice   Decimal?        @db.Decimal(10, 2)
-  stock            Int             @default(0)
+  status           ProductStatus      @default(DRAFT)
+  price            Decimal            @db.Decimal(10, 2)
+  compareAtPrice   Decimal?           @db.Decimal(10, 2)
+  stock            Int                @default(0)
+  manageStock      Boolean            @default(true)
+  totalSales       Int                @default(0)
+  weight           Decimal?           @db.Decimal(8, 3)
+  /// Length (cm) — used by shipping calculators that need volumetric weight.
+  lengthCm         Decimal?           @db.Decimal(6, 1)
+  widthCm          Decimal?           @db.Decimal(6, 1)
+  heightCm         Decimal?           @db.Decimal(6, 1)
+  /// Per-product low-stock threshold. NULL = use the site-wide default
+  /// (`low_stock_default` SiteSetting). Drives the "Få kvar" badge.
+  lowStockThreshold Int?
+  /// Staff-only free-text notes — never rendered publicly. Useful for
+  /// "next batch arrives v.24", supplier history, or internal reminders.
+  internalNote     String?
+  /// Editorial seasonal/featured flag. Homepage promotes the most-recently
+  /// updated featured product per current season. Multiple products can
+  /// be featured simultaneously without breaking the page.
+  featured         Boolean            @default(false)
   ingredients      String?
+  /** Structured ingredient table: { rows: [{name, amount}], perUnit, footnote }. */
+  ingredientList   Json?
+  /** Free-text dosing / how-to-use. Rendered as the "Dosering" box. */
   usage            String?
-  badges           String[]        @default([])
+  /**
+   * Optional structured dosing override for the dose chips + day-phase
+   * timeline. Shape: `{ amount, frequency, timing: {label, tone}, schedule }`.
+   * When null, the public page falls back to parsing `usage` via the dose
+   * parser. When set, editorial has full control of every chip + dot.
+   */
+  dosing           Json?
+  /** Storage instructions — rendered as the "Förvaring" box. */
+  storage          String?
+  /** Cautions / contraindications — rendered as the "Observera" box. */
+  warnings         String?
+  badges           String[]           @default([])
   imageUrl         String
-  galleryUrls      String[]        @default([])
-  categoryId       String
+  galleryUrls      String[]           @default([])
   seoTitle         String?
   seoDescription   String?
+  seoFocusKw       String?
   seoFaqJson       Json?
-  aiKeywords       String[]        @default([])
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
-  category         Category        @relation(fields: [categoryId], references: [id])
+  aiKeywords       String[]           @default([])
+  /** Open Graph title — falls back to seoTitle then product name. */
+  ogTitle          String?
+  /** Open Graph description — falls back to seoDescription then shortDescription. */
+  ogDescription    String?
+  /** Custom social share image — falls back to product imageUrl. */
+  ogImageUrl       String?
+  /** Last editorial review date — drives JSON-LD dateModified for E-E-A-T. */
+  dateReviewed     DateTime?
+  legacyWpId       Int?               @unique
+  legacyPermalink  String?
+  publishedAt      DateTime?
+  /// Scheduled go-live. When set and in the future, the product is treated
+  /// as not-yet-public even if status is PUBLISHED. NULL = visible
+  /// immediately (subject to status).
+  availableFrom    DateTime?
+  /// Scheduled retire. When set and in the past, the product 404s on the
+  /// public site. Useful for seasonal pulls without flipping status by hand.
+  availableUntil   DateTime?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  categories       Category[]         @relation("product_categories")
   reviews          Review[]
   orderItems       OrderItem[]
   crossSells       ProductCrossSell[] @relation("source_product")
@@ -156,27 +262,40 @@ model Order {
   shippingAmount     Decimal         @default(0) @db.Decimal(10, 2)
   taxAmount          Decimal         @default(0) @db.Decimal(10, 2)
   totalAmount        Decimal         @db.Decimal(10, 2)
+  /** VAT rate at time of sale, in basis points (600 = 6 %, 1200 = 12 %, 2500 = 25 %). */
+  taxRateBp          Int             @default(600)
   shippingAddressId  String?
   billingAddressId   String?
   marketingConsent   Boolean         @default(false)
+  legacyWpId         Int?            @unique
+  legacySource       String?
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
   items              OrderItem[]
   user               User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
   shippingAddress    Address?        @relation("shipping_address", fields: [shippingAddressId], references: [id], onDelete: SetNull)
   billingAddress     Address?        @relation("billing_address", fields: [billingAddressId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([email])
+  @@index([createdAt])
 }
 
 model OrderItem {
-  id          String   @id @default(cuid())
-  orderId     String
-  productId   String
-  quantity    Int      @default(1)
-  unitPrice   Decimal  @db.Decimal(10, 2)
-  totalPrice  Decimal  @db.Decimal(10, 2)
-  createdAt   DateTime @default(now())
-  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product     Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  id           String   @id @default(cuid())
+  orderId      String
+  productId    String?
+  productName  String
+  productSku   String?
+  quantity     Int      @default(1)
+  unitPrice    Decimal  @db.Decimal(10, 2)
+  totalPrice   Decimal  @db.Decimal(10, 2)
+  createdAt    DateTime @default(now())
+  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product      Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@index([productId])
 }
 
 model Address {
@@ -231,6 +350,17 @@ model Coupon {
   updatedAt       DateTime  @updatedAt
 }
 
+/// Key/value site settings — adds new editor-controlled knobs without a
+/// migration per knob. Consumers wrap reads in typed helpers (see
+/// `lib/site/settings.ts`) so a missing or malformed value falls back
+/// to a hardcoded default rather than crashing the page.
+model SiteSetting {
+  key         String   @id
+  value       Json
+  description String?
+  updatedAt   DateTime @updatedAt
+}
+
 model NewsletterSubscriber {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -238,4 +368,154 @@ model NewsletterSubscriber {
   source       String?
   consentedAt  DateTime @default(now())
   unsubscribed Boolean  @default(false)
+}
+
+/// Uptime probe — one row per check per monitored URL. The cron pinger
+/// (run from a separate origin so site outages don't take it down too)
+/// inserts on every run; admin reads the latest result per URL and the
+/// recent history per URL for the incident timeline.
+model UptimeProbe {
+  id            String   @id @default(cuid())
+  /// What got pinged.
+  url           String
+  /// "up" | "down" | "degraded"
+  status        String
+  /// HTTP status code returned. 0 = no connection.
+  httpStatus    Int      @default(0)
+  /// Round-trip latency in ms. 0 when the probe never connected.
+  latencyMs     Int      @default(0)
+  /// Short error string when status != "up".
+  error         String?
+  /// Where the probe ran from — lets us spot regional issues if we ever
+  /// run multiple pingers.
+  origin        String?
+  /// When the probe ran (UTC).
+  checkedAt     DateTime @default(now())
+
+  @@index([url, checkedAt])
+  @@index([checkedAt])
+  @@index([status, checkedAt])
+}
+
+/// Per-page-load Web Vitals sample posted from the browser via the
+/// `<WebVitalsReporter />` client component. We persist individual samples
+/// (not aggregates) so the admin dashboard can compute p75/p95 and slice by
+/// route/device/connection at read time. `sampleId` is the web-vitals
+/// library's stable per-page-load id — unique here to dedupe duplicate
+/// beacons (sendBeacon + visibilitychange can fire twice in some browsers).
+model WebVital {
+  id             String   @id @default(cuid())
+  /// "LCP" | "INP" | "CLS" | "FCP" | "TTFB"
+  metric         String
+  /// Metric value in the unit the web-vitals library reports
+  /// (LCP/INP/FCP/TTFB in ms; CLS unitless score).
+  value          Float
+  /// Stable id from the web-vitals library — identifies the metric instance.
+  sampleId       String   @unique
+  /// URL pathname only (no query string, no host) for groupability.
+  route          String
+  /// "navigate" | "reload" | "back-forward" | "back-forward-cache" | "prerender"
+  navigationType String?
+  /// Approximate connection class from navigator.connection.effectiveType.
+  connection     String?
+  /// "mobile" | "tablet" | "desktop" — derived from UA / viewport width.
+  device         String?
+  createdAt      DateTime @default(now())
+
+  @@index([metric, route, createdAt])
+  @@index([createdAt])
+}
+
+/// LLM citation probe — did the configured model mention biomax.nu when
+/// asked one of the curated prompts? One row per (promptId, model, runDate)
+/// so we get a time-series per (prompt, model) for trend lines.
+model LlmCitation {
+  id            String   @id @default(cuid())
+  /// Stable identifier from the curated prompt registry (e.g. "best-q10-sweden").
+  promptId      String
+  /// Original prompt text (denormalised so historical rows survive prompt edits).
+  promptText    String
+  /// Model identifier as configured (e.g. "claude-sonnet-4-6", "gpt-4o", "llama3").
+  model         String
+  /// True when "biomax" appears in the response (case-insensitive substring match).
+  cited         Boolean
+  /// True when a biomax.nu URL appears in the response.
+  linked        Boolean  @default(false)
+  /// Truncated response excerpt for display (full response in `responseFull`).
+  responseExcerpt String  @db.Text
+  /// Full response for audit; can be large.
+  responseFull  String   @db.Text
+  /// Provider-reported token usage when available, else 0.
+  promptTokens     Int   @default(0)
+  completionTokens Int   @default(0)
+  /// When the probe ran.
+  runAt         DateTime @default(now())
+
+  @@index([promptId, model, runAt])
+  @@index([runAt])
+}
+
+/// Latest URL Inspection API result per page. The API is rate-limited
+/// (2 000/day) so we keep just the freshest verdict per URL — historical
+/// drift is rare enough that we don't snapshot daily like GscSnapshot.
+model GscIndexCheck {
+  id                 String    @id @default(cuid())
+  url                String    @unique
+  /// "PASS" | "PARTIAL" | "FAIL" | "NEUTRAL" | "VERDICT_UNSPECIFIED"
+  verdict            String
+  /// Free text from Google: "Submitted and indexed", "URL is not on Google", etc.
+  coverageState      String?
+  /// "ALLOWED" | "DISALLOWED" | "ROBOTS_TXT_STATE_UNSPECIFIED"
+  robotsState        String?
+  /// "INDEXING_ALLOWED" | "BLOCKED_BY_META_TAG" | "BLOCKED_BY_HTTP_HEADER" | …
+  indexingState      String?
+  pageFetchState     String?
+  /// Last time Googlebot crawled the URL.
+  lastCrawlTime      DateTime?
+  googleCanonical    String?
+  userCanonical      String?
+  /// "MOBILE" | "DESKTOP" | "CRAWLING_USER_AGENT_UNSPECIFIED"
+  crawledAs          String?
+  /// "PASS" | "FAIL" | null when no rich results detected
+  richResultsVerdict String?
+  /// Timestamp of when WE called the API.
+  checkedAt          DateTime  @default(now())
+
+  @@index([verdict])
+  @@index([checkedAt])
+}
+
+/// Daily Google Search Console snapshot keyed on (date, page, query). Lets us
+/// build position-history sparklines and impressions trends — GSC's API only
+/// returns aggregates per request, so we persist daily slices ourselves.
+model GscSnapshot {
+  id          String   @id @default(cuid())
+  /// The day this metric is FOR (UTC). Indexed for time-window queries.
+  date        DateTime @db.Date
+  /// Full URL as GSC reports it. Matches the `page` dimension.
+  page        String
+  /// Search term as GSC reports it. Matches the `query` dimension.
+  query       String
+  clicks      Int      @default(0)
+  impressions Int      @default(0)
+  ctr         Float    @default(0)
+  /// Average position — lower is better. GSC returns 1-based.
+  position    Float    @default(0)
+  createdAt   DateTime @default(now())
+
+  @@unique([date, page, query])
+  @@index([page, query, date])
+  @@index([date])
+}
+
+/// Server-side 301 redirects. Written automatically when an editor renames
+/// a product slug; the public product page falls through to a redirect
+/// lookup before returning 404. Path values include the leading slash.
+model Redirect {
+  id        String   @id @default(cuid())
+  fromPath  String   @unique
+  toPath    String
+  status    Int      @default(301)
+  reason    String?
+  createdAt DateTime @default(now())
 }

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Produktbild kommer snart">
+  <rect width="400" height="400" fill="#F4F0E8"/>
+  <g transform="translate(160,140)" fill="#1E3A5F">
+    <rect x="20" y="0" width="40" height="40" rx="8"/>
+    <rect x="40" y="20" width="40" height="40" rx="8"/>
+    <rect x="20" y="40" width="40" height="40" rx="8"/>
+    <rect x="0" y="20" width="40" height="40" rx="8"/>
+  </g>
+  <text x="200" y="270" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="16" fill="#525860">
+    Produktbild kommer snart
+  </text>
+</svg>
