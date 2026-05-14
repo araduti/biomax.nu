@@ -4,6 +4,13 @@ import { Display, Eyebrow } from "@/components/ui/typography";
 import { OrderStatusBadge } from "@/components/admin/order-status-badge";
 import { formatPriceSEK } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
+import { GdprActions } from "@/components/admin/gdpr-actions";
+import { CopyButton } from "@/components/admin/copy-button";
+import { getAccountBalance } from "@/lib/loyalty/account";
+import {
+  LOYALTY_PROGRAM_NAME,
+  pointsToKr,
+} from "@/lib/loyalty/constants";
 
 const dateFmt = new Intl.DateTimeFormat("sv-SE", {
   year: "numeric",
@@ -44,6 +51,7 @@ export default async function AdminCustomerDetail({
     (sum, o) => sum + parseFloat(o.totalAmount.toString()),
     0
   );
+  const loyalty = await getAccountBalance(user.id);
   const fullName =
     user.name ||
     [user.firstName, user.lastName].filter(Boolean).join(" ") ||
@@ -53,20 +61,34 @@ export default async function AdminCustomerDetail({
     <>
       <Link
         href="/admin/kunder"
-        className="inline-flex items-center gap-1 font-sans text-[13px] text-primary hover:text-primary-deep transition-colors mb-4"
+        className="inline-flex items-center gap-1 font-sans text-[13.5px] text-primary hover:text-primary-deep transition-colors mb-4"
       >
         ← Alla kunder
       </Link>
 
       <Eyebrow>Kund</Eyebrow>
-      <Display as="h1" size="xl" className="mt-3 mb-1">
+      <Display as="h1" size="xl" className="mt-3 mb-3">
         {fullName}
       </Display>
-      <p className="font-sans text-base text-ink-mute mb-8">
-        {user.email}
-        {user.phone ? ` · ${user.phone}` : ""}
-        {user.legacyWpId ? " · arkiverad från gamla biomax.nu" : ""}
-      </p>
+      <div className="flex flex-wrap items-center gap-3 mb-8">
+        <span className="font-sans text-[15.5px] text-ink-body">{user.email}</span>
+        <CopyButton value={user.email} label="Kopiera e-post" />
+        {user.phone && (
+          <>
+            <span aria-hidden className="text-ink-soft">·</span>
+            <span className="font-sans text-[15.5px] text-ink-body">
+              {user.phone}
+            </span>
+            <CopyButton value={user.phone} label="Kopiera tel" />
+          </>
+        )}
+        {user.legacyWpId && (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-ink-mute/12 text-ink-mute font-sans text-[12.5px] font-semibold">
+            <span aria-hidden>◌</span>
+            Arkiverad från gamla biomax.nu
+          </span>
+        )}
+      </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <Stat label="Ordrar" value={orders.length.toString()} />
@@ -80,6 +102,28 @@ export default async function AdminCustomerDetail({
           value={dateFmt.format(user.createdAt)}
         />
       </div>
+
+      {loyalty && (
+        <section className="mb-8 bg-surface-warm border border-accent/30 rounded-2xl p-5">
+          <div className="flex flex-wrap items-baseline justify-between gap-4">
+            <div>
+              <p className="font-sans text-[11px] uppercase tracking-[0.22em] font-semibold text-accent-deep">
+                {LOYALTY_PROGRAM_NAME}
+              </p>
+              <p className="mt-2 font-display text-[26px] font-medium tracking-tight text-primary-deep">
+                {loyalty.balance.toLocaleString("sv-SE")} poäng
+                <span className="ml-3 font-sans text-[13px] text-ink-mute font-normal">
+                  ({formatPriceSEK(pointsToKr(loyalty.balance))} värde)
+                </span>
+              </p>
+              <p className="mt-1 font-sans text-[12.5px] text-ink-mute">
+                Totalt tjänat {loyalty.lifetimeEarned.toLocaleString("sv-SE")}{" "}
+                sedan {dateFmt.format(loyalty.enrolledAt)}
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
         <section>
@@ -150,6 +194,13 @@ export default async function AdminCustomerDetail({
           )}
         </aside>
       </div>
+
+      <section className="mt-12 pt-8 border-t border-border">
+        <p className="font-sans text-[11px] uppercase tracking-[0.18em] font-semibold text-ink-soft mb-3">
+          GDPR
+        </p>
+        <GdprActions userId={user.id} />
+      </section>
     </>
   );
 }

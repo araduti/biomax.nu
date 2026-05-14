@@ -8,6 +8,7 @@ import { Footer } from "@/components/site/footer";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { CategoryHero } from "@/components/category/category-hero";
 import { ProductGrid } from "@/components/product/product-grid";
+import { getRatingsByProductIds } from "@/lib/reviews/queries";
 import {
   CategoryFilter,
   type FilterOption,
@@ -75,7 +76,17 @@ export default async function CategoryPage({
         price: { gt: 0 },
         categories: { some: { id: category.id } },
       },
-      include: { categories: { select: { name: true }, take: 1 } },
+      // Explicit select — see comment in app/produkter/page.tsx.
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        shortDescription: true,
+        imageUrl: true,
+        price: true,
+        totalSales: true,
+        categories: { select: { name: true }, take: 1 },
+      },
       orderBy: { totalSales: "desc" },
     }),
     prisma.category.findMany({
@@ -91,6 +102,8 @@ export default async function CategoryPage({
       orderBy: { name: "asc" },
     }),
   ]);
+
+  const ratings = await getRatingsByProductIds(products.map((p) => p.id));
 
   const filterOptions: FilterOption[] = allCategories.map((c) => ({
     slug: c.slug,
@@ -143,7 +156,7 @@ export default async function CategoryPage({
         </section>
         <section className="bg-surface px-6 md:px-8 pb-24">
           <div className="max-w-[1240px] mx-auto">
-            <ProductGrid products={products} />
+            <ProductGrid products={products} ratings={ratings} />
           </div>
         </section>
       </main>

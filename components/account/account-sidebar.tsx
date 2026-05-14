@@ -15,6 +15,9 @@ type NavItem = {
 const NAV: NavItem[] = [
   { href: "/konto", label: "Översikt" },
   { href: "/konto/ordrar", label: "Mina ordrar", matchPrefix: true },
+  { href: "/konto/prenumerationer", label: "Prenumerationer", matchPrefix: true },
+  { href: "/konto/familjen", label: "Familjen Biomax" },
+  { href: "/konto/rutin", label: "Min rutin" },
   { href: "/konto/profil", label: "Profil" },
   { href: "/konto/adresser", label: "Adresser" },
   { href: "/konto/sakerhet", label: "Säkerhet" },

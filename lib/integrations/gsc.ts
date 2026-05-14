@@ -213,9 +213,13 @@ export async function getSiteSummary(): Promise<GscSummary | null> {
 
 /**
  * Per-page query breakdown. Used on /admin/produkter/[slug] to show "what
- * queries are driving traffic to THIS product".
+ * queries are driving traffic to THIS product". Cached for 30 min — GSC
+ * data lags ~48h anyway, so anything more aggressive is wasted, and this
+ * lets the admin route stay dynamic (no whole-page ISR on a private route).
  */
-export async function getQueriesForPage(
+import { unstable_cache } from "next/cache";
+
+async function _getQueriesForPage(
   url: string,
   limit = 15
 ): Promise<GscRow[]> {
@@ -244,6 +248,17 @@ export async function getQueriesForPage(
     console.error("[gsc] getQueriesForPage failed:", err);
     return [];
   }
+}
+
+export async function getQueriesForPage(
+  url: string,
+  limit = 15
+): Promise<GscRow[]> {
+  return unstable_cache(
+    () => _getQueriesForPage(url, limit),
+    ["gsc:queries-for-page", url, String(limit)],
+    { revalidate: 1800, tags: ["gsc:queries-for-page"] }
+  )();
 }
 
 /** Format ratio as a percent string (0.0234 → "2.3 %"). */

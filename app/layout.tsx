@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
-import { CartDrawer } from "@/components/cart/cart-drawer";
+import { CartDrawerLazy } from "@/components/cart/cart-drawer-lazy";
 import { Analytics } from "@/components/site/analytics";
 import { WebVitalsReporter } from "@/components/site/web-vitals-reporter";
+import { CookieConsent } from "@/components/site/cookie-consent";
+import { ShippingConfigProvider } from "@/lib/site/shipping-config-context";
+import { getShippingRules } from "@/lib/site/settings";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -39,11 +42,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const shipping = await getShippingRules();
   return (
     <html
       lang="sv"
@@ -51,10 +55,13 @@ export default function RootLayout({
       className={`${playfair.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-surface text-ink font-sans">
-        {children}
-        <CartDrawer />
+        <ShippingConfigProvider value={shipping}>
+          {children}
+          <CartDrawerLazy />
+        </ShippingConfigProvider>
         <Analytics />
         <WebVitalsReporter />
+        <CookieConsent />
       </body>
     </html>
   );

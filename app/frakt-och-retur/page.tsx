@@ -3,18 +3,18 @@ import Link from "next/link";
 import { LegalPage } from "@/components/site/legal-page";
 
 export const metadata: Metadata = {
-  title: "Frakt & retur — Biomax",
+  title: "Frakt, retur och återbetalning — Biomax",
   description:
-    "Allt om frakt, leverans och retur när du handlar hos Biomax. Fri frakt över 499 kr, 30 dagars öppet köp, leverans inom 1–3 vardagar.",
+    "Frakt, leverans, retur och återbetalning när du handlar hos Biomax. Fri frakt över 499 kr, 30 dagars öppet köp, återbetalning inom 14 dagar från det att vi mottagit returen.",
   alternates: { canonical: "/frakt-och-retur" },
 };
 
 export default function FraktOchReturPage() {
   return (
     <LegalPage
-      title="Frakt & retur"
+      title="Frakt, retur och återbetalning"
       eyebrow="Praktisk info"
-      intro="Hur leveransen fungerar, vad det kostar, och hur du gör om du vill returnera."
+      intro="Hur leveransen fungerar, vad det kostar, och hur du gör om du vill returnera eller få pengarna tillbaka."
       lastUpdated="2026-05-10"
       reviewedByLegal
     >
@@ -61,7 +61,7 @@ export default function FraktOchReturPage() {
         undvika detta — håll utkik efter avi från PostNord och hämta i tid.
       </p>
 
-      <h2>Ångerrätt och retur</h2>
+      <h2 id="retur">Ångerrätt, retur och återbetalning</h2>
       <p>
         Du har <strong>30 dagars öppet köp</strong> på obrutna förpackningar
         (14 dagar lagstadgad ångerrätt + 14 dagars frivillig garanti från oss).
@@ -81,11 +81,16 @@ export default function FraktOchReturPage() {
           Skicka tillbaka varan i obrutet originalskick. Du betalar
           returfrakten om inget annat avtalats.
         </li>
-        <li>
-          Återbetalning sker inom 14 dagar från det att vi mottagit varan, till
-          samma betalmetod som vid köpet.
-        </li>
       </ol>
+
+      <h3 id="aterbetalning">Återbetalning</h3>
+      <p>
+        När vi mottagit din retur i godtagbart skick återbetalar vi inom{" "}
+        <strong>14 dagar</strong> till samma betalmetod som du använde vid köpet.
+        Vid Klarna-betalning ser du återbetalningen i Klarnas app eller på
+        ditt kontoutdrag. Eventuell returfrakt återbetalas inte (såvida inte
+        produkten var defekt eller felaktigt levererad).
+      </p>
 
       <h2>Reklamation</h2>
       <p>

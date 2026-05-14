@@ -1,8 +1,10 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+import { twoFactor } from "better-auth/plugins";
 import { prisma } from "./prisma";
 import { sendTransactional } from "./email/client";
 import { passwordResetEmail } from "./email/templates";
+import { ensureAccount as ensureLoyaltyAccount } from "./loyalty/account";
 
 if (!process.env.BETTER_AUTH_SECRET) {
   throw new Error("BETTER_AUTH_SECRET is not set. Check .env.local");
@@ -85,6 +87,42 @@ export const auth = betterAuth({
   advanced: {
     cookiePrefix: "biomax",
   },
+
+  // Auto-enroll every new customer into Familjen Biomax with a welcome
+  // bonus. Loyalty enrolment is the default, not an opt-in — customers
+  // who never want to use points just ignore the balance. Better Auth
+  // fires `user.create.after` immediately after the user row is committed,
+  // so the loyalty account creation is in a follow-up transaction. If it
+  // throws we swallow the error rather than aborting signup; the account
+  // creates lazily on first `/konto` visit instead.
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          try {
+            await ensureLoyaltyAccount(user.id);
+          } catch (err) {
+            console.error("[loyalty] auto-enroll failed for", user.id, err);
+          }
+        },
+      },
+    },
+  },
+
+  // 2FA (TOTP + backup codes). Customers can enable it from
+  // /konto/sakerhet; admins should consider it mandatory before launch.
+  // Sign-in flow: after password validates, if the user has 2FA enabled
+  // we issue a short-lived "twoFactorRedirect" cookie and the UI prompts
+  // for the code. Backup codes are one-shot.
+  plugins: [
+    twoFactor({
+      issuer: "Biomax",
+      backupCodeOptions: {
+        amount: 10,
+        length: 10,
+      },
+    }),
+  ],
 });
 
 export type Auth = typeof auth;

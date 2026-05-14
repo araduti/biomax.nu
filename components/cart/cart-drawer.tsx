@@ -2,13 +2,20 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { useCart, selectCartCount, selectCartSubtotal } from "@/lib/cart-store";
+import {
+  useCart,
+  selectCartCount,
+  selectCartSubtotal,
+  selectBundleSavings,
+} from "@/lib/cart-store";
 import { Display, Eyebrow } from "@/components/ui/typography";
 import { ButtonLink } from "@/components/ui/button";
 import { formatPriceSEK } from "@/lib/format";
+import { useShippingConfig } from "@/lib/site/shipping-config-context";
 import { CartLine } from "./cart-line";
-
-const FREE_SHIPPING_THRESHOLD = 499;
+import { CartBundleGroup, groupCartItems } from "./cart-bundle-group";
+import { CartCrossSells } from "./cart-cross-sells";
+import { LoyaltyEarnPreview } from "./loyalty-earn-preview";
 
 /**
  * Slide-out cart, anchored to the right side of the viewport.
@@ -21,7 +28,9 @@ export function CartDrawer() {
   const items = useCart((s) => s.items);
   const count = useCart(selectCartCount);
   const subtotal = useCart(selectCartSubtotal);
+  const bundleSavings = useCart(selectBundleSavings);
   const hydrated = useCart((s) => s.hydrated);
+  const { freeThresholdSek } = useShippingConfig();
 
   // Lock background scroll while open + close on Escape
   useEffect(() => {
@@ -37,8 +46,11 @@ export function CartDrawer() {
     };
   }, [isOpen, close]);
 
-  const remainingForFreeShip = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
-  const showFreeShipMeter = subtotal > 0 && remainingForFreeShip > 0;
+  // freeThresholdSek can be null (= "never free") — meter hides in that case.
+  const freeShipThreshold = freeThresholdSek ?? Infinity;
+  const remainingForFreeShip = Math.max(0, freeShipThreshold - subtotal);
+  const showFreeShipMeter =
+    freeThresholdSek !== null && subtotal > 0 && remainingForFreeShip > 0;
 
   return (
     <>
@@ -116,13 +128,15 @@ export function CartDrawer() {
                   <div
                     className="h-full bg-accent transition-all"
                     style={{
-                      width: `${Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100)}%`,
+                      width: `${Math.min(100, (subtotal / freeShipThreshold) * 100)}%`,
                     }}
                   />
                 </div>
               </div>
             )}
-            {!showFreeShipMeter && subtotal >= FREE_SHIPPING_THRESHOLD && (
+            {!showFreeShipMeter &&
+              freeThresholdSek !== null &&
+              subtotal >= freeThresholdSek && (
               <div className="px-6 py-3 bg-accent/15 border-b border-border-soft">
                 <p className="font-sans text-[13px] text-accent-deep font-semibold">
                   ✓ Du har fri frakt
@@ -131,10 +145,25 @@ export function CartDrawer() {
             )}
 
             <ul className="flex-1 overflow-y-auto px-6">
-              {items.map((item) => (
-                <CartLine key={item.productId} item={item} onNavigate={close} />
-              ))}
+              {groupCartItems(items).map((group) =>
+                group.kind === "line" ? (
+                  <CartLine
+                    key={`${group.item.productId}::${group.item.variantId ?? ""}::${group.item.bundleId ?? ""}`}
+                    item={group.item}
+                    onNavigate={close}
+                  />
+                ) : (
+                  <CartBundleGroup
+                    key={group.bundleId}
+                    bundleId={group.bundleId}
+                    lines={group.lines}
+                    onNavigate={close}
+                  />
+                )
+              )}
             </ul>
+
+            <CartCrossSells variant="drawer" onNavigate={close} />
 
             {/* Footer */}
             <div className="border-t border-border px-6 py-5 bg-surface">
@@ -146,6 +175,12 @@ export function CartDrawer() {
                   {formatPriceSEK(subtotal)}
                 </Display>
               </div>
+              {bundleSavings > 0 && (
+                <p className="font-sans text-[12px] text-accent-deep font-semibold mb-1">
+                  Inkluderar paketrabatt {formatPriceSEK(bundleSavings)}
+                </p>
+              )}
+              <LoyaltyEarnPreview subtotalKr={subtotal} variant="drawer" />
               <p className="font-sans text-[12px] text-ink-soft mb-5">
                 Frakt och eventuella rabatter beräknas i kassan.
               </p>

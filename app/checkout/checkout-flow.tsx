@@ -14,11 +14,15 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { formatPriceSEK } from "@/lib/format";
 import { placeOrder } from "@/lib/checkout/order-actions";
+import { upsertCartSnapshot } from "@/lib/cart-snapshot/actions";
 import { ServicePointPicker } from "@/components/checkout/service-point-picker";
+import { LoyaltyRedeem } from "@/components/checkout/loyalty-redeem";
+import { pointsToKr } from "@/lib/loyalty/constants";
+import { CURRENT_VAT_BP } from "@/lib/checkout/vat";
 import type { ServicePoint } from "@/lib/postnord/types";
+import { useShippingConfig } from "@/lib/site/shipping-config-context";
 
-const FREE_SHIP = 499;
-const SHIP_FEE = 49;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type SessionUser = {
   email: string;
@@ -41,9 +45,26 @@ export function CheckoutFlow({
   const subtotal = useCart(selectCartSubtotal);
   const hydrated = useCart((s) => s.hydrated);
   const clear = useCart((s) => s.clear);
+  const { flatSek, freeThresholdSek } = useShippingConfig();
 
-  const shipping = subtotal >= FREE_SHIP ? 0 : SHIP_FEE;
-  const total = subtotal + shipping;
+  const qualifiesForFree =
+    freeThresholdSek !== null && subtotal >= freeThresholdSek;
+  const shipping = qualifiesForFree ? 0 : flatSek;
+  // Loyalty redemption — client state; server re-validates in placeOrder.
+  // We deliberately scope the cap based on `subtotal` (not total) so the
+  // discount can't make the order line items go negative; shipping/tax
+  // stay payable.
+  const [loyaltyPoints, setLoyaltyPoints] = useState(0);
+  const loyaltyDiscount = loyaltyPoints > 0 ? pointsToKr(loyaltyPoints) : 0;
+  const total = subtotal - loyaltyDiscount + shipping;
+  // Moms breakdown for the summary — same formula as server-side in
+  // lib/checkout/order-actions.ts: VAT = gross × rate / (10000 + rate).
+  // Display-only; the gross prices already include moms (Swedish PIL
+  // convention). Standard Swedish e-comm pattern is "Varav moms".
+  const vatRatePct = (CURRENT_VAT_BP / 100).toString().replace(".", ",");
+  const vatAmount =
+    Math.round(((total * CURRENT_VAT_BP) / (10000 + CURRENT_VAT_BP)) * 100) /
+    100;
 
   const [email, setEmail] = useState(user?.email ?? "");
   const [firstName, setFirstName] = useState(user?.firstName ?? "");
@@ -97,6 +118,8 @@ export function CheckoutFlow({
     const result = await placeOrder({
       cart: items.map((i) => ({
         productId: i.productId,
+        variantId: i.variantId,
+        bundleId: i.bundleId,
         quantity: i.quantity,
       })),
       customer: {
@@ -107,6 +130,7 @@ export function CheckoutFlow({
       },
       shipping: { street, postalCode, city },
       marketingConsent,
+      loyaltyPointsToRedeem: loyaltyPoints > 0 ? loyaltyPoints : undefined,
     });
     if (!result.ok) {
       setError(result.error);
@@ -187,6 +211,25 @@ export function CheckoutFlow({
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onBlur={() => {
+                  // Capture cart snapshot for abandoned-cart flow once we
+                  // have a valid email + at least one item. Best-effort —
+                  // failure is logged server-side, no UI surface.
+                  if (
+                    EMAIL_RE.test(email) &&
+                    items.length > 0 &&
+                    typeof window !== "undefined"
+                  ) {
+                    void upsertCartSnapshot({
+                      email,
+                      items: items.map((i) => ({
+                        productId: i.productId,
+                        variantId: i.variantId,
+                        quantity: i.quantity,
+                      })),
+                    });
+                  }
+                }}
                 className="md:col-span-2"
               />
               <Input
@@ -413,6 +456,30 @@ export function CheckoutFlow({
                       ? `Slutför köp · ${formatPriceSEK(total)}`
                       : `Slutför testorder · ${formatPriceSEK(total)}`}
                 </Button>
+
+                {/* Trust strip — research note: Swedish ecom converts
+                    measurably better with these signals visible right at
+                    the submit point. We never list a badge we can't back
+                    up; "Trygg E-handel" lands here once the application
+                    is approved. */}
+                <ul className="mt-5 grid grid-cols-2 gap-3 font-sans text-[12px] text-ink-mute leading-snug">
+                  <li className="flex gap-2">
+                    <span aria-hidden className="text-accent-deep mt-0.5">✓</span>
+                    <span>Familjeägt sedan 2001, Kållered</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span aria-hidden className="text-accent-deep mt-0.5">✓</span>
+                    <span>Snabb leverans i Sverige med PostNord</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span aria-hidden className="text-accent-deep mt-0.5">✓</span>
+                    <span>Säker betalning med Klarna</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span aria-hidden className="text-accent-deep mt-0.5">✓</span>
+                    <span>14 dagars öppet köp, fri retur</span>
+                  </li>
+                </ul>
               </div>
             )}
           </fieldset>
@@ -448,11 +515,26 @@ export function CheckoutFlow({
             ))}
           </ul>
 
+          {/* Loyalty redemption — renders nothing for guests / empty wallets */}
+          <LoyaltyRedeem
+            subtotalKr={subtotal}
+            value={loyaltyPoints}
+            onChange={setLoyaltyPoints}
+          />
+
           <dl className="space-y-2.5 font-sans text-[14px] pt-5 border-t border-border-soft">
             <div className="flex justify-between text-ink-body">
               <dt>Delsumma</dt>
               <dd className="font-semibold">{formatPriceSEK(subtotal)}</dd>
             </div>
+            {loyaltyDiscount > 0 && (
+              <div className="flex justify-between text-accent-deep font-semibold">
+                <dt>
+                  Familjen Biomax · {loyaltyPoints.toLocaleString("sv-SE")} p
+                </dt>
+                <dd>−{formatPriceSEK(loyaltyDiscount)}</dd>
+              </div>
+            )}
             <div className="flex justify-between text-ink-mute">
               <dt>Frakt</dt>
               <dd>
@@ -462,6 +544,10 @@ export function CheckoutFlow({
                   formatPriceSEK(shipping)
                 )}
               </dd>
+            </div>
+            <div className="flex justify-between text-ink-mute">
+              <dt>Varav moms ({vatRatePct} %)</dt>
+              <dd className="tabular-nums">{formatPriceSEK(vatAmount)}</dd>
             </div>
           </dl>
 
@@ -474,7 +560,7 @@ export function CheckoutFlow({
             </Display>
           </div>
           <p className="mt-1 font-sans text-[11px] text-ink-soft">
-            Inkl. 6 % moms (kosttillskott)
+            Priser inkl. moms · faktura skickas efter köp
           </p>
         </aside>
       </div>

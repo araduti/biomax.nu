@@ -4,6 +4,7 @@ import { ProductEditForm } from "@/components/admin/product-edit-form";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { ProductImageUpload } from "@/components/admin/product-image-upload";
 import { ProductGalleryEditor } from "@/components/admin/product-gallery-editor";
+import { VariantsEditor } from "@/components/admin/variants-editor";
 import { SlugRename } from "@/components/admin/slug-rename";
 import {
   RelatedProductsEditor,
@@ -28,9 +29,10 @@ import { IndexStatusBadge } from "@/components/admin/index-status-badge";
 
 const SITE = "https://www.biomax.nu";
 
-// 30-min cache so the GSC API isn't called on every keystroke-induced
-// re-render. GSC's data lags ~48h anyway, so anything more aggressive is wasted.
-export const revalidate = 1800;
+// Route stays dynamic — admins are authenticated and edits should land
+// immediately. The expensive GSC fetch is cached *inside*
+// `getQueriesForPage` (30 min, since GSC data lags ~48h anyway), so a
+// keystroke-induced re-render doesn't hit the GSC API.
 
 export default async function AdminProductEditPage({
   params,
@@ -40,7 +42,10 @@ export default async function AdminProductEditPage({
   const { slug } = await params;
   const product = await prisma.product.findUnique({
     where: { slug },
-    include: { categories: { select: { name: true, slug: true } } },
+    include: {
+      categories: { select: { name: true, slug: true } },
+      variants: { orderBy: { position: "asc" } },
+    },
   });
   if (!product) notFound();
 
@@ -214,6 +219,32 @@ export default async function AdminProductEditPage({
       <div className="mb-6 bg-surface-alt border border-border rounded-2xl p-6 md:p-8">
         <header className="mb-5">
           <h2 className="font-display text-xl md:text-[22px] font-medium tracking-tight text-primary-deep">
+            Varianter
+          </h2>
+          <p className="mt-1.5 font-sans text-[13px] text-ink-mute leading-relaxed max-w-[640px]">
+            Storlekar, smaker eller styrkor av samma produkt. När minst två
+            varianter finns visar produktsidan en väljare i kassan.
+          </p>
+        </header>
+        <VariantsEditor
+          productSlug={product.slug}
+          initial={product.variants.map((v) => ({
+            id: v.id,
+            sku: v.sku,
+            label: v.label,
+            price: v.price.toString(),
+            compareAtPrice: v.compareAtPrice ? v.compareAtPrice.toString() : null,
+            stock: v.stock,
+            manageStock: v.manageStock,
+            weight: v.weight ? v.weight.toString() : null,
+            isDefault: v.isDefault,
+          }))}
+        />
+      </div>
+
+      <div className="mb-6 bg-surface-alt border border-border rounded-2xl p-6 md:p-8">
+        <header className="mb-5">
+          <h2 className="font-display text-xl md:text-[22px] font-medium tracking-tight text-primary-deep">
             Relaterade produkter
           </h2>
           <p className="mt-1.5 font-sans text-[13px] text-ink-mute leading-relaxed max-w-[640px]">
@@ -284,6 +315,7 @@ export default async function AdminProductEditPage({
           internalNote: product.internalNote,
           featured: product.featured,
           badges: product.badges,
+          allergens: product.allergens,
           categorySlugs: product.categories.map((c) => c.slug),
           allCategories,
         }}

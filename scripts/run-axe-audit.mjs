@@ -29,6 +29,11 @@ const ROUTES = [
   "/kop/koenzym-q10",
   "/om-oss",
   "/faq",
+  "/hjalp",
+  "/hjalp/somnproblem",
+  "/paket",
+  "/hjalp-mig-valja",
+  "/sok",
 ];
 
 // Severities axe assigns: minor < moderate < serious < critical.

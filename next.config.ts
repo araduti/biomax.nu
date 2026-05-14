@@ -1,8 +1,67 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
+/**
+ * Security headers applied to every response.
+ *
+ * CSP is the load-bearing one. We allow:
+ *   - `self` for our own scripts/styles/connects
+ *   - `'unsafe-inline'` for styles only (Tailwind v4 + JSON-LD inline tags
+ *     require it; nonces would need a middleware that we can add later if
+ *     CSP grading becomes a priority)
+ *   - Plausible + Klarna + Brevo CDN domains for legitimate third-party loads
+ *   - `data:` for inline SVGs / fonts we render via `data:` URLs
+ *   - frame-ancestors none → blocks clickjacking
+ *
+ * HSTS only kicks in over HTTPS; harmless in dev.
+ */
+const SECURITY_HEADERS: { key: string; value: string }[] = [
+  {
+    key: "Strict-Transport-Security",
+    value: "max-age=63072000; includeSubDomains; preload",
+  },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  {
+    key: "Permissions-Policy",
+    // Disable powerful features we never use. Lock down the surface.
+    value:
+      "camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()",
+  },
+  {
+    key: "Content-Security-Policy",
+    value: [
+      "default-src 'self'",
+      // Tailwind v4 emits inline <style> on RSC streaming. `unsafe-inline`
+      // is the realistic option for styles short of nonce middleware.
+      "style-src 'self' 'unsafe-inline'",
+      // Scripts: self + Plausible + Klarna on-site messaging. `unsafe-inline`
+      // for the JSON-LD <script type="application/ld+json"> tags we render
+      // server-side. (LD-JSON isn't executable JS so the practical risk is
+      // tiny; future hardening: SHA hashes per ld+json block.)
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://plausible.io https://*.klarna.com https://x.klarnacdn.net",
+      "img-src 'self' data: blob: https://images.unsplash.com https://*.klarnacdn.net",
+      "font-src 'self' data:",
+      "connect-src 'self' https://plausible.io https://*.sentry.io https://*.klarna.com https://api.brevo.com",
+      "frame-src 'self' https://*.klarna.com",
+      "frame-ancestors 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+    ].join("; "),
+  },
+];
+
 const nextConfig: NextConfig = {
   output: "standalone",
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: SECURITY_HEADERS,
+      },
+    ];
+  },
   // Allow access to Next.js dev resources (HMR, JS bundles) from LAN hosts.
   // Without this, Next.js 16 blocks the JS bundles cross-origin, the page
   // renders without React hydration, and forms fall back to default browser
@@ -19,7 +78,9 @@ const nextConfig: NextConfig = {
         hostname: "images.unsplash.com",
       },
     ],
-    qualities: [75, 85, 90],
+    // 82 is the LCP-tuned setting for product hero images — see
+    // components/product/product-hero.tsx for the trade-off rationale.
+    qualities: [75, 82, 85, 90],
   },
   experimental: {
     serverActions: {

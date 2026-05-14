@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getAllIngredients } from "@/lib/knowledge/ingredients";
 import { findProductsForIngredient } from "@/lib/knowledge/ingredient-products";
 import { publicProductWhere } from "@/lib/products/availability";
+import { getAllSymptoms } from "@/lib/symptoms/registry";
 
 const SITE = "https://www.biomax.nu";
 
@@ -39,6 +40,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly",
       priority: 0.7,
     },
+    {
+      url: `${SITE}/hjalp`,
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.85,
+    },
+    ...getAllSymptoms().map((s) => ({
+      url: `${SITE}/hjalp/${s.slug}`,
+      lastModified: now,
+      changeFrequency: "monthly" as const,
+      priority: 0.8,
+    })),
     {
       url: `${SITE}/om-oss`,
       lastModified: now,

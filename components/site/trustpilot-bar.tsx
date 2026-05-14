@@ -1,14 +1,16 @@
 /**
  * Slim Trustpilot rating bar — sits directly below the hero.
  *
- * For V1 the rating + review count are hardcoded (locked in ADR 0008 as a known
- * "live data" item). Later wired to the Trustpilot API or scraped on a 24h
- * cache from the public profile.
+ * Reads `Trustpilot rating / review count / profile URL` from
+ * SiteSetting (see `lib/site/settings.ts → getTrustpilotSummary`).
+ *
+ * When the rating is unset (e.g. fresh install before the admin pastes
+ * the current number) we render a CTA-only variant — "Läs vad våra
+ * kunder säger →" — without inventing a score. That's the deliberate
+ * trade-off: a real number when we have one, an honest invitation
+ * otherwise. We never hardcode a fabricated rating.
  */
-
-const TRUSTPILOT_URL = "https://se.trustpilot.com/review/biomax.nu";
-const RATING = 4.4;
-const REVIEW_COUNT = 53;
+import { getTrustpilotSummary } from "@/lib/site/settings";
 
 function Stars({ rating, size = 18 }: { rating: number; size?: number }) {
   return (
@@ -46,29 +48,55 @@ function Stars({ rating, size = 18 }: { rating: number; size?: number }) {
   );
 }
 
-export function TrustpilotBar() {
+/** Categorical label per Trustpilot's own scoring brackets. */
+function ratingLabel(rating: number): string {
+  if (rating >= 4.4) return "Utmärkt";
+  if (rating >= 4.0) return "Mycket bra";
+  if (rating >= 3.0) return "Bra";
+  if (rating >= 2.0) return "Acceptabelt";
+  return "Dåligt";
+}
+
+export async function TrustpilotBar() {
+  const tp = await getTrustpilotSummary();
+
   return (
     <section className="bg-surface-alt border-b border-border">
       <a
-        href={TRUSTPILOT_URL}
+        href={tp.profileUrl}
         target="_blank"
         rel="noopener noreferrer"
         className="flex flex-wrap items-center justify-center gap-4 px-8 py-3.5 hover:bg-surface-warm transition-colors"
       >
-        <Stars rating={RATING} />
-        <span className="font-display text-lg font-medium text-primary-deep tracking-tight leading-none">
-          {RATING.toString().replace(".", ",")}{" "}
-          <span className="text-sm text-ink-mute font-normal">av 5</span>
-        </span>
-        <span aria-hidden className="w-px h-4 bg-border" />
-        <span className="text-sm font-semibold text-ink-body">
-          <span className="text-trustpilot">Utmärkt</span> på Trustpilot
-        </span>
-        <span aria-hidden className="w-px h-4 bg-border" />
-        <span className="text-sm text-ink-mute">
-          {REVIEW_COUNT} omdömen
-          <span className="text-primary ml-1">→</span>
-        </span>
+        {tp.rating !== null ? (
+          <>
+            <Stars rating={tp.rating} />
+            <span className="font-display text-lg font-medium text-primary-deep tracking-tight leading-none">
+              {tp.rating.toString().replace(".", ",")}{" "}
+              <span className="text-sm text-ink-mute font-normal">av 5</span>
+            </span>
+            <span aria-hidden className="w-px h-4 bg-border" />
+            <span className="text-sm font-semibold text-ink-body">
+              <span className="text-trustpilot">{ratingLabel(tp.rating)}</span>{" "}
+              på Trustpilot
+            </span>
+            {tp.reviewCount !== null && (
+              <>
+                <span aria-hidden className="w-px h-4 bg-border" />
+                <span className="text-sm text-ink-mute">
+                  {tp.reviewCount} omdömen
+                  <span className="text-primary ml-1">→</span>
+                </span>
+              </>
+            )}
+          </>
+        ) : (
+          <span className="text-sm font-semibold text-ink-body">
+            Läs vad våra kunder säger på{" "}
+            <span className="text-trustpilot">Trustpilot</span>
+            <span className="text-primary ml-1">→</span>
+          </span>
+        )}
       </a>
     </section>
   );

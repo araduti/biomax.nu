@@ -7,6 +7,8 @@ import { ButtonLink } from "@/components/ui/button";
 import { formatPriceSEK } from "@/lib/format";
 import { currentUser } from "@/lib/session";
 import { getOrderForUser, statusDisplay } from "@/lib/account/orders";
+import { OrderSelfServicePanel } from "@/components/account/order-self-service-panel";
+import { ReturnRequestForm } from "@/components/account/return-request-form";
 
 export const metadata: Metadata = {
   title: "Order",
@@ -135,6 +137,15 @@ export default async function OrderDetailPage({
               {formatPriceSEK(order.subtotal.toString())}
             </dd>
           </div>
+          {order.loyaltyPointsRedeemed && order.loyaltyPointsRedeemed > 0 && (
+            <div className="flex justify-between text-accent-deep font-semibold">
+              <dt>
+                Familjen Biomax ·{" "}
+                {order.loyaltyPointsRedeemed.toLocaleString("sv-SE")} p
+              </dt>
+              <dd>−{formatPriceSEK(order.discountAmount.toString())}</dd>
+            </div>
+          )}
           <div className="flex justify-between text-ink-mute">
             <dt>Frakt</dt>
             <dd>
@@ -145,12 +156,27 @@ export default async function OrderDetailPage({
               )}
             </dd>
           </div>
+          <div className="flex justify-between text-ink-mute">
+            <dt>
+              Varav moms (
+              {(order.taxRateBp / 100).toString().replace(".", ",")} %)
+            </dt>
+            <dd className="tabular-nums">
+              {formatPriceSEK(order.taxAmount.toString())}
+            </dd>
+          </div>
           <div className="flex justify-between text-primary-deep font-display text-lg pt-3 border-t border-border-soft mt-2">
             <dt>Totalt</dt>
             <dd className="font-medium">
               {formatPriceSEK(order.totalAmount.toString())}
             </dd>
           </div>
+          {order.loyaltyPointsAwarded && order.loyaltyPointsAwarded > 0 && (
+            <p className="pt-3 font-sans text-[12.5px] text-accent-deep">
+              ✓ Du tjänade {order.loyaltyPointsAwarded.toLocaleString("sv-SE")}{" "}
+              poäng på den här ordern.
+            </p>
+          )}
         </dl>
       </section>
 
@@ -189,6 +215,44 @@ export default async function OrderDetailPage({
           </div>
         </section>
       )}
+
+      {/* Returns request — only surfaces from FULFILLED onward, gated
+          by the 14-day window. Server-side validation re-checks. */}
+      {order.status === "FULFILLED" && order.items.length > 0 && (
+        <div className="mt-10 pt-6 border-t border-border">
+          <p className="font-sans text-[11px] uppercase tracking-[0.22em] text-ink-soft font-semibold mb-4">
+            Returer
+          </p>
+          <ReturnRequestForm
+            orderId={order.id}
+            lines={order.items.map((it) => ({
+              id: it.id,
+              productName: it.productName,
+              quantity: it.quantity,
+            }))}
+          />
+        </div>
+      )}
+
+      {/* Self-service actions — only meaningful while the order is in
+          PAID state (i.e. not yet packed). Returns are surfaced from
+          FULFILLED onward via lib/orders/return-actions. */}
+      <OrderSelfServicePanel
+        orderId={order.id}
+        orderNumber={order.orderNumber}
+        status={order.status}
+        shippingAddress={
+          order.shippingAddress
+            ? {
+                fullName: order.shippingAddress.fullName,
+                street: order.shippingAddress.street,
+                postalCode: order.shippingAddress.postalCode,
+                city: order.shippingAddress.city,
+                phone: order.shippingAddress.phone,
+              }
+            : null
+        }
+      />
 
       <div className="mt-8 flex flex-wrap gap-3">
         <ButtonLink href="/produkter" variant="primary" size="md">

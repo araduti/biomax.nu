@@ -7,16 +7,26 @@ import { Button } from "@/components/ui/button";
 import {
   updateShippingRules,
   updateLowStockDefault,
+  updateWarehouseAlertEmails,
+  updateTrustpilotSummary,
 } from "@/lib/admin/settings-actions";
 
 export function SettingsForm({
   initialFlatSek,
   initialFreeThresholdSek,
   initialLowStockDefault,
+  initialWarehouseEmails,
+  initialTrustpilot,
 }: {
   initialFlatSek: number;
   initialFreeThresholdSek: number | null;
   initialLowStockDefault: number;
+  initialWarehouseEmails: string;
+  initialTrustpilot: {
+    rating: number | null;
+    reviewCount: number | null;
+    profileUrl: string;
+  };
 }) {
   const router = useRouter();
   const [flatSek, setFlatSek] = useState(String(initialFlatSek));
@@ -24,10 +34,31 @@ export function SettingsForm({
     initialFreeThresholdSek === null ? "" : String(initialFreeThresholdSek)
   );
   const [lowStock, setLowStock] = useState(String(initialLowStockDefault));
+  const [warehouseEmails, setWarehouseEmails] = useState(
+    initialWarehouseEmails
+  );
+  const [tpRating, setTpRating] = useState(
+    initialTrustpilot.rating === null
+      ? ""
+      : initialTrustpilot.rating.toString().replace(".", ",")
+  );
+  const [tpReviewCount, setTpReviewCount] = useState(
+    initialTrustpilot.reviewCount === null
+      ? ""
+      : String(initialTrustpilot.reviewCount)
+  );
+  const [tpProfileUrl, setTpProfileUrl] = useState(initialTrustpilot.profileUrl);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
   const [pendingShipping, startShipping] = useTransition();
   const [pendingStock, startStock] = useTransition();
+  const [pendingWarehouse, startWarehouse] = useTransition();
+  const [pendingTrustpilot, startTrustpilot] = useTransition();
+
+  function flashSaved(label: string) {
+    setSaved(label);
+    setTimeout(() => setSaved(null), 2000);
+  }
 
   function saveShipping() {
     setError(null);
@@ -51,8 +82,7 @@ export function SettingsForm({
         setError(result.error);
         return;
       }
-      setSaved("Frakt sparad");
-      setTimeout(() => setSaved(null), 2000);
+      flashSaved("Frakt sparad");
       router.refresh();
     });
   }
@@ -71,8 +101,41 @@ export function SettingsForm({
         setError(result.error);
         return;
       }
-      setSaved("Lagertröskel sparad");
-      setTimeout(() => setSaved(null), 2000);
+      flashSaved("Lagertröskel sparad");
+      router.refresh();
+    });
+  }
+
+  function saveWarehouse() {
+    setError(null);
+    setSaved(null);
+    startWarehouse(async () => {
+      const result = await updateWarehouseAlertEmails({
+        emails: warehouseEmails,
+      });
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      flashSaved("Lagerlarms-adresser sparade");
+      router.refresh();
+    });
+  }
+
+  function saveTrustpilot() {
+    setError(null);
+    setSaved(null);
+    startTrustpilot(async () => {
+      const result = await updateTrustpilotSummary({
+        rating: tpRating,
+        reviewCount: tpReviewCount,
+        profileUrl: tpProfileUrl,
+      });
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      flashSaved("Trustpilot sparad");
       router.refresh();
     });
   }
@@ -150,6 +213,86 @@ export function SettingsForm({
             disabled={pendingStock}
           >
             {pendingStock ? "Sparar…" : "Spara lagertröskel"}
+          </Button>
+        </div>
+      </section>
+
+      <section className="bg-surface-alt border border-border rounded-2xl p-6 md:p-8">
+        <h2 className="font-display text-xl font-medium tracking-tight text-primary-deep mb-1">
+          Lagerlarm
+        </h2>
+        <p className="font-sans text-[13px] text-ink-mute leading-relaxed mb-5">
+          E-postadresser som tar emot det dagliga lagerlarmet (07:30 UTC).
+          Flera adresser separeras med komma. Lämna tomt för att stänga av
+          larmet.
+        </p>
+        <Input
+          label="E-postadresser"
+          value={warehouseEmails}
+          onChange={(e) => setWarehouseEmails(e.target.value)}
+          disabled={pendingWarehouse}
+          hint="t.ex. lager@biomax.nu, kontakt@biomax.nu"
+        />
+        <div className="mt-5">
+          <Button
+            type="button"
+            size="sm"
+            onClick={saveWarehouse}
+            disabled={pendingWarehouse}
+          >
+            {pendingWarehouse ? "Sparar…" : "Spara lagerlarm"}
+          </Button>
+        </div>
+      </section>
+
+      <section className="bg-surface-alt border border-border rounded-2xl p-6 md:p-8">
+        <h2 className="font-display text-xl font-medium tracking-tight text-primary-deep mb-1">
+          Trustpilot
+        </h2>
+        <p className="font-sans text-[13px] text-ink-mute leading-relaxed mb-5">
+          Klistra in aktuellt betyg och antal omdömen från Trustpilot-panelen.
+          Lämna tomt så visar vi en &quot;Läs våra omdömen&quot;-CTA istället
+          för en påhittad siffra. (Automatisk uppdatering via API följer när
+          vi tecknat Trustpilots betalda nivå.)
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Input
+            label="Betyg (0–5)"
+            value={tpRating}
+            onChange={(e) => setTpRating(e.target.value)}
+            disabled={pendingTrustpilot}
+            placeholder="t.ex. 4,4"
+            hint="Decimaler med komma eller punkt."
+          />
+          <Input
+            label="Antal omdömen"
+            type="number"
+            min="0"
+            value={tpReviewCount}
+            onChange={(e) =>
+              setTpReviewCount(e.target.value.replace(/[^0-9]/g, ""))
+            }
+            disabled={pendingTrustpilot}
+            placeholder="t.ex. 53"
+          />
+        </div>
+        <div className="mt-4">
+          <Input
+            label="Profil-URL"
+            value={tpProfileUrl}
+            onChange={(e) => setTpProfileUrl(e.target.value)}
+            disabled={pendingTrustpilot}
+            hint="Länken som hero-strippen och footern pekar på."
+          />
+        </div>
+        <div className="mt-5">
+          <Button
+            type="button"
+            size="sm"
+            onClick={saveTrustpilot}
+            disabled={pendingTrustpilot}
+          >
+            {pendingTrustpilot ? "Sparar…" : "Spara Trustpilot"}
           </Button>
         </div>
       </section>

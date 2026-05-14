@@ -2,10 +2,24 @@
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import type { ProductStatus } from "@prisma/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { RichTextEditor } from "@/components/ui/rich-text-editor";
+
+// TipTap + ProseMirror is ~150KB gzipped. Lazy-load so the admin product
+// list and other admin routes don't pull it; this form is the only caller.
+// ssr:false because TipTap touches `window` during init.
+const RichTextEditor = dynamic(
+  () =>
+    import("@/components/ui/rich-text-editor").then((m) => m.RichTextEditor),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="min-h-[160px] rounded-lg border border-border bg-surface-alt animate-pulse" />
+    ),
+  }
+);
 import { IngredientListEditor } from "@/components/admin/ingredient-list-editor";
 import { SeoSnippetPreview } from "@/components/admin/seo-snippet-preview";
 import { OgCardPreview } from "@/components/admin/og-card-preview";
@@ -20,6 +34,7 @@ import {
   type CategoryOption,
 } from "@/components/admin/category-multiselect";
 import { BadgesEditor } from "@/components/admin/badges-editor";
+import { AllergenPicker } from "@/components/admin/allergen-picker";
 import type { Dose } from "@/lib/products/dose";
 import { EditorAnchorRail } from "@/components/admin/editor-anchor-rail";
 import { stripHtml } from "@/lib/sanitize";
@@ -57,14 +72,14 @@ function FormSection({
   return (
     <section
       id={id}
-      className="bg-surface-alt border border-border rounded-2xl p-6 md:p-8 scroll-mt-6"
+      className="bg-surface-alt border border-border rounded-2xl p-6 md:p-8 scroll-mt-24"
     >
-      <header className="mb-5">
-        <h2 className="font-display text-xl md:text-[22px] font-medium tracking-tight text-primary-deep">
+      <header className="mb-6">
+        <h2 className="font-display text-[22px] md:text-[26px] font-medium tracking-tight text-primary-deep">
           {title}
         </h2>
         {description && (
-          <p className="mt-1.5 font-sans text-[13px] text-ink-mute leading-relaxed max-w-[640px]">
+          <p className="mt-2 font-sans text-[14.5px] text-ink-mute leading-relaxed max-w-[640px]">
             {description}
           </p>
         )}
@@ -113,6 +128,7 @@ type Initial = {
   internalNote: string | null;
   featured: boolean;
   badges: string[];
+  allergens: string[];
   categorySlugs: string[];
   allCategories: CategoryOption[];
 };
@@ -156,6 +172,7 @@ export function ProductEditForm({ initial }: { initial: Initial }) {
   const [internalNote, setInternalNote] = useState<string>(initial.internalNote ?? "");
   const [featured, setFeatured] = useState<boolean>(initial.featured);
   const [badges, setBadges] = useState<string[]>(initial.badges);
+  const [allergens, setAllergens] = useState<string[]>(initial.allergens);
   const [categorySlugs, setCategorySlugs] = useState<string[]>(initial.categorySlugs);
 
   const [pending, setPending] = useState(false);
@@ -201,6 +218,7 @@ export function ProductEditForm({ initial }: { initial: Initial }) {
       internalNote,
       featured,
       badges,
+      allergens,
       categorySlugs,
     });
     const baseline = JSON.stringify({
@@ -238,6 +256,7 @@ export function ProductEditForm({ initial }: { initial: Initial }) {
       internalNote: initial.internalNote ?? "",
       featured: initial.featured,
       badges: initial.badges,
+      allergens: initial.allergens,
       categorySlugs: initial.categorySlugs,
     });
     return current !== baseline;
@@ -247,7 +266,7 @@ export function ProductEditForm({ initial }: { initial: Initial }) {
     status, seoTitle, seoDescription, seoFocusKw, ogTitle, ogDescription,
     ogImageUrl, aiKeywords, faqItems, dateReviewed, availableFrom, availableUntil,
     weightInput, lengthCm, widthCm, heightCm, lowStockThreshold, internalNote,
-    featured, badges, categorySlugs, initial,
+    featured, badges, allergens, categorySlugs, initial,
   ]);
 
   // Browser-level "you have unsaved changes" guard — fires on tab close,
@@ -304,6 +323,7 @@ export function ProductEditForm({ initial }: { initial: Initial }) {
       internalNote: internalNote || null,
       featured,
       badges,
+      allergens,
       categorySlugs,
     });
     setPending(false);
@@ -367,6 +387,16 @@ export function ProductEditForm({ initial }: { initial: Initial }) {
                   Märken på kortet
                 </p>
                 <BadgesEditor values={badges} onChange={setBadges} />
+              </div>
+              <div className="md:col-span-2">
+                <p className="font-sans text-[11px] uppercase tracking-[0.2em] font-semibold text-ink-soft mb-1.5">
+                  Allergener (EU 1169/2011)
+                </p>
+                <p className="font-sans text-[12px] text-ink-mute mb-2.5 leading-snug">
+                  Markera alla allergener i produkten. Visas som en framhävd
+                  &quot;Innehåller:&quot;-ruta på produktsidan — krävs enligt EU-lag.
+                </p>
+                <AllergenPicker values={allergens} onChange={setAllergens} />
               </div>
             </div>
           </FormSection>
@@ -819,15 +849,21 @@ export function ProductEditForm({ initial }: { initial: Initial }) {
       </div>
 
       {/* Sticky save bar — visible whenever there are unsaved changes,
-          plus a brief moment after save so the confirmation isn't fleeting. */}
+          plus a brief moment after save so the confirmation isn't fleeting.
+          Sidebar is 280 px on lg+; the offset matches the AdminLayout
+          shell so the bar doesn't slide under the nav. Visual weight
+          deliberately stronger than the public-site equivalent — the
+          older audience needs the dirty state to be impossible to miss. */}
       <div
         className={
           dirty || pending || saved || error
-            ? "fixed bottom-0 left-0 lg:left-[260px] right-0 bg-surface/95 backdrop-blur border-t border-border z-40 px-6 md:px-8 py-3 flex items-center justify-between gap-4 shadow-[0_-4px_20px_rgba(15,32,44,0.06)]"
+            ? "fixed bottom-0 left-0 lg:left-[280px] right-0 bg-surface-alt border-t-2 border-[#C68A4F] z-40 px-6 md:px-10 py-4 flex items-center justify-between gap-4 shadow-[0_-6px_24px_rgba(15,32,44,0.12)]"
             : "hidden"
         }
+        role="region"
+        aria-label="Spara ändringar"
       >
-        <div className="font-sans text-[13px] min-w-0 flex-1">
+        <div className="font-sans text-[15px] min-w-0 flex-1">
           {error ? (
             <span role="alert" className="text-[#B5523B] font-semibold">
               ⚠ {error}
@@ -841,7 +877,7 @@ export function ProductEditForm({ initial }: { initial: Initial }) {
           ) : dirty ? (
             <span className="text-[#7A4D2A]">
               <span className="font-semibold">Osparade ändringar</span>
-              <span className="hidden sm:inline">
+              <span className="hidden sm:inline text-ink-mute font-normal">
                 {" "}
                 — glöm inte att spara innan du lämnar sidan.
               </span>
@@ -849,7 +885,7 @@ export function ProductEditForm({ initial }: { initial: Initial }) {
           ) : null}
         </div>
         <Button type="submit" disabled={pending || (!dirty && !error)} size="lg">
-          {pending ? "Sparar…" : "Spara"}
+          {pending ? "Sparar…" : "Spara ändringar"}
         </Button>
       </div>
     </form>

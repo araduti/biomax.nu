@@ -158,3 +158,188 @@
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
+
+/* ───────────────────────────────────────────────────────────────────
+   Admin UI — sized for 50+/60+ users.
+
+   Two density modes ("comfortable" = default, "dense" = opt-in) driven by
+   the `data-density` attribute on `.admin-shell`. The variables below are
+   the contract; admin pages read them via:
+
+     class="text-[length:var(--admin-body)]"
+     style={{ minHeight: "var(--admin-hit)" }}
+     class="text-[var(--admin-ink-mute)]"
+
+   …or use the pre-baked utility classes at the bottom of this block.
+
+   Why not just override Tailwind defaults globally? Because the public
+   site is built around the brand's editorial proportions and shouldn't
+   shift. The admin lives behind `requireAdmin()` and serves a different
+   audience entirely.
+
+   Token names mirror the public scale so a future merge stays sane.
+   ─────────────────────────────────────────────────────────────────── */
+
+.admin-shell {
+  /* Comfortable density — the default, optimised for older eyes. */
+  --admin-body: 16px;
+  --admin-body-lh: 1.65;
+  --admin-input: 17px;
+  --admin-small: 14px;
+  --admin-label: 14px;
+  --admin-heading: 26px;
+
+  /* Hit targets — WCAG 2.5.5 floor is 44px; we sit comfortably above. */
+  --admin-hit: 48px;
+  --admin-hit-lg: 56px;
+  --admin-input-h: 48px;
+  --admin-stepper: 40px;
+
+  /* Spacing rhythm — slightly more breathing room than the public site. */
+  --admin-gap: 16px;
+  --admin-section-gap: 32px;
+  --admin-row-h: 72px;
+
+  /* Borders thicker — the cream-on-cream borderline disappears with
+     reading glasses at typical desk distance. */
+  --admin-border-w: 2px;
+
+  /* Contrast-bumped ink-mute. The public token is 4.7:1 on cream; this
+     is 6.5:1 — solid AAA for body text. */
+  --admin-ink-mute: #3f4550;
+  /* Demoted `ink-soft` — decorative only inside admin. Never use on
+     copy a user must read. We keep the value for hover-only badges. */
+  --admin-ink-soft: #5c6470;
+}
+
+.admin-shell[data-density="dense"] {
+  --admin-body: 14px;
+  --admin-body-lh: 1.5;
+  --admin-input: 15px;
+  --admin-small: 13px;
+  --admin-label: 12px;
+  --admin-heading: 22px;
+  --admin-hit: 40px;
+  --admin-hit-lg: 44px;
+  --admin-input-h: 40px;
+  --admin-stepper: 32px;
+  --admin-gap: 12px;
+  --admin-section-gap: 24px;
+  --admin-row-h: 56px;
+  --admin-border-w: 1px;
+}
+
+/* Apply the body-text scale to all prose inside the admin shell. The
+   prose-classes the marketing site uses are unaffected — we only target
+   plain elements + the explicit utility classes below. */
+.admin-shell,
+.admin-shell p,
+.admin-shell li {
+  font-size: var(--admin-body);
+  line-height: var(--admin-body-lh);
+}
+
+/* Re-target the public site's `ink-mute` colour usage when inside admin.
+   We can't (and don't want to) change the Tailwind utility itself, so
+   this overrides every `text-ink-mute` element that lives inside the
+   admin shell. Same for ink-soft — demoted to decorative. */
+.admin-shell .text-ink-mute {
+  color: var(--admin-ink-mute);
+}
+.admin-shell .text-ink-soft {
+  color: var(--admin-ink-mute);
+}
+
+/* Stronger focus ring for older eyes; same colour, fatter ring. */
+.admin-shell :focus-visible {
+  outline-width: 3px;
+  outline-offset: 3px;
+}
+
+/* Component scaling — applied to any button/input that lives inside the
+   admin shell. We don't touch the shared `<Button>` / `<Input>`
+   components themselves because public auth + checkout forms use them
+   too and shouldn't shift. */
+
+/* Every button picks up the comfortable hit-floor. Public-site `h-10`
+   is 40 px; the override bumps to 48 px (or 40 in dense mode). */
+.admin-shell button,
+.admin-shell [role="button"],
+.admin-shell a.button,
+.admin-shell input[type="submit"],
+.admin-shell input[type="button"] {
+  min-height: var(--admin-hit);
+}
+
+/* Smaller chrome buttons (close-icon, kebab, badge-style toggles) keep
+   their existing footprint but only when explicitly marked. Without the
+   opt-out, every interactive button hits the floor. */
+.admin-shell button[data-admin-compact],
+.admin-shell [role="button"][data-admin-compact] {
+  min-height: 0;
+}
+
+/* Single-line inputs grow to the new floor. Textareas keep their
+   author-set height (multi-row content), but their font scales. */
+.admin-shell input[type="text"],
+.admin-shell input[type="email"],
+.admin-shell input[type="password"],
+.admin-shell input[type="number"],
+.admin-shell input[type="search"],
+.admin-shell input[type="tel"],
+.admin-shell input[type="url"],
+.admin-shell input[type="date"],
+.admin-shell input[type="datetime-local"],
+.admin-shell select {
+  min-height: var(--admin-input-h);
+  font-size: var(--admin-input);
+}
+.admin-shell textarea {
+  font-size: var(--admin-input);
+  line-height: 1.55;
+}
+
+/* Form-field labels — the public Input renders them as
+   `text-[12px] uppercase tracking-[0.18em]`. Inside admin we promote to
+   readable sentence-case at 14 px. */
+.admin-shell label[for] {
+  font-size: var(--admin-label);
+  letter-spacing: normal;
+  text-transform: none;
+  font-weight: 600;
+}
+
+/* Field hints + error text were 13 px / 11 px — too small. */
+.admin-shell [id$="-hint"],
+.admin-shell [id$="-error"] {
+  font-size: var(--admin-small);
+  line-height: 1.5;
+}
+
+/* Utility classes — used by admin components for the new scale. */
+.admin-text-body {
+  font-size: var(--admin-body);
+  line-height: var(--admin-body-lh);
+}
+.admin-text-small {
+  font-size: var(--admin-small);
+  line-height: 1.55;
+}
+.admin-text-label {
+  font-size: var(--admin-label);
+  line-height: 1.4;
+}
+.admin-text-input {
+  font-size: var(--admin-input);
+}
+.admin-hit {
+  min-width: var(--admin-hit);
+  min-height: var(--admin-hit);
+}
+.admin-input-h {
+  min-height: var(--admin-input-h);
+}
+.admin-row-h {
+  min-height: var(--admin-row-h);
+}
+

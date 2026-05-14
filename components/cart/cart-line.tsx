@@ -58,6 +58,11 @@ export function CartLine({
         >
           {item.name}
         </Link>
+        {item.variantLabel && (
+          <p className="font-sans text-[11.5px] uppercase tracking-[0.14em] font-semibold text-ink-soft mt-0.5">
+            {item.variantLabel}
+          </p>
+        )}
         <p className="font-sans text-[12px] text-ink-mute mt-1">
           {formatPriceSEK(item.price)} per st
         </p>
@@ -66,7 +71,14 @@ export function CartLine({
           <div className="inline-flex items-center border border-border rounded-full bg-surface-alt overflow-hidden">
             <button
               type="button"
-              onClick={() => setQuantity(item.productId, item.quantity - 1)}
+              onClick={() =>
+                setQuantity(
+                  item.productId,
+                  item.variantId,
+                  item.quantity - 1,
+                  item.bundleId
+                )
+              }
               aria-label="Minska antal"
               className="w-8 h-8 flex items-center justify-center text-ink-body hover:bg-surface-warm transition-colors text-base leading-none"
             >
@@ -80,7 +92,14 @@ export function CartLine({
             </span>
             <button
               type="button"
-              onClick={() => setQuantity(item.productId, item.quantity + 1)}
+              onClick={() =>
+                setQuantity(
+                  item.productId,
+                  item.variantId,
+                  item.quantity + 1,
+                  item.bundleId
+                )
+              }
               aria-label="Öka antal"
               className="w-8 h-8 flex items-center justify-center text-ink-body hover:bg-surface-warm transition-colors text-base leading-none"
             >
@@ -94,7 +113,7 @@ export function CartLine({
 
         <button
           type="button"
-          onClick={() => remove(item.productId)}
+          onClick={() => remove(item.productId, item.variantId, item.bundleId)}
           className="self-start mt-2 font-sans text-[12px] text-ink-soft hover:text-[#B5523B] transition-colors"
         >
           Ta bort

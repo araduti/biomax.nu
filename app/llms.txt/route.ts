@@ -13,6 +13,8 @@ import { stripHtml } from "@/lib/sanitize";
 import { getAllIngredients } from "@/lib/knowledge/ingredients";
 import { findProductsForIngredient } from "@/lib/knowledge/ingredient-products";
 import { publicProductWhere } from "@/lib/products/availability";
+import { getAllSymptoms } from "@/lib/symptoms/registry";
+import { getActiveBundles } from "@/lib/bundles/queries";
 
 const SITE = "https://www.biomax.nu";
 
@@ -100,6 +102,32 @@ export async function GET() {
     );
   }
   lines.push("");
+
+  lines.push(`## Behovssidor (symptomguider)`);
+  lines.push("");
+  lines.push(
+    "Editoriella ingångar som adresserar vad kunden upplever — sömnsvårigheter, oro, urinvägsbesvär, mag- och tarmproblem — och knyter ihop traditionell växtmedicin med de produkter i sortimentet som passar."
+  );
+  lines.push("");
+  for (const s of getAllSymptoms()) {
+    lines.push(
+      `- [${s.shortTitle}](${SITE}/hjalp/${s.slug}): ${s.summary}`
+    );
+  }
+  lines.push("");
+
+  const bundles = await getActiveBundles();
+  if (bundles.length > 0) {
+    lines.push(`## Paket (kurerade kombinationer)`);
+    lines.push("");
+    for (const b of bundles) {
+      const memberNames = b.items.map((i) => i.name).join(" + ");
+      lines.push(
+        `- [${b.name}](${SITE}/paket/${b.slug}): ${memberNames}. ${b.discountPercent} % rabatt jämfört med separata köp.`
+      );
+    }
+    lines.push("");
+  }
 
   lines.push(`## Produkter`);
   lines.push("");

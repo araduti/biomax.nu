@@ -10,7 +10,12 @@
         "http://localhost:3000/kunskap/ingredienser/koenzym-q10",
         "http://localhost:3000/kop/koenzym-q10",
         "http://localhost:3000/om-oss",
-        "http://localhost:3000/faq"
+        "http://localhost:3000/faq",
+        "http://localhost:3000/hjalp",
+        "http://localhost:3000/hjalp/somnproblem",
+        "http://localhost:3000/paket",
+        "http://localhost:3000/hjalp-mig-valja",
+        "http://localhost:3000/sok"
       ],
       "numberOfRuns": 3,
       "settings": {

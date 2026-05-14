@@ -13,6 +13,10 @@ type Props = {
     imageUrl: string;
     price: string;
   };
+  /** Optional — when the product has variants, the selected variant's id. */
+  variantId?: string | null;
+  /** Optional — when the product has variants, the selected variant's label. */
+  variantLabel?: string | null;
   quantity?: number;
   size?: "sm" | "md" | "lg";
   className?: string;
@@ -24,6 +28,8 @@ type Props = {
 
 export function AddToCartButton({
   product,
+  variantId = null,
+  variantLabel = null,
   quantity = 1,
   size = "md",
   className,
@@ -37,6 +43,8 @@ export function AddToCartButton({
     add(
       {
         productId: product.id,
+        variantId,
+        variantLabel,
         slug: product.slug,
         name: product.name,
         imageUrl: product.imageUrl,

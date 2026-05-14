@@ -6,30 +6,92 @@ import { Header } from "@/components/site/header";
 import { Footer } from "@/components/site/footer";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { ProductHero } from "@/components/product/product-hero";
+import { StickyMobileBuyBar } from "@/components/product/sticky-mobile-buy-bar";
 import { ProductContent } from "@/components/product/product-content";
 import { RelatedProducts } from "@/components/product/related-products";
+import { BundlesForProduct } from "@/components/product/bundles-for-product";
+import { getBundlesForProduct } from "@/lib/bundles/queries";
 import { JsonLd } from "@/components/seo/json-ld";
-import { productLd, breadcrumbLd, faqLd } from "@/lib/jsonld";
+import { productLd, breadcrumbLd, faqLd, reviewLd } from "@/lib/jsonld";
 import { buildProductFaq } from "@/lib/products/faq";
 import { stripHtml } from "@/lib/sanitize";
 import {
   isProductAvailable,
   publicProductWhere,
 } from "@/lib/products/availability";
+import {
+  getProductRating,
+  getProductReviews,
+  getMyReviewForProduct,
+  getReviewGoalCounts,
+} from "@/lib/reviews/queries";
+import { ReviewList } from "@/components/reviews/review-list";
+import { ReviewForm } from "@/components/reviews/review-form";
+import { currentUser } from "@/lib/session";
+import { isInRoutine } from "@/lib/routine/actions";
+import { cache } from "react";
+import { unstable_cache } from "next/cache";
+import { productCacheTag } from "@/lib/cache/tags";
 
-// Render fresh on every request during build/seed iteration so admin edits
-// and import scripts surface immediately. Switch back to `revalidate = 600`
-// (or tag-based revalidation) once content has stabilised.
-export const dynamic = "force-dynamic";
+// ISR with tag-based invalidation. Admin product/image saves call
+// `revalidateTag(productCacheTag(slug))` so edits land within seconds
+// instead of waiting for the 10-min window. React `cache()` further
+// dedupes `getProduct` calls within a single render (metadata + body).
+export const revalidate = 600;
 
 type RouteParams = Promise<{ slug: string }>;
 
-async function getProduct(slug: string) {
+// `unstable_cache` JSON-serializes its result, so Date columns come back
+// as ISO strings on a cache hit. We rehydrate them here so callers can
+// keep using `.toISOString()` / `.getTime()` exactly as if they came
+// fresh from Prisma. (Decimal columns survive as strings; everywhere we
+// use price/weight/etc we already go through `.toString()` / parseFloat,
+// so those don't need rehydration.)
+const DATE_FIELDS = [
+  "createdAt",
+  "updatedAt",
+  "publishedAt",
+  "availableFrom",
+  "availableUntil",
+  "dateReviewed",
+] as const;
+
+function rehydrateDates<T>(row: T): T {
+  if (!row || typeof row !== "object") return row;
+  const r = row as Record<string, unknown>;
+  for (const f of DATE_FIELDS) {
+    const v = r[f];
+    if (typeof v === "string") r[f] = new Date(v);
+  }
+  const variants = r.variants;
+  if (Array.isArray(variants)) {
+    for (const v of variants as Record<string, unknown>[]) {
+      if (typeof v.createdAt === "string") v.createdAt = new Date(v.createdAt);
+      if (typeof v.updatedAt === "string") v.updatedAt = new Date(v.updatedAt);
+    }
+  }
+  return row;
+}
+
+async function fetchProduct(slug: string) {
   return prisma.product.findUnique({
     where: { slug },
-    include: { categories: true },
+    include: {
+      categories: { select: { id: true, name: true, slug: true } },
+      variants: { orderBy: { position: "asc" } },
+    },
   });
 }
+
+type ProductRow = Awaited<ReturnType<typeof fetchProduct>>;
+
+const getProduct = cache(async (slug: string): Promise<ProductRow> => {
+  const row = await unstable_cache(() => fetchProduct(slug), ["product-by-slug", slug], {
+    tags: [productCacheTag(slug)],
+    revalidate: 600,
+  })();
+  return rehydrateDates(row);
+});
 
 export async function generateMetadata({
   params,
@@ -79,7 +141,13 @@ export async function generateMetadata({
   };
 }
 
-export default async function ProductPage({ params }: { params: RouteParams }) {
+export default async function ProductPage({
+  params,
+  searchParams,
+}: {
+  params: RouteParams;
+  searchParams?: Promise<{ recensioner?: string }>;
+}) {
   const { slug } = await params;
   const product = await getProduct(slug);
   if (!product) {
@@ -144,6 +212,27 @@ export default async function ProductPage({ params }: { params: RouteParams }) {
 
   const inStock = !product.manageStock || product.stock > 0;
 
+  // Reviews — aggregate + recent. Aggregate counts feed the JSON-LD
+  // AggregateRating block so Google can render ⭐ in search results.
+  // Cap the list at 20 to keep the page lean; pagination is a follow-up
+  // once any product crosses that count.
+  const reviewGoalFilter = (await searchParams)?.recensioner?.trim() || null;
+  const [rating, reviews, viewer, bundles, reviewGoalCounts, inRoutine] =
+    await Promise.all([
+      getProductRating(product.id),
+      getProductReviews(product.id, 20, reviewGoalFilter),
+      currentUser(),
+      getBundlesForProduct(product.id),
+      getReviewGoalCounts(product.id),
+      isInRoutine(product.id),
+    ]);
+
+  // Pre-fetch the viewer's own review (if any) so the form can render its
+  // "already submitted"-state without a round-trip on submit.
+  const myReview = viewer
+    ? await getMyReviewForProduct(viewer.id, product.id)
+    : null;
+
   return (
     <>
       <TopBar />
@@ -164,6 +253,8 @@ export default async function ProductPage({ params }: { params: RouteParams }) {
           currency: "SEK",
           inStock,
           category: primaryCategory?.name,
+          averageRating: rating.count > 0 ? rating.average : null,
+          reviewCount: rating.count > 0 ? rating.count : null,
           dateModified: product.dateReviewed
             ? product.dateReviewed.toISOString()
             : product.updatedAt.toISOString(),
@@ -173,12 +264,72 @@ export default async function ProductPage({ params }: { params: RouteParams }) {
         const faq = buildProductFaq(product);
         return faq.length >= 2 ? <JsonLd data={faqLd(faq)} /> : null;
       })()}
+      {/* Per-review JSON-LD (top 10 approved reviews) — Schema.org
+          eligibility for the review snippet rich result. */}
+      {reviews.slice(0, 10).map((r) => (
+        <JsonLd
+          key={`review-${r.id}`}
+          data={reviewLd({
+            productName: product.name,
+            rating: r.rating,
+            body: r.body,
+            authorName: r.authorDisplay,
+            datePublished: r.createdAt.toISOString(),
+          })}
+        />
+      ))}
       <main>
         <div className="max-w-[1240px] mx-auto px-6 md:px-8 pt-8 pb-4">
           <Breadcrumb crumbs={crumbs} />
         </div>
-        <ProductHero product={product} />
-        <ProductContent product={product} />
+        <div id="buy-panel">
+          <ProductHero
+            product={product}
+            rating={rating}
+            loggedIn={Boolean(viewer)}
+            inRoutine={inRoutine}
+          />
+        </div>
+        <StickyMobileBuyBar
+          productName={product.name}
+          productImageUrl={product.imageUrl}
+          fromPriceSek={product.price.toString()}
+          buyPanelTargetId="buy-panel"
+        />
+        {/* Recensioner now lives as the third tab inside ProductContent.
+            Surfacing them again as a free-standing section was a duplicate
+            entry point — the hero "läs recensionerna" link uses the
+            `#recensioner` hash and ProductTabs activates the tab on mount. */}
+        <ProductContent
+          product={product}
+          reviews={{
+            count: rating.count,
+            content: (
+              <div className="max-w-[820px]">
+                <ReviewList
+                  reviews={reviews}
+                  aggregate={rating}
+                  goalCounts={reviewGoalCounts}
+                  activeGoal={reviewGoalFilter}
+                  baseHref={`/produkter/${product.slug}`}
+                />
+                <div className="mt-10">
+                  <ReviewForm
+                    productSlug={product.slug}
+                    loggedIn={Boolean(viewer)}
+                    existingReview={myReview}
+                  />
+                </div>
+              </div>
+            ),
+          }}
+        />
+
+        <BundlesForProduct
+          bundles={bundles}
+          currentProductName={product.name}
+        />
+
         <RelatedProducts
           products={related}
           categoryName={primaryCategory?.name}

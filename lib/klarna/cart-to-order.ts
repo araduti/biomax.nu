@@ -2,6 +2,7 @@ import type {
   KlarnaCreateOrderPayload,
   KlarnaOrderLine,
 } from "./types";
+import { CURRENT_VAT_BP } from "@/lib/checkout/vat";
 
 /** Anything Prisma's Decimal can decay to — Prisma 7 ships its own type. */
 type DecimalLike = { toString(): string } | string | number;
@@ -15,9 +16,11 @@ type DecimalLike = { toString(): string } | string | number;
  * per order so historical records stay accurate when the rate changes again.
  */
 
-// Swedish VAT for kosttillskott is 6% (was 12% before 2026). Stored in
-// basis points so the gross→net math stays integer-friendly.
-export const CURRENT_VAT_BP = 600;
+// Swedish VAT for kosttillskott — re-exported from the dependency-free
+// `lib/checkout/vat` so client components can read it without dragging
+// Prisma + `pg` into the bundle. New imports should hit that path
+// directly; this re-export is kept for the existing call sites.
+export { CURRENT_VAT_BP };
 
 export type CheckoutLine = {
   productId: string;
@@ -68,25 +71,19 @@ export type CheckoutShipping = {
 };
 
 /**
- * Synchronous fallback constants — kept for code paths that can't yet
- * await the SiteSetting helper (Klarna payload assembly is server-only,
- * so it should call `shippingForSubtotalAsync` instead). These values
- * mirror the SiteSetting defaults; an editor change in /admin/installningar
- * does NOT update these.
+ * Last-resort fallback constants — used only when the SiteSetting read
+ * itself throws. The single source of truth is the SiteSetting table
+ * (editable at /admin/installningar). All callers must `await
+ * shippingForSubtotal()`; there is no sync variant on purpose — a sync
+ * path would silently drift from admin edits (see audit 2026-05-13).
  */
-export const FREE_SHIPPING_THRESHOLD = 599;
-export const STANDARD_SHIPPING_SEK = 49;
+const FALLBACK_FREE_THRESHOLD = 499;
+const FALLBACK_FLAT_SEK = 49;
 
-export function shippingForSubtotal(subtotalSek: number): number {
-  return subtotalSek >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_SHIPPING_SEK;
-}
+/** Re-exported for back-compat where call sites only need the cap label. */
+export const STANDARD_SHIPPING_SEK = FALLBACK_FLAT_SEK;
 
-/**
- * Editor-aware shipping calculation. Reads the SiteSetting table; falls
- * back to the constants above on read failure. Use this in any new code
- * path; existing call sites are migrated over time.
- */
-export async function shippingForSubtotalAsync(
+export async function shippingForSubtotal(
   subtotalSek: number
 ): Promise<number> {
   try {
@@ -96,19 +93,37 @@ export async function shippingForSubtotalAsync(
       return 0;
     return rules.flatSek;
   } catch {
-    return shippingForSubtotal(subtotalSek);
+    return subtotalSek >= FALLBACK_FREE_THRESHOLD ? 0 : FALLBACK_FLAT_SEK;
   }
 }
 
-export function buildKlarnaPayload(
+/**
+ * Optional discount applied to the Klarna order. When set, we emit a
+ * Klarna `discount` line with a negative amount so the Klarna screen
+ * shows the deduction explicitly to the customer (rather than silently
+ * adjusting product line prices).
+ *
+ * Currently used by Familjen Biomax point redemption. Same shape will
+ * cover future coupon-code application without further changes.
+ */
+export type CheckoutDiscount = {
+  /** Discount amount in SEK (positive number). */
+  amountKr: number;
+  /** Display label shown to the customer on the Klarna screen. */
+  label: string;
+  /** Stable reference for the line — surfaces in Klarna's admin. */
+  reference?: string;
+};
+
+export async function buildKlarnaPayload(
   lines: CheckoutLine[],
-  baseURL: string
-): KlarnaCreateOrderPayload {
+  baseURL: string,
+  discount?: CheckoutDiscount | null
+): Promise<KlarnaCreateOrderPayload> {
   const productLines = lines.map((l) => buildLine(l, baseURL));
   const productAmount = productLines.reduce((s, l) => s + l.total_amount, 0);
-  const productTax = productLines.reduce((s, l) => s + l.total_tax_amount, 0);
   const subtotalSek = productAmount / 100;
-  const shippingSek = shippingForSubtotal(subtotalSek);
+  const shippingSek = await shippingForSubtotal(subtotalSek);
 
   const allLines = [...productLines];
   if (shippingSek > 0) {
@@ -126,6 +141,33 @@ export function buildKlarnaPayload(
       total_amount: shippingOre,
       total_tax_amount: shippingTax,
     });
+  }
+
+  // Discount line — Klarna convention is negative unit_price + total_amount
+  // for `type: "discount"`. We cap at the productAmount so we never push
+  // the order negative; placeOrder's server-side validator should have
+  // already enforced that, but we double-guard here in case a future call
+  // site forgets. The discount's tax follows the same gross-inclusive
+  // math as product lines so the order-level tax stays consistent.
+  if (discount && discount.amountKr > 0) {
+    const rawOre = Math.round(discount.amountKr * 100);
+    const cappedOre = Math.min(rawOre, productAmount);
+    if (cappedOre > 0) {
+      const negOre = -cappedOre;
+      const total_tax_amount = -Math.round(
+        (cappedOre * CURRENT_VAT_BP) / (10000 + CURRENT_VAT_BP)
+      );
+      allLines.push({
+        type: "discount",
+        reference: discount.reference ?? "DISCOUNT",
+        name: discount.label,
+        quantity: 1,
+        unit_price: negOre,
+        tax_rate: CURRENT_VAT_BP,
+        total_amount: negOre,
+        total_tax_amount,
+      });
+    }
   }
 
   const order_amount = allLines.reduce((s, l) => s + l.total_amount, 0);

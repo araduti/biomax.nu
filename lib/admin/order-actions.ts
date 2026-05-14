@@ -37,6 +37,19 @@ export async function updateOrderStatus(
     data: { status: next },
   });
 
+  // Familjen Biomax — reverse earned points on cancel/refund. Helper is
+  // idempotent (`already-reversed` → no-op) so admins flipping the same
+  // order CANCELLED → REFUNDED (allowed transition? not currently, but
+  // defensive) doesn't double-debit.
+  if (next === "CANCELLED" || next === "REFUNDED") {
+    try {
+      const { reverseOrderPoints } = await import("@/lib/loyalty/earn");
+      await reverseOrderPoints(order.id);
+    } catch (err) {
+      console.error("[admin order] loyalty reversal failed", err);
+    }
+  }
+
   revalidatePath("/admin");
   revalidatePath("/admin/ordrar");
   revalidatePath(`/admin/ordrar/${orderNumber}`);

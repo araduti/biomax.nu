@@ -1,10 +1,16 @@
 import Image from "next/image";
-import type { Product, Category } from "@prisma/client";
+import type { Product, Category, ProductVariant } from "@prisma/client";
+import { resolveVariants } from "@/lib/products/variants";
+import { VariantSelector } from "@/components/product/variant-selector";
 import { Display, Eyebrow } from "@/components/ui/typography";
 import { ButtonLink } from "@/components/ui/button";
-import { AddToCartButton } from "@/components/cart/add-to-cart-button";
+import { BuyOptionsPanel } from "@/components/product/buy-options-panel";
 import { stripHtml } from "@/lib/sanitize";
 import { formatPriceSEK } from "@/lib/format";
+import { StarRating } from "@/components/reviews/star-rating";
+import { NotifyMeButton } from "@/components/product/notify-me-button";
+import { KlarnaInstallment } from "@/components/product/klarna-installment";
+import { getShippingRules } from "@/lib/site/settings";
 
 type Props = {
   product: Pick<
@@ -21,12 +27,31 @@ type Props = {
     | "manageStock"
   > & {
     categories: Pick<Category, "name" | "slug">[];
+    variants: ProductVariant[];
   };
+  rating?: { count: number; average: number };
+  /** Whether the viewer has a session — gates the subscribe-toggle CTA. */
+  loggedIn?: boolean;
+  /** Whether the viewer already has this product in their saved routine. */
+  inRoutine?: boolean;
 };
 
-export function ProductHero({ product }: Props) {
+export async function ProductHero({
+  product,
+  rating,
+  loggedIn = false,
+  inRoutine = false,
+}: Props) {
   const cat = product.categories[0];
-  const inStock = !product.manageStock || product.stock > 0;
+  const resolved = resolveVariants(product.variants);
+  const inStock = resolved.hasVariants
+    ? resolved.variants.some((v) => v.inStock)
+    : !product.manageStock || product.stock > 0;
+  const { freeThresholdSek } = await getShippingRules();
+  const freeShipLabel =
+    freeThresholdSek !== null
+      ? `Fri frakt över ${formatPriceSEK(freeThresholdSek)}`
+      : null;
   const onSale =
     product.compareAtPrice &&
     product.compareAtPrice.toString() !== product.price.toString();
@@ -45,9 +70,14 @@ export function ProductHero({ product }: Props) {
               src={product.imageUrl || "/products/_placeholder.svg"}
               alt={product.name}
               fill
-              sizes="(max-width: 1024px) 100vw, 600px"
+              // Container is aspect-square with inset-[10%] → ~80 % of the
+              // hero column. The column itself is 1fr-of-2.1fr inside a
+              // max-w-[1240px] grid (~570 px on desktop, ~80 vw on mobile).
+              // Serving 100 vw on mobile fetched ~1000 px for a ~370 px
+              // display — net 2× over-fetch on the LCP image.
+              sizes="(max-width: 768px) 80vw, (max-width: 1024px) 60vw, 480px"
               priority
-              quality={90}
+              quality={82}
               className="object-contain mix-blend-darken"
             />
           </div>
@@ -70,67 +100,112 @@ export function ProductHero({ product }: Props) {
             {product.name}
           </Display>
 
+          {rating && rating.count > 0 && (
+            <a
+              href="#recensioner"
+              className="mt-3 inline-flex items-center gap-2 text-accent-deep hover:opacity-80 transition-opacity"
+              aria-label={`${rating.average} av 5 stjärnor baserat på ${rating.count} recensioner — läs recensionerna`}
+            >
+              <StarRating value={rating.average} size={16} />
+              <span className="font-sans text-[13px] text-ink-mute">
+                {rating.average.toFixed(1)} ·{" "}
+                <span className="underline decoration-accent/30 underline-offset-2">
+                  {rating.count}{" "}
+                  {rating.count === 1 ? "recension" : "recensioner"}
+                </span>
+              </span>
+            </a>
+          )}
+
           {summary && (
             <p className="mt-5 font-sans text-base md:text-lg leading-relaxed text-ink-mute max-w-[560px]">
               {summary}
             </p>
           )}
 
-          {/* Price block */}
-          <div className="mt-8 flex items-baseline gap-4">
-            <span className="font-display text-4xl font-medium tracking-tight text-primary-deep">
-              {formatPriceSEK(product.price.toString())}
-            </span>
-            {onSale && product.compareAtPrice && (
-              <span className="font-sans text-base text-ink-soft line-through">
-                {formatPriceSEK(product.compareAtPrice.toString())}
-              </span>
-            )}
-          </div>
-          <p className="mt-2 font-sans text-[13px] text-ink-mute">
-            Inkl. moms · Fri frakt över 499 kr
-          </p>
-
-          {/* Stock signal */}
-          <p
-            className={`mt-3 font-sans text-[13px] flex items-center gap-2 ${
-              inStock ? "text-accent-deep" : "text-ink-soft"
-            }`}
-          >
-            <span
-              aria-hidden
-              className={`w-1.5 h-1.5 rounded-full ${
-                inStock ? "bg-accent" : "bg-ink-soft"
-              }`}
+          {resolved.hasVariants ? (
+            // Multi-variant path — the client component owns the selector,
+            // the displayed price/stock, and the add-to-cart button.
+            <VariantSelector
+              productId={product.id}
+              productSlug={product.slug}
+              productName={product.name}
+              productImageUrl={product.imageUrl}
+              variants={resolved.variants}
+              defaultVariantId={resolved.defaultVariant.id}
+              freeShipLabel={freeShipLabel}
+              loggedIn={loggedIn}
+              inRoutine={inRoutine}
             />
-            {inStock ? "I lager · Skickas inom 1–2 arbetsdagar" : "Tillfälligt slut"}
-          </p>
+          ) : (
+            <>
+              {/* Single-SKU path — parent Product price + stock. */}
+              <div className="mt-8 flex items-baseline gap-4">
+                <span className="font-display text-4xl font-medium tracking-tight text-primary-deep">
+                  {formatPriceSEK(product.price.toString())}
+                </span>
+                {onSale && product.compareAtPrice && (
+                  <span className="font-sans text-base text-ink-soft line-through">
+                    {formatPriceSEK(product.compareAtPrice.toString())}
+                  </span>
+                )}
+              </div>
+              <p className="mt-2 font-sans text-[13px] text-ink-mute">
+                Inkl. moms{freeShipLabel ? ` · ${freeShipLabel}` : ""}
+              </p>
 
-          <div className="mt-8 flex flex-wrap gap-3">
-            <AddToCartButton
-              product={{
-                id: product.id,
-                slug: product.slug,
-                name: product.name,
-                imageUrl: product.imageUrl,
-                price: product.price.toString(),
-              }}
-              size="lg"
-              className="min-w-[220px]"
-            />
-            <ButtonLink href="#" variant="outline" size="lg">
-              Lägg till i favoriter
-            </ButtonLink>
-          </div>
+              <KlarnaInstallment
+                priceSek={parseFloat(product.price.toString())}
+              />
+
+              <p
+                className={`mt-3 font-sans text-[13px] flex items-center gap-2 ${
+                  inStock ? "text-accent-deep" : "text-ink-soft"
+                }`}
+              >
+                <span
+                  aria-hidden
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    inStock ? "bg-accent" : "bg-ink-soft"
+                  }`}
+                />
+                {inStock
+                  ? "I lager · Skickas inom 1–2 arbetsdagar"
+                  : "Tillfälligt slut"}
+              </p>
+
+              <div className="mt-8">
+                {inStock ? (
+                  <BuyOptionsPanel
+                    product={{
+                      id: product.id,
+                      slug: product.slug,
+                      name: product.name,
+                      imageUrl: product.imageUrl,
+                    }}
+                    variantId={null}
+                    variantLabel={null}
+                    unitPrice={product.price.toString()}
+                    loggedIn={loggedIn}
+                    inRoutine={inRoutine}
+                  />
+                ) : (
+                  <NotifyMeButton productSlug={product.slug} />
+                )}
+              </div>
+            </>
+          )}
 
           {/* Trust strip — small */}
           <ul className="mt-9 grid grid-cols-2 gap-x-6 gap-y-3 font-sans text-[13px] text-ink-mute">
-            <li className="flex items-start gap-2">
-              <span aria-hidden className="text-accent-deep mt-0.5">
-                ✓
-              </span>
-              Fri frakt över 499 kr
-            </li>
+            {freeShipLabel && (
+              <li className="flex items-start gap-2">
+                <span aria-hidden className="text-accent-deep mt-0.5">
+                  ✓
+                </span>
+                {freeShipLabel}
+              </li>
+            )}
             <li className="flex items-start gap-2">
               <span aria-hidden className="text-accent-deep mt-0.5">
                 ✓

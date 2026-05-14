@@ -33,7 +33,7 @@ export function AdminPageHeader({
       {crumbs && crumbs.length > 0 && (
         <nav
           aria-label="Brödsmulor"
-          className="mb-4 flex flex-wrap items-baseline gap-x-1.5 font-sans text-[12.5px] text-ink-mute"
+          className="mb-4 flex flex-wrap items-baseline gap-x-1.5 admin-text-small text-ink-mute"
         >
           {crumbs.map((c, i) => (
             <span key={i} className="inline-flex items-baseline gap-1.5">
@@ -63,7 +63,7 @@ export function AdminPageHeader({
             {title}
           </Display>
           {subtitle && (
-            <div className="mt-3 font-sans text-[14.5px] text-ink-mute leading-relaxed max-w-[760px]">
+            <div className="mt-3 admin-text-body text-ink-mute max-w-[760px]">
               {subtitle}
             </div>
           )}

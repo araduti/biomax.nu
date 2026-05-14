@@ -44,9 +44,37 @@ model User {
   orders        Order[]
   reviews       Review[]
   wishlist      Wishlist?
+  /// Flipped on by `auth.api.enableTwoFactor` (Better Auth two-factor
+  /// plugin). When true, sign-in requires a TOTP code after the
+  /// password check. Customers can enable from /konto/sakerhet; we
+  /// strongly recommend it for admin accounts.
+  twoFactorEnabled Boolean @default(false)
   blogPosts     BlogPost[] @relation("author_posts")
   sessions      Session[]
   accounts      Account[]
+  subscriptions Subscription[]
+  twoFactors    TwoFactor[]
+  returns       Return[]
+  loyaltyAccount     LoyaltyAccount?
+  /// Transactions where this user (an admin) created an ADJUST_ADMIN
+  /// row. Named relation because the customer-side join is via
+  /// `LoyaltyAccount` → `LoyaltyTransaction`.
+  loyaltyAdjustments LoyaltyTransaction[] @relation("LoyaltyAdjustments")
+}
+
+/// Better Auth two-factor plugin storage: TOTP secret + one-shot backup
+/// codes per user. Plugin schema reference:
+/// node_modules/better-auth/dist/plugins/two-factor/schema.mjs
+model TwoFactor {
+  id          String   @id @default(cuid())
+  userId      String
+  secret      String
+  backupCodes String
+  verified    Boolean  @default(true)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([secret])
 }
 
 // ──────────────────────────────────────────────── Better Auth tables
@@ -158,6 +186,11 @@ model Product {
   /** Cautions / contraindications — rendered as the "Observera" box. */
   warnings         String?
   badges           String[]           @default([])
+  /// EU 1169/2011 Annex II allergens declared for this product. Slugs
+  /// from `lib/products/allergens.ts` (a fixed 14-item list). Rendered
+  /// as a visible "Innehåller:"-callout on the PDP — required by EU law
+  /// for every food product, kosttillskott included.
+  allergens        String[]           @default([])
   imageUrl         String
   galleryUrls      String[]           @default([])
   seoTitle         String?
@@ -191,6 +224,80 @@ model Product {
   crossSells       ProductCrossSell[] @relation("source_product")
   recommendedBy    ProductCrossSell[] @relation("target_product")
   wishlistItems    WishlistProduct[]
+  stockNotifications StockNotificationRequest[]
+  ingredientPins   IngredientPin[]
+  bundleItems      BundleItem[]
+  variants         ProductVariant[]
+  ingredients_resolved ProductIngredient[]
+  subscriptionLines SubscriptionLine[]
+  /// Persisted SEO health classification — recomputed on product save by
+  /// `setProductSeoHealth()`. Lets the admin product list query just this
+  /// column instead of pulling longDescription + ingredientList JSON per row.
+  /// Nullable so seeds/imports don't have to compute it up front.
+  seoHealthLevel   SeoHealthLevel?
+}
+
+/// SEO health classification, matches `lib/admin/seo-health.ts`. Stored on
+/// Product so the admin list can read it without the heavy text fields.
+enum SeoHealthLevel {
+  COMPLETE
+  PARTIAL
+  NEEDS_WORK
+}
+
+/// Resolved ingredient-to-product join. Populated whenever a product's
+/// `ingredientList` is saved (see `lib/admin/product-actions.ts`). The
+/// ingredient slug matches `lib/knowledge/ingredients.ts`. Replaces the
+/// "fetch every product and substring-match in JS" pattern that previously
+/// powered `findProductsForIngredient`.
+model ProductIngredient {
+  id             String   @id @default(cuid())
+  productId      String
+  ingredientSlug String
+  createdAt      DateTime @default(now())
+  product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, ingredientSlug])
+  @@index([ingredientSlug])
+}
+
+/// Size / strength / flavor variant of a parent product. Products that
+/// only come in one size leave this relation empty — public pages render
+/// the parent Product's price + stock directly. As soon as ≥ 2 variants
+/// exist, the public page renders a variant selector and every cart line
+/// + order item carries `variantId`.
+///
+/// Migration policy: existing pre-variant products keep using
+/// `Product.price` / `Product.stock`. Adding the first variant to a
+/// product is a manual editor action — no auto-migration.
+model ProductVariant {
+  id              String   @id @default(cuid())
+  productId       String
+  /// Per-variant SKU. Unique across the whole catalogue (not just the parent
+  /// product) so we can use it as `g:id` in the Google Shopping feed.
+  sku             String   @unique
+  /// Short customer-facing label — "30 kaps", "90 kaps", "stor",
+  /// "smaksatt apelsin". Shown in the variant selector and in cart lines.
+  label           String
+  /// Render order in the selector. Lower = first.
+  position        Int      @default(0)
+  /// Per-variant price in SEK.
+  price           Decimal  @db.Decimal(10, 2)
+  /// Optional strikethrough / sale price.
+  compareAtPrice  Decimal? @db.Decimal(10, 2)
+  stock           Int      @default(0)
+  manageStock     Boolean  @default(true)
+  /// Per-variant weight (kg) for shipping. Falls back to Product.weight
+  /// when null.
+  weight          Decimal? @db.Decimal(8, 3)
+  /// Soft default for the selector — the variant pre-selected on page load.
+  /// Multiple `isDefault=true` rows is benign; we pick the first by position.
+  isDefault       Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, position])
 }
 
 model ProductCrossSell {
@@ -206,16 +313,41 @@ model ProductCrossSell {
 }
 
 model Review {
-  id         String   @id @default(cuid())
+  id         String       @id @default(cuid())
   productId  String
   userId     String?
   rating     Int
   title      String?
   body       String?
-  verified   Boolean  @default(false)
-  createdAt  DateTime @default(now())
-  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  /// True when the reviewer's userId has an Order containing this product.
+  /// Set at submission time, drives the "Verifierat köp"-badge.
+  verified   Boolean      @default(false)
+  /// Moderation gate — only APPROVED rows render publicly. PENDING is the
+  /// default on customer submission; admin moves to APPROVED or REJECTED
+  /// via /admin/recensioner. AggregateRating JSON-LD only counts APPROVED.
+  status     ReviewStatus @default(PENDING)
+  /// Display name override — falls back to user.name when null. Lets a
+  /// signed-in customer post as "Karin S." or "Anonym kund i Lund".
+  authorName String?
+  /// Optional staff response — rendered as a "Svar från Biomax"-block under
+  /// the review. NULL = no response yet. Filled via the admin moderation UI.
+  storeResponse     String?
+  storeRespondedAt  DateTime?
+  /// Optional "what did you buy this for?" tag, used by the review filter
+  /// chips ("Köpt för sömn", "Köpt för UTI"). Free-text but clamped to the
+  /// site's behov-slug enum at write time. NULL = no goal supplied.
+  reviewerGoal      String?
+  createdAt  DateTime     @default(now())
+  product    Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user       User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([productId, status, createdAt])
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 model BlogCategory {
@@ -262,23 +394,82 @@ model Order {
   shippingAmount     Decimal         @default(0) @db.Decimal(10, 2)
   taxAmount          Decimal         @default(0) @db.Decimal(10, 2)
   totalAmount        Decimal         @db.Decimal(10, 2)
-  /** VAT rate at time of sale, in basis points (600 = 6 %, 1200 = 12 %, 2500 = 25 %). */
-  taxRateBp          Int             @default(600)
+  /** VAT rate at time of sale, in basis points (600 = 6 %, 1200 = 12 %, 2500 = 25 %).
+   *  No schema default — caller must supply `CURRENT_VAT_BP` so when the
+   *  rate changes (e.g. 6 % regime ends) we don't silently bake the old
+   *  value into new orders. */
+  taxRateBp          Int
   shippingAddressId  String?
   billingAddressId   String?
   marketingConsent   Boolean         @default(false)
   legacyWpId         Int?            @unique
   legacySource       String?
+  /// Timestamp when the post-fulfillment "please review your order" email
+  /// was sent. NULL = not yet sent. Cron at /api/cron/review-requests
+  /// targets orders where this is NULL AND status=FULFILLED AND
+  /// updatedAt is at least 14 days old (updatedAt is when the status flip
+  /// to FULFILLED happened in practice).
+  reviewRequestSentAt DateTime?
+  /// Set when this Order was generated by the subscription renewal cron
+  /// rather than a standalone checkout. NULL for ad-hoc orders. Lets us
+  /// answer "is this customer's order pattern habitual?" + tag-route
+  /// the order-confirmation email differently.
+  subscriptionId     String?
+  /// Shipping carrier — defaults to PostNord. Stored as string rather
+  /// than enum so we can wire a second carrier (Instabox / Budbee /
+  /// Airmee) without a schema migration.
+  carrier            String?
+  /// PostNord (or other carrier) tracking number. NULL until the
+  /// shipment is booked. The public tracking page at /spara/[ref]
+  /// uses this to link directly to the carrier's tracker.
+  trackingNumber     String?
+  /// URL to the carrier-issued shipping label PDF. Admin "Skriv ut
+  /// fraktsedel"-button downloads from here.
+  labelPdfUrl        String?
+  /// PostNord service-point ID when the customer picked one at
+  /// checkout. NULL = "deliver to home address".
+  servicePointId     String?
+  /// Human-readable service-point name (e.g. "ICA Kvantum Kållered").
+  /// Snapshot — survives if the SP ID becomes stale.
+  servicePointName   String?
+  /// Public-tracking page token. Generated on order creation. Lets a
+  /// guest customer hit /spara/[token] without authenticating. Distinct
+  /// from orderNumber so guessing one doesn't expose the other.
+  trackingToken      String?         @unique
+  /// One-shot per-cycle token used by the post-cancellation re-order
+  /// link in customer emails — defensive in depth around order detail
+  /// access, complementing trackingToken which is read-only.
+  cancelledAt        DateTime?
+  cancellationReason String?
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
   items              OrderItem[]
   user               User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
   shippingAddress    Address?        @relation("shipping_address", fields: [shippingAddressId], references: [id], onDelete: SetNull)
   billingAddress     Address?        @relation("billing_address", fields: [billingAddressId], references: [id], onDelete: SetNull)
+  subscription       Subscription?   @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  returns            Return[]
+  /// Loyalty earn/reverse rows tied to this order. EARN_ORDER fires on
+  /// PAID, matching REVERSAL fires on CANCELLED/REFUNDED. Both have the
+  /// same orderId; the ledger sum is what matters, not row count.
+  loyaltyTransactions LoyaltyTransaction[]
+  /// Cached snapshot of points awarded for this order. Filled when
+  /// EARN_ORDER posts. Used for fast "+285 poäng"-display on order
+  /// confirmation + history without rejoining the ledger. NULL on
+  /// orders that pre-date the loyalty program or that were never paid.
+  loyaltyPointsAwarded Int?
+  /// Points the customer spent at checkout on this order (Phase 2
+  /// redemption). NULL when no points were redeemed. The corresponding
+  /// kr-discount lives on `discountAmount`. Stored as an int snapshot
+  /// so we can render "Du använde 200 poäng" even after the user
+  /// changes wallet state.
+  loyaltyPointsRedeemed Int?
 
   @@index([userId])
   @@index([email])
   @@index([createdAt])
+  @@index([subscriptionId])
+  @@index([trackingNumber])
 }
 
 model OrderItem {
@@ -287,12 +478,36 @@ model OrderItem {
   productId    String?
   productName  String
   productSku   String?
+  /// Variant ID at order time. NULL when the product has no variants
+  /// (single-SKU product) or for legacy pre-variants orders. We don't
+  /// FK this — variants can be deleted; the historical reference stays
+  /// readable via `variantLabel` + `productSku`.
+  variantId    String?
+  /// Variant label frozen at order time ("30 kaps", "90 kaps"). NULL when
+  /// the product has no variants.
+  variantLabel String?
+  /// Bundle snapshot — set when this line was added to the cart as part
+  /// of a bundle. No FK on `bundleId` because bundles can be edited or
+  /// deleted later; the snapshot fields keep the historical record
+  /// readable even if the source row is gone. `unitPrice` on a bundled
+  /// line is the bundle's discounted per-item price (server-recomputed
+  /// at order time from the live `Bundle.discountPercent`), so the row
+  /// math still adds up directly.
+  bundleId               String?
+  bundleSlug             String?
+  bundleName             String?
+  bundleDiscountPercent  Int?
   quantity     Int      @default(1)
   unitPrice    Decimal  @db.Decimal(10, 2)
   totalPrice   Decimal  @db.Decimal(10, 2)
+  /// Timestamp when the "Din X tar slut snart" replenishment reminder
+  /// was sent for this specific line. NULL = not yet sent. Cron at
+  /// /api/cron/replenishment fills this when an email goes out.
+  replenishmentSentAt DateTime?
   createdAt    DateTime @default(now())
   order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product      Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  returnItems  ReturnItem[]
 
   @@index([orderId])
   @@index([productId])
@@ -313,6 +528,10 @@ model Address {
   user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   shippingFor Order[]  @relation("shipping_address")
   billingFor  Order[]  @relation("billing_address")
+  subscriptionShippingFor Subscription[] @relation("subscription_shipping_address")
+  subscriptionBillingFor  Subscription[] @relation("subscription_billing_address")
+
+  @@index([userId])
 }
 
 model Wishlist {
@@ -367,7 +586,137 @@ model NewsletterSubscriber {
   locale       String   @default("sv-SE")
   source       String?
   consentedAt  DateTime @default(now())
-  unsubscribed Boolean  @default(false)
+  /// Explicit unsubscribe timestamp. Lifecycle flows (welcome series,
+  /// abandoned cart, replenishment) all check `unsubscribedAt IS NULL`
+  /// before sending. (Legacy `unsubscribed Boolean` column was dropped
+  /// 2026-05-13 after migration backfilled `unsubscribedAt` from it.)
+  unsubscribedAt DateTime?
+  /// Per-subscriber random token for one-click unsubscribe links. Set on
+  /// row creation, never rotated. Stored in plain text — it's a low-value
+  /// secret whose only purpose is making the unsubscribe URL unguessable.
+  unsubscribeToken String? @unique
+  /// Welcome-series state machine: 0 = not started, 1 = email A sent
+  /// (day 0), 2 = email B sent (day 3), 3 = email C sent (day 7),
+  /// 4 = completed. Advances monotonically; reset only via DB surgery.
+  welcomeSeriesStage Int @default(0)
+  /// Timestamp of the first welcome email — used to gate the delays for
+  /// the subsequent stages (day 3, day 7).
+  welcomeSeriesStartedAt DateTime?
+}
+
+/// Persisted snapshot of an in-progress cart. Used by the abandoned-cart
+/// flow at /api/cron/abandoned-cart. We capture on add-to-cart events
+/// once we have an email (logged-in user OR a newsletter subscriber whose
+/// email is in the session). Snapshots auto-expire after 30 days.
+model CartSnapshot {
+  id                 String   @id @default(cuid())
+  email              String
+  userId             String?
+  /// Items as JSON: `[{productId, productSlug, productName, quantity, unitPrice}]`.
+  items              Json
+  subtotalSek        Decimal  @db.Decimal(10, 2)
+  /// Random token for the recovery link in the abandoned-cart email.
+  recoveryToken      String   @unique
+  firstEmailSentAt   DateTime?
+  secondEmailSentAt  DateTime?
+  /// Set when the customer completes an order that contains any of the
+  /// snapshot's items. Suppresses further emails.
+  recoveredAt        DateTime?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([email])
+  @@index([createdAt])
+}
+
+/// Curated multi-product bundle ("Köp tillsammans"). Bundle price is
+/// computed as `SUM(product.price) * (1 - discountPercent/100)`. Editor
+/// curates the slug, name, member products, and discount. Public bundles
+/// render on /paket and as cross-sells under related products.
+model Bundle {
+  id              String       @id @default(cuid())
+  slug            String       @unique
+  name            String
+  description     String?
+  /// 0–100 — percentage off the sum of member-product prices. 0 = no
+  /// discount (still useful for curated "rekommenderad kombination"
+  /// editorial groupings).
+  discountPercent Int          @default(10)
+  active          Boolean      @default(true)
+  position        Int          @default(0)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  items           BundleItem[]
+
+  @@index([active, position])
+}
+
+model BundleItem {
+  id        String  @id @default(cuid())
+  bundleId  String
+  productId String
+  position  Int     @default(0)
+  bundle    Bundle  @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([bundleId, productId])
+  @@index([bundleId, position])
+}
+
+/// Editor-pinned cross-sell from an ingredient knowledge slug to a
+/// specific product. Lives next to `ProductCrossSell` conceptually but
+/// keyed on a string (the ingredient registry isn't a DB table). When
+/// empty for an ingredient, /kop/[slug] falls back to auto-derived
+/// matches via `findProductsForIngredient`.
+model IngredientPin {
+  id              String  @id @default(cuid())
+  ingredientSlug  String
+  productId       String
+  /// Display ordering — lower = earlier. Editor sets this implicitly via
+  /// drag-to-reorder; we store the position to avoid a separate "rank"
+  /// concept.
+  position        Int     @default(0)
+  createdAt       DateTime @default(now())
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([ingredientSlug, productId])
+  @@index([ingredientSlug, position])
+}
+
+/// Editorial homepage block. The homepage renders a stack of these
+/// in `position` order. `kind` switches between rendered components
+/// (hero, featured-product, season-spotlight, category-rail, etc.).
+/// `payload` carries the kind-specific data as JSON; each kind has
+/// its own Zod schema enforced server-side.
+model HomepageBlock {
+  id        String   @id @default(cuid())
+  /// Discriminator: drives which React component renders the block.
+  /// Allowed values: "hero", "featured-product", "category-rail",
+  /// "knowledge-teaser", "newsletter", "bundle-rail".
+  kind      String
+  /// Kind-specific payload. See `lib/homepage/blocks.ts` for shapes.
+  payload   Json
+  position  Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active, position])
+}
+
+/// Notify-me-when-back-in-stock request. Created when a customer hits
+/// the "Notifiera mig" button on an out-of-stock product. Emails fire
+/// event-driven when the product's stock returns above zero.
+model StockNotificationRequest {
+  id          String   @id @default(cuid())
+  productId   String
+  email       String
+  fulfilledAt DateTime?
+  createdAt   DateTime @default(now())
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, email])
+  @@index([productId, fulfilledAt])
 }
 
 /// Uptime probe — one row per check per monitored URL. The cron pinger
@@ -518,4 +867,342 @@ model Redirect {
   status    Int      @default(301)
   reason    String?
   createdAt DateTime @default(now())
+}
+
+/// Append-only log of significant admin actions — product/category
+/// edits, refunds, GDPR exports, customer anonymisation, manual order
+/// status changes, etc. We don't try to capture every CRUD operation;
+/// the rule of thumb is "things you'd need to explain in a postmortem
+/// or a customer dispute". The `diff` JSON is intentionally free-form
+/// — readers shouldn't depend on its shape across action kinds.
+model AdminAuditEntry {
+  id         String   @id @default(cuid())
+  /// The admin User performing the action. Nullable on `User` delete so
+  /// the log row survives even if the admin's account is later removed.
+  actorId    String?
+  /// Stable name of the action ("product.update", "customer.anonymize",
+  /// "order.refund"). Use dot-namespaced strings so adding a new kind
+  /// doesn't collide with existing rows.
+  action     String
+  /// Optional reference to the affected entity. Most actions affect one
+  /// row; for bulk operations the count goes in `diff`.
+  entityType String?
+  entityId   String?
+  diff       Json?
+  /// IP at the time of action, for forensic correlation with web logs.
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  @@index([action, createdAt])
+  @@index([entityType, entityId])
+  @@index([actorId, createdAt])
+}
+
+/// Fixed-window rate-limit counter keyed by `(scope, identifier)`.
+/// `scope` is the rule name ("newsletter-signup", "review-submission",
+/// etc.); `identifier` is the IP (or email, for slow per-account abuse).
+/// Window resets when `windowStart + windowMs <= now`. A daily cleanup
+/// cron deletes rows where `windowStart < now - 7d` so the table stays
+/// small.
+model RateLimitBucket {
+  scope       String
+  identifier  String
+  count       Int      @default(0)
+  windowStart DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@id([scope, identifier])
+  @@index([windowStart])
+}
+
+/// Recurring-order subscriptions ("prenumeration"). Each Subscription
+/// owns one or more SubscriptionLine rows (one product/variant per line)
+/// and renews on a fixed interval. The renewal cron creates a fresh
+/// Order with status PENDING per cycle — Klarna recurring tokens land
+/// later; for the v1 launch, customers confirm payment per cycle.
+///
+/// Cancellation is one-way (status = CANCELLED) but PAUSED can flip
+/// back to ACTIVE. Address overrides on the Subscription (rather than
+/// per-cycle) so the customer's "ändra leveransadress för min
+/// prenumeration"-flow updates one row.
+model Subscription {
+  id              String              @id @default(cuid())
+  userId          String?
+  /// Always present — duplicates User.email for guest checkouts and
+  /// for the renewal email even after a user deletes their account.
+  email           String
+  status          SubscriptionStatus  @default(ACTIVE)
+  /// Renewal cadence in days (30 / 60 / 90 typical). Stored as int so
+  /// editor-side admins can pick non-standard cadences for piloting.
+  intervalDays    Int
+  /// Discount percent applied to every renewal line. Snapshot at create
+  /// time — editorial changes to the global subscription discount don't
+  /// retroactively change historic subscriptions.
+  discountPercent Int                 @default(10)
+  /// Computed at create-time + every renewal: when the next Order will
+  /// be generated. PAUSED subscriptions push this date forward by the
+  /// pause duration on resume.
+  nextOrderAt     DateTime
+  /// Filled by the cron when a renewal Order is created. Lets us prove
+  /// the renewal happened even if the cron logs are rotated.
+  lastRenewedAt   DateTime?
+  cancelledAt     DateTime?
+  cancellationReason String?
+  /// Default shipping/billing for the subscription. Updating the Address
+  /// row updates every future renewal cycle automatically (FK, not
+  /// snapshot).
+  shippingAddressId String?
+  billingAddressId  String?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  user            User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
+  shippingAddress Address?            @relation("subscription_shipping_address", fields: [shippingAddressId], references: [id], onDelete: SetNull)
+  billingAddress  Address?            @relation("subscription_billing_address", fields: [billingAddressId], references: [id], onDelete: SetNull)
+  lines           SubscriptionLine[]
+  /// Orders created by each renewal cycle. Soft link — Order has its own
+  /// life cycle and only this back-pointer keeps the trail.
+  orders          Order[]
+
+  @@index([status, nextOrderAt])
+  @@index([userId])
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAUSED
+  CANCELLED
+}
+
+model SubscriptionLine {
+  id             String       @id @default(cuid())
+  subscriptionId String
+  productId      String
+  /// Variant ID when the product has variants; null otherwise. Same
+  /// pattern as CartItem / OrderItem.
+  variantId      String?
+  quantity       Int          @default(1)
+  /// Snapshot price at subscription creation. Renewal cron uses the
+  /// current Product/Variant price (not this snapshot) so price drift
+  /// is transparent to the customer — but this is kept for "what did
+  /// this used to cost" admin investigations.
+  unitPriceAtCreate Decimal   @db.Decimal(10, 2)
+  createdAt      DateTime     @default(now())
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  product        Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([subscriptionId, productId, variantId])
+  @@index([productId])
+}
+
+/// Customer-initiated return request.
+///
+/// Lifecycle: REQUESTED (customer initiated) → APPROVED (admin OK) →
+/// RECEIVED (parcel back in warehouse) → REFUNDED (Klarna refund fired).
+/// REJECTED is terminal — used for "outside return window" or "ineligible
+/// product". Each row references the OrderItems being returned (partial
+/// returns are common).
+///
+/// Refund amount is stored separately from the original order totals so
+/// admin can adjust (re-stocking fee, partial refund, etc.). When the
+/// row hits REFUNDED, `refundedAt` is set and `refundReference` carries
+/// the Klarna refund id for reconciliation.
+model Return {
+  id               String         @id @default(cuid())
+  /// Public-facing return reference, e.g. "BMX-RET-20260513-1234".
+  returnNumber     String         @unique
+  orderId          String
+  /// Optional userId — guest orders may still trigger a return via
+  /// email-token link.
+  userId           String?
+  status           ReturnStatus   @default(REQUESTED)
+  reason           String?
+  /// Stored in major units (SEK), not öre, to match Order.totalAmount.
+  refundAmount     Decimal?       @db.Decimal(10, 2)
+  refundReference  String?
+  refundedAt       DateTime?
+  /// Free-text admin internal note (visible only in /admin/returer).
+  internalNote     String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  order            Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user             User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  items            ReturnItem[]
+
+  @@index([orderId])
+  @@index([userId])
+  @@index([status, createdAt])
+}
+
+enum ReturnStatus {
+  REQUESTED
+  APPROVED
+  RECEIVED
+  REFUNDED
+  REJECTED
+}
+
+model ReturnItem {
+  id           String     @id @default(cuid())
+  returnId     String
+  orderItemId  String
+  /// Quantity to return — capped at the OrderItem.quantity.
+  quantity     Int        @default(1)
+  return       Return     @relation(fields: [returnId], references: [id], onDelete: Cascade)
+  orderItem    OrderItem  @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+
+  @@unique([returnId, orderItemId])
+}
+
+// ──────────────────────────────────────────────── Editorial hero photography
+//
+// Replaces the hardcoded `lib/seasons.ts` map with a DB-backed, admin-
+// editable surface so editorial can swap the homepage hero without
+// shipping code — for the 4 seasons AND for high seasons like Midsommar,
+// Black Friday, Jul, etc.
+//
+// Selection (see `lib/homepage/hero.ts`):
+//   1. Filter to rows with status = PUBLISHED.
+//   2. Keep rows currently active:
+//        - season matches currentSeason()  → "Seasonal" rows
+//        - OR now() in [startsAt, endsAt]   → "Campaign" rows
+//   3. Sort by priority desc. Highest wins.
+//   4. Fallback: hardcoded `lib/seasons.ts` map keeps the page alive even
+//      if the table is empty or all rows are archived.
+
+enum HomepageHeroStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum HomepageHeroSeason {
+  var
+  sommar
+  host
+  vinter
+}
+
+model HomepageHero {
+  id          String              @id @default(cuid())
+  /// Admin-facing name ("Midsommar 2026", "Vinter — eldstad"). Never
+  /// shown to customers — they see `motif` + `caption` only.
+  name        String
+  /// Big italic line in the hero ("När häggen blommar").
+  motif       String
+  /// Small caption under it ("Vit hägg mot djupgrön skog, mitten av maj").
+  caption     String
+  /// Hex used for the italic accent in the hero headline.
+  accent      String
+  /// Path to the uploaded photo (e.g. /uploads/hero/midsommar-1234.jpg)
+  /// or an external Unsplash URL — both work.
+  photoUrl    String
+  /// Alt text for accessibility.
+  photoAlt    String
+  /// When set, the row activates during this Swedish season. Use this
+  /// for the 4 default rows. NULL when the row is purely date-gated.
+  season      HomepageHeroSeason?
+  /// Inclusive date-window start. NULL = no lower bound.
+  startsAt    DateTime?
+  /// Inclusive date-window end. NULL = no upper bound.
+  endsAt      DateTime?
+  /// Higher wins when multiple rows are currently active. Seasonal
+  /// defaults sit at 0; campaigns (Midsommar, Black Week) go higher.
+  priority    Int                 @default(0)
+  status      HomepageHeroStatus  @default(DRAFT)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  @@index([status])
+  @@index([season])
+  @@index([startsAt, endsAt])
+}
+
+// ──────────────────────────────────────────────── Familjen Biomax (loyalty)
+//
+// Two-table append-only ledger pattern. `LoyaltyAccount` carries the
+// cached balance for fast read; `LoyaltyTransaction` is the source of
+// truth and every mutation MUST go through the ledger helpers in
+// `lib/loyalty/ledger.ts` so the cached balance, lifetimeEarned, and
+// lastActivityAt stay coherent with the underlying transactions.
+//
+// Earn-rate and burn-rate live in `lib/loyalty/constants.ts`, not the
+// DB. We may want to change the rate without retroactively re-pricing
+// historical earnings — keeping the rate in code, baked into the
+// `points` value at write time, is the immutable record.
+
+enum LoyaltyTxKind {
+  /// Points awarded when an order's status flips to PAID. Idempotent per
+  /// orderId — re-running the awarder for the same order is a no-op.
+  EARN_ORDER
+  /// Points spent at checkout (Phase 2). Negative `points` value.
+  BURN_REDEMPTION
+  /// Welcome bonus granted on account auto-enroll at signup.
+  BONUS_WELCOME
+  /// Birthday bonus from the yearly cron (Phase 2).
+  BONUS_BIRTHDAY
+  /// Referral credit, both sides (Phase 3).
+  BONUS_REFERRAL
+  /// Manual admin adjustment — `adminId` is the actor, `description`
+  /// carries the reason. Positive or negative.
+  ADJUST_ADMIN
+  /// Reverses a previous EARN_ORDER when the order is cancelled or
+  /// refunded. `orderId` points to the original order. Negative value
+  /// equal in magnitude to the EARN_ORDER it reverses.
+  REVERSAL
+  /// Auto-expiry sweep after LOYALTY_INACTIVITY_MONTHS of zero activity
+  /// (Phase 3). Negative value zeroing the account.
+  EXPIRE
+}
+
+model LoyaltyAccount {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Cached balance. Sum of all transactions for this account. Reads
+  /// hit this column; writes go through the ledger helper which
+  /// updates both the transaction row and this cache atomically.
+  balance         Int      @default(0)
+  /// Lifetime earned (sum of positive transactions only). Display-only
+  /// — "Du har tjänat X poäng totalt" + future tier preview. NEVER
+  /// drives spend logic; that's `balance` only.
+  lifetimeEarned  Int      @default(0)
+  enrolledAt      DateTime @default(now())
+  /// Updated on every earn or burn. Account expires after
+  /// LOYALTY_INACTIVITY_MONTHS of no activity (Phase 3 cron).
+  lastActivityAt  DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  transactions    LoyaltyTransaction[]
+
+  @@index([lastActivityAt])
+}
+
+model LoyaltyTransaction {
+  id          String         @id @default(cuid())
+  accountId   String
+  account     LoyaltyAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  /// Denormalized — same value as `account.userId`. Lets us answer
+  /// "all transactions for user X" without the join.
+  userId      String
+  kind        LoyaltyTxKind
+  /// Signed. Earn/bonus/admin-credit positive; burn/expire/reversal/
+  /// admin-debit negative. Sum across an account's rows must equal
+  /// the account's cached `balance` — invariant enforced by the
+  /// ledger helper.
+  points      Int
+  /// Order this transaction relates to (EARN_ORDER, REVERSAL). NULL
+  /// for bonuses and admin adjustments.
+  orderId     String?
+  order       Order?         @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  /// Admin actor on an ADJUST_ADMIN row. NULL otherwise.
+  adminId     String?
+  admin       User?          @relation("LoyaltyAdjustments", fields: [adminId], references: [id], onDelete: SetNull)
+  /// Customer-facing short text shown in the transaction list. Server
+  /// fills it for system transactions, admin types it for adjustments.
+  description String
+  createdAt   DateTime       @default(now())
+
+  @@index([accountId, createdAt])
+  @@index([userId, createdAt])
+  @@index([orderId])
 }

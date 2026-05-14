@@ -12,6 +12,7 @@ import {
   type FilterOption,
 } from "@/components/product/category-filter";
 import { ProductGrid } from "@/components/product/product-grid";
+import { getRatingsByProductIds } from "@/lib/reviews/queries";
 import { SortSelect } from "@/components/product/sort-select";
 import { JsonLd } from "@/components/seo/json-ld";
 import { breadcrumbLd, itemListLd } from "@/lib/jsonld";
@@ -96,7 +97,20 @@ export default async function ProductsIndex({
     prisma.product.findMany({
       where: { ...publicProductWhere(), price: { gt: 0 } },
       orderBy,
-      include: { categories: { select: { name: true }, take: 1 } },
+      // Explicit select — the card only renders 7 fields. Default `include`
+      // would pull longDescription + ingredientList JSON + every SEO/OG
+      // field for every card, which is 10-50× the bytes we need.
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        shortDescription: true,
+        imageUrl: true,
+        price: true,
+        compareAtPrice: true,
+        totalSales: true,
+        categories: { select: { name: true }, take: 1 },
+      },
     }),
     prisma.category.findMany({
       where: {
@@ -133,6 +147,9 @@ export default async function ProductsIndex({
           return original > current;
         })
       : products;
+
+  // Bulk-fetch ratings so cards can render "★ 4.6 (24)" without N+1 queries.
+  const ratings = await getRatingsByProductIds(filtered.map((p) => p.id));
 
   const filterOptions: FilterOption[] = categories.map((c) => ({
     slug: c.slug,
@@ -228,7 +245,7 @@ export default async function ProductsIndex({
                 </Link>
               </div>
             ) : (
-              <ProductGrid products={filtered} />
+              <ProductGrid products={filtered} ratings={ratings} />
             )}
           </div>
         </section>

@@ -21,7 +21,7 @@ export const SECTIONS: Record<SectionId, Section> = {
     id: "help",
     eyebrow: "Hjälp & juridik",
     items: [
-      { label: "Frakt & retur", href: "/frakt-och-retur" },
+      { label: "Frakt, retur & återbetalning", href: "/frakt-och-retur" },
       { label: "Vanliga frågor", href: "/faq" },
       { label: "Köpvillkor", href: "/villkor" },
       { label: "Ångerblankett", href: "/anger-formular" },

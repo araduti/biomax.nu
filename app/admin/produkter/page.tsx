@@ -2,12 +2,19 @@ import Link from "next/link";
 import Image from "next/image";
 import { formatPriceSEK } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { getSeoHealth } from "@/lib/admin/seo-health";
 import { SeoHealthDot } from "@/components/admin/seo-health-dot";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { getLowStockDefault } from "@/lib/site/settings";
 
 export const metadata = { title: "Produkter" };
+
+// Map persisted enum → the UI level the existing dot component uses.
+const PRISMA_TO_LEVEL = {
+  COMPLETE: "complete",
+  PARTIAL: "partial",
+  NEEDS_WORK: "needs-work",
+} as const;
+type UiLevel = (typeof PRISMA_TO_LEVEL)[keyof typeof PRISMA_TO_LEVEL];
 
 export default async function AdminProductsPage() {
   const lowStockDefault = await getLowStockDefault();
@@ -25,25 +32,25 @@ export default async function AdminProductsPage() {
       lowStockThreshold: true,
       totalSales: true,
       status: true,
-      seoTitle: true,
-      seoDescription: true,
-      seoFocusKw: true,
-      shortDescription: true,
-      longDescription: true,
-      ingredientList: true,
-      usage: true,
-      warnings: true,
+      // Persisted on product save (see lib/admin/post-save-sync.ts).
+      // Lets the list render the health dot without re-fetching
+      // longDescription + ingredientList JSON for every row.
+      seoHealthLevel: true,
       categories: { select: { name: true }, take: 1 },
     },
   });
 
-  // Aggregate health counts for the header summary line.
+  // Aggregate health counts for the header summary line. Rows where the
+  // level is still null (pre-backfill / freshly seeded) are treated as
+  // "needs-work" so they get attention.
   const healthCounts = { complete: 0, partial: 0, "needs-work": 0 };
-  const healths = new Map<string, ReturnType<typeof getSeoHealth>>();
+  const levels = new Map<string, UiLevel>();
   for (const p of products) {
-    const h = getSeoHealth(p);
-    healths.set(p.id, h);
-    healthCounts[h.level]++;
+    const level: UiLevel = p.seoHealthLevel
+      ? PRISMA_TO_LEVEL[p.seoHealthLevel]
+      : "needs-work";
+    levels.set(p.id, level);
+    healthCounts[level]++;
   }
 
   return (
@@ -66,7 +73,7 @@ export default async function AdminProductsPage() {
             const threshold = p.lowStockThreshold ?? lowStockDefault;
             const lowStock = p.manageStock && p.stock <= threshold;
             const oos = p.manageStock && p.stock === 0;
-            const health = healths.get(p.id)!;
+            const level = levels.get(p.id) ?? "needs-work";
             return (
               <li
                 key={p.id}
@@ -74,23 +81,23 @@ export default async function AdminProductsPage() {
               >
                 <Link
                   href={`/admin/produkter/${p.slug}`}
-                  className="grid grid-cols-[24px_64px_1fr_auto_auto_auto] items-center gap-4 px-5 py-4 hover:bg-surface-warm transition-colors"
+                  className="admin-row-h grid grid-cols-[110px_80px_1fr_auto_auto_auto] items-center gap-4 px-5 py-3 hover:bg-surface-warm transition-colors"
                 >
-                  <SeoHealthDot health={health} />
-                  <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-surface-warm">
+                  <SeoHealthDot level={level} />
+                  <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-surface-warm">
                     <Image
                       src={p.imageUrl || "/products/_placeholder.svg"}
                       alt={p.name}
                       fill
-                      sizes="64px"
+                      sizes="80px"
                       className="object-cover mix-blend-darken"
                     />
                   </div>
                   <div className="min-w-0">
-                    <p className="font-display text-[15px] font-medium tracking-tight text-primary-deep">
+                    <p className="font-display text-[16px] font-medium tracking-tight text-primary-deep">
                       {p.name}
                     </p>
-                    <p className="font-sans text-[11px] text-ink-mute mt-0.5">
+                    <p className="font-sans text-[13px] text-ink-mute mt-1">
                       {p.sku} · {p.categories[0]?.name ?? "Okategoriserad"} ·{" "}
                       {p.totalSales.toLocaleString("sv-SE")} sålda
                     </p>
@@ -98,24 +105,27 @@ export default async function AdminProductsPage() {
                   <span
                     className={
                       p.status === "PUBLISHED"
-                        ? "font-sans text-[10px] uppercase tracking-[0.18em] font-bold px-2.5 py-1 rounded-full bg-accent/15 text-accent-deep"
-                        : "font-sans text-[10px] uppercase tracking-[0.18em] font-bold px-2.5 py-1 rounded-full bg-surface-warm text-ink-mute"
+                        ? "inline-flex items-center gap-1.5 font-sans text-[12.5px] font-semibold px-2.5 py-1 rounded-full bg-accent/15 text-accent-deep"
+                        : "inline-flex items-center gap-1.5 font-sans text-[12.5px] font-semibold px-2.5 py-1 rounded-full bg-ink-mute/15 text-ink-mute"
                     }
                   >
-                    {p.status === "PUBLISHED" ? "Publicerad" : p.status}
+                    <span aria-hidden>
+                      {p.status === "PUBLISHED" ? "✓" : "◌"}
+                    </span>
+                    {p.status === "PUBLISHED" ? "Publicerad" : "Utkast"}
                   </span>
                   <span
                     className={
                       oos
-                        ? "font-sans text-[12px] font-semibold text-[#B5523B] whitespace-nowrap"
+                        ? "font-sans text-[14px] font-semibold text-[#B5523B] whitespace-nowrap tabular-nums"
                         : lowStock
-                          ? "font-sans text-[12px] font-semibold text-accent-deep whitespace-nowrap"
-                          : "font-sans text-[12px] text-ink-mute whitespace-nowrap"
+                          ? "font-sans text-[14px] font-semibold text-[#8A5A2C] whitespace-nowrap tabular-nums"
+                          : "font-sans text-[14px] text-ink-mute whitespace-nowrap tabular-nums"
                     }
                   >
-                    {!p.manageStock ? "Obegränsat" : `${p.stock} st`}
+                    {!p.manageStock ? "∞" : `${p.stock} st`}
                   </span>
-                  <span className="font-display text-[14px] font-medium text-primary-deep tracking-tight whitespace-nowrap min-w-[70px] text-right">
+                  <span className="font-display text-[16px] font-medium text-primary-deep tracking-tight whitespace-nowrap min-w-[80px] text-right tabular-nums">
                     {formatPriceSEK(p.price.toString())}
                   </span>
                 </Link>
