@@ -140,6 +140,59 @@ export function Hero({ season, meta, featured }: Props) {
           {s.motif}
         </div>
       </div>
+
+      {/* Mobile featured product — the glass card above is desktop-only;
+          this in-flow strip keeps the seasonal conversion surface on
+          phones (the audience skews older and mobile-first). */}
+      {featured && (
+        <div className="md:hidden px-6 pb-8 pt-6">
+          <div className="flex gap-4 items-center p-4 rounded-2xl border border-surface/15 bg-surface/95 shadow-[0_8px_28px_rgba(15,36,64,0.25)]">
+            <Link
+              href={`/produkter/${featured.slug}`}
+              aria-label={`Visa produkt: ${featured.name}`}
+              className="relative w-[72px] h-[72px] rounded-[10px] overflow-hidden bg-surface-warm flex-shrink-0"
+            >
+              <Image
+                src={featured.imageUrl || "/products/_placeholder.svg"}
+                alt={featured.name}
+                fill
+                sizes="72px"
+                quality={85}
+                className="object-cover"
+              />
+            </Link>
+            <div className="flex-1 min-w-0">
+              <span className="font-sans text-[9px] font-bold uppercase tracking-[0.22em] text-accent-deep flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                Säsongens favorit
+              </span>
+              <Link
+                href={`/produkter/${featured.slug}`}
+                className="block font-display text-lg font-medium tracking-tight text-primary-deep mt-1 mb-1.5 leading-[1.1]"
+              >
+                {featured.name}
+              </Link>
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-display text-base font-medium text-primary-deep tracking-tight">
+                  {formatPriceSEK(featured.price.toString())}
+                </span>
+                <AddToCartButton
+                  product={{
+                    id: featured.id,
+                    slug: featured.slug,
+                    name: featured.name,
+                    imageUrl: featured.imageUrl,
+                    price: featured.price.toString(),
+                  }}
+                  size="sm"
+                  label="Lägg i varukorg"
+                  className="min-w-0 px-3.5 h-9 text-xs"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
