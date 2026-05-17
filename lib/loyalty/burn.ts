@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
-import { postTransaction } from "./ledger";
 import {
   MIN_REDEMPTION_POINTS,
   pointsToOre,
@@ -94,29 +93,74 @@ export async function redeemPointsForOrder(input: {
   points: number;
   tx?: Prisma.TransactionClient;
 }): Promise<number> {
-  const client = input.tx ?? prisma;
   if (input.points <= 0) return 0;
 
-  const existing = await client.loyaltyTransaction.findFirst({
-    where: { orderId: input.orderId, kind: "BURN_REDEMPTION" },
-    select: { id: true, points: true },
-  });
-  if (existing) return Math.abs(existing.points);
+  // The idempotency check, the balance guard and the ledger row must
+  // all see (and commit) the same atomic snapshot. When a caller
+  // already supplies a transaction we join it; otherwise we open our
+  // own so the guarded decrement + ledger row can't tear apart.
+  const run = async (c: Prisma.TransactionClient): Promise<number> => {
+    const existing = await c.loyaltyTransaction.findFirst({
+      where: { orderId: input.orderId, kind: "BURN_REDEMPTION" },
+      select: { id: true, points: true },
+    });
+    if (existing) return Math.abs(existing.points);
 
-  const account = await client.loyaltyAccount.findUnique({
-    where: { userId: input.userId },
-    select: { id: true },
-  });
-  if (!account) return 0;
+    const account = await c.loyaltyAccount.findUnique({
+      where: { userId: input.userId },
+      select: { id: true, balance: true },
+    });
+    if (!account) return 0;
 
-  await postTransaction({
-    accountId: account.id,
-    userId: input.userId,
-    kind: "BURN_REDEMPTION",
-    points: -input.points,
-    orderId: input.orderId,
-    description: "Använda poäng vid kassan",
-    tx: input.tx,
-  });
-  return input.points;
+    // Atomic, balance-guarded debit. A stale points snapshot can ride
+    // in Kustom `merchant_data` from a second checkout session opened
+    // on the same balance; both sessions can later be paid. Without
+    // this guard the second confirmation would burn the same points
+    // again — driving the account negative and granting a discount the
+    // customer didn't have the points for. The conditional updateMany
+    // only decrements when the LIVE balance still covers the burn, so
+    // concurrent confirmations serialize at the DB and the balance can
+    // never go below zero.
+    const guarded = await c.loyaltyAccount.updateMany({
+      where: { id: account.id, balance: { gte: input.points } },
+      data: {
+        balance: { decrement: input.points },
+        lastActivityAt: new Date(),
+      },
+    });
+    if (guarded.count === 0) {
+      // Live balance no longer covers this redemption — almost
+      // certainly a double-spend from two checkout sessions sharing one
+      // snapshot. Never burn into the negative; flag for manual
+      // reconciliation (the customer already paid the discounted total
+      // at Kustom).
+      console.error(
+        `[loyalty] CRITICAL: order ${input.orderId} (user ${input.userId}) ` +
+          `claims a ${input.points}p redemption but live balance is only ` +
+          `${account.balance}p — burn refused to keep the balance ` +
+          `non-negative. Manual reconciliation required: the customer paid ` +
+          `the discounted total at Kustom but the points were not deducted.`
+      );
+      return 0;
+    }
+
+    // Ledger row mirrors the guarded decrement we just applied so the
+    // SUM(transactions.points) === account.balance invariant holds. We
+    // intentionally bypass postTransaction here because it does an
+    // *unconditional* increment — the conditional guard above is the
+    // whole point, and it has already mutated the account.
+    await c.loyaltyTransaction.create({
+      data: {
+        accountId: account.id,
+        userId: input.userId,
+        kind: "BURN_REDEMPTION",
+        points: -input.points,
+        orderId: input.orderId,
+        description: "Använda poäng vid kassan",
+      },
+    });
+    return input.points;
+  };
+
+  return input.tx ? run(input.tx) : prisma.$transaction(run);
 }

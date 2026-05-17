@@ -778,7 +778,7 @@ export async function ensureOrderFromKustomOrder(
           phone: addr.phone ?? null,
         },
       });
-      await tx.order.create({
+      const createdOrder = await tx.order.create({
         data: {
           orderNumber,
           userId: linkedUserId,
@@ -827,6 +827,22 @@ export async function ensureOrderFromKustomOrder(
           label: r.productName,
         }))
       );
+      // Burn redeemed points INSIDE the order transaction so the
+      // discount, the order row and the points debit commit (or roll
+      // back) atomically. redeemPointsForOrder is idempotent per order
+      // (safe for the dual-path page+webhook) and balance-guarded —
+      // two checkout sessions sharing one stale balance snapshot can't
+      // both burn (the second one's guarded decrement no-ops and logs
+      // for reconciliation rather than driving the account negative).
+      if (redeemedPoints > 0 && redeemUserId) {
+        const { redeemPointsForOrder } = await import("@/lib/loyalty/burn");
+        await redeemPointsForOrder({
+          orderId: createdOrder.id,
+          userId: redeemUserId,
+          points: redeemedPoints,
+          tx,
+        });
+      }
     });
   } catch (err) {
     // Unique constraint on paymentReference → a concurrent call (webhook
@@ -857,21 +873,13 @@ export async function ensureOrderFromKustomOrder(
       select: { id: true },
     });
     if (created) {
-      // Burn redeemed points first (idempotent per orderId — safe for
-      // the dual-path page+webhook), then award earn points.
-      if (redeemedPoints > 0 && redeemUserId) {
-        const { redeemPointsForOrder } = await import("@/lib/loyalty/burn");
-        await redeemPointsForOrder({
-          orderId: created.id,
-          userId: redeemUserId,
-          points: redeemedPoints,
-        });
-      }
+      // Points burn now happens inside the order transaction (above).
+      // Earn is safe post-commit and idempotent per order.
       const { awardOrderPoints } = await import("@/lib/loyalty/earn");
       await awardOrderPoints(created.id);
     }
   } catch (err) {
-    console.error("[kustom-confirm] loyalty burn/award failed", err);
+    console.error("[kustom-confirm] loyalty award failed", err);
   }
 
   // Order confirmation email. Only on the freshly-created path (the

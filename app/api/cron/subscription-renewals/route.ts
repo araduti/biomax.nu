@@ -23,11 +23,6 @@ import { sendTransactional } from "@/lib/email/client";
 import { orderConfirmationEmail } from "@/lib/email/templates";
 import { cronAuthorized } from "@/lib/api/cron-auth";
 import { shippingForSubtotal, CURRENT_VAT_BP } from "@/lib/klarna/cart-to-order";
-import {
-  reserveStock,
-  InsufficientStockError,
-  type StockReservation,
-} from "@/lib/checkout/stock";
 
 /** Thrown inside the renewal txn when a concurrent cron run already
  *  advanced this subscription. Caught + skipped (not an error). */
@@ -189,6 +184,13 @@ export async function GET(req: Request) {
         if (claim.count === 0) {
           throw new AlreadyRenewedError();
         }
+        // NB: a renewal order is created PENDING and unpaid — the
+        // customer pays via the standard checkout next visit. Stock is
+        // therefore NOT reserved here: an unpaid or later-cancelled
+        // renewal has no restock path, so reserving at creation time
+        // would permanently leak inventory. Stock is reserved when the
+        // order is actually paid (ensureOrderFromKustomOrder, at PAID),
+        // exactly like an ad-hoc checkout.
         await tx.order.create({
           data: {
             orderNumber,
@@ -221,18 +223,6 @@ export async function GET(req: Request) {
             },
           },
         });
-        // Reserve stock atomically — a subscription renewal is real
-        // demand and must not oversell against ad-hoc checkouts.
-        await reserveStock(
-          tx,
-          resolved.map<StockReservation>((r) => ({
-            kind: r.decrementVariant && r.variantId ? "variant" : "product",
-            id: r.decrementVariant && r.variantId ? r.variantId : r.productId,
-            quantity: r.quantity,
-            manageStock: r.manageStock,
-            label: r.name,
-          }))
-        );
       });
       renewed++;
 
@@ -285,15 +275,6 @@ export async function GET(req: Request) {
       if (err instanceof AlreadyRenewedError) {
         // Concurrent/retried run already handled this subscription.
         // Not an error — skip silently.
-        continue;
-      }
-      if (err instanceof InsufficientStockError) {
-        // Renewal rolled back (nextOrderAt NOT advanced) — it will be
-        // retried next run once stock is replenished.
-        console.error(
-          `[subscription-renewals] out of stock for ${sub.id}: ${err.message} — will retry next run`
-        );
-        errors.push({ subscriptionId: sub.id, error: err.message });
         continue;
       }
       console.error(`[subscription-renewals] renewal failed for ${sub.id}:`, err);
