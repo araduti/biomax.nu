@@ -31,7 +31,7 @@ export const seasons: Record<Season, SeasonMeta> = {
     // nostalgia note. If this URL 404s, swap to another Unsplash photo
     // of Prunus padus / spring white blossom — the brand pillar is the
     // motif, not any one image.
-    photoUrl: "https://images.unsplash.com/photo-1588280991779-bf36c2af6727",
+    photoUrl: "https://images.unsplash.com/photo-1588280991779-bf36c2af6727?w=3840&q=92&fit=crop&crop=entropy&fm=jpg",
     photoAlt: "Häggens vita blomklasar mot djupgrön vårskog",
   },
   sommar: {
@@ -40,7 +40,7 @@ export const seasons: Record<Season, SeasonMeta> = {
     motif: "Långa ljusa kvällar",
     caption: "Vid vattnet i juli",
     accent: "#D4A574",
-    photoUrl: "https://images.unsplash.com/photo-1660063846374-8f98fd32cbc3",
+    photoUrl: "https://images.unsplash.com/photo-1660063846374-8f98fd32cbc3?w=3840&q=92&fit=crop&crop=entropy&fm=jpg",
     photoAlt: "Sommarstämning vid vattnet i nordisk natur",
   },
   host: {
@@ -49,7 +49,7 @@ export const seasons: Record<Season, SeasonMeta> = {
     motif: "Höstens glöd",
     caption: "Lönn och berberis i oktober",
     accent: "#B5523B",
-    photoUrl: "https://images.unsplash.com/photo-1665513849007-0974b3ccec81",
+    photoUrl: "https://images.unsplash.com/photo-1665513849007-0974b3ccec81?w=3840&q=92&fit=crop&crop=entropy&fm=jpg",
     photoAlt: "Person promenerar i höstskog med gyllene löv",
   },
   vinter: {
@@ -58,7 +58,7 @@ export const seasons: Record<Season, SeasonMeta> = {
     motif: "Hand i hand i snön",
     caption: "Snöbarrskog i januari",
     accent: "#7B97A3",
-    photoUrl: "https://images.unsplash.com/photo-1764773964890-c00c7082b90d",
+    photoUrl: "https://images.unsplash.com/photo-1764773964890-c00c7082b90d?w=3840&q=92&fit=crop&crop=entropy&fm=jpg",
     photoAlt: "Par går hand i hand genom snötäckt barrskog",
   },
 };

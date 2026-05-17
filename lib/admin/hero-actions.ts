@@ -18,7 +18,7 @@ import {
  * Hero photography editor actions.
  *
  * Two responsibilities:
- *   1. Upload + normalize a hero photo. Wide-aspect (16:9 at 1920×1080)
+ *   1. Upload + normalize a hero photo. Wide-aspect (16:9 at 3840×2160)
  *      progressive JPEG so it loads fast as the LCP image.
  *   2. CRUD for `HomepageHero` rows — create, update, set status, delete.
  *
@@ -30,8 +30,13 @@ const HERO_DIR = "public/uploads/hero";
 const HERO_URL_PREFIX = "/uploads/hero/";
 const MAX_BYTES = 12 * 1024 * 1024; // 12 MB
 const ALLOWED_MIME = ["image/jpeg", "image/png", "image/webp"];
-const TARGET_WIDTH = 1920;
-const TARGET_HEIGHT = 1080;
+// Full-bleed hero is rendered at `sizes="100vw"`; on wide high-DPR
+// displays the browser needs a candidate near its device-pixel width.
+// Store a 4K master so Next can generate sharp per-device AVIF
+// variants instead of upscaling a 1920 source. The big master only
+// costs disk — delivered bytes are still the per-device AVIF Next picks.
+const TARGET_WIDTH = 3840;
+const TARGET_HEIGHT = 2160;
 const REMOTE_FETCH_TIMEOUT_MS = 15_000;
 
 export type HeroPhotoUploadResult =
@@ -79,8 +84,9 @@ export async function uploadHeroPhoto(
       .resize(TARGET_WIDTH, TARGET_HEIGHT, {
         fit: "cover",
         position: "centre",
+        withoutEnlargement: true,
       })
-      .jpeg({ quality: 86, progressive: true, mozjpeg: true })
+      .jpeg({ quality: 90, progressive: true, mozjpeg: true })
       .toBuffer();
   } catch (err) {
     console.error("[admin hero] image processing failed:", err);
@@ -112,7 +118,7 @@ export async function uploadHeroPhoto(
  * pillar hero our own asset forever. The editor can paste any Unsplash
  * link as a *preview*; the moment they save, it becomes a local file.
  *
- * The pipeline matches `uploadHeroPhoto` (1920×1080 progressive JPEG)
+ * The pipeline matches `uploadHeroPhoto` (3840×2160 progressive JPEG)
  * so a mirrored Unsplash photo and an uploaded laptop file render
  * identically.
  *
@@ -164,8 +170,8 @@ async function mirrorRemotePhoto(url: string): Promise<string | null> {
   let processed: Buffer;
   try {
     processed = await sharp(buf)
-      .resize(TARGET_WIDTH, TARGET_HEIGHT, { fit: "cover", position: "centre" })
-      .jpeg({ quality: 86, progressive: true, mozjpeg: true })
+      .resize(TARGET_WIDTH, TARGET_HEIGHT, { fit: "cover", position: "centre", withoutEnlargement: true })
+      .jpeg({ quality: 90, progressive: true, mozjpeg: true })
       .toBuffer();
   } catch (err) {
     console.warn("[admin hero] mirror sharp failed:", err);

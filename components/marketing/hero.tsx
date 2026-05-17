@@ -28,7 +28,7 @@ export function Hero({ season, meta, featured }: Props) {
           alt={s.photoAlt}
           fill
           sizes="100vw"
-          quality={85}
+          quality={90}
           priority
           className="object-cover"
         />

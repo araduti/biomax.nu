@@ -99,9 +99,18 @@ const nextConfig: NextConfig = {
         hostname: "images.unsplash.com",
       },
     ],
+    // AVIF first: for photographic hero/product imagery it delivers
+    // noticeably cleaner gradients and foliage than WebP at equal or
+    // smaller byte size. WebP kept as fallback for older clients.
+    formats: ["image/avif", "image/webp"],
+    // Adds a 2560 step and keeps the 3840 ceiling so wide high-DPR
+    // displays get a candidate close to their device-pixel width
+    // instead of upscaling a 1920 source.
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 2560, 3840],
     // 82 is the LCP-tuned setting for product hero images — see
     // components/product/product-hero.tsx for the trade-off rationale.
     qualities: [75, 82, 85, 90],
+    minimumCacheTTL: 31536000,
   },
   experimental: {
     serverActions: {
