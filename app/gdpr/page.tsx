@@ -15,7 +15,8 @@ export default function GdprPage() {
       title="Dina GDPR-rättigheter"
       eyebrow="Praktiskt"
       intro="Konkreta steg för att utöva varje rättighet du har enligt EU:s dataskyddsförordning."
-      lastUpdated="2026-05-10"
+      lastUpdated="2026-05-17"
+      reviewedByLegal
     >
       <p>
         Vår fullständiga{" "}
@@ -60,8 +61,10 @@ export default function GdprPage() {
         Skicka ett mejl till{" "}
         <a href="mailto:kontakt@biomax.nu">kontakt@biomax.nu</a> från den
         e-postadress som är registrerad hos oss. Skriv vilken rättighet du vill
-        utöva. Vi svarar inom en månad — i praktiken oftast inom någon
-        arbetsdag.
+        utöva. Vi svarar utan onödigt dröjsmål och senast inom en månad. Är
+        ärendet komplext eller om vi tagit emot många begäranden kan tiden
+        förlängas med ytterligare två månader; vi informerar dig i så fall
+        inom en månad om förlängningen och skälen till den (GDPR art. 12.3).
       </p>
       <p>
         Vid radering kommer vi att ta bort all data som inte måste sparas av

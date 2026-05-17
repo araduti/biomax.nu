@@ -15,7 +15,8 @@ export default function IntegritetPage() {
       title="Integritetspolicy"
       eyebrow="GDPR"
       intro="Hur vi samlar in, använder och skyddar dina personuppgifter — och hur du utövar dina rättigheter."
-      lastUpdated="2026-05-10"
+      lastUpdated="2026-05-17"
+      reviewedByLegal
     >
       <h2>Personuppgiftsansvarig</h2>
       <p>
@@ -106,23 +107,42 @@ export default function IntegritetPage() {
       </p>
       <ul>
         <li>
-          <strong>Klarna</strong> (betalningar) — egen personuppgiftsansvarig.
+          <strong>Klarna/Kustom</strong> (betal- och kassalösning) — egen
+          personuppgiftsansvarig för betalningen.
         </li>
         <li>
-          <strong>PostNord</strong> eller motsvarande fraktbolag — för leverans.
+          <strong>PostNord</strong> eller motsvarande fraktbolag — för leverans
+          och spårning.
         </li>
         <li>
-          <strong>Brevo</strong> — för transaktionell e-post och eventuellt
+          <strong>Brevo</strong> — transaktionell e-post och eventuellt
           nyhetsbrev. Datacenter inom EU.
         </li>
         <li>
-          <strong>Vår webhotells- och databasleverantör</strong> — drift av
-          biomax.nu, EU-baserad.
+          <strong>Plausible</strong> — webbanalys utan kakor och utan att
+          bygga någon personlig profil. EU-baserad.
+        </li>
+        <li>
+          <strong>Sentry</strong> — felövervakning, endast om det är aktiverat
+          för driften. Används för att upptäcka och rätta tekniska fel.
+        </li>
+        <li>
+          <strong>Vår hostingleverantör</strong> (Ampliosoft) — drift av
+          biomax.nu och databasen, på servrar inom EU/Sverige.
         </li>
       </ul>
       <p>
-        Vi säljer aldrig uppgifter till tredje part. Inga uppgifter överförs
-        till länder utanför EU/EES utan adekvat skyddsnivå.
+        Vi säljer aldrig uppgifter till tredje part. Skulle en leverantör
+        behöva behandla uppgifter utanför EU/EES sker det endast med en giltig
+        skyddsmekanism, t.ex. EU-kommissionens standardavtalsklausuler (SCC).
+      </p>
+
+      <h2>Automatiserat beslutsfattande</h2>
+      <p>
+        Vi använder inte automatiserat beslutsfattande eller profilering som
+        har rättsliga följder för dig eller på liknande sätt påverkar dig
+        i betydande grad. Vårt lojalitetsprogram (Familjen Biomax) räknar
+        endast poäng utifrån dina köp och fattar inga sådana beslut.
       </p>
 
       <h2>Dina rättigheter</h2>
