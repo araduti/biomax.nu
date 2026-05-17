@@ -15,7 +15,8 @@ export default function VillkorPage() {
       title="Köp- & leveransvillkor"
       eyebrow="Konsumentavtal"
       intro="Villkoren för köp på biomax.nu, formulerade enligt distansavtalslagen och konsumentköplagen."
-      lastUpdated="2026-05-10"
+      lastUpdated="2026-05-17"
+      reviewedByLegal
     >
       <h2>Säljaren</h2>
       <p>
@@ -83,9 +84,10 @@ export default function VillkorPage() {
         ut. Du kan antingen mejla{" "}
         <a href="mailto:kontakt@biomax.nu">kontakt@biomax.nu</a> formfritt,
         eller använda <Link href="/anger-formular">Konsumentverkets
-        standardformulär</Link>. Returnera sedan varan i obrutet
-        originalskick inom 14 dagar från ditt ångermeddelande. Returfrakten
-        betalar du själv om inget annat avtalats.
+        standardformulär</Link>. Vi bekräftar att vi mottagit ditt
+        ångermeddelande. Returnera sedan varan i obrutet originalskick inom
+        14 dagar från ditt ångermeddelande. Returfrakten betalar du själv om
+        inget annat avtalats.
       </p>
       <p>
         Brutna eller använda förpackningar omfattas inte av ångerrätten av
@@ -102,17 +104,25 @@ export default function VillkorPage() {
       <h2>Återbetalning</h2>
       <p>
         Vid godkänd retur återbetalas hela orderbeloppet (inklusive ursprunglig
-        standardfrakt) inom 14 dagar från det att vi mottagit varan. Vi använder
-        samma betalmetod som vid köpet om inget annat avtalats.
+        standardfrakt) inom 14 dagar. Fristen räknas från den dag vi tagit emot
+        varan eller från den dag du visat att den skickats tillbaka — det som
+        inträffar först. Vi använder samma betalmetod som vid köpet om inget
+        annat avtalats.
       </p>
 
       <h2>Reklamation och garantier</h2>
       <p>
-        Enligt konsumentköplagen har du rätt att reklamera fel i upp till
-        <strong> tre år och två månader</strong> från det att du tagit emot
-        varan. Reklamation ska göras inom <strong>skälig tid</strong> efter
-        det att du upptäckt eller borde ha upptäckt felet — i normalfall
-        anses två månader som skälig tid.
+        Enligt konsumentköplagen (2022:260) har du rätt att reklamera
+        ursprungliga fel i upp till <strong>tre år</strong> från det att du
+        tagit emot varan. Reklamationen ska göras inom <strong>skälig tid</strong>{" "}
+        efter att du upptäckt eller borde ha upptäckt felet; en reklamation som
+        görs inom två månader anses alltid ha lämnats i tid.
+      </p>
+      <p>
+        Visar sig ett fel inom <strong>två år</strong> från leveransen antas
+        felet ha funnits redan vid leveransen, om vi inte kan visa något annat
+        eller det är oförenligt med varans art (för kosttillskott t.ex. en
+        passerad bäst-före-dag vid normal förvaring).
       </p>
       <p>
         Vid godkänd reklamation har du rätt att i första hand få varan lagad
@@ -130,8 +140,8 @@ export default function VillkorPage() {
 
       <h2>Tvister</h2>
       <p>
-        Vid tvist försöker vi alltid komma överens. Lyckas det inte kan du vända
-        dig till{" "}
+        Vid tvist försöker vi alltid komma överens först. Lyckas det inte kan
+        du kostnadsfritt vända dig till{" "}
         <a
           href="https://www.arn.se"
           target="_blank"
@@ -139,16 +149,10 @@ export default function VillkorPage() {
         >
           Allmänna reklamationsnämnden (ARN)
         </a>{" "}
-        eller använda EU:s plattform för tvistlösning på{" "}
-        <a
-          href="https://ec.europa.eu/consumers/odr"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          ec.europa.eu/consumers/odr
-        </a>
-        . Tvister avgörs i sista hand av svensk allmän domstol med tillämpning
-        av svensk rätt.
+        (Box 174, 101 23 Stockholm). Vi följer ARN:s rekommendationer. Bor du
+        i ett annat EU/EES-land kan du vända dig till motsvarande organ för
+        alternativ tvistlösning i ditt hemland. Tvister avgörs i sista hand av
+        svensk allmän domstol med tillämpning av svensk rätt.
       </p>
 
       <h2>Personuppgifter</h2>

@@ -15,7 +15,7 @@ export default function FraktOchReturPage() {
       title="Frakt, retur och återbetalning"
       eyebrow="Praktisk info"
       intro="Hur leveransen fungerar, vad det kostar, och hur du gör om du vill returnera eller få pengarna tillbaka."
-      lastUpdated="2026-05-10"
+      lastUpdated="2026-05-17"
       reviewedByLegal
     >
       <h2>Fraktkostnad</h2>
@@ -56,9 +56,12 @@ export default function FraktOchReturPage() {
 
       <h2>Om paketet inte kommer fram</h2>
       <p>
-        Om paketet inte hämtats ut inom 14 dagar returneras det till oss. Då
-        debiteras en avgift på 199 kr för returfrakt och hantering. För att
-        undvika detta — håll utkik efter avi från PostNord och hämta i tid.
+        Om paketet inte hämtas ut inom 14 dagar returneras det till oss av
+        PostNord. För ett outhämtat paket debiterar vi vår faktiska kostnad
+        för returfrakten (PostNords avgift för returen). Detta gäller inte
+        om du i stället utnyttjar din ångerrätt — vill du ångra köpet,
+        meddela oss enligt avsnittet nedan i stället för att låta paketet gå
+        i retur. Håll utkik efter avi från PostNord och hämta i tid.
       </p>
 
       <h2 id="retur">Ångerrätt, retur och återbetalning</h2>
@@ -85,11 +88,13 @@ export default function FraktOchReturPage() {
 
       <h3 id="aterbetalning">Återbetalning</h3>
       <p>
-        När vi mottagit din retur i godtagbart skick återbetalar vi inom{" "}
-        <strong>14 dagar</strong> till samma betalmetod som du använde vid köpet.
-        Vid Klarna-betalning ser du återbetalningen i Klarnas app eller på
-        ditt kontoutdrag. Eventuell returfrakt återbetalas inte (såvida inte
-        produkten var defekt eller felaktigt levererad).
+        Vi återbetalar inom <strong>14 dagar</strong>, räknat från den dag vi
+        tagit emot returen eller den dag du visat att varan skickats tillbaka
+        — det som inträffar först. Återbetalningen sker till samma betalmetod
+        som du använde vid köpet. Vid Klarna-betalning ser du återbetalningen
+        i Klarnas app eller på ditt kontoutdrag. Eventuell returfrakt
+        återbetalas inte (såvida inte produkten var defekt eller felaktigt
+        levererad).
       </p>
 
       <h2>Reklamation</h2>
