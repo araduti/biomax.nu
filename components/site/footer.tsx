@@ -68,7 +68,7 @@ export function Footer() {
           </div>
           {COLS.map((c) => (
             <div key={c.title}>
-              <p className="font-sans text-[11px] uppercase tracking-[0.22em] text-accent font-semibold mb-4">
+              <p className="font-sans text-[11px] uppercase tracking-[0.22em] text-accent-on-dark font-semibold mb-4">
                 {c.title}
               </p>
               <ul className="flex flex-col gap-2.5">

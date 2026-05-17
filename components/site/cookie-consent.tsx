@@ -130,7 +130,7 @@ export function CookieConsent() {
             <button
               type="button"
               onClick={() => setShowDetail(true)}
-              className="font-sans text-[12.5px] text-ink-soft underline decoration-accent/30 underline-offset-[3px] hover:text-primary-deep"
+              className="font-sans text-[12.5px] text-ink-mute underline decoration-accent/30 underline-offset-[3px] hover:text-primary-deep"
             >
               Anpassa
             </button>
@@ -213,7 +213,7 @@ export function CookieConsent() {
             <button
               type="button"
               onClick={() => setShowDetail(false)}
-              className="font-sans text-[12.5px] text-ink-soft underline decoration-accent/30 underline-offset-[3px] hover:text-primary-deep"
+              className="font-sans text-[12.5px] text-ink-mute underline decoration-accent/30 underline-offset-[3px] hover:text-primary-deep"
             >
               Tillbaka
             </button>
