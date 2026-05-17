@@ -5,7 +5,7 @@ import { VariantSelector } from "@/components/product/variant-selector";
 import { Display, Eyebrow } from "@/components/ui/typography";
 import { ButtonLink } from "@/components/ui/button";
 import { BuyOptionsPanel } from "@/components/product/buy-options-panel";
-import { stripHtml } from "@/lib/sanitize";
+import { sanitizeRichText } from "@/lib/sanitize";
 import { formatPriceSEK } from "@/lib/format";
 import { StarRating } from "@/components/reviews/star-rating";
 import { NotifyMeButton } from "@/components/product/notify-me-button";
@@ -55,7 +55,7 @@ export async function ProductHero({
   const onSale =
     product.compareAtPrice &&
     product.compareAtPrice.toString() !== product.price.toString();
-  const summary = stripHtml(product.shortDescription, 240);
+  const summary = sanitizeRichText(product.shortDescription);
 
   return (
     <section className="bg-surface-warm py-12 md:py-20 px-6 md:px-8">
@@ -118,9 +118,10 @@ export async function ProductHero({
           )}
 
           {summary && (
-            <p className="mt-5 font-sans text-base md:text-lg leading-relaxed text-ink-mute max-w-[560px]">
-              {summary}
-            </p>
+            <div
+              className="prose-biomax mt-5 font-sans text-base md:text-lg leading-relaxed text-ink-mute max-w-[560px]"
+              dangerouslySetInnerHTML={{ __html: summary }}
+            />
           )}
 
           {resolved.hasVariants ? (
