@@ -70,7 +70,11 @@ secrets/
 
 # ── Editor / tooling local state ─────────────────────────────────────
 # Claude Code's per-machine session + settings (e.g. settings.local.json)
-.claude/
+# stay out of the repo, but shared team subagents under .claude/agents/
+# (and project commands) ARE committed so the whole team gets them.
+.claude/*
+!.claude/agents/
+!.claude/commands/
 
 # ── User-uploaded runtime assets ─────────────────────────────────────
 # Hero photos editors upload from /admin/startsida/hero land here.
