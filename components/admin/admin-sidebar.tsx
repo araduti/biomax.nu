@@ -27,6 +27,7 @@ import {
   ListIcon,
   DatabaseBackup,
   Printer,
+  ShieldCheck,
   ChevronDown,
   type LucideProps,
 } from "lucide-react";
@@ -95,6 +96,7 @@ const NAV: NavGroup[] = [
   {
     label: "System",
     items: [
+      { href: "/admin/team", label: "Team & behörighet", matchPrefix: true, icon: ShieldCheck },
       { href: "/admin/installningar", label: "Inställningar", matchPrefix: true, icon: Settings },
       { href: "/admin/system/prestanda", label: "Prestanda", matchPrefix: true, icon: Gauge },
       { href: "/admin/system/drifttid", label: "Drifttid", matchPrefix: true, icon: Activity },

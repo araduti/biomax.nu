@@ -17,7 +17,12 @@ export type AdminUser = {
  * Behavior:
  *  - Not logged in → redirect to /logga-in
  *  - Logged in but not admin → 404 (hide existence of /admin)
- *  - Logged in admin → return fresh DB row with role
+ *  - Logged in admin WITHOUT 2FA → redirect to /konto/sakerhet to
+ *    enrol. The admin surface (orders, customers, PII, refunds) is
+ *    mandatory-2FA: a stolen admin password alone must not grant it.
+ *    The setup page is login-gated only (not admin-gated) so this can't
+ *    loop.
+ *  - Logged in admin WITH 2FA → return fresh DB row with role.
  *
  * We re-query the DB rather than trust the session-cached role to avoid
  * stale-role-elevation issues (admin demoted but session still valid).
@@ -35,10 +40,19 @@ export const requireAdmin = cache(async (): Promise<AdminUser> => {
       name: true,
       firstName: true,
       role: true,
+      twoFactorEnabled: true,
     },
   });
 
   if (!dbUser || dbUser.role !== "admin") notFound();
+
+  // Mandatory 2FA for the admin surface. Bounce to the security page
+  // (which prompts TOTP enrolment) until it's on. requireAdmin also
+  // runs inside admin server actions, so this closes the mutation path
+  // too — an admin without 2FA can neither view nor act.
+  if (!dbUser.twoFactorEnabled) {
+    redirect("/konto/sakerhet?krav=admin-2fa");
+  }
 
   return {
     id: dbUser.id,
