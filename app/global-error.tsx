@@ -77,6 +77,10 @@ export default function GlobalError({
               Referenskod: <code>{error.digest}</code>
             </p>
           )}
+          {/* global-error renders its own <html>; the App Router /
+              next/link context isn't available here, so a plain anchor
+              that does a full reload is the correct recovery path. */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a
             href="/"
             style={{

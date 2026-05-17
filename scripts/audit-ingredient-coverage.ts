@@ -35,7 +35,7 @@ async function main() {
   let totalRows = 0;
   let totalResolved = 0;
   let productsWithStructuredList = 0;
-  let productsWithoutStructuredList: string[] = [];
+  const productsWithoutStructuredList: string[] = [];
 
   for (const p of products) {
     const list: IngredientList | null = parseIngredientList(p.ingredientList);

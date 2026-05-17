@@ -31,14 +31,10 @@ jobs:
       - run: npx prisma generate
       - name: Typecheck
         run: npx tsc --noEmit
+      - name: Lint
+        run: npm run lint
       - name: Unit tests
         run: npm test
-      # Lint is reported but non-blocking: there is pre-existing lint
-      # debt (tracked separately). Surfacing drift without a red gate
-      # keeps the merge-blocking signal limited to types + tests.
-      - name: Lint (non-blocking)
-        run: npm run lint
-        continue-on-error: true
 
   integration:
     name: integration (postgres)
