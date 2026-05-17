@@ -94,7 +94,7 @@ export function BuyOptionsPanel({
           role="radio"
           aria-checked={mode === "once"}
           onClick={() => setMode("once")}
-          className={`px-4 py-1.5 rounded-full font-sans text-[13px] font-semibold transition-colors ${
+          className={`px-4 py-1.5 rounded-full font-sans text-[13px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
             mode === "once"
               ? "bg-surface text-primary-deep shadow-sm"
               : "text-ink-mute hover:text-ink-body"
@@ -107,7 +107,7 @@ export function BuyOptionsPanel({
           role="radio"
           aria-checked={mode === "subscribe"}
           onClick={() => setMode("subscribe")}
-          className={`px-4 py-1.5 rounded-full font-sans text-[13px] font-semibold transition-colors ${
+          className={`px-4 py-1.5 rounded-full font-sans text-[13px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
             mode === "subscribe"
               ? "bg-surface text-primary-deep shadow-sm"
               : "text-ink-mute hover:text-ink-body"
@@ -145,7 +145,7 @@ export function BuyOptionsPanel({
                     role="radio"
                     aria-checked={active}
                     onClick={() => setInterval(d)}
-                    className={`px-3.5 py-1.5 rounded-full border font-sans text-[12.5px] font-semibold transition-colors ${
+                    className={`px-3.5 py-1.5 rounded-full border font-sans text-[12.5px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
                       active
                         ? "bg-primary-deep text-surface border-primary-deep"
                         : "bg-surface text-ink-body border-border hover:border-border-soft hover:bg-surface-warm"

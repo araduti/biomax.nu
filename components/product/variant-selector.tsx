@@ -67,7 +67,7 @@ export function VariantSelector({
                 aria-checked={active}
                 onClick={() => setSelectedId(v.id)}
                 className={
-                  "px-4 py-2 rounded-full border font-sans text-[13.5px] font-semibold transition-colors " +
+                  "px-4 py-2 rounded-full border font-sans text-[13.5px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 " +
                   (active
                     ? "bg-primary-deep text-surface border-primary-deep"
                     : "bg-surface text-ink-body border-border hover:border-border-soft hover:bg-surface-warm") +

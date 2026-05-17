@@ -66,7 +66,7 @@ export function ProductTabs({ tabs }: { tabs: ProductTab[] }) {
               tabIndex={isActive ? 0 : -1}
               onClick={() => handleClick(t.id)}
               className={cn(
-                "font-display text-xl md:text-2xl font-medium tracking-tight pb-3 md:pb-4 -mb-px border-b-2 transition-colors",
+                "font-display text-xl md:text-2xl font-medium tracking-tight pb-3 md:pb-4 -mb-px border-b-2 transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
                 isActive
                   ? "text-primary-deep border-primary"
                   : "text-ink-mute border-transparent hover:text-ink-body"
