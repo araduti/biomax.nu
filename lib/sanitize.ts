@@ -49,6 +49,11 @@ export function stripHtml(html: string | null | undefined, maxLength?: number): 
   const stripped = html
     .replace(/<style[\s\S]*?<\/style>/gi, "")
     .replace(/<script[\s\S]*?<\/script>/gi, "")
+    // Block boundaries become a visible separator so list items and
+    // paragraphs don't run together when flattened (e.g. a bulleted
+    // shortDescription rendered as a card teaser or meta description).
+    .replace(/<\/(li|p|h[1-6]|tr|div)\s*>/gi, " · ")
+    .replace(/<br\s*\/?>/gi, " · ")
     .replace(/<[^>]+>/g, " ")
     .replace(/&nbsp;/gi, " ")
     .replace(/&amp;/gi, "&")
@@ -57,6 +62,11 @@ export function stripHtml(html: string | null | undefined, maxLength?: number): 
     .replace(/&quot;/gi, '"')
     .replace(/&#039;|&apos;/gi, "'")
     .replace(/\s+/g, " ")
+    // Tidy the separators: collapse repeats, drop any at the very
+    // start/end, and remove the space that precedes one.
+    .replace(/(?:\s*·\s*)+/g, " · ")
+    .replace(/^\s*·\s*/, "")
+    .replace(/\s*·\s*$/, "")
     .trim();
 
   if (!maxLength || stripped.length <= maxLength) return stripped;
