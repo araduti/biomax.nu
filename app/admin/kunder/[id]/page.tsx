@@ -4,6 +4,8 @@ import { OrderStatusBadge } from "@/components/admin/order-status-badge";
 import { formatPriceSEK } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { GdprActions } from "@/components/admin/gdpr-actions";
+import { CustomerRoleControl } from "@/components/admin/customer-role-control";
+import { requireAdmin } from "@/lib/admin/guard";
 import { CopyButton } from "@/components/admin/copy-button";
 import { AdminSummaryStrip } from "@/components/admin/admin-summary-strip";
 import { getAccountBalance } from "@/lib/loyalty/account";
@@ -24,6 +26,7 @@ export default async function AdminCustomerDetail({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const me = await requireAdmin();
   const user = await prisma.user.findUnique({
     where: { id },
     include: {
@@ -103,6 +106,13 @@ export default async function AdminCustomerDetail({
           },
           { label: "Skapad", value: dateFmt.format(user.createdAt) },
         ]}
+      />
+
+      <CustomerRoleControl
+        userId={user.id}
+        email={user.email}
+        isAdmin={user.role === "admin"}
+        isSelf={user.id === me.id}
       />
 
       {loyalty && (

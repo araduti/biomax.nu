@@ -172,3 +172,34 @@ export const ORDER_PLACEMENT_RULE: RateLimitRule = {
   limit: 10,
   windowMs: 60 * 60 * 1000,
 };
+
+// ── Auth brute-force / credential-stuffing protection ───────────────
+// Two independent buckets per sign-in attempt (both must pass):
+//   - per-IP: stops one host spraying many accounts.
+//   - per-email: stops a botnet (many IPs) hammering ONE known account
+//     — the realistic attack on a known admin address.
+// Enforced in lib/auth.ts via a Better Auth `before` hook on the
+// sign-in path. Fail-open (DB hiccup) is acceptable: this slows
+// humans/naive bots, it is not the only admin control (2FA is enforced
+// on the admin surface regardless).
+
+export const LOGIN_IP_RULE: RateLimitRule = {
+  scope: "auth-login-ip",
+  limit: 20,
+  windowMs: 5 * 60 * 1000, // 20 attempts / 5 min / IP
+};
+
+export const LOGIN_EMAIL_RULE: RateLimitRule = {
+  scope: "auth-login-email",
+  // Tight per-account: a legit user needs a handful of tries; 8 in 15
+  // min then a cool-down blunts targeted credential stuffing.
+  limit: 8,
+  windowMs: 15 * 60 * 1000,
+};
+
+export const TWO_FACTOR_IP_RULE: RateLimitRule = {
+  scope: "auth-2fa-ip",
+  // 6-digit TOTP / backup codes — throttle online guessing hard.
+  limit: 10,
+  windowMs: 5 * 60 * 1000,
+};

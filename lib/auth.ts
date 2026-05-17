@@ -1,10 +1,34 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { twoFactor } from "better-auth/plugins";
+import { createAuthMiddleware, APIError } from "better-auth/api";
 import { prisma } from "./prisma";
 import { sendTransactional } from "./email/client";
 import { passwordResetEmail } from "./email/templates";
 import { ensureAccount as ensureLoyaltyAccount } from "./loyalty/account";
+import {
+  enforceRateLimit,
+  LOGIN_IP_RULE,
+  LOGIN_EMAIL_RULE,
+  TWO_FACTOR_IP_RULE,
+} from "./security/rate-limit";
+
+/** Best-effort client IP from the Better Auth request headers. */
+function ipFromHeaders(h: Headers | undefined): string {
+  const xff = h?.get("x-forwarded-for");
+  if (xff) return xff.split(",")[0]!.trim().slice(0, 64);
+  const real = h?.get("x-real-ip");
+  if (real) return real.slice(0, 64);
+  return "dev-local";
+}
+
+const TOO_MANY = (retryAfterSeconds: number) =>
+  new APIError("TOO_MANY_REQUESTS", {
+    message:
+      "För många försök. Vänta en stund och försök igen.",
+    // surfaces as Retry-After on the 429
+    retryAfter: retryAfterSeconds,
+  });
 
 // `next build` evaluates this module while collecting page data for
 // /api/auth/[...all]. CI has no .env.local, so a hard throw at import
@@ -117,6 +141,40 @@ export const auth = betterAuth({
     cookiePrefix: "biomax",
   },
 
+  // Brute-force / credential-stuffing throttle on the auth paths
+  // (Better Auth's default limiter is a coarse per-path counter, not a
+  // per-account one). Two independent DB-backed buckets on sign-in —
+  // per-IP and per-email — plus a per-IP cap on 2FA code verification.
+  // Fail-open on a DB hiccup (the limiter itself logs); admin access is
+  // still 2FA-gated regardless (see lib/admin/guard.ts).
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      const path = ctx.path;
+
+      if (path === "/sign-in/email") {
+        const ip = ipFromHeaders(ctx.headers);
+        const email =
+          typeof ctx.body?.email === "string"
+            ? ctx.body.email.toLowerCase().slice(0, 128)
+            : "unknown";
+
+        const [byIp, byEmail] = await Promise.all([
+          enforceRateLimit(LOGIN_IP_RULE, ip),
+          enforceRateLimit(LOGIN_EMAIL_RULE, email),
+        ]);
+        if (!byIp.allowed) throw TOO_MANY(byIp.retryAfterSeconds);
+        if (!byEmail.allowed) throw TOO_MANY(byEmail.retryAfterSeconds);
+        return;
+      }
+
+      if (path.startsWith("/two-factor/")) {
+        const ip = ipFromHeaders(ctx.headers);
+        const r = await enforceRateLimit(TWO_FACTOR_IP_RULE, ip);
+        if (!r.allowed) throw TOO_MANY(r.retryAfterSeconds);
+      }
+    }),
+  },
+
   // Auto-enroll every new customer into Familjen Biomax with a welcome
   // bonus. Loyalty enrolment is the default, not an opt-in — customers
   // who never want to use points just ignore the balance. Better Auth
@@ -138,8 +196,9 @@ export const auth = betterAuth({
     },
   },
 
-  // 2FA (TOTP + backup codes). Customers can enable it from
-  // /konto/sakerhet; admins should consider it mandatory before launch.
+  // 2FA (TOTP + backup codes). Optional for customers (/konto/sakerhet);
+  // MANDATORY for admins — enforced in lib/admin/guard.ts (an admin
+  // without 2FA is bounced to enrol before any /admin access).
   // Sign-in flow: after password validates, if the user has 2FA enabled
   // we issue a short-lived "twoFactorRedirect" cookie and the UI prompts
   // for the code. Backup codes are one-shot.

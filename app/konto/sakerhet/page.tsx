@@ -10,13 +10,34 @@ export const metadata: Metadata = {
   alternates: { canonical: "/konto/sakerhet" },
 };
 
-export default async function SecurityPage() {
+export default async function SecurityPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ krav?: string }>;
+}) {
   const user = await currentUser();
   const twoFactorEnabled =
     (user as { twoFactorEnabled?: boolean } | null)?.twoFactorEnabled ?? false;
+  const adminGate =
+    (await searchParams).krav === "admin-2fa" && !twoFactorEnabled;
 
   return (
     <>
+      {adminGate && (
+        <div
+          role="alert"
+          className="mb-8 rounded-xl border border-status-warn/40 bg-status-warn/10 px-5 py-4"
+        >
+          <p className="font-sans text-sm font-semibold text-status-warn-text">
+            Tvåfaktorsinloggning krävs för adminpanelen
+          </p>
+          <p className="font-sans text-sm text-ink-mute mt-1 leading-relaxed">
+            Du har administratörsbehörighet. För att skydda beställningar
+            och kunduppgifter måste du aktivera tvåfaktorsinloggning nedan
+            innan du kommer åt <span className="whitespace-nowrap">/admin</span>.
+          </p>
+        </div>
+      )}
       <Eyebrow>Säkerhet</Eyebrow>
       <Display as="h1" size="xl" className="mt-3 mb-3">
         Lösenord
