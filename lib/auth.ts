@@ -6,9 +6,22 @@ import { sendTransactional } from "./email/client";
 import { passwordResetEmail } from "./email/templates";
 import { ensureAccount as ensureLoyaltyAccount } from "./loyalty/account";
 
-if (!process.env.BETTER_AUTH_SECRET) {
+// `next build` evaluates this module while collecting page data for
+// /api/auth/[...all]. CI has no .env.local, so a hard throw at import
+// time breaks the production build (and the Lighthouse workflow) even
+// though the secret is only ever *used* at request time. Fail closed
+// at runtime in production, but tolerate the build phase with a
+// deterministic placeholder so static collection can proceed.
+const isBuildPhase =
+  process.env.NEXT_PHASE === "phase-production-build";
+
+if (!process.env.BETTER_AUTH_SECRET && !isBuildPhase) {
   throw new Error("BETTER_AUTH_SECRET is not set. Check .env.local");
 }
+
+const betterAuthSecret =
+  process.env.BETTER_AUTH_SECRET ??
+  "build-phase-placeholder-not-used-at-runtime";
 
 /**
  * Server-side Better Auth instance.
@@ -30,7 +43,7 @@ const isDev = process.env.NODE_ENV !== "production";
 export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: "postgresql" }),
   baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3001",
-  secret: process.env.BETTER_AUTH_SECRET,
+  secret: betterAuthSecret,
 
   // Per Better Auth docs: trustedOrigins is a string[] with wildcard support
   // (`*`, `?` via wildcardMatch on the origin). In dev we list localhost + a

@@ -34,6 +34,11 @@ yarn-error.log*
 .env
 .env.local
 .env.*.local
+# Any env variant + ad-hoc backups (e.g. .env.local.cibak, .env.bak).
+# Belt-and-braces so a transient backup can never be committed.
+.env.*
+*.cibak
+!.env.example
 # .env.example is intentionally committed
 
 # WordPress migration exports — contain PII, large binary, never commit
