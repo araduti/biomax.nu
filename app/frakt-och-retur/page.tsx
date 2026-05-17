@@ -69,7 +69,7 @@ export default function FraktOchReturPage() {
         Du har <strong>30 dagars öppet köp</strong> på obrutna förpackningar
         (14 dagar lagstadgad ångerrätt + 14 dagars frivillig garanti från oss).
         Brutna eller använda förpackningar omfattas inte av ångerrätten av
-        livsmedels- och hygieniska skäl.
+        livsmedels- och hygienskäl.
       </p>
 
       <h3>Så här returnerar du</h3>

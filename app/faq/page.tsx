@@ -39,7 +39,7 @@ const FAQ_GROUPS: FaqGroup[] = [
       {
         question: "Kan jag ångra mitt köp?",
         answer:
-          "Ja. Vi följer distansavtalslagen och du har 14 dagars ångerrätt från det att du tagit emot varan, samt ytterligare 14 dagar utöver det enligt vår egna garanti — totalt 30 dagars öppet köp på obrutna förpackningar.",
+          "Ja. Vi följer distansavtalslagen och du har 14 dagars ångerrätt från det att du tagit emot varan, samt ytterligare 14 dagar enligt vår egen frivilliga garanti — totalt 30 dagars öppet köp på obrutna förpackningar.",
       },
     ],
   },
@@ -64,7 +64,7 @@ const FAQ_GROUPS: FaqGroup[] = [
       {
         question: "Är Biomax produkter testade?",
         answer:
-          "Våra råvaror kommer från etablerade europeiska leverantörer med kvalitetsdokumentation och analys per batch. Slutproducerade satser kontrolleras enligt gällande svensk och europeisk lagstiftning för kosttillskott.",
+          "Våra råvaror kommer från etablerade europeiska leverantörer med kvalitetsdokumentation och analys per tillverkningssats. Färdiga satser kontrolleras enligt gällande svensk och europeisk lagstiftning för kosttillskott.",
       },
       {
         question: "Var hittar jag fullständig innehållsförteckning?",
@@ -77,7 +77,7 @@ const FAQ_GROUPS: FaqGroup[] = [
           "Kosttillskott. Vi gör inga medicinska påståenden om våra produkter. Innehåll, doser och beskrivningar är formulerade enligt svensk och europeisk lagstiftning för kosttillskott.",
       },
       {
-        question: "Vad gör Biomax annorlunda än andra kosttillskottsmärken?",
+        question: "Vad skiljer Biomax från andra varumärken inom kosttillskott?",
         answer:
           "Vi är ett svenskt familjeföretag som drivit samma verksamhet i tjugofem år, från samma adress i Kållered. Vi tillverkar och lagerhåller själva, vi är öppna med både innehåll och forskningsläget bakom våra produkter, och vi importerar inte färdiga märken — vi formulerar.",
       },
@@ -94,7 +94,7 @@ const FAQ_GROUPS: FaqGroup[] = [
       {
         question: "Säljer ni mina uppgifter vidare?",
         answer:
-          "Nej. Vi säljer inga personuppgifter. Vi delar dem endast med de leverantörer vi behöver för att kunna leverera din beställning (PostNord, Klarna) eller skicka transaktionell e-post.",
+          "Nej. Vi säljer inga personuppgifter. Vi delar dem endast med de leverantörer vi behöver för att kunna leverera din beställning (PostNord, Klarna) eller för att skicka orderbekräftelser och liknande mejl.",
       },
       {
         question: "Hur kontaktar jag er?",
@@ -127,7 +127,7 @@ const FAQ_GROUPS: FaqGroup[] = [
     heading: "Innehåll & säkerhet",
     items: [
       {
-        question: "Är produkterna veganska / glutenfria / laktosfria?",
+        question: "Är produkterna veganska, glutenfria eller laktosfria?",
         answer:
           "Det varierar per produkt — vi har kapslar i veganska skal och kapslar med gelatin. Allergeninformation enligt EU 1169/2011 finns markerad i en gul ruta på varje produktsida. Läs alltid hela innehållsförteckningen om du har en känd intolerans eller allergi.",
       },

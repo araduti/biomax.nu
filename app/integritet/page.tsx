@@ -50,15 +50,17 @@ export default function IntegritetPage() {
       </ul>
       <h3>När du skapar konto</h3>
       <ul>
-        <li>E-postadress och hashat lösenord.</li>
+        <li>
+          E-postadress och ett lösenord som lagras i hashad, oläsbar form.
+        </li>
         <li>Sparade leveransadresser och orderhistorik.</li>
       </ul>
       <h3>När du besöker biomax.nu</h3>
       <ul>
         <li>
           Tekniska uppgifter (IP-adress, webbläsarversion, sidvisningar) för att
-          driva sajten och förbättra prestandan. Använder vi analysverktyg samlas
-          den datan in i anonymiserad eller pseudonymiserad form.
+          driva sajten och förbättra prestandan. Om vi använder analysverktyg
+          samlas de uppgifterna in i anonymiserad eller pseudonymiserad form.
         </li>
         <li>
           Kakor (cookies) som behövs för inloggning och varukorg. Se vår{" "}
@@ -96,8 +98,8 @@ export default function IntegritetPage() {
       <p>
         Orderuppgifter sparas i sju år enligt bokföringslagen. Konto- och
         kontaktuppgifter sparas så länge du har ett aktivt konto. Vid radering
-        av kontot anonymiseras uppgifterna förutom det som måste sparas av
-        legala skäl.
+        av kontot anonymiseras uppgifterna, utom sådant som måste sparas av
+        rättsliga skäl.
       </p>
 
       <h2>Vilka vi delar uppgifter med</h2>
