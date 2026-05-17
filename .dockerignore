@@ -1,0 +1,52 @@
+# Build context hygiene (Ampliosoft platform §A3).
+# Keep the image small and ensure NO secrets/local config are ever copied.
+
+# Secrets / local config — never in the image (runtime env comes from Compose)
+.env
+.env.*
+!.env.example
+*.cibak
+biomax-gsc-key.json
+*-key.json
+*credentials*.json
+secrets/
+.secrets/
+
+# Dependencies & build output (reinstalled/rebuilt inside the image)
+node_modules
+.next
+out
+build
+coverage
+.turbo
+
+# VCS & CI
+.git
+.github
+.gitignore
+.lighthouseci
+.lighthouserc.json
+
+# Tests & local tooling
+test
+tests
+**/*.test.ts
+**/*.test.tsx
+**/*.integration.test.ts
+vitest.config.ts
+vitest.integration.config.ts
+
+# Docs (README is force-kept so the image/runner can reference it)
+*.md
+!README.md
+
+# Local runtime assets / editor state
+public/uploads
+public/labels
+.claude
+.vscode
+.idea
+.DS_Store
+
+# WordPress import dumps (large, not needed at runtime)
+*.WordPress.*.xml
