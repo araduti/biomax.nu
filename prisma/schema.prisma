@@ -26,6 +26,13 @@ enum PaymentProvider {
   MANUAL
 }
 
+/// Account role. DB-level enum so a typo can't silently grant/deny
+/// admin — values match the existing string data (customer/admin).
+enum UserRole {
+  customer
+  admin
+}
+
 model User {
   id            String     @id @default(cuid())
   email         String     @unique
@@ -34,7 +41,7 @@ model User {
   firstName     String?
   lastName      String?
   image         String?
-  role          String     @default("customer")
+  role          UserRole   @default(customer)
   locale        String     @default("sv-SE")
   phone         String?
   legacyWpId    Int?       @unique
@@ -235,6 +242,13 @@ model Product {
   /// column instead of pulling longDescription + ingredientList JSON per row.
   /// Nullable so seeds/imports don't have to compute it up front.
   seoHealthLevel   SeoHealthLevel?
+
+  // Public listing/homepage filter by status then order by one of
+  // these; without a composite index every ISR revalidation seq-scans
+  // + sorts the Product table.
+  @@index([status, totalSales])
+  @@index([status, publishedAt])
+  @@index([status, updatedAt])
 }
 
 /// SEO health classification, matches `lib/admin/seo-health.ts`. Stored on
@@ -474,6 +488,9 @@ model Order {
   @@index([createdAt])
   @@index([subscriptionId])
   @@index([trackingNumber])
+  // Review-request cron filters status=FULFILLED AND
+  // reviewRequestSentAt IS NULL on every tick.
+  @@index([status, reviewRequestSentAt])
 }
 
 model OrderItem {
@@ -515,6 +532,8 @@ model OrderItem {
 
   @@index([orderId])
   @@index([productId])
+  // Replenishment cron filters replenishmentSentAt IS NULL each run.
+  @@index([replenishmentSentAt])
 }
 
 model Address {
