@@ -77,7 +77,7 @@ export async function TrustpilotBar() {
             </span>
             <span aria-hidden className="w-px h-4 bg-border" />
             <span className="text-sm font-semibold text-ink-body">
-              <span className="text-trustpilot">{ratingLabel(tp.rating)}</span>{" "}
+              <span className="text-trustpilot-text">{ratingLabel(tp.rating)}</span>{" "}
               på Trustpilot
             </span>
             {tp.reviewCount !== null && (
@@ -93,7 +93,7 @@ export async function TrustpilotBar() {
         ) : (
           <span className="text-sm font-semibold text-ink-body">
             Läs vad våra kunder säger på{" "}
-            <span className="text-trustpilot">Trustpilot</span>
+            <span className="text-trustpilot-text">Trustpilot</span>
             <span className="text-primary ml-1">→</span>
           </span>
         )}

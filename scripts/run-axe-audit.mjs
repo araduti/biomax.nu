@@ -20,17 +20,20 @@ import { AxePuppeteer } from "@axe-core/puppeteer";
 
 const BASE = process.argv[2] ?? "http://localhost:3000";
 
+// Only routes that resolve on a freshly-migrated, EMPTY database.
+// Dynamic [slug] detail pages (product, ingredient monograph, /kop,
+// symptom) need production WordPress data CI never has — they 404/500
+// on the empty CI DB and the audited error page produces spurious
+// violations. Kept in sync with .lighthouserc.json (see the seed-step
+// note + TODO in .github/workflows/lighthouse.yml: re-add detail
+// routes once a deterministic CI seed exists).
 const ROUTES = [
   "/",
   "/produkter",
-  "/produkter/q10-100mg-100-kapslar",
   "/kunskap",
-  "/kunskap/ingredienser/koenzym-q10",
-  "/kop/koenzym-q10",
   "/om-oss",
   "/faq",
   "/hjalp",
-  "/hjalp/somnproblem",
   "/paket",
   "/hjalp-mig-valja",
   "/sok",

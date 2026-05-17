@@ -20,8 +20,11 @@
   --color-accent-deep: #5c6e55;
   /* Lightened sage for use ON the deep-navy surface (footer, dark
      bands). Plain --color-accent is only 4.26:1 on --color-primary-deep
-     (fails WCAG AA for the 11px footer eyebrows); this lifts it to
-     ~6.6:1 while keeping the sage identity. Use `text-accent-on-dark`. */
+     (fails WCAG AA for the small eyebrow text); this lifts it to
+     ~6.6:1 while keeping the sage identity. Dual-purpose: also use it
+     as a *surface* (`bg-accent-on-dark`) when dark ink sits on a sage
+     button — plain --color-accent as a button bg is only 4.26:1 with
+     navy text. Use `text-accent-on-dark` / `bg-accent-on-dark`. */
   --color-accent-on-dark: #9fb091;
 
   /* Surfaces */
@@ -33,7 +36,12 @@
   --color-ink: #0a0a0a;
   --color-ink-body: #1f2530;
   --color-ink-mute: #525860;
-  --color-ink-soft: #7a8290;
+  /* Was #7a8290 — only ~3.7:1 on the cream/white surfaces, failing
+     WCAG AA for the muted caption text it's used for site-wide.
+     Darkened to clear 4.5:1 on every light surface (incl.
+     --color-surface-warm, the darkest at ~5:1) while staying a step
+     lighter than --color-ink-mute. */
+  --color-ink-soft: #5f6672;
 
   /* Borders — keep a touch of brand warmth but lean slightly cooler so
      they recede behind content the way Stripe's #e3e8ee does. The shift
@@ -41,8 +49,12 @@
   --color-border: #e3dfd6;
   --color-border-soft: #ece8df;
 
-  /* Trustpilot brand color (for the Utmärkt rating) */
+  /* Trustpilot brand green — for the star glyphs only (graphical,
+     WCAG-exempt). It is just 2.6:1 on white, so NEVER use it for text. */
   --color-trustpilot: #00b67a;
+  /* Darkened Trustpilot green for text accents (rating label, the
+     "Trustpilot" word). ~6:1 on white / ~5.6:1 on surface-warm. */
+  --color-trustpilot-text: #006d4d;
 
   /* Status colours — single source of truth. Used across admin
      dashboards, status pills, KPI accents, and form validation. Pair
