@@ -132,6 +132,8 @@ function UnsplashSearchTab({
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [searching, startSearch] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
 
   // Auto-fire search on mount if we have a suggested key + query.
   useEffect(() => {
@@ -139,19 +141,21 @@ function UnsplashSearchTab({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function runSearch(q: string) {
+  function runSearch(q: string, pageArg = 1) {
     const trimmed = q.trim();
     if (!trimmed) return;
     setError(null);
     setQuery(trimmed);
     startSearch(async () => {
-      const res = await adminSearchUnsplash(trimmed);
+      const res = await adminSearchUnsplash(trimmed, pageArg);
       if (!res.ok) {
         setError(res.error);
         return;
       }
       setConfigured(res.configured);
       setPhotos(res.result?.photos ?? []);
+      setTotalPages(res.result?.totalPages ?? 0);
+      setPage(pageArg);
     });
   }
 
@@ -281,6 +285,30 @@ function UnsplashSearchTab({
               </div>
             );
           })}
+        </div>
+      )}
+
+      {photos && photos.length > 0 && totalPages > 1 && (
+        <div className="flex items-center justify-center gap-4 mt-6">
+          <button
+            type="button"
+            onClick={() => runSearch(query, page - 1)}
+            disabled={searching || page <= 1}
+            className="h-10 px-4 rounded-lg border border-border bg-surface font-sans text-[14px] font-semibold text-primary-deep hover:bg-surface-warm disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            ← Föregående
+          </button>
+          <span className="font-sans text-[13px] text-ink-mute tabular-nums">
+            Sida {page} av {totalPages}
+          </span>
+          <button
+            type="button"
+            onClick={() => runSearch(query, page + 1)}
+            disabled={searching || page >= totalPages}
+            className="h-10 px-4 rounded-lg border border-border bg-surface font-sans text-[14px] font-semibold text-primary-deep hover:bg-surface-warm disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            Nästa →
+          </button>
         </div>
       )}
     </div>
