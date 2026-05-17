@@ -79,6 +79,21 @@ export const metadata: Metadata = {
     title: "Biomax — Livskvalitet i fokus sedan 2001",
     description:
       "Vetenskapligt baserade naturpreparat från svensk familjeägd hälsofackhandel sedan 2001.",
+    images: [
+      {
+        url: "/og-default.png",
+        width: 1200,
+        height: 630,
+        alt: "Biomax",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Biomax — Livskvalitet i fokus sedan 2001",
+    description:
+      "Vetenskapligt baserade naturpreparat från svensk familjeägd hälsofackhandel sedan 2001.",
+    images: ["/og-default.png"],
   },
 };
 

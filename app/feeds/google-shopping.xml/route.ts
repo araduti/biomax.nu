@@ -119,7 +119,7 @@ export async function GET() {
 ${additionalImages}
         <g:availability>${inStock ? "in_stock" : "out_of_stock"}</g:availability>${priceFields}
         <g:condition>new</g:condition>
-        <g:brand>Rockland</g:brand>
+        <g:brand>Biomax</g:brand>
         <g:identifier_exists>false</g:identifier_exists>
         <g:google_product_category>${SUPPLEMENT_TAXONOMY_ID}</g:google_product_category>
         <g:product_type>Kosttillskott</g:product_type>${shippingWeight}

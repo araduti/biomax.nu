@@ -75,7 +75,7 @@ export async function GET() {
     <shipping_cost>49.00</shipping_cost>
     <delivery_time>1-3 arbetsdagar</delivery_time>
     <category>${escapeXml(category)}</category>
-    <manufacturer>Rockland</manufacturer>
+    <manufacturer>Biomax</manufacturer>
   </product>`;
     })
     .join("\n");
