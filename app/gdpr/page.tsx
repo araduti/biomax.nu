@@ -36,7 +36,7 @@ export default function GdprPage() {
         </li>
         <li>
           <strong>Radering</strong> — bli &quot;glömd&quot; (med vissa
-          legala undantag).
+          undantag i lag).
         </li>
         <li>
           <strong>Begränsning</strong> — pausa behandlingen av dina uppgifter.
@@ -67,26 +67,26 @@ export default function GdprPage() {
         inom en månad om förlängningen och skälen till den (GDPR art. 12.3).
       </p>
       <p>
-        Vid radering kommer vi att ta bort all data som inte måste sparas av
-        legala skäl (t.ex. underlag för bokföring, vilka enligt lag ska sparas i
+        Vid radering tar vi bort alla uppgifter som inte måste sparas av
+        rättsliga skäl (t.ex. bokföringsunderlag, som enligt lag ska sparas i
         sju år).
       </p>
 
       <h3>2. Avregistrera nyhetsbrev</h3>
       <p>
-        Klicka på &quot;Avregistrera&quot; i botten av valfritt utskick. Det
+        Klicka på &quot;Avregistrera&quot; längst ner i valfritt utskick. Det
         avregistrerar dig direkt — du behöver inte kontakta oss.
       </p>
 
       <h3>3. Cookies & analys</h3>
       <p>
-        Vid första besöket på biomax.nu kan vi visa en cookie-bannar där du
-        väljer vilka kakor som får sättas. Du kan när som helst justera valet
-        via webbläsarens inställningar eller genom att radera cookies för
-        biomax.nu.
+        Vid första besöket på biomax.nu kan vi visa en samtyckesruta för kakor
+        där du väljer vilka kakor som får användas. Du kan när som helst ändra
+        ditt val via webbläsarens inställningar eller genom att radera kakorna
+        för biomax.nu.
       </p>
       <p>
-        Strikt nödvändiga cookies (inloggning, varukorg) sätts utan samtycke
+        Nödvändiga kakor (inloggning, varukorg) används utan samtycke
         eftersom sajten inte fungerar utan dem.
       </p>
 

@@ -14,13 +14,13 @@ export default function AngerFormularPage() {
     <LegalPage
       title="Ångerblankett"
       eyebrow="Konsumentverkets standardformulär"
-      intro="Använd den här blanketten om du vill utöva din ångerrätt enligt distansavtalslagen. Du kan också meddela ditt ångerbeslut formfritt via e-post."
-      lastUpdated="2026-05-10"
+      intro="Använd den här blanketten om du vill utöva din ångerrätt enligt distansavtalslagen. Du kan också meddela formfritt via e-post att du vill ångra köpet."
+      lastUpdated="2026-05-17"
       reviewedByLegal
     >
       <p>
         Du har rätt att frånträda köpet inom 14 dagar från det att du tagit
-        emot varan. Skicka den ifyllda blanketten till oss antingen per
+        emot varan. Skicka den ifyllda blanketten till oss antingen via
         e-post eller med vanlig post.
       </p>
 
@@ -81,8 +81,10 @@ ________________________________________________________________________
         </li>
         <li>Returfrakten betalar du själv om inget annat avtalats.</li>
         <li>
-          Återbetalning sker inom 14 dagar från det att vi mottagit din vara,
-          till samma betalmetod som vid köpet.
+          Återbetalning sker inom 14 dagar, räknat från den dag vi tagit emot
+          varan eller den dag du visat att den skickats tillbaka — det som
+          inträffar först. Pengarna betalas tillbaka till samma betalmetod
+          som du använde vid köpet.
         </li>
       </ul>
 

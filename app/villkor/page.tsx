@@ -42,8 +42,8 @@ export default function VillkorPage() {
       <h2>Beställning och avtalsslut</h2>
       <p>
         Avtal sluts när vi bekräftar din beställning via e-post. Vi förbehåller
-        oss rätten att avbeställa order vid uppenbara prisfel, vid utebliven
-        betalning, eller om en produkt är slut i lager.
+        oss rätten att annullera en order vid uppenbara prisfel, vid utebliven
+        betalning eller om en produkt är slut i lager.
       </p>
 
       <h2>Priser</h2>
@@ -63,7 +63,7 @@ export default function VillkorPage() {
       <h2>Leverans</h2>
       <ul>
         <li>
-          Vi packar order som läggs på vardagar före kl 13 samma dag.
+          Order som läggs på vardagar före kl 13 packas och skickas samma dag.
         </li>
         <li>Standardleveranstid: 1–3 vardagar inom Sverige med PostNord.</li>
         <li>
@@ -91,7 +91,7 @@ export default function VillkorPage() {
       </p>
       <p>
         Brutna eller använda förpackningar omfattas inte av ångerrätten av
-        livsmedels- och hygieniska skäl.
+        livsmedels- och hygienskäl.
       </p>
       <p>
         Vi kan göra ett <strong>värdeminskningsavdrag</strong> för värdesänkning
