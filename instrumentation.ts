@@ -8,6 +8,13 @@
 import { getSentryDsn, SENTRY_DEFAULTS } from "@/lib/monitoring/sentry";
 
 export async function register() {
+  // Fail fast on missing required runtime config (Node runtime only —
+  // Edge has no process.exit and isn't our server target).
+  if (process.env.NEXT_RUNTIME === "nodejs") {
+    const { validateRuntimeEnv } = await import("@/lib/env");
+    validateRuntimeEnv();
+  }
+
   const dsn = getSentryDsn();
   if (!dsn) return;
 

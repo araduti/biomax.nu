@@ -1,3 +1,15 @@
+# Local dev stack (Ampliosoft platform §A2).
+#
+#   docker compose -f docker-compose.dev.yml up --build
+#
+# brings up Postgres + migrations + the app on a fresh clone with only
+# the values committed here (no secrets to fill). Dev-only credentials
+# are inline on purpose — nothing here is used in production.
+#
+# Host-based dev (npm run dev) instead? Start just the DB:
+#   docker compose -f docker-compose.dev.yml up -d db
+# then `npm run dev`. The DB volume is shared between both modes.
+
 services:
   db:
     image: postgres:17-alpine
@@ -14,6 +26,60 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  # One-shot: apply migrations then run the idempotent admin seeder.
+  # Uses the `builder` stage (it has the Prisma CLI + tsx + migrations);
+  # exits 0 when done. Mirrors the platform's biomax-migrate service.
+  migrate:
+    build:
+      context: .
+      dockerfile: docker/biomax/web/Dockerfile
+      target: builder
+    command: sh -c "npm run db:migrate:deploy && npm run db:seed"
+    environment:
+      DATABASE_URL: postgresql://biomax:biomax@db:5432/biomax_dev
+      DATABASE_MIGRATE_URL: postgresql://biomax:biomax@db:5432/biomax_dev
+      BETTER_AUTH_SECRET: dev-only-not-a-real-secret-000000000000000000
+      BETTER_AUTH_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      SEED_ADMIN_EMAIL: admin@biomax.nu
+      SEED_ADMIN_PASSWORD: devadmin12345
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/biomax/web/Dockerfile
+      target: runner
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      DATABASE_URL: postgresql://biomax:biomax@db:5432/biomax_dev
+      BETTER_AUTH_SECRET: dev-only-not-a-real-secret-000000000000000000
+      BETTER_AUTH_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
 
 volumes:
   pgdata:

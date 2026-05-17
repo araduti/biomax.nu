@@ -11,6 +11,8 @@
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:seed": "tsx prisma/seeds/index.ts",
     "db:reset": "prisma migrate reset --force",
     "db:import-wp": "tsx scripts/import-wordpress.ts",
     "img:normalize": "tsx scripts/normalize-product-images.ts",

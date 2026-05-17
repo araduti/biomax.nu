@@ -253,3 +253,33 @@ server", never "patch around it". (See `AGENTS.md`.)
   (see above).
 - **404 on `/produkter`, product or knowledge pages** — empty DB; run
   the seed import (step 6).
+
+## Production / deployment
+
+The app is deployed on the Ampliosoft self-hosted platform (Docker
+Compose + Traefik + PostgreSQL). The authoritative deployment reference
+— runtime env table, migration/seed commands, health check, graceful
+shutdown, resource sizing — is **[`docs/deployment.md`](docs/deployment.md)**.
+
+- **Runtime:** Node.js 22, Next.js 16 standalone output.
+- **Database:** PostgreSQL 17 or 18.
+- **Image:** `docker/biomax/web/Dockerfile` (multi-stage, non-root).
+- **Health:** `GET /api/health` → `200 {"status":"ok"}` (no auth/DB).
+
+### Build args
+
+`next build` reads these at module load; pass harmless **placeholders**
+at build time (real values are injected at runtime, never baked in):
+
+| Build ARG | Placeholder |
+|---|---|
+| `BETTER_AUTH_SECRET` | `build-placeholder` |
+| `BETTER_AUTH_URL` | `https://biomax.nu` |
+| `DATABASE_URL` | `postgresql://x:x@build.invalid:5432/biomax` |
+| `NEXT_PUBLIC_APP_URL` | `https://biomax.nu` |
+
+Full local stack (app + Postgres + migrate) on a fresh clone:
+
+```bash
+docker compose -f docker-compose.dev.yml up --build
+```
