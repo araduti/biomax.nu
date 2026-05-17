@@ -77,9 +77,11 @@ function authHeader(): { Authorization: string } {
 function normalize(raw: RawUnsplashPhoto): UnsplashPhoto {
   return {
     id: raw.id,
-    // `regular` is ~1080px wide — large enough to mirror at 1920×1080
-    // cover without visible quality loss for a hero band.
-    fullUrl: raw.urls.regular,
+    // `regular` is only ~1080px wide — far too small for a full-bleed
+    // 4K hero master. Build a high-res URL off the imgix `raw` base
+    // instead (it already carries an `?ixid=…` query, so append with
+    // `&`). The mirror pipeline downsizes/re-encodes from this.
+    fullUrl: `${raw.urls.raw}&w=3840&q=90&fit=crop&crop=entropy&fm=jpg`,
     thumbUrl: raw.urls.small,
     alt: raw.alt_description ?? raw.description ?? "",
     width: raw.width,
