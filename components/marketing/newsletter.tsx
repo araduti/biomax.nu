@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { Display, Eyebrow, Accent } from "@/components/ui/typography";
 import { Button } from "@/components/ui/button";
 import { subscribeToNewsletter } from "@/lib/newsletter/actions";
+import { Section } from "@/components/ui/section";
 
 type Status =
   | { kind: "idle" }
@@ -36,7 +37,7 @@ export function Newsletter() {
   }
 
   return (
-    <section className="bg-surface-warm py-20 md:py-24 px-6 md:px-8">
+    <Section tone="warm">
       <div className="max-w-[880px] mx-auto text-center">
         <Eyebrow>Brev från Biomax</Eyebrow>
         <Display size="xl" className="mt-4 mb-4">
@@ -118,6 +119,6 @@ export function Newsletter() {
           </form>
         )}
       </div>
-    </section>
+    </Section>
   );
 }

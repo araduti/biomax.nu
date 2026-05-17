@@ -3,6 +3,7 @@ import Image from "next/image";
 import { formatPriceSEK } from "@/lib/format";
 import { Display, Eyebrow } from "@/components/ui/typography";
 import type { BundleSummary } from "@/lib/bundles/queries";
+import { Section } from "@/components/ui/section";
 
 /**
  * Homepage strip of active bundles. Hidden when no bundles exist, so the
@@ -14,8 +15,8 @@ export function BundleRail({ bundles }: { bundles: BundleSummary[] }) {
   const top = bundles.slice(0, 3);
 
   return (
-    <section className="bg-surface-warm py-14 md:py-20 px-6 md:px-8">
-      <div className="max-w-[1240px] mx-auto">
+    <Section tone="warm" padding="tight">
+      <>
         <div className="flex items-end justify-between mb-10 gap-6 flex-wrap">
           <div>
             <Eyebrow className="mb-3">Paket</Eyebrow>
@@ -83,7 +84,7 @@ export function BundleRail({ bundles }: { bundles: BundleSummary[] }) {
             </li>
           ))}
         </ul>
-      </div>
-    </section>
+      </>
+    </Section>
   );
 }

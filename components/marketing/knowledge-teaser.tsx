@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Display, Eyebrow, Accent } from "@/components/ui/typography";
 import { getIngredient } from "@/lib/knowledge/ingredients";
+import { Section } from "@/components/ui/section";
 
 /**
  * "Forskning, förklarad" — three featured ingredient monographs on the
@@ -52,8 +53,8 @@ export function KnowledgeTeaser() {
   if (articles.length === 0) return null;
 
   return (
-    <section className="bg-surface py-24 md:py-28 px-6 md:px-8">
-      <div className="max-w-[1240px] mx-auto">
+    <Section>
+      <>
         <div className="flex flex-wrap justify-between items-end gap-6 mb-12">
           <div>
             <Eyebrow>Kunskap</Eyebrow>
@@ -85,7 +86,7 @@ export function KnowledgeTeaser() {
             </Link>
           ))}
         </div>
-      </div>
-    </section>
+      </>
+    </Section>
   );
 }

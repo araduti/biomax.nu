@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { Category } from "@prisma/client";
 import { Display, Eyebrow, Accent } from "@/components/ui/typography";
 import { categoryMetaByName } from "@/lib/categories";
+import { Section } from "@/components/ui/section";
 
 type CategoryWithCount = Pick<Category, "id" | "name" | "slug"> & {
   _count: { products: number };
@@ -15,8 +16,8 @@ export function Categories({ categories }: { categories: CategoryWithCount[] }) 
     .sort((a, b) => b._count.products - a._count.products);
 
   return (
-    <section className="bg-surface py-24 md:py-28 px-6 md:px-8">
-      <div className="max-w-[1240px] mx-auto">
+    <Section>
+      <>
         <div className="flex flex-wrap justify-between items-end gap-6 mb-12">
           <div>
             <Eyebrow>Sortiment</Eyebrow>
@@ -84,7 +85,7 @@ export function Categories({ categories }: { categories: CategoryWithCount[] }) 
           Varje hälsoområde representeras av sin signaturväxt — den ört vetenskapen och
           Biomax återkommer till.
         </p>
-      </div>
-    </section>
+      </>
+    </Section>
   );
 }

@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Product, Category } from "@prisma/client";
 import { Display, Eyebrow, Accent } from "@/components/ui/typography";
 import { ProductCard } from "@/components/product/product-card";
+import { Section } from "@/components/ui/section";
 
 type ProductWithCategories = Pick<
   Product,
@@ -19,8 +20,8 @@ type ProductWithCategories = Pick<
  */
 export function Bestsellers({ products }: { products: ProductWithCategories[] }) {
   return (
-    <section className="bg-surface-warm py-16 md:py-20 px-6 md:px-8">
-      <div className="max-w-[1240px] mx-auto">
+    <Section tone="warm">
+      <>
         <header className="flex flex-wrap justify-between items-baseline gap-4 mb-12">
           <div>
             <Eyebrow className="mb-3">Signaturprodukter</Eyebrow>
@@ -41,7 +42,7 @@ export function Bestsellers({ products }: { products: ProductWithCategories[] })
             <ProductCard key={p.id} product={p} />
           ))}
         </div>
-      </div>
-    </section>
+      </>
+    </Section>
   );
 }

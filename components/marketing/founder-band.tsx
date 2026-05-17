@@ -1,11 +1,12 @@
 import Image from "next/image";
 import { Display, Eyebrow } from "@/components/ui/typography";
 import { ButtonLink } from "@/components/ui/button";
+import { Section } from "@/components/ui/section";
 
 export function FounderBand() {
   return (
-    <section className="bg-primary-deep text-surface py-24 md:py-32 px-6 md:px-8">
-      <div className="max-w-[1240px] mx-auto grid grid-cols-1 lg:grid-cols-[1fr_1.2fr] gap-14 lg:gap-20 items-center">
+    <Section tone="deep">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.2fr] gap-14 lg:gap-20 items-center">
         {/* Founder portrait with editorial treatments */}
         <div className="relative aspect-[4/5] rounded-3xl overflow-hidden border border-surface/10 bg-primary-deep">
           <Image
@@ -88,6 +89,6 @@ export function FounderBand() {
           </div>
         </div>
       </div>
-    </section>
+    </Section>
   );
 }
