@@ -7,7 +7,7 @@ import { ensureAccount, getAccountBalance } from "@/lib/loyalty/account";
 import { getAccountHistory, labelForKind } from "@/lib/loyalty/queries";
 import {
   LOYALTY_PROGRAM_NAME,
-  POINTS_PER_KR_EARNED,
+  KR_PER_EARNED_POINT,
   ORE_PER_POINT,
   MIN_REDEMPTION_POINTS,
   WELCOME_BONUS_POINTS,
@@ -107,7 +107,7 @@ export default async function LoyaltyAccountPage() {
             <p className="font-sans text-[14.5px] text-ink-body leading-relaxed">
               Du får{" "}
               <strong className="font-semibold text-primary-deep">
-                {POINTS_PER_KR_EARNED} poäng per krona
+                1 poäng per {KR_PER_EARNED_POINT} kr
               </strong>{" "}
               du handlar för hos Biomax. Poängen registreras när din
               betalning är genomförd.
