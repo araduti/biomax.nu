@@ -3,7 +3,7 @@ import Link from "next/link";
 import { LegalPage } from "@/components/site/legal-page";
 
 export const metadata: Metadata = {
-  title: "Frakt, retur och återbetalning — Biomax",
+  title: "Frakt, retur och återbetalning",
   description:
     "Frakt, leverans, retur och återbetalning när du handlar hos Biomax. Fri frakt över 499 kr, 30 dagars öppet köp, återbetalning inom 14 dagar från det att vi mottagit returen.",
   alternates: { canonical: "/frakt-och-retur" },

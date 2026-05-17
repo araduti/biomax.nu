@@ -3,7 +3,7 @@ import Link from "next/link";
 import { LegalPage } from "@/components/site/legal-page";
 
 export const metadata: Metadata = {
-  title: "Ångerblankett — Biomax",
+  title: "Ångerblankett",
   description:
     "Konsumentverkets standardformulär för utövande av ångerrätt. Använd om du vill häva ditt köp inom 14 dagar.",
   alternates: { canonical: "/anger-formular" },

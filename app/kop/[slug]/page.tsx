@@ -63,7 +63,7 @@ export async function generateMetadata({
   const ing = getIngredient(slug);
   if (!ing) return { title: "Hittades inte" };
   return {
-    title: `Köp ${ing.name} — Biomax`,
+    title: `Köp ${ing.name}`,
     description: `${ing.summary} Hitta Biomax-produkter med ${ing.name} — svenskt familjeföretag sedan 2001, fri frakt över 499 kr.`,
     alternates: { canonical: `/kop/${ing.slug}` },
   };

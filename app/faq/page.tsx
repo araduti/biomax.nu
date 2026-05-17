@@ -6,7 +6,7 @@ import { SectionLayout } from "@/components/site/section-layout";
 import { faqLd } from "@/lib/jsonld";
 
 export const metadata: Metadata = {
-  title: "Vanliga frågor — Biomax",
+  title: "Vanliga frågor",
   description:
     "Svar på de vanligaste frågorna om Biomax kosttillskott — leveranser, retur, betalning, ingredienser och vår familjeägda historia sedan 2001.",
   alternates: { canonical: "/faq" },

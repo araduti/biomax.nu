@@ -4,7 +4,7 @@ import { Display, Eyebrow } from "@/components/ui/typography";
 import { SectionLayout } from "@/components/site/section-layout";
 
 export const metadata: Metadata = {
-  title: "Behandlingar — Biomax",
+  title: "Behandlingar",
   description:
     "Konsultation, håranalys och laserbehandling i Eken Hälsobutik i Kållered. Mejla kontakt@biomax.nu för aktuella tider och tidsbokning.",
   alternates: { canonical: "/behandlingar" },

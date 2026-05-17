@@ -6,7 +6,7 @@ import { SectionLayout } from "@/components/site/section-layout";
 const SITE = "https://www.biomax.nu";
 
 export const metadata: Metadata = {
-  title: "Butik i Kållered — Biomax",
+  title: "Butik i Kållered",
   description:
     "Eken Hälsobutik på Ekenleden 15A i Kållered är Biomax fysiska butik. Hela sortimentet, personlig rådgivning, samma familj som driver biomax.nu.",
   alternates: { canonical: "/butik" },

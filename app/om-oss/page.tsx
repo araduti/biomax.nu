@@ -6,7 +6,7 @@ import { SectionLayout } from "@/components/site/section-layout";
 import { organizationLd } from "@/lib/jsonld";
 
 export const metadata: Metadata = {
-  title: "Om Biomax — kunskapsföretaget bakom våra produkter",
+  title: "Om oss — kunskapsföretaget bakom våra produkter",
   description:
     "Biomax HB grundades 2001 av familjen Raduti i Kållered. Vi är ett kunskapsföretag som importerar, utvecklar och marknadsför hälsokostprodukter — sedan tjugofem år.",
   alternates: { canonical: "/om-oss" },

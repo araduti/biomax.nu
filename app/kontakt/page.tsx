@@ -6,7 +6,7 @@ import { SectionLayout } from "@/components/site/section-layout";
 import { organizationLd } from "@/lib/jsonld";
 
 export const metadata: Metadata = {
-  title: "Kontakt — Biomax",
+  title: "Kontakt",
   description:
     "Kontakta Biomax. Telefon, e-post och adress till vår butik och vårt lager i Kållered. Vi svarar oftast samma dag.",
   alternates: { canonical: "/kontakt" },

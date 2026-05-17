@@ -3,7 +3,7 @@ import Link from "next/link";
 import { LegalPage } from "@/components/site/legal-page";
 
 export const metadata: Metadata = {
-  title: "Köp- & leveransvillkor — Biomax",
+  title: "Köp- och leveransvillkor",
   description:
     "Allmänna villkor vid köp på biomax.nu — distansavtal, ångerrätt, leverans, retur och garantier för konsumenter.",
   alternates: { canonical: "/villkor" },

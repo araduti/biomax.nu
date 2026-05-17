@@ -9,7 +9,7 @@ import { getAllIngredients } from "@/lib/knowledge/ingredients";
 import { getAllSymptoms } from "@/lib/symptoms/registry";
 
 export const metadata: Metadata = {
-  title: "Kunskap — Biomax",
+  title: "Kunskap",
   description:
     "Vetenskaplig översikt över ingredienser, behandlingar och studier från Biomax — familjeföretaget som drivit svensk kosttillskottsforskning sedan 2001.",
   alternates: { canonical: "/kunskap" },

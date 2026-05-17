@@ -3,7 +3,7 @@ import Link from "next/link";
 import { LegalPage } from "@/components/site/legal-page";
 
 export const metadata: Metadata = {
-  title: "Integritetspolicy — Biomax",
+  title: "Integritetspolicy",
   description:
     "Hur Biomax behandlar dina personuppgifter enligt GDPR. Vad vi samlar in, varför, hur länge, och dina rättigheter.",
   alternates: { canonical: "/integritet" },

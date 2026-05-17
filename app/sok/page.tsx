@@ -14,6 +14,9 @@ export const metadata: Metadata = {
   title: "Sök",
   description: "Sök bland produkter, ingredienser och behovsområden.",
   alternates: { canonical: "/sok" },
+  // Internal search results are thin/duplicate — keep them out of the
+  // index (crawl-budget) but let crawlers follow through to products.
+  robots: { index: false, follow: true },
 };
 
 type RouteParams = {

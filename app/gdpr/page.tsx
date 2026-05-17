@@ -3,7 +3,7 @@ import Link from "next/link";
 import { LegalPage } from "@/components/site/legal-page";
 
 export const metadata: Metadata = {
-  title: "Dina GDPR-rättigheter — Biomax",
+  title: "Dina GDPR-rättigheter",
   description:
     "Hur du utövar dina rättigheter enligt GDPR hos Biomax: registerutdrag, rättelse, radering, dataportabilitet, invändning och återkallande av samtycke.",
   alternates: { canonical: "/gdpr" },

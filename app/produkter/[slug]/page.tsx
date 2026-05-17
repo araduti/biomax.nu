@@ -130,7 +130,12 @@ export async function generateMetadata({
       description: ogDescription,
       type: "website",
       url: `/produkter/${product.slug}`,
-      images: ogImage ? [{ url: ogImage, alt: product.name }] : undefined,
+      // Product images are normalized to 1000×1000 by the upload
+      // pipeline; declaring dimensions lets social platforms render
+      // the card without a re-fetch round-trip.
+      images: ogImage
+        ? [{ url: ogImage, alt: product.name, width: 1000, height: 1000 }]
+        : undefined,
     },
     twitter: {
       card: "summary_large_image",

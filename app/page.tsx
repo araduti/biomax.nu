@@ -10,6 +10,26 @@ import { getHomepageBlocks } from "@/lib/homepage/queries";
 import { getActiveBundles } from "@/lib/bundles/queries";
 import { JsonLd } from "@/components/seo/json-ld";
 import { websiteLd, organizationLd } from "@/lib/jsonld";
+import type { Metadata } from "next";
+
+// Homepage gets its own tuned metadata rather than inheriting the layout
+// default. `absolute` so the brand isn't doubled by the "%s | Biomax"
+// title template on the one page that should just be the brand.
+export const metadata: Metadata = {
+  title: { absolute: "Biomax — Livskvalitet i fokus sedan 2001" },
+  description:
+    "Svensk familjeägd hälsofackhandel sedan 2001. Vetenskapligt baserade naturpreparat med tydligt deklarerat innehåll — för sömn, lugn, immunförsvar och vardagsbalans. Snabb leverans i hela Sverige.",
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    locale: "sv_SE",
+    siteName: "Biomax",
+    url: "https://www.biomax.nu/",
+    title: "Biomax — Livskvalitet i fokus sedan 2001",
+    description:
+      "Vetenskapligt baserade naturpreparat från svensk familjeägd hälsofackhandel sedan 2001.",
+  },
+};
 
 export const revalidate = 300; // ISR: refresh hero/bestsellers data every 5 min
 

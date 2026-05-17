@@ -43,7 +43,7 @@ export async function generateMetadata({
   const ing = getIngredient(slug);
   if (!ing) return { title: "Ingrediens hittades inte" };
   return {
-    title: `${ing.name} — Biomax kunskapsbank`,
+    title: `${ing.name} — kunskapsbank`,
     description: ing.summary,
     alternates: { canonical: `/kunskap/ingredienser/${ing.slug}` },
   };

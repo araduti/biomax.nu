@@ -14,7 +14,7 @@ import {
 } from "@/lib/knowledge/ingredients";
 
 export const metadata: Metadata = {
-  title: "Ingredienser — Biomax kunskapsbank",
+  title: "Ingredienser — kunskapsbank",
   description:
     "Vetenskaplig översikt över de vitaminer, mineraler, aminosyror och växtbaserade extrakt vi använder i våra produkter.",
   alternates: { canonical: "/kunskap/ingredienser" },

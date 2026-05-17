@@ -7,6 +7,13 @@ import { getAllSymptoms } from "@/lib/symptoms/registry";
 
 const SITE = "https://www.biomax.nu";
 
+// Stable `lastmod` for static/editorial URLs. Previously these used
+// `new Date()`, so with hourly revalidation every static page reported
+// "modified" every hour — which trains crawlers to ignore our lastmod.
+// Bump this when static/editorial content meaningfully changes.
+// (Products & categories use their own `updatedAt`, not this.)
+const SITE_CONTENT_UPDATED = new Date("2026-05-17T00:00:00Z");
+
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -24,7 +31,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }),
   ]);
 
-  const now = new Date();
+  const now = SITE_CONTENT_UPDATED;
 
   return [
     { url: `${SITE}/`, lastModified: now, changeFrequency: "weekly", priority: 1 },

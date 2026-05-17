@@ -79,6 +79,46 @@ export function productLd(p: ProductLdInput) {
       : "https://schema.org/OutOfStock",
     itemCondition: "https://schema.org/NewCondition",
     seller: { "@type": "Organization", name: "Biomax" },
+    // Google warns without priceValidUntil; year-end is the standard
+    // convention for an open-ended price.
+    priceValidUntil: `${new Date().getUTCFullYear()}-12-31`,
+    shippingDetails: {
+      "@type": "OfferShippingDetails",
+      shippingRate: {
+        "@type": "MonetaryAmount",
+        value: "49.00",
+        currency: "SEK",
+      },
+      shippingDestination: {
+        "@type": "DefinedRegion",
+        addressCountry: "SE",
+      },
+      deliveryTime: {
+        "@type": "ShippingDeliveryTime",
+        handlingTime: {
+          "@type": "QuantitativeValue",
+          minValue: 0,
+          maxValue: 1,
+          unitCode: "DAY",
+        },
+        transitTime: {
+          "@type": "QuantitativeValue",
+          minValue: 1,
+          maxValue: 3,
+          unitCode: "DAY",
+        },
+      },
+    },
+    hasMerchantReturnPolicy: {
+      "@type": "MerchantReturnPolicy",
+      applicableCountry: "SE",
+      returnPolicyCategory:
+        "https://schema.org/MerchantReturnFiniteReturnWindow",
+      // Swedish statutory ångerrätt (distansavtalslagen) — 14 days.
+      merchantReturnDays: 14,
+      returnMethod: "https://schema.org/ReturnByMail",
+      returnFees: "https://schema.org/ReturnShippingFees",
+    },
   };
 
   const ld: Record<string, unknown> = {
