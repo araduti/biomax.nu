@@ -1,14 +1,11 @@
 "use server";
 
 import { z } from "zod";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { currentUser } from "@/lib/session";
 import { cuidSchema, fail } from "@/lib/validation/shared";
-import {
-  DEFAULT_SUBSCRIPTION_DISCOUNT_PERCENT,
-  SUBSCRIPTION_INTERVAL_DAYS,
-  type SubscriptionIntervalDays,
-} from "./constants";
+import { DEFAULT_SUBSCRIPTION_DISCOUNT_PERCENT } from "./constants";
 
 const IntervalDays = z.union([z.literal(30), z.literal(60), z.literal(90)]);
 
@@ -37,20 +34,21 @@ const CancelSchema = z.object({
 /**
  * Customer-facing subscription server actions.
  *
- * Subscription creation paths:
- *   1. From the PDP "Prenumerera"-toggle. Customer must be logged in
- *      (we need a userId to manage subscription lifecycle). The PDP
- *      form sends product + variant + interval; we create a 1-line
- *      subscription with the customer's last-used address (or null,
- *      forcing checkout to capture one).
- *   2. From the checkout flow once we wire "convert this order to a
- *      subscription"-toggle. Phase 2 — not yet built.
+ * Subscription creation is PAYMENT-GATED. The PDP "Prenumerera" toggle
+ * routes the customer through the standard Kustom/Klarna checkout to
+ * pay for (and capture an address for) the first delivery — see
+ * `startSubscriptionCheckout` in lib/checkout/kustom-session.ts. The
+ * subscription row itself is created only once that first payment
+ * settles, by `finalizePaidSubscription` (called from
+ * `ensureOrderFromKustomOrder`, inside the paid-order transaction).
+ * There is intentionally NO action that creates an ACTIVE subscription
+ * without a settled first order.
  *
  * Lifecycle:
- *   - createSubscription → ACTIVE, nextOrderAt = now + intervalDays
+ *   - finalizePaidSubscription → ACTIVE, nextOrderAt = now +
+ *     intervalDays, linked to the paid first Order
  *   - pauseSubscription → PAUSED (renewal cron skips)
- *   - resumeSubscription → ACTIVE, nextOrderAt = now (immediate next
- *     cycle, intentionally — the customer asked to be back on)
+ *   - resumeSubscription → ACTIVE, nextOrderAt = now + intervalDays
  *   - cancelSubscription → CANCELLED (terminal). No undo via UI;
  *     customer creates a fresh subscription if they change their mind.
  *
@@ -61,38 +59,60 @@ export type SubscriptionActionResult =
   | { ok: true; subscriptionId: string }
   | { ok: false; error: string };
 
-export async function createSubscription(
-  raw: unknown
-): Promise<SubscriptionActionResult> {
-  const parsed = CreateSubscriptionSchema.safeParse(raw);
-  if (!parsed.success) return fail(parsed.error);
-  const input = parsed.data;
+export type SubscriptionTarget = {
+  productId: string;
+  productName: string;
+  productSku: string;
+  variantId: string | null;
+  variantSku: string | null;
+  /** Undiscounted list price (kr). The subscription discount is applied
+   *  by the caller (Kustom discount line). */
+  listUnitPrice: number;
+  discountPercent: number;
+  intervalDays: 30 | 60 | 90;
+  quantity: number;
+};
 
-  const user = await currentUser();
-  if (!user) {
-    return { ok: false, error: "Du måste vara inloggad för att prenumerera." };
+/**
+ * Validate a PDP subscribe request and resolve the authoritative
+ * product/variant/price. No DB writes, no auth — the caller
+ * (startSubscriptionCheckout) owns the session + auth. Price is the
+ * undiscounted list price; the subscription discount is applied as a
+ * Kustom discount line so the customer sees it explicitly.
+ */
+export async function resolveSubscriptionTarget(
+  raw: unknown
+): Promise<
+  | { ok: true; target: SubscriptionTarget }
+  | { ok: false; error: string }
+> {
+  const parsed = CreateSubscriptionSchema.safeParse(raw);
+  if (!parsed.success) {
+    const f = fail(parsed.error);
+    return { ok: false, error: f.error };
   }
+  const input = parsed.data;
   const quantity = input.quantity ?? 1;
 
-  // Validate product + variant.
   const product = await prisma.product.findUnique({
     where: { id: input.productId },
     select: {
       id: true,
       name: true,
+      sku: true,
       price: true,
       status: true,
-      variants: {
-        select: { id: true, price: true },
-      },
+      variants: { select: { id: true, sku: true, price: true } },
     },
   });
   if (!product || product.status !== "PUBLISHED") {
     return { ok: false, error: "Produkten är inte tillgänglig för prenumeration." };
   }
+
   const hasVariants = product.variants.length >= 2;
   let variantId: string | null = null;
-  let unitPriceAtCreate: number;
+  let variantSku: string | null = null;
+  let listUnitPrice: number;
   if (hasVariants) {
     if (!input.variantId) {
       return { ok: false, error: "Välj en variant att prenumerera på." };
@@ -100,50 +120,99 @@ export async function createSubscription(
     const v = product.variants.find((x) => x.id === input.variantId);
     if (!v) return { ok: false, error: "Varianten finns inte längre." };
     variantId = v.id;
-    unitPriceAtCreate = parseFloat(v.price.toString());
+    variantSku = v.sku;
+    listUnitPrice = parseFloat(v.price.toString());
   } else {
-    unitPriceAtCreate = parseFloat(product.price.toString());
+    listUnitPrice = parseFloat(product.price.toString());
   }
 
-  // Reuse the customer's last shipping address, if any. Null is fine —
-  // the renewal flow re-prompts in that case.
-  const lastAddress = await prisma.address.findFirst({
-    where: { userId: user.id },
-    orderBy: { createdAt: "desc" },
+  return {
+    ok: true,
+    target: {
+      productId: product.id,
+      productName: product.name,
+      productSku: product.sku,
+      variantId,
+      variantSku,
+      listUnitPrice,
+      discountPercent: DEFAULT_SUBSCRIPTION_DISCOUNT_PERCENT,
+      intervalDays: input.intervalDays,
+      quantity,
+    },
+  };
+}
+
+/** Subscription intent serialised into Kustom `merchant_data` so the
+ *  confirmation/webhook path can create the subscription after the
+ *  first payment settles. Kept compact (merchant_data has a length
+ *  cap). */
+export type SubscriptionIntent = {
+  /** product id */ pid: string;
+  /** variant id */ vid: string | null;
+  /** quantity */ q: number;
+  /** interval days */ iv: 30 | 60 | 90;
+  /** discount percent */ dp: number;
+  /** list unit price (kr) at create */ up: number;
+};
+
+/**
+ * Create the Subscription + its single line once the first delivery is
+ * paid. Idempotent: keyed on `firstOrderId` — a second call (webhook
+ * race / page refresh) finds the existing subscription and returns it
+ * without creating a duplicate. Runs inside the paid-order transaction
+ * so the order and the subscription commit (or roll back) atomically.
+ */
+export async function finalizePaidSubscription(
+  tx: Prisma.TransactionClient,
+  args: {
+    intent: SubscriptionIntent;
+    userId: string | null;
+    email: string;
+    firstOrderId: string;
+    shippingAddressId: string | null;
+    billingAddressId: string | null;
+  }
+): Promise<string> {
+  const existing = await tx.subscription.findFirst({
+    where: { orders: { some: { id: args.firstOrderId } } },
     select: { id: true },
   });
+  if (existing) return existing.id;
 
   const nextOrderAt = new Date();
-  nextOrderAt.setUTCDate(nextOrderAt.getUTCDate() + input.intervalDays);
+  nextOrderAt.setUTCDate(nextOrderAt.getUTCDate() + args.intent.iv);
 
-  try {
-    const sub = await prisma.subscription.create({
-      data: {
-        userId: user.id,
-        email: user.email,
-        status: "ACTIVE",
-        intervalDays: input.intervalDays,
-        discountPercent: DEFAULT_SUBSCRIPTION_DISCOUNT_PERCENT,
-        nextOrderAt,
-        shippingAddressId: lastAddress?.id ?? null,
-        billingAddressId: lastAddress?.id ?? null,
-        lines: {
-          create: [
-            {
-              productId: product.id,
-              variantId,
-              quantity,
-              unitPriceAtCreate,
-            },
-          ],
-        },
+  const sub = await tx.subscription.create({
+    data: {
+      userId: args.userId,
+      email: args.email,
+      status: "ACTIVE",
+      intervalDays: args.intent.iv,
+      discountPercent: args.intent.dp,
+      nextOrderAt,
+      shippingAddressId: args.shippingAddressId,
+      billingAddressId: args.billingAddressId,
+      lines: {
+        create: [
+          {
+            productId: args.intent.pid,
+            variantId: args.intent.vid,
+            quantity: args.intent.q,
+            unitPriceAtCreate: args.intent.up,
+          },
+        ],
       },
-    });
-    return { ok: true, subscriptionId: sub.id };
-  } catch (err) {
-    console.error("createSubscription failed:", err);
-    return { ok: false, error: "Kunde inte skapa prenumerationen." };
-  }
+    },
+  });
+
+  // Link the just-paid first Order to the subscription so /konto and
+  // /admin reconstruct the trail exactly like a renewal order.
+  await tx.order.update({
+    where: { id: args.firstOrderId },
+    data: { subscriptionId: sub.id },
+  });
+
+  return sub.id;
 }
 
 async function authorizedSubscription(subscriptionId: string) {

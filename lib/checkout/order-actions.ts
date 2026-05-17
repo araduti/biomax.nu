@@ -32,6 +32,10 @@ import {
   InsufficientStockError,
   type StockReservation,
 } from "@/lib/checkout/stock";
+import {
+  finalizePaidSubscription,
+  type SubscriptionIntent,
+} from "@/lib/subscriptions/actions";
 
 /**
  * Server-trusted order placement.
@@ -717,15 +721,26 @@ export async function ensureOrderFromKustomOrder(
   // a malformed value must never break a paid order.
   let redeemedPoints = 0;
   let redeemUserId: string | null = null;
+  let subscriptionIntent: SubscriptionIntent | null = null;
+  let subscriptionUserId: string | null = null;
   if (k.merchant_data) {
     try {
       const md = JSON.parse(k.merchant_data) as {
         uid?: string;
         lp?: number;
+        sub?: SubscriptionIntent;
       };
       if (md && typeof md.lp === "number" && md.lp > 0 && md.uid) {
         redeemedPoints = Math.floor(md.lp);
         redeemUserId = md.uid;
+      }
+      if (
+        md?.sub &&
+        typeof md.sub.pid === "string" &&
+        (md.sub.iv === 30 || md.sub.iv === 60 || md.sub.iv === 90)
+      ) {
+        subscriptionIntent = md.sub;
+        subscriptionUserId = md.uid ?? null;
       }
     } catch {
       console.warn(
@@ -734,7 +749,17 @@ export async function ensureOrderFromKustomOrder(
     }
   }
   const { pointsToKr } = await import("@/lib/loyalty/constants");
-  const discountAmount = redeemedPoints > 0 ? pointsToKr(redeemedPoints) : 0;
+  // Subscription first orders carry the recurring discount as a Kustom
+  // discount line; record the same amount on our Order so the persisted
+  // total matches what the customer actually paid. Loyalty and a
+  // subscription discount never co-occur (subscription checkout offers
+  // no points), but summing is safe either way.
+  const subscriptionDiscount = subscriptionIntent
+    ? Math.round(subtotal * (subscriptionIntent.dp / 100) * 100) / 100
+    : 0;
+  const discountAmount =
+    (redeemedPoints > 0 ? pointsToKr(redeemedPoints) : 0) +
+    subscriptionDiscount;
 
   const totalAmount = subtotal - discountAmount + shippingAmount;
   const taxAmount =
@@ -746,7 +771,7 @@ export async function ensureOrderFromKustomOrder(
   // isn't a perpetual guest order. Prefer the redeeming user's id
   // (from merchant_data); otherwise match the Kustom order email to a
   // registered user. No match → genuine guest order.
-  let linkedUserId: string | null = redeemUserId;
+  let linkedUserId: string | null = redeemUserId ?? subscriptionUserId;
   if (!linkedUserId && email) {
     const u = await prisma.user.findUnique({
       where: { email },
@@ -841,6 +866,20 @@ export async function ensureOrderFromKustomOrder(
           userId: redeemUserId,
           points: redeemedPoints,
           tx,
+        });
+      }
+      // First-delivery subscription: create the Subscription + line
+      // now that the first payment has settled, inside the same txn so
+      // order + subscription commit atomically. Idempotent (keyed on
+      // the order id) for the dual-path page+webhook.
+      if (subscriptionIntent) {
+        await finalizePaidSubscription(tx, {
+          intent: subscriptionIntent,
+          userId: linkedUserId,
+          email,
+          firstOrderId: createdOrder.id,
+          shippingAddressId: address.id,
+          billingAddressId: address.id,
         });
       }
     });

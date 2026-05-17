@@ -3,15 +3,26 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { currentUser } from "@/lib/session";
+import crypto from "node:crypto";
 import {
   createKlarnaOrder,
   updateKustomOrder,
   getKlarnaOrder,
+  isKlarnaConfigured,
 } from "@/lib/klarna/client";
-import { buildKlarnaPayload } from "@/lib/klarna/cart-to-order";
+import {
+  buildKlarnaPayload,
+  shippingForSubtotal,
+  CURRENT_VAT_BP,
+} from "@/lib/klarna/cart-to-order";
 import type { CheckoutLine, CheckoutDiscount } from "@/lib/klarna/cart-to-order";
 import type { KlarnaAddress } from "@/lib/klarna/types";
 import { cuidSchema, positiveIntSchema, fail } from "@/lib/validation/shared";
+import {
+  resolveSubscriptionTarget,
+  finalizePaidSubscription,
+  type SubscriptionIntent,
+} from "@/lib/subscriptions/actions";
 
 /**
  * ADR 0020 — create a Kustom (formerly Klarna) checkout session and
@@ -275,6 +286,210 @@ export async function readKustomOrderTotals(
     return { ok: true, shippingKr: ore / 100 };
   } catch {
     return { ok: false };
+  }
+}
+
+/**
+ * Start the first-delivery checkout for a new subscription.
+ *
+ * The subscription itself is NOT created here — it's created by
+ * `finalizePaidSubscription` once this first payment settles (in
+ * `ensureOrderFromKustomOrder`). The 10 % subscription discount is
+ * passed as an explicit Kustom discount line so the customer sees it
+ * on the payment screen, and the subscription intent rides in
+ * `merchant_data` so the confirmation/webhook path can reconstruct it.
+ *
+ * Stub mode (no Klarna creds — local dev): there is no iframe, so we
+ * mirror the one-time stub-checkout fallback: create a stub-PAID first
+ * Order + the subscription directly and return a redirect to the
+ * confirmation page. This keeps dev usable while still going through
+ * an explicit "paid first delivery" — never a free subscription.
+ */
+export type StartSubscriptionCheckoutResult =
+  | { ok: true; mode: "kustom"; htmlSnippet: string; orderId: string }
+  | { ok: true; mode: "stub"; redirect: string }
+  | { ok: false; error: string };
+
+function generateSubOrderNumber(): string {
+  const now = new Date();
+  const yyyymmdd =
+    now.getFullYear().toString() +
+    (now.getMonth() + 1).toString().padStart(2, "0") +
+    now.getDate().toString().padStart(2, "0");
+  const rand = Math.floor(1000 + Math.random() * 9000);
+  return `BMX-SUB-${yyyymmdd}-${rand}`;
+}
+
+export async function startSubscriptionCheckout(
+  raw: unknown
+): Promise<StartSubscriptionCheckoutResult> {
+  const user = await currentUser();
+  if (!user) {
+    return { ok: false, error: "Du måste vara inloggad för att prenumerera." };
+  }
+
+  const resolved = await resolveSubscriptionTarget(raw);
+  if (!resolved.ok) return { ok: false, error: resolved.error };
+  const t = resolved.target;
+
+  const intent: SubscriptionIntent = {
+    pid: t.productId,
+    vid: t.variantId,
+    q: t.quantity,
+    iv: t.intervalDays,
+    dp: t.discountPercent,
+    up: t.listUnitPrice,
+  };
+
+  const lineSubtotal = t.listUnitPrice * t.quantity;
+  const discountKr =
+    Math.round(lineSubtotal * (t.discountPercent / 100) * 100) / 100;
+
+  // ── Stub mode: no iframe. Create stub-PAID first order + sub. ──
+  if (!isKlarnaConfigured()) {
+    const shippingAmount = await shippingForSubtotal(lineSubtotal);
+    const subtotal = lineSubtotal - discountKr;
+    const totalAmount = subtotal + shippingAmount;
+    const taxAmount =
+      Math.round(
+        ((totalAmount * CURRENT_VAT_BP) / (10000 + CURRENT_VAT_BP)) * 100
+      ) / 100;
+    const orderNumber = generateSubOrderNumber();
+    const trackingToken = crypto.randomBytes(24).toString("base64url");
+    const lastAddress = await prisma.address.findFirst({
+      where: { userId: user.id },
+      orderBy: { createdAt: "desc" },
+      select: { id: true },
+    });
+    const unitPrice =
+      Math.round(t.listUnitPrice * (1 - t.discountPercent / 100) * 100) / 100;
+
+    try {
+      await prisma.$transaction(async (tx) => {
+        const order = await tx.order.create({
+          data: {
+            orderNumber,
+            userId: user.id,
+            email: user.email,
+            status: "PAID",
+            paymentProvider: "KLARNA",
+            paymentReference: `stub-${orderNumber}`,
+            currency: "SEK",
+            subtotal,
+            discountAmount: discountKr,
+            shippingAmount,
+            taxAmount,
+            taxRateBp: CURRENT_VAT_BP,
+            totalAmount,
+            carrier: "POSTNORD",
+            trackingToken,
+            marketingConsent: false,
+            shippingAddressId: lastAddress?.id ?? null,
+            billingAddressId: lastAddress?.id ?? null,
+            legacySource: null,
+            items: {
+              create: [
+                {
+                  productId: t.productId,
+                  variantId: t.variantId,
+                  variantLabel: null,
+                  productName: t.productName,
+                  productSku: t.variantSku ?? t.productSku,
+                  quantity: t.quantity,
+                  unitPrice,
+                  totalPrice: unitPrice * t.quantity,
+                },
+              ],
+            },
+          },
+        });
+        await finalizePaidSubscription(tx, {
+          intent,
+          userId: user.id,
+          email: user.email,
+          firstOrderId: order.id,
+          shippingAddressId: lastAddress?.id ?? null,
+          billingAddressId: lastAddress?.id ?? null,
+        });
+      });
+    } catch (err) {
+      console.error("startSubscriptionCheckout (stub) failed:", err);
+      return { ok: false, error: "Kunde inte skapa prenumerationen." };
+    }
+
+    try {
+      const created = await prisma.order.findUnique({
+        where: { orderNumber },
+        select: { id: true },
+      });
+      if (created) {
+        const { awardOrderPoints } = await import("@/lib/loyalty/earn");
+        await awardOrderPoints(created.id);
+      }
+    } catch (err) {
+      console.error("[subscription] stub loyalty award failed", err);
+    }
+
+    return {
+      ok: true,
+      mode: "stub",
+      redirect: `/checkout/bekraftelse?order=${orderNumber}`,
+    };
+  }
+
+  // ── Real Kustom flow: single-line session + discount line. ──
+  const baseURL =
+    process.env.KUSTOM_MERCHANT_BASE_URL ??
+    process.env.BETTER_AUTH_URL ??
+    "http://localhost:3000";
+
+  const lines: CheckoutLine[] = [
+    {
+      productId: t.productId,
+      slug: "",
+      sku: t.variantSku ?? t.productSku,
+      name: t.productName,
+      imageUrl: "",
+      price: t.listUnitPrice,
+      quantity: t.quantity,
+    },
+  ];
+  const discount: CheckoutDiscount = {
+    amountKr: discountKr,
+    label: `Prenumerationsrabatt −${t.discountPercent} %`,
+    reference: "SUBSCRIPTION",
+  };
+
+  const billingAddress = await prefillAddress();
+  const payload = await buildKlarnaPayload(
+    lines,
+    baseURL,
+    discount,
+    billingAddress
+  );
+  payload.merchant_data = JSON.stringify({ uid: user.id, sub: intent });
+
+  try {
+    const order = await createKlarnaOrder(payload);
+    if (!order.html_snippet || !order.order_id) {
+      return {
+        ok: false,
+        error: "Kustom returnerade ingen checkout (saknar html_snippet).",
+      };
+    }
+    return {
+      ok: true,
+      mode: "kustom",
+      htmlSnippet: order.html_snippet,
+      orderId: order.order_id,
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      error: `Kunde inte starta kassan: ${
+        err instanceof Error ? err.message : "okänt fel"
+      }`,
+    };
   }
 }
 

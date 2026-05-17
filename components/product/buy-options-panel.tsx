@@ -7,7 +7,6 @@ import { AddToCartButton } from "@/components/cart/add-to-cart-button";
 import { Button } from "@/components/ui/button";
 import { RoutineToggleButton } from "@/components/product/routine-toggle-button";
 import { DeliveryEtaChip } from "@/components/product/delivery-eta";
-import { createSubscription } from "@/lib/subscriptions/actions";
 import {
   SUBSCRIPTION_INTERVAL_DAYS,
   DEFAULT_SUBSCRIPTION_INTERVAL_DAYS,
@@ -22,9 +21,10 @@ import { formatPriceSEK } from "@/lib/format";
  * product page. Mirrors what Apotea / Bodystore / Holistic do: a single
  * choice point with a price for each branch and a clear discount badge.
  *
- * When subscription is selected, the customer must be logged in
- * (createSubscription requires a userId). For guests we route them to
- * /logga-in with a `next` redirect back to the PDP.
+ * Choosing "Prenumerera" routes to the first-delivery checkout
+ * (/prenumerera/kassa); the subscription is created only once that
+ * payment settles. Guests are sent to /logga-in with a `next` redirect
+ * back to that checkout so they return to the right place after login.
  *
  * Variants: if the product has variants, the caller passes the selected
  * variant's id, label, and price. For variantless products, pass
@@ -58,7 +58,6 @@ export function BuyOptionsPanel({
     DEFAULT_SUBSCRIPTION_INTERVAL_DAYS
   );
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
   const [pending, start] = useTransition();
   const router = useRouter();
 
@@ -68,42 +67,18 @@ export function BuyOptionsPanel({
 
   function onSubscribe() {
     setError(null);
+    const target = `/prenumerera/kassa?productId=${product.id}${
+      variantId ? `&variantId=${variantId}` : ""
+    }&interval=${interval}`;
     if (!loggedIn) {
-      router.push(
-        `/logga-in?next=${encodeURIComponent(`/produkter/${product.slug}`)}`
-      );
+      router.push(`/logga-in?next=${encodeURIComponent(target)}`);
       return;
     }
-    start(async () => {
-      const result = await createSubscription({
-        productId: product.id,
-        variantId,
-        quantity: 1,
-        intervalDays: interval,
-      });
-      if (!result.ok) {
-        setError(result.error);
-        return;
-      }
-      setSuccess(true);
-      // Direct the customer to /konto/prenumerationer where they can
-      // confirm shipping address etc. The /konto page is the
-      // subscription's home from here on out.
-      setTimeout(() => router.push("/konto/prenumerationer"), 900);
+    // Route through the first-delivery checkout. The subscription is
+    // created only once that payment settles — never here.
+    start(() => {
+      router.push(target);
     });
-  }
-
-  if (success) {
-    return (
-      <div className="rounded-2xl border border-accent-deep/30 bg-accent/10 p-5">
-        <p className="font-display text-lg font-medium tracking-tight text-primary-deep">
-          Prenumeration skapad ✓
-        </p>
-        <p className="mt-1 font-sans text-[13.5px] text-ink-body">
-          Vi tar dig till hanteringssidan…
-        </p>
-      </div>
-    );
   }
 
   return (
@@ -210,7 +185,7 @@ export function BuyOptionsPanel({
             className="min-w-[220px]"
           >
             {pending
-              ? "Skapar prenumeration…"
+              ? "Öppnar kassan…"
               : loggedIn
                 ? `Prenumerera och spara ${DEFAULT_SUBSCRIPTION_DISCOUNT_PERCENT} %`
                 : "Logga in för att prenumerera"}
