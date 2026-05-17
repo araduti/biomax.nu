@@ -50,6 +50,9 @@ jobs:
       # protects nothing in CI and is never used in production.
       BETTER_AUTH_SECRET: "ci-lighthouse-dummy-secret-not-used-in-production"
       BETTER_AUTH_URL: "http://localhost:3000"
+      # Required by the boot-time env validator (lib/env.ts) — the
+      # server fails fast without it, so the audited app can't start.
+      NEXT_PUBLIC_APP_URL: "http://localhost:3000"
       # Disable production integrations during the audit — we want the public
       # surfaces to render, not call out to GSC / Brevo / Klarna / LLMs.
       NEXT_PUBLIC_PLAUSIBLE_DOMAIN: ""
