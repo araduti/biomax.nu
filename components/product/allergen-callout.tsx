@@ -14,9 +14,9 @@ export function AllergenCallout({ allergens }: { allergens: string[] }) {
     <aside
       role="note"
       aria-label="Allergeninformation"
-      className="bg-[#C68A4F]/8 border border-[#C68A4F]/40 rounded-2xl p-5 my-6"
+      className="bg-status-warn/8 border border-status-warn/40 rounded-2xl p-5 my-6"
     >
-      <p className="font-sans text-[11px] uppercase tracking-[0.18em] font-semibold text-[#8A5A2C] mb-2">
+      <p className="font-sans text-[11px] uppercase tracking-[0.18em] font-semibold text-status-low mb-2">
         Innehåller
       </p>
       <p className="font-sans text-[14.5px] text-ink-body leading-relaxed">

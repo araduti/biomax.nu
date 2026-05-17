@@ -186,7 +186,7 @@ export default async function LoyaltyAccountPage() {
                     </div>
                     <span
                       className={`font-display text-[16px] font-medium tabular-nums whitespace-nowrap ${
-                        positive ? "text-accent-deep" : "text-[#B5523B]"
+                        positive ? "text-accent-deep" : "text-status-error"
                       }`}
                     >
                       {positive ? "+" : ""}

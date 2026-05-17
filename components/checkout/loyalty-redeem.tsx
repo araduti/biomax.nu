@@ -6,6 +6,7 @@ import {
   MIN_REDEMPTION_POINTS,
   ORE_PER_POINT,
   pointsToKr,
+  pointsFromKr,
 } from "@/lib/loyalty/constants";
 import { formatPriceSEK } from "@/lib/format";
 import { getMyLoyaltyBalance } from "@/lib/loyalty/actions";
@@ -15,29 +16,103 @@ type Props = {
   subtotalKr: number;
   /** Current redemption choice (controlled by parent). */
   value: number;
-  /** Setter — parent passes to placeOrder. */
+  /** Setter — parent debounces + syncs into the Kustom order
+   *  (suspend → update → resume). This stays a pure controlled input. */
   onChange: (points: number) => void;
 };
 
 /**
- * Inline Familjen Biomax redemption control on /checkout.
+ * Familjen Biomax redemption — the "slider" pattern from the checkout
+ * design exploration (the chosen winner), built pixel-faithfully on
+ * the project design tokens (ADR 0007), not the prototype's `--amber`
+ * palette. Drag-to-redeem with a live discount preview; no apply
+ * button (the parent debounces and syncs into Kustom in place).
  *
- * Behaviour
- * ─────────
- * • Pulls the balance once on mount via server action (no caching layer
- *   for v1 — the request is cheap and rarely re-rendered).
- * • Hidden entirely for guests, users with no account, or balances
- *   below `MIN_REDEMPTION_POINTS`. The checkout sidebar should stay
- *   uncluttered for first-time customers.
- * • Snaps the user's input to multiples of MIN_REDEMPTION_POINTS and
- *   clamps to the lesser of (balance, cart-points-cap).
- * • Two quick-picks: "Använd allt" + "Max för denna order" — covers
- *   the two intents we see in practice.
- *
- * The "value" / "onChange" pair lives in the parent (CheckoutFlow) so
- * the final number submits with the placeOrder call. Server validates
- * one more time before applying; the client is just convenience.
+ * Hidden for guests / unknown balance. Below the redemption minimum we
+ * show the earn-back empty state instead of nothing.
  */
+const THUMB_CSS = `
+.bx-range{appearance:none;-webkit-appearance:none;width:100%;height:28px;background:transparent;margin:0;position:relative;z-index:1;cursor:pointer;}
+.bx-range::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:24px;height:24px;border-radius:999px;background:#0F2440;border:3px solid #F4F0E8;box-shadow:0 1px 3px rgba(10,10,10,.25);cursor:grab;margin-top:0;}
+.bx-range::-moz-range-thumb{width:24px;height:24px;border-radius:999px;background:#0F2440;border:3px solid #F4F0E8;box-shadow:0 1px 3px rgba(10,10,10,.25);cursor:grab;}
+.bx-range::-webkit-slider-runnable-track{background:transparent;height:28px;}
+.bx-range::-moz-range-track{background:transparent;height:28px;}
+.bx-range:focus-visible{outline:2px solid var(--color-primary);outline-offset:4px;border-radius:999px;}
+`;
+
+function Badge() {
+  return (
+    <span className="w-[22px] h-[22px] rounded-full bg-accent text-white grid place-items-center font-display text-[12px] font-bold">
+      B
+    </span>
+  );
+}
+
+function Shell({
+  balance,
+  applied,
+  children,
+  footer,
+}: {
+  balance: number;
+  applied: number;
+  children: React.ReactNode;
+  footer: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-[14px] bg-surface-warm border border-border px-[18px] py-4 overflow-hidden">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <Badge />
+            <span className="font-sans text-[11px] uppercase tracking-[0.16em] font-semibold text-accent-deep">
+              {LOYALTY_PROGRAM_NAME}
+            </span>
+          </div>
+          <p className="mt-2 font-display text-[18px] font-medium tracking-tight text-primary-deep leading-tight">
+            Lös in dina poäng
+          </p>
+        </div>
+        <div className="text-right flex-shrink-0 whitespace-nowrap">
+          <div className="font-sans text-[11px] uppercase tracking-[0.04em] text-ink-mute">
+            Saldo
+          </div>
+          <div className="mt-0.5 font-sans text-[17px] font-semibold tabular-nums text-ink-body">
+            {balance.toLocaleString("sv-SE")}{" "}
+            <span className="text-ink-mute font-normal text-[0.7em]">
+              poäng
+            </span>
+          </div>
+          <div className="mt-0.5 font-sans text-[11px] text-ink-mute tabular-nums">
+            ≈ {formatPriceSEK(pointsToKr(balance))} i rabatt
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4">{children}</div>
+
+      {applied > 0 && (
+        <div className="mt-3.5 px-3 py-2.5 rounded-[8px] bg-primary-deep text-surface flex items-center justify-between text-[13px] whitespace-nowrap">
+          <span className="flex items-center gap-2">
+            <span aria-hidden>✓</span>
+            <span>
+              <b className="tabular-nums">
+                {applied.toLocaleString("sv-SE")}
+              </b>{" "}
+              poäng inlösta
+            </span>
+          </span>
+          <span className="font-semibold tabular-nums">
+            −{formatPriceSEK(pointsToKr(applied))}
+          </span>
+        </div>
+      )}
+
+      {footer}
+    </section>
+  );
+}
+
 export function LoyaltyRedeem({ subtotalKr, value, onChange }: Props) {
   const [balance, setBalance] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
@@ -57,10 +132,33 @@ export function LoyaltyRedeem({ subtotalKr, value, onChange }: Props) {
     };
   }, []);
 
-  // Hidden until we know we have something to show.
   if (loading) return null;
   if (balance === null) return null; // not logged in
-  if (balance < MIN_REDEMPTION_POINTS) return null;
+
+  // Below the redemption minimum → earn-back empty state (mock parity).
+  if (balance < MIN_REDEMPTION_POINTS) {
+    const earn = pointsFromKr(subtotalKr);
+    return (
+      <section className="rounded-[14px] bg-surface-warm border border-border px-[18px] py-4">
+        <div className="flex items-center gap-2">
+          <Badge />
+          <span className="font-sans text-[11px] uppercase tracking-[0.16em] font-semibold text-accent-deep">
+            {LOYALTY_PROGRAM_NAME}
+          </span>
+        </div>
+        <p className="mt-2 font-display text-[18px] font-medium tracking-tight text-primary-deep leading-tight">
+          Du börjar samla poäng på det här köpet
+        </p>
+        <p className="mt-2 font-sans text-[13px] text-ink-mute leading-relaxed">
+          Du får{" "}
+          <b className="text-ink-body">
+            cirka {earn.toLocaleString("sv-SE")} poäng
+          </b>{" "}
+          tillbaka — använd dem nästa gång för rabatt direkt i kassan.
+        </p>
+      </section>
+    );
+  }
 
   // Cap: balance OR however many points fit under the subtotal,
   // whichever is smaller. Snap down to a multiple of MIN.
@@ -72,80 +170,65 @@ export function LoyaltyRedeem({ subtotalKr, value, onChange }: Props) {
     Math.floor(balance / MIN_REDEMPTION_POINTS) * MIN_REDEMPTION_POINTS,
     pointsThatFit
   );
-
-  const applyDiscountKr = pointsToKr(value);
+  const pct = cap === 0 ? 0 : (value / cap) * 100;
 
   function snap(raw: number) {
     if (!Number.isFinite(raw) || raw <= 0) return 0;
     const snapped =
-      Math.floor(raw / MIN_REDEMPTION_POINTS) * MIN_REDEMPTION_POINTS;
+      Math.round(raw / MIN_REDEMPTION_POINTS) * MIN_REDEMPTION_POINTS;
     return Math.min(Math.max(snapped, 0), cap);
   }
 
   return (
-    <section className="mb-6 bg-surface-warm border border-accent/30 rounded-2xl p-5">
-      <div className="flex items-baseline justify-between mb-2 gap-3 flex-wrap">
-        <p className="font-display text-[16px] font-medium tracking-tight text-primary-deep">
-          {LOYALTY_PROGRAM_NAME}
+    <Shell
+      balance={balance}
+      applied={value}
+      footer={
+        <p className="mt-2.5 font-sans text-[12px] text-ink-mute">
+          Dra för att välja. {MIN_REDEMPTION_POINTS} poäng ={" "}
+          {formatPriceSEK((MIN_REDEMPTION_POINTS * ORE_PER_POINT) / 100)}{" "}
+          rabatt.
         </p>
-        <p className="font-sans text-[12.5px] text-ink-mute">
-          Du har{" "}
-          <strong className="font-semibold text-primary-deep">
-            {balance.toLocaleString("sv-SE")} poäng
-          </strong>{" "}
-          ({formatPriceSEK(pointsToKr(balance))})
-        </p>
+      }
+    >
+      <style dangerouslySetInnerHTML={{ __html: THUMB_CSS }} />
+      <div className="flex items-baseline justify-between">
+        <div className="flex items-baseline gap-2">
+          <span className="font-display text-[32px] font-medium tracking-tight tabular-nums text-primary-deep">
+            {value.toLocaleString("sv-SE")}
+          </span>
+          <span className="font-sans text-[13px] text-ink-mute">poäng</span>
+        </div>
+        <span className="font-sans text-[16px] font-semibold tabular-nums text-primary-deep">
+          −{formatPriceSEK(pointsToKr(value))}
+        </span>
       </div>
 
-      <p className="font-sans text-[13px] text-ink-mute mb-3 leading-relaxed">
-        {MIN_REDEMPTION_POINTS} poäng ={" "}
-        {formatPriceSEK((MIN_REDEMPTION_POINTS * ORE_PER_POINT) / 100)} rabatt.
-        Lös in i steg om {MIN_REDEMPTION_POINTS}.
-      </p>
-
-      <div className="flex flex-wrap items-center gap-2">
-        <label
-          htmlFor="loyalty-points-input"
-          className="font-sans text-[13px] text-ink-body whitespace-nowrap"
-        >
-          Använd
-        </label>
+      <div className="mt-3 relative">
+        <div className="absolute left-0 right-0 top-[11px] h-1.5 rounded-full bg-border" />
+        <div
+          className="absolute left-0 top-[11px] h-1.5 rounded-full bg-accent"
+          style={{ width: `${pct}%` }}
+        />
         <input
-          id="loyalty-points-input"
-          type="number"
-          inputMode="numeric"
+          type="range"
+          className="bx-range"
           min={0}
           max={cap}
           step={MIN_REDEMPTION_POINTS}
-          value={value || ""}
-          placeholder="0"
+          value={value}
           onChange={(e) => onChange(snap(Number(e.target.value)))}
-          className="h-11 w-[120px] px-3 rounded-lg border border-border bg-surface font-sans text-[15px] text-ink tabular-nums outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+          aria-label="Poäng att lösa in"
+          aria-valuetext={`${value} poäng, ${formatPriceSEK(pointsToKr(value))} rabatt`}
         />
-        <span className="font-sans text-[13px] text-ink-body">poäng</span>
-        <button
-          type="button"
-          onClick={() => onChange(cap)}
-          className="h-11 px-3 rounded-lg border border-border bg-surface font-sans text-[13px] font-semibold text-primary-deep hover:bg-surface-warm transition-colors"
-        >
-          Max ({cap.toLocaleString("sv-SE")})
-        </button>
-        {value > 0 && (
-          <button
-            type="button"
-            onClick={() => onChange(0)}
-            className="h-11 px-3 font-sans text-[13px] text-ink-mute hover:text-ink-body underline decoration-ink-mute/40 underline-offset-[3px]"
-          >
-            Rensa
-          </button>
-        )}
       </div>
 
-      {value > 0 && (
-        <p className="mt-3 font-sans text-[13.5px] text-accent-deep font-semibold">
-          ↓ Rabatt: −{formatPriceSEK(applyDiscountKr)}
-        </p>
-      )}
-    </section>
+      <div className="flex justify-between font-sans text-[11px] text-ink-mute mt-0.5">
+        <span>0</span>
+        <span className="tabular-nums">
+          Max {cap.toLocaleString("sv-SE")}
+        </span>
+      </div>
+    </Shell>
   );
 }

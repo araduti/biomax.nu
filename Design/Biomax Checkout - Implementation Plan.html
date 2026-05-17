@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Biomax Checkout · Implementation Plan</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="tokens.css" />
+<style>
+  body { background: var(--paper); color: var(--ink); }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 64px 32px 120px; font-family: var(--sans); font-size: 15px; line-height: 1.6; }
+  h1 { font-family: var(--serif); font-weight: 500; font-size: 56px; letter-spacing: -.02em; line-height: 1.05; margin: 0 0 16px; }
+  h2 { font-family: var(--serif); font-weight: 500; font-size: 32px; letter-spacing: -.015em; margin: 56px 0 16px; line-height: 1.15; }
+  h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacing: -.01em; margin: 32px 0 10px; }
+  h4 { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; font-weight: 600; color: var(--mute); margin: 24px 0 8px; }
+  p { margin: 0 0 14px; color: var(--ink-2); }
+  ul, ol { margin: 0 0 16px; padding-left: 22px; color: var(--ink-2); }
+  li { margin: 4px 0; }
+  li::marker { color: var(--mute-2); }
+  a { color: var(--blue); }
+  code { font-family: var(--mono); font-size: .88em; background: var(--paper-2); padding: 1px 6px; border-radius: 4px; color: var(--blue-deep); }
+  pre { font-family: var(--mono); font-size: 12.5px; background: var(--blue-deep); color: #E6ECF3; padding: 18px 20px; border-radius: var(--r-md); overflow-x: auto; line-height: 1.55; margin: 16px 0; }
+  pre code { background: transparent; padding: 0; color: inherit; font-size: inherit; }
+  pre .c { color: #8FA3BA; font-style: italic; }
+  pre .k { color: #B8C8DA; }
+  pre .s { color: #C9D5E2; }
+  pre .n { color: #E6ECF3; }
+  pre .p { color: #7A8B6F; }
+
+  blockquote { margin: 18px 0; padding: 14px 18px; background: var(--surface-warm); border-left: 3px solid var(--blue); border-radius: 0 8px 8px 0; color: var(--ink-2); font-size: 14px; }
+  blockquote p { margin: 0; }
+  blockquote p + p { margin-top: 8px; }
+
+  hr { border: 0; border-top: 1px solid var(--line); margin: 48px 0; }
+
+  /* tables */
+  table { width: 100%; border-collapse: collapse; margin: 14px 0 24px; font-size: 13.5px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-weight: 600; color: var(--ink); background: var(--surface-warm); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; }
+  td code { font-size: 12px; }
+  td:first-child { white-space: nowrap; }
+
+  /* phase header */
+  .phase {
+    display: flex; align-items: baseline; gap: 16px;
+    padding: 12px 20px;
+    background: var(--blue-deep); color: var(--paper);
+    border-radius: var(--r-md);
+    margin: 56px 0 8px;
+  }
+  .phase .p { font-family: var(--serif); font-size: 24px; font-weight: 500; }
+  .phase .l { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: rgba(251,250,247,.7); }
+  .phase .e { margin-left: auto; font-size: 12px; color: rgba(251,250,247,.7); }
+
+  /* impact tag */
+  .tag { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+  .tag.hi { background: #F4E2DE; color: #8E2D24; }
+  .tag.md { background: var(--blue-50); color: var(--blue-deep); }
+  .tag.lo { background: var(--sage-50); color: var(--sage-deep); }
+
+  /* swatch */
+  .sw { display: inline-flex; align-items: center; gap: 8px; }
+  .sw .ch { width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(0,0,0,.1); display: inline-block; vertical-align: middle; }
+
+  /* check card */
+  .acceptance {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--r-lg); padding: 18px 22px; margin: 16px 0;
+  }
+  .acceptance h4 { margin-top: 0; }
+  .acceptance ul { padding-left: 18px; }
+  .acceptance li { padding-left: 4px; }
+
+  .pill {
+    display: inline-block;
+    padding: 2px 9px; border-radius: 999px;
+    background: var(--paper-2); color: var(--ink-2);
+    font-size: 11.5px; font-weight: 500;
+    margin-right: 6px;
+  }
+
+  .lead { font-size: 18px; color: var(--ink-2); line-height: 1.55; max-width: 60ch; }
+
+  .toc { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 18px 22px; margin: 24px 0 40px; }
+  .toc h4 { margin: 0 0 8px; }
+  .toc ol { margin: 0; padding-left: 18px; columns: 2; column-gap: 24px; font-size: 13.5px; }
+  .toc a { color: var(--ink-2); text-decoration: none; }
+  .toc a:hover { color: var(--blue); }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 14px 16px; font-size: 13.5px; color: var(--ink-2); }
+  .card b { color: var(--ink); }
+
+  .file-tree {
+    font-family: var(--mono); font-size: 12.5px; line-height: 1.7;
+    background: var(--surface-warm); border-radius: var(--r-md);
+    padding: 14px 18px; color: var(--ink-2);
+  }
+  .file-tree .new { color: var(--sage-deep); }
+  .file-tree .new::before { content: '+ '; color: var(--sage); font-weight: 600; }
+  .file-tree .edit::before { content: '~ '; color: var(--blue); font-weight: 600; }
+  .file-tree .keep { color: var(--mute); }
+  .file-tree .keep::before { content: '· '; color: var(--mute-2); }
+
+  .meta {
+    display: flex; gap: 32px;
+    padding-bottom: 32px; margin-bottom: 32px;
+    border-bottom: 1px solid var(--line);
+    color: var(--mute); font-size: 12.5px;
+  }
+  .meta div b { display: block; color: var(--ink); font-weight: 600; margin-bottom: 2px; }
+</style>
+</head>
+<body>
+<main class="wrap">
+
+<div class="eyebrow" style="margin-bottom: 16px;">Implementation brief · v1</div>
+<h1>Biomax checkout —<br/>Kustom-aware redesign</h1>
+<p class="lead">A complete, ordered build plan for an AI engineering agent to translate the Nordic-Steel checkout exploration into production code on a Kustom-iframe foundation. Phase-gated by conversion impact, with API payloads, code, and acceptance criteria for every step.</p>
+
+<div class="meta">
+  <div><b>Stack</b>Frontend host · Kustom Checkout SDK</div>
+  <div><b>Target</b>Biomax.nu · /kassan</div>
+  <div><b>Brand</b>Nordic Steel · refined</div>
+  <div><b>Owners</b>Frontend AI · Eng review</div>
+</div>
+
+<div class="toc">
+  <h4>Contents</h4>
+  <ol>
+    <li><a href="#strategy">Strategy & boundaries</a></li>
+    <li><a href="#tokens">Design tokens</a></li>
+    <li><a href="#kustom">Kustom API config</a></li>
+    <li><a href="#phases">Phased build</a></li>
+    <li><a href="#points">Points integration</a></li>
+    <li><a href="#express">Express pay</a></li>
+    <li><a href="#cart">Cart panel</a></li>
+    <li><a href="#trust">Trust & social proof</a></li>
+    <li><a href="#mobile">Mobile specifics</a></li>
+    <li><a href="#metrics">Acceptance & metrics</a></li>
+    <li><a href="#risks">Risks & edge cases</a></li>
+  </ol>
+</div>
+
+<!-- ─────────────────────────────────────────────────────── -->
+<h2 id="strategy">1 · Strategy &amp; boundaries</h2>
+
+<p>The Kustom iframe handles the entire form: customer details, shipping options, payment selection, totals, and the final <em>Slutför köp</em> CTA. It is mounted inside <code>#kustom-checkout-container</code> and its internal DOM is sandboxed — merchant CSS does not apply.</p>
+
+<p>Inside the iframe, Kustom exposes:</p>
+<ul>
+  <li>7 themable color tokens + 1 border-radius value (passed via <code>options</code> at order-create time)</li>
+  <li>A ≤70-char <code>shipping_details</code> message on the confirmation</li>
+  <li>A <code>vat_removed</code> boolean to hide VAT</li>
+</ul>
+
+<p>Layout, typography, microcopy, field labels, sequence, and error states inside the iframe are <strong>not</strong> editable. Therefore <strong>every conversion lever lives outside the iframe</strong>, in zones we fully control.</p>
+
+<h4>Zone ownership</h4>
+<table>
+  <thead><tr><th>Zone</th><th>Owner</th><th>Conversion lever</th></tr></thead>
+  <tbody>
+    <tr><td>Top utility bar</td><td><span class="pill">Merchant</span></td><td>USPs, free-shipping threshold, loyalty greeting</td></tr>
+    <tr><td>Main nav</td><td><span class="pill">Merchant</span></td><td>Persistent points balance badge</td></tr>
+    <tr><td>Member greeting strip</td><td><span class="pill">Merchant</span></td><td>Loyalty tone-setting before the form</td></tr>
+    <tr><td>Express-pay strip</td><td><span class="pill">Merchant</span></td><td>Apple/Google/Klarna Express — Kustom's documented #1 lift</td></tr>
+    <tr><td><b>Kustom iframe</b></td><td><span class="pill" style="background:#FBEED1;color:#7A4A18">Kustom</span></td><td>Themable via API only</td></tr>
+    <tr><td>Cart panel</td><td><span class="pill">Merchant</span></td><td>Line items, qty edit, mirrored totals</td></tr>
+    <tr><td>Points widget</td><td><span class="pill">Merchant</span></td><td>Discount applied via order-update API</td></tr>
+    <tr><td>Trust strip</td><td><span class="pill">Merchant</span></td><td>Trustpilot, Svanen, returns, payment-method icons</td></tr>
+    <tr><td>Recommendations</td><td><span class="pill">Merchant</span></td><td>AOV lift — add-to-cart suspended/resumed around the iframe</td></tr>
+    <tr><td>Reviews & FAQ</td><td><span class="pill">Merchant</span></td><td>Below-fold reassurance</td></tr>
+  </tbody>
+</table>
+
+<!-- ─────────────────────────────────────────────────────── -->
+<h2 id="tokens">2 · Design tokens</h2>
+
+<p>Adopt the locked palette globally. Replace any existing checkout-page CSS variables. Apply to both the host page and the values sent to the Kustom theme API.</p>
+
+<table>
+  <thead><tr><th>Token</th><th>Hex</th><th>Use</th></tr></thead>
+  <tbody>
+    <tr><td><span class="sw"><span class="ch" style="background:#1E3A5F"></span><code>--blue</code></span></td><td>#1E3A5F</td><td>Primary buttons, links, CTAs</td></tr>
+    <tr><td><span class="sw"><span class="ch" style="background:#0F2440"></span><code>--blue-deep</code></span></td><td>#0F2440</td><td>Headers, top utility bar</td></tr>
+    <tr><td><span class="sw"><span class="ch" style="background:#7A8B6F"></span><code>--sage</code></span></td><td>#7A8B6F</td><td>Loyalty accent, applied/success state</td></tr>
+    <tr><td><span class="sw"><span class="ch" style="background:#FBFAF7;border:1px solid #ddd"></span><code>--paper</code></span></td><td>#FBFAF7</td><td>Page background</td></tr>
+    <tr><td><span class="sw"><span class="ch" style="background:#F4F0E8"></span><code>--paper-2</code></span></td><td>#F4F0E8</td><td>Warm surface · loyalty card</td></tr>
+    <tr><td><span class="sw"><span class="ch" style="background:#0A0A0A"></span><code>--ink</code></span></td><td>#0A0A0A</td><td>Body text</td></tr>
+  </tbody>
+</table>
+
+<h4>Typography</h4>
+<ul>
+  <li><b>Playfair Display</b> 400/500/600 — all H1–H4 (Kustom <code>color_header</code> targets these inside the iframe but Playfair will not load there; iframe headers stay in Kustom's stack).</li>
+  <li><b>Inter</b> 400/500/600/700 — body and all UI chrome.</li>
+  <li><b>JetBrains Mono</b> 400/500 — tabular numbers in totals (optional; <code>font-variant-numeric: tabular-nums</code> on Inter is acceptable).</li>
+</ul>
+
+<!-- ─────────────────────────────────────────────────────── -->
+<h2 id="kustom">3 · Kustom API configuration</h2>
+
+<p>Set these <code>options</code> when creating the order via the Kustom Checkout API. Hex values only (no <code>rgba()</code>, no <code>var()</code>).</p>
+
+<pre><code><span class="c">// POST /checkout/v3/orders — options block</span>
+<span class="n">{</span>
+  <span class="n">"options"</span>: <span class="n">{</span>
+    <span class="n">"color_button"</span>:            <span class="s">"#1E3A5F"</span>,  <span class="c">// deep clinical blue</span>
+    <span class="n">"color_button_text"</span>:       <span class="s">"#FFFFFF"</span>,
+    <span class="n">"color_checkbox"</span>:          <span class="s">"#1E3A5F"</span>,  <span class="c">// radio + checkbox fill</span>
+    <span class="n">"color_checkbox_checkmark"</span>: <span class="s">"#FFFFFF"</span>,
+    <span class="n">"color_header"</span>:            <span class="s">"#0A0A0A"</span>,  <span class="c">// section headers inside iframe</span>
+    <span class="n">"color_link"</span>:              <span class="s">"#1E3A5F"</span>,
+    <span class="n">"radius_border"</span>:           <span class="n">8</span>,
+    <span class="n">"shipping_details"</span>:        <span class="s">"Snabb, spårbar leverans · 1–3 vardagar"</span>,
+    <span class="n">"vat_removed"</span>:             <span class="k">false</span>
+  <span class="n">}</span>
+<span class="n">}</span>
+</code></pre>
+
+<blockquote>
+  <p><b>Constraint reminder:</b> do NOT apply any merchant CSS to <code>#kustom-checkout-container</code> or its descendants. Selectors that target inside the iframe will not work and may break the Kustom session.</p>
+</blockquote>
+
+<!-- ─────────────────────────────────────────────────────── -->
+<h2 id="phases">4 · Phased build</h2>
+
+<p>Three phases, gated by impact. P0 is the conversion floor: until it ships, no other work is shipped. P1 raises AOV and trust. P2 polishes mobile and edge states.</p>
+
+<div class="phase">
+  <span class="l">Phase</span><span class="p">P0</span>
+  <span class="e">Estimated · 3–5 days · highest leverage</span>
+</div>
+<h4>Goal</h4><p>Get the Kustom-themed iframe + express pay + a working loyalty widget live.</p>
+<h4>Tasks</h4>
+<ol>
+  <li>Apply the design-token CSS variables to the <code>/kassan</code> route. Remove the legacy palette from this route's stylesheet.</li>
+  <li>Send the <code>options</code> payload above when creating the Kustom order. Verify the iframe renders with the new colors.</li>
+  <li>Build the <b>Express-pay strip</b> above the iframe (see §6).</li>
+  <li>Build the <b>cart panel</b> on the right with mirrored line items + totals (see §7).</li>
+  <li>Build the <b>points widget</b> inside the cart panel and wire it to the order-update API (see §5).</li>
+  <li>Ship behind a feature flag <code>kassan_v2</code>. Cookie-gate to 10% of sessions for 48h.</li>
+</ol>
+<div class="acceptance">
+  <h4>Acceptance · P0</h4>
+  <ul>
+    <li>Lighthouse perf score on <code>/kassan</code> ≥ 85 on a throttled 4G/Moto G profile.</li>
+    <li>Kustom iframe successfully loads with the new theme — confirmed in the Kustom dashboard's "Test Order" view.</li>
+    <li>Express-pay buttons fire and complete an order without ever showing the iframe form.</li>
+    <li>Applying points triggers exactly one <code>suspend → updateCart → resume</code> sequence; the iframe totals match the merchant cart totals to the öre.</li>
+    <li>No merchant CSS rule has a selector that targets inside <code>#kustom-checkout-container</code> (lint rule added).</li>
+  </ul>
+</div>
+
+<div class="phase">
+  <span class="l">Phase</span><span class="p">P1</span>
+  <span class="e">Estimated · 2–3 days · AOV + reassurance</span>
+</div>
+<h4>Tasks</h4>
+<ol>
+  <li>Build the <b>trust strip</b> directly under the cart panel (see §8).</li>
+  <li>Build the <b>recommendations</b> block under the trust strip. Adding a recommendation must <code>suspend</code> the iframe, hit the cart API, then <code>resume</code>.</li>
+  <li>Build the <b>member greeting strip</b> above the express-pay row. Show only when the user is signed in <em>or</em> identified by email — see §11 for the empty/anonymous state.</li>
+  <li>Build the <b>reviews + FAQ</b> block below the fold.</li>
+  <li>Move the rollout flag to 50%.</li>
+</ol>
+
+<div class="phase">
+  <span class="l">Phase</span><span class="p">P2</span>
+  <span class="e">Estimated · 2 days · mobile + edge</span>
+</div>
+<h4>Tasks</h4>
+<ol>
+  <li>Implement mobile collapsed-summary chevron, sticky bottom CTA shadow.</li>
+  <li>Implement empty/full/error states for the points widget (§5).</li>
+  <li>Implement loyalty empty state for non-members (§11).</li>
+  <li>Hook up reviews to live Trustpilot widget.</li>
+  <li>Rollout to 100%; keep flag in code for emergency rollback for 14 days, then remove.</li>
+</ol>
+
+<!-- ─────────────────────────────────────────────────────── -->
+<h2 id="points">5 · Points widget integration</h2>
+
+<p>The widget sits inside the cart panel, directly above the totals. <strong>Default pattern: slider</strong> (recommended winner from the exploration — drag-to-redeem with live discount preview removed the friction users had with the 100-point manual input).</p>
+
+<h4>Data contract</h4>
+<table>
+  <thead><tr><th>Field</th><th>Type</th><th>Source</th></tr></thead>
+  <tbody>
+    <tr><td><code>balance</code></td><td>integer</td><td><code>GET /api/loyalty/balance</code> · cached 60s</td></tr>
+    <tr><td><code>step</code></td><td>integer</td><td>const · <code>100</code></td></tr>
+    <tr><td><code>rate</code></td><td>integer</td><td>const · <code>10</code> (kr per <code>step</code>)</td></tr>
+    <tr><td><code>applied</code></td><td>integer</td><td>component state, multiple of <code>step</code>, ≤ <code>balance - balance % step</code></td></tr>
+  </tbody>
+</table>
+
+<h4>Iframe handoff</h4>
+<p>When <code>applied</code> changes, suspend the iframe, push a new cart with a discount line, then resume. Kustom recomputes totals and re-renders.</p>
+
+<pre><code><span class="c">// /src/checkout/points.ts</span>
+<span class="k">import</span> <span class="n">{ kco }</span> <span class="k">from</span> <span class="s">'@/lib/kustom'</span>;
+
+<span class="k">export async function</span> <span class="n">applyPoints</span>(points: <span class="k">number</span>) {
+  <span class="c">// 1) freeze the iframe — prevents the user from submitting mid-update</span>
+  <span class="n">kco</span>.<span class="n">suspend</span>();
+
+  <span class="k">try</span> {
+    <span class="c">// 2) tell our cart service the new redemption</span>
+    <span class="k">const</span> <span class="n">cart</span> = <span class="k">await</span> <span class="n">fetch</span>(<span class="s">'/api/cart/points'</span>, {
+      <span class="n">method</span>: <span class="s">'PATCH'</span>,
+      <span class="n">headers</span>: { <span class="s">'Content-Type'</span>: <span class="s">'application/json'</span> },
+      <span class="n">body</span>: <span class="n">JSON</span>.<span class="n">stringify</span>({ <span class="n">points</span> })
+    }).<span class="k">then</span>(r =&gt; r.<span class="n">json</span>());
+
+    <span class="c">// 3) push the new cart to Kustom (or rely on session sync if your backend</span>
+    <span class="c">//    already updates the Kustom order on cart change). Either path:</span>
+    <span class="k">await</span> <span class="n">kco</span>.<span class="n">updateOrder</span>({
+      <span class="n">order_lines</span>: <span class="n">cart</span>.<span class="n">orderLines</span>
+    });
+  } <span class="k">finally</span> {
+    <span class="c">// 4) always resume — even on error — so the form is usable</span>
+    <span class="n">kco</span>.<span class="n">resume</span>();
+  }
+}
+</code></pre>
+
+<h4>Optimistic UI</h4>
+<p>The widget updates its own preview (<code>−X kr</code>) <em>immediately</em> on drag. The iframe stays suspended during the drag and only commits on <code>change</code> (mouse-up). This avoids flooding the API and keeps the iframe legible.</p>
+
+<pre><code><span class="c">// debounced commit pattern</span>
+<span class="k">const</span> [<span class="n">applied</span>, <span class="n">setApplied</span>] = <span class="n">React</span>.<span class="n">useState</span>(<span class="n">0</span>);
+
+<span class="k">const</span> <span class="n">commit</span> = <span class="n">React</span>.<span class="n">useMemo</span>(
+  () =&gt; <span class="n">debounce</span>(<span class="n">applyPoints</span>, <span class="n">250</span>),
+  []
+);
+
+<span class="k">return</span> &lt;<span class="n">PointsSlider</span>
+  <span class="n">value</span>={<span class="n">applied</span>}
+  <span class="n">onChange</span>={(<span class="n">v</span>) =&gt; { <span class="n">setApplied</span>(<span class="n">v</span>); <span class="n">commit</span>(<span class="n">v</span>); }}
+/&gt;;
+</code></pre>
+
+<h4>States to implement</h4>
+<table>
+  <thead><tr><th>State</th><th>Trigger</th><th>UI</th></tr></thead>
+  <tbody>
+    <tr><td>Empty</td><td><code>balance &lt; 100</code></td><td>Earning preview card — "You'll earn +N points on this order"</td></tr>
+    <tr><td>Idle</td><td>has balance, none applied</td><td>Slider at 0, sage track</td></tr>
+    <tr><td>Active</td><td><code>applied &gt; 0</code></td><td>Midnight pill below slider: "300 points redeemed · −30 kr"</td></tr>
+    <tr><td>Loading</td><td>commit in flight</td><td>Slider thumb shows spinner ring; iframe shows Kustom's own suspended overlay</td></tr>
+    <tr><td>Error</td><td>API non-2xx</td><td>Rose-50 toast above widget: "Couldn't apply points. Try again." → revert <code>applied</code> to last-committed value</td></tr>
+  </tbody>
+</table>
+
+<!-- ─────────────────────────────────────────────────────── -->
+<h2 id="express">6 · Express-pay strip</h2>
+
+<p>Three buttons above the iframe: <b>Apple Pay</b>, <b>Google Pay</b>, <b>Klarna Express</b>. Each completes an order without the user ever filling in the form.</p>
+
+<h4>Visibility</h4>
+<ul>
+  <li>Apple Pay — show only when <code>window.ApplePaySession?.canMakePayments() === true</code>.</li>
+  <li>Google Pay — show only when <code>google.payments.api.PaymentsClient.isReadyToPay()</code> returns <code>true</code>.</li>
+  <li>Klarna Express — always show. Triggers <code>KlarnaCheckoutExpress.show()</code> from the Kustom SDK.</li>
+</ul>
+
+<h4>Layout</h4>
+<ul>
+  <li>If 3 buttons available → grid 3 × 1.</li>
+  <li>If 2 → grid 2 × 1.</li>
+  <li>If 1 → full-width single button.</li>
+  <li>If 0 → hide the entire strip including the "eller fyll i nedan" divider.</li>
+</ul>
+
+<h4>Success handler</h4>
+<p>Each express button must dispatch the same <code>order:created</code> event the iframe path dispatches, so analytics, GTM tags, and the loyalty-points-earn job all fire identically regardless of payment route.</p>
+
+<!-- ─────────────────────────────────────────────────────── -->
+<h2 id="cart">7 · Cart panel</h2>
+
+<p>Sticky on desktop (<code>position: sticky; top: 16px</code>). Collapsed by default on mobile with a "Visa beställning" chevron.</p>
+
+<h4>Sections, top to bottom</h4>
+<ol>
+  <li>Header — "Din beställning · 2 produkter" + "Redigera kundvagn" link back to cart.</li>
+  <li>Line items — name, sub, qty stepper (<code>−</code> / qty / <code>+</code>), line total. Quantity changes call the same <code>suspend → update → resume</code> sequence as points.</li>
+  <li>Points widget — slot directly here when <code>applied &gt; 0</code> OR <code>balance ≥ 100</code>.</li>
+  <li>Totals — Delsumma · Frakt · (Poängrabatt if applicable, sage) · Totalt (Playfair 24 px). Must mirror what the iframe shows — both totals should come from the same backend source.</li>
+  <li>Earn-back hint — cream pill: "Du tjänar +N poäng på det här köpet."</li>
+</ol>
+
+<blockquote><p><b>Why mirror the totals?</b> The iframe shows its own totals as part of payment. If our cart panel shows a different number, trust collapses. Both must read from the same authoritative endpoint (<code>GET /api/cart/totals</code>).</p></blockquote>
+
+<!-- ─────────────────────────────────────────────────────── -->
+<h2 id="trust">8 · Trust strip &amp; social proof</h2>
+
+<p>Four cells in a 2×2 grid below the cart panel:</p>
+<ul>
+  <li><b>Snabb leverans</b> · 1–3 vardagar med PostNord</li>
+  <li><b>14 dagars öppet köp</b> · Fri retur via PostNord</li>
+  <li><b>Svanenmärkt frakt</b> · Klimatneutralt val</li>
+  <li><b>4,7 av 5 på Trustpilot</b> · 12 400+ omdömen → links to /omdomen</li>
+</ul>
+
+<p>Reviews block below the fold pulls 3 most-recent 4★+ reviews from the Trustpilot API. Cache for 24h. Fall back to a hand-curated set of 3 reviews if the API errors.</p>
+
+<!-- ─────────────────────────────────────────────────────── -->
+<h2 id="mobile">9 · Mobile specifics</h2>
+
+<ul>
+  <li><b>Sticky CTA</b> is owned by Kustom inside the iframe — we cannot override its position. Accept this and ensure the iframe has enough breathing room (no fixed footer overlapping its <code>Slutför köp</code> button).</li>
+  <li><b>Collapsed cart strip</b> at the top — single-line "Visa beställning · 565 kr" with chevron. Tap expands the full cart inline.</li>
+  <li><b>Member greeting</b> shrinks to a single-line row: badge + "796 poäng" + arrow link "↓ Använd nedan".</li>
+  <li><b>Express pay</b> stays full-width above the iframe. Buttons stack into a column when viewport ≤ 360px.</li>
+  <li><b>Trust strip</b> becomes a horizontal scroller (4 cards, snap points, no scrollbar) below the cart so it never pushes the iframe below the fold.</li>
+</ul>
+
+<!-- ─────────────────────────────────────────────────────── -->
+<h2 id="metrics">10 · Acceptance &amp; metrics</h2>
+
+<h4>Acceptance criteria — overall</h4>
+<div class="acceptance">
+  <ul>
+    <li>Visual regression vs. the Figma frames at ≤2px diff on key zones (cart panel, express row, points widget).</li>
+    <li>Both keyboard navigation and screen reader can complete an order using express pay AND the standard iframe path.</li>
+    <li>All copy is Swedish. No untranslated strings reach production.</li>
+    <li>Removing the <code>kassan_v2</code> flag instantly reverts to the old checkout — no DB migrations on either path.</li>
+    <li>Points balance & applied amount survive a page refresh and a browser back-button.</li>
+  </ul>
+</div>
+
+<h4>Metrics to watch (week-over-week vs. baseline)</h4>
+<div class="grid2">
+  <div class="card"><b>Primary · checkout completion rate</b><br/>Sessions that hit /kassan ÷ sessions that complete an order. Target +6 pts.</div>
+  <div class="card"><b>Express-pay attach</b><br/>Express orders ÷ total orders. Target ≥15% within 2 weeks.</div>
+  <div class="card"><b>Points redemption rate</b><br/>Orders with <code>applied &gt; 0</code> ÷ orders by users with ≥100 balance. Target ≥40%.</div>
+  <div class="card"><b>AOV</b><br/>Recs block should add +3% AOV with no completion-rate regression.</div>
+  <div class="card"><b>Time-to-pay</b><br/>Median time from /kassan view to order complete. Target −20% on mobile.</div>
+  <div class="card"><b>Trust signals</b><br/>Trustpilot click-through and FAQ open-rate as soft signals.</div>
+</div>
+
+<!-- ─────────────────────────────────────────────────────── -->
+<h2 id="risks">11 · Risks &amp; edge cases</h2>
+
+<table>
+  <thead><tr><th>Risk</th><th>Mitigation</th></tr></thead>
+  <tbody>
+    <tr><td>Kustom SDK changes the <code>suspend/resume</code> contract</td><td>Pin SDK version. Subscribe to Kustom's changelog. Wrap calls in a thin adapter (<code>/lib/kustom.ts</code>) so a swap is one file.</td></tr>
+    <tr><td>Merchant cart total drifts from iframe total</td><td>Both must read from the same <code>/api/cart/totals</code>. Add a runtime assertion that compares them on every render in dev mode.</td></tr>
+    <tr><td>User applies points, then changes shipping in iframe</td><td>Shipping change re-fires <code>updateCart</code>. The points discount is preserved as a line item, not a percentage — it survives shipping changes.</td></tr>
+    <tr><td>Anonymous / not-logged-in user</td><td>Member greeting hides. Points widget renders the "Bli medlem" empty state (link to /konto/registrera, prefilled with checkout email). Earn-back hint still shows projected earn.</td></tr>
+    <tr><td>Express pay returns to checkout (e.g. user cancels Apple Pay sheet)</td><td>Re-show the iframe with current cart state. No double-render.</td></tr>
+    <tr><td>Recommendations block adds an item mid-checkout</td><td><code>suspend → updateOrder → resume</code> same pattern as points. Toast confirms the add. Item is removable from the cart panel inline.</td></tr>
+    <tr><td>Slow loyalty API</td><td>Render the points widget skeleton inline. Don't block the iframe load on balance fetch.</td></tr>
+    <tr><td>Currency / locale</td><td>SEK only for now. All <code>toLocaleString('sv-SE')</code>. Hard-coded "kr" suffix is acceptable.</td></tr>
+  </tbody>
+</table>
+
+<hr/>
+
+<h2 id="files">Appendix · file map</h2>
+
+<p>Reference file layout for the prototype. Mirror this structure when implementing — file boundaries match component boundaries.</p>
+
+<div class="file-tree">
+<div class="keep">tokens.css                <span style="color:var(--mute-2)">// design tokens, paste into global stylesheet</span></div>
+<div class="keep">components.jsx            <span style="color:var(--mute-2)">// Section, RadioRow, Button, Chip, Icon, Badge, BrandPill</span></div>
+<div class="keep">points-widgets.jsx        <span style="color:var(--mute-2)">// PointsSlider/Chips/Stepper/Toggle/Hero — pick one to ship</span></div>
+<div class="keep">kustom-iframe.jsx         <span style="color:var(--mute-2)">// reference mock of what the iframe renders, for stakeholders</span></div>
+<div class="keep">checkout-v2.jsx           <span style="color:var(--mute-2)">// host page — TopBar, Nav, ExpressPay, CartPanel, TrustStrip, Recos, Reviews, FAQ</span></div>
+</div>
+
+<p style="margin-top: 24px; color: var(--mute); font-size: 12.5px;">End of brief · v1 · Generated for AI engineering handoff. Update the metrics table after rollout reaches 100% and remove the flag.</p>
+
+</main>
+</body>
+</html>

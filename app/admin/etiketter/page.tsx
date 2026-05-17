@@ -28,7 +28,7 @@ export default function LabelPreviewPage() {
 
       <div className="space-y-12">
         <section>
-          <h2 className="font-display text-2xl font-medium text-primary-deep mb-1">
+          <h2 className="font-sans text-[16px] font-semibold text-primary-deep mb-1">
             Variant A — &quot;Stamped&quot;
           </h2>
           <p className="font-sans text-[13.5px] text-ink-mute mb-6 max-w-[640px] leading-relaxed">
@@ -43,7 +43,7 @@ export default function LabelPreviewPage() {
         </section>
 
         <section>
-          <h2 className="font-display text-2xl font-medium text-primary-deep mb-1">
+          <h2 className="font-sans text-[16px] font-semibold text-primary-deep mb-1">
             Variant B — &quot;Editorial&quot;
           </h2>
           <p className="font-sans text-[13.5px] text-ink-mute mb-6 max-w-[640px] leading-relaxed">
@@ -58,7 +58,7 @@ export default function LabelPreviewPage() {
         </section>
 
         <section className="border-t border-border-soft pt-10">
-          <h2 className="font-display text-lg font-medium text-primary-deep mb-3">
+          <h2 className="font-sans text-[14.5px] font-semibold text-primary-deep mb-3">
             Noter
           </h2>
           <ul className="font-sans text-[13px] text-ink-mute leading-relaxed list-disc pl-5 space-y-1.5 max-w-[680px]">

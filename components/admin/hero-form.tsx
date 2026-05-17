@@ -4,6 +4,7 @@ import { useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { seasons } from "@/lib/seasons";
+import { confirmDialog } from "@/components/admin/confirm-dialog";
 import {
   saveHero,
   setHeroStatus,
@@ -211,9 +212,12 @@ export function HeroForm({ initial }: { initial?: Initial }) {
 
   async function onArchive() {
     if (!initial?.id) return;
-    if (!confirm("Arkivera den här hero-bilden? Den slutar visas direkt.")) {
-      return;
-    }
+    const ok = await confirmDialog({
+      title: "Arkivera hero-bilden?",
+      body: "Den slutar visas direkt. Du kan publicera den igen senare.",
+      confirmLabel: "Arkivera",
+    });
+    if (!ok) return;
     const res = await setHeroStatus(initial.id, "ARCHIVED");
     if (res.ok) router.push("/admin/startsida/hero");
     else setError(res.error);
@@ -221,7 +225,13 @@ export function HeroForm({ initial }: { initial?: Initial }) {
 
   async function onDelete() {
     if (!initial?.id) return;
-    if (!confirm("Ta bort permanent? Bilden raderas också.")) return;
+    const ok = await confirmDialog({
+      title: "Ta bort permanent?",
+      body: "Hero-bilden tas bort från databasen och den uppladdade bilden raderas. Detta går inte att ångra.",
+      confirmLabel: "Ta bort",
+      intent: "destructive",
+    });
+    if (!ok) return;
     const res = await deleteHero(initial.id);
     if (res.ok) router.push("/admin/startsida/hero");
     else setError(res.error);
@@ -230,7 +240,7 @@ export function HeroForm({ initial }: { initial?: Initial }) {
   return (
     <form onSubmit={onSubmit} className="space-y-8 max-w-[820px]">
       {error && (
-        <div className="bg-[#B5523B]/8 border border-[#B5523B]/30 rounded-xl px-5 py-4 font-sans text-[14.5px] text-[#B5523B]">
+        <div className="bg-status-error/8 border border-status-error/30 rounded-xl px-5 py-4 font-sans text-[14.5px] text-status-error">
           {error}
         </div>
       )}
@@ -527,7 +537,7 @@ export function HeroForm({ initial }: { initial?: Initial }) {
             <button
               type="button"
               onClick={onDelete}
-              className="inline-flex items-center justify-center h-12 px-5 rounded-lg font-sans text-[14px] font-semibold text-[#B5523B] hover:bg-[#B5523B]/8 transition-colors"
+              className="inline-flex items-center justify-center h-12 px-5 rounded-lg font-sans text-[14px] font-semibold text-status-error hover:bg-status-error/8 transition-colors"
             >
               Ta bort permanent
             </button>
@@ -612,7 +622,7 @@ function HeroPreview({
   return (
     <div className="space-y-3">
       <div
-        className="relative overflow-hidden rounded-2xl border border-border bg-primary-deep shadow-sm"
+        className="relative overflow-hidden rounded-xl border border-border bg-primary-deep shadow-sm"
         style={{ aspectRatio: "16 / 9", maxHeight: 360 }}
       >
         {photoUrl ? (

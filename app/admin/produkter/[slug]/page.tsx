@@ -182,50 +182,54 @@ export default async function AdminProductEditPage({
         }
       />
 
-      <div className="mb-6">
+      {/* All sub-sections flow as divider-separated chunks rather than
+          nested bordered cards. The earlier 5-card stack (galleri /
+          varianter / relaterade / GSC / edit form, each in a
+          `border rounded-xl p-5` wrapper) read as five separate tools
+          glued together. Replacing the boxes with hairline dividers
+          makes the editor read as one coherent surface — much closer
+          to Stripe's stacked-section pattern. */}
+
+      <section className="pb-8 mb-8 border-b border-border-soft">
         <SlugRename currentSlug={product.slug} />
-      </div>
+      </section>
 
       {indexCheck && (
-        <div className="mb-6">
+        <section className="pb-8 mb-8 border-b border-border-soft">
           <IndexStatusBadge check={indexCheck} />
-        </div>
+        </section>
       )}
 
-      <div className="mb-6">
+      <section className="pb-8 mb-8 border-b border-border-soft">
         <ProductImageUpload
           slug={product.slug}
           initialUrl={product.imageUrl}
           productName={product.name}
         />
-      </div>
+      </section>
 
-      <div className="mb-6 bg-surface-alt border border-border rounded-2xl p-6 md:p-8">
-        <header className="mb-5">
-          <h2 className="font-display text-xl md:text-[22px] font-medium tracking-tight text-primary-deep">
-            Galleri
-          </h2>
-          <p className="mt-1.5 font-sans text-[13px] text-ink-mute leading-relaxed max-w-[640px]">
-            Extra produktbilder som visas under huvudbilden — t.ex. baksidans
-            innehållsdeklaration, en livsstilsbild, eller en närbild på kapslarna.
-          </p>
-        </header>
+      <section className="pb-8 mb-8 border-b border-border-soft">
+        <h2 className="font-sans text-[15px] md:text-[16px] font-semibold tracking-tight text-primary-deep">
+          Galleri
+        </h2>
+        <p className="mt-1.5 mb-4 font-sans text-[13px] text-ink-mute leading-relaxed max-w-[640px]">
+          Extra produktbilder som visas under huvudbilden — t.ex. baksidans
+          innehållsdeklaration, en livsstilsbild, eller en närbild på kapslarna.
+        </p>
         <ProductGalleryEditor
           slug={product.slug}
           initialUrls={product.galleryUrls}
         />
-      </div>
+      </section>
 
-      <div className="mb-6 bg-surface-alt border border-border rounded-2xl p-6 md:p-8">
-        <header className="mb-5">
-          <h2 className="font-display text-xl md:text-[22px] font-medium tracking-tight text-primary-deep">
-            Varianter
-          </h2>
-          <p className="mt-1.5 font-sans text-[13px] text-ink-mute leading-relaxed max-w-[640px]">
-            Storlekar, smaker eller styrkor av samma produkt. När minst två
-            varianter finns visar produktsidan en väljare i kassan.
-          </p>
-        </header>
+      <section className="pb-8 mb-8 border-b border-border-soft">
+        <h2 className="font-sans text-[15px] md:text-[16px] font-semibold tracking-tight text-primary-deep">
+          Varianter
+        </h2>
+        <p className="mt-1.5 mb-4 font-sans text-[13px] text-ink-mute leading-relaxed max-w-[640px]">
+          Storlekar, smaker eller styrkor av samma produkt. När minst två
+          varianter finns visar produktsidan en väljare i kassan.
+        </p>
         <VariantsEditor
           productSlug={product.slug}
           initial={product.variants.map((v) => ({
@@ -240,31 +244,29 @@ export default async function AdminProductEditPage({
             isDefault: v.isDefault,
           }))}
         />
-      </div>
+      </section>
 
-      <div className="mb-6 bg-surface-alt border border-border rounded-2xl p-6 md:p-8">
-        <header className="mb-5">
-          <h2 className="font-display text-xl md:text-[22px] font-medium tracking-tight text-primary-deep">
-            Relaterade produkter
-          </h2>
-          <p className="mt-1.5 font-sans text-[13px] text-ink-mute leading-relaxed max-w-[640px]">
-            Manuellt valda kompletterar produktsidan i den ordning de listas.
-            Lämnas listan tom väljs 3 ur samma kategori (mest sålda först).
-          </p>
-        </header>
+      <section className="pb-8 mb-8 border-b border-border-soft">
+        <h2 className="font-sans text-[15px] md:text-[16px] font-semibold tracking-tight text-primary-deep">
+          Relaterade produkter
+        </h2>
+        <p className="mt-1.5 mb-4 font-sans text-[13px] text-ink-mute leading-relaxed max-w-[640px]">
+          Manuellt valda kompletterar produktsidan i den ordning de listas.
+          Lämnas listan tom väljs 3 ur samma kategori (mest sålda först).
+        </p>
         <RelatedProductsEditor
           sourceSlug={product.slug}
           initialPinned={initialPinned}
         />
-      </div>
+      </section>
 
-      <div className="mb-6">
+      <section className="pb-8 mb-8 border-b border-border-soft">
         <ProductGscBlock
           configured={gscOn}
           rows={gscRows}
           histories={historyMap}
         />
-      </div>
+      </section>
 
       <ProductEditForm
         initial={{

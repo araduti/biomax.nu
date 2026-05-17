@@ -1,54 +1,61 @@
 import Link from "next/link";
-import { OrderStatusBadge } from "@/components/admin/order-status-badge";
-import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { DAreaChart } from "@/components/admin/d-area-chart";
+import { OverviewPackTable } from "@/components/admin/overview-pack-table";
 import { formatPriceSEK } from "@/lib/format";
-import { getDashboardStats } from "@/lib/admin/stats";
+import {
+  getDashboardStats,
+  getDailyMetrics,
+  getPackQueue,
+  getBestSellers,
+} from "@/lib/admin/stats";
 import { getAdminBadges } from "@/lib/admin/badges";
-import { getRecentActivity } from "@/lib/admin/activity-feed";
-
-const dateFmt = new Intl.DateTimeFormat("sv-SE", {
-  month: "short",
-  day: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-});
-const monthFmt = new Intl.DateTimeFormat("sv-SE", { month: "long" });
+import { getPlausibleSnapshot } from "@/lib/integrations/plausible";
+import { requireAdmin } from "@/lib/admin/guard";
 
 /**
- * Admin overview ("Översikt") — action-first.
+ * Admin overview ("Översikt") — Direction D composition, Phase 1 data.
  *
- * Answers "vad behöver jag göra?" before "hur går det?":
- *  1. Att göra nu — counts of items waiting on a human, each linked
- *     to the queue. Empty zone hides when nothing's pending.
- *  2. Denna månad — compact trend strip (revenue, orders, AOV). One
- *     row each; the old 4-card KPI wall wasted screen real estate
- *     compared to its signal.
- *  3. Senaste ordrar — five most recent non-legacy orders.
- *  4. Lågt lager — PUBLISHED products only, variant-aware. The
- *     previous query surfaced DRAFT items at 0 stock.
- *
- * Removed from this page:
- *  - Innehållshälsa (mixed product-SEO + kunskapsbank counts) → moved
- *    to /admin/seo and /admin/innehall.
- *  - Bestånd (total customers + lifetime orders) → /admin/rapporter.
- *  - The four big KPI cards at the top — replaced by the compact
- *    trend strip below.
+ * Order per the Direction D shell spec: mono date · serif greeting ·
+ * hero numeric + chart · KPI strip · Att packa · Lågt lager +
+ * Bästsäljare. Every figure is real data (getDashboardStats /
+ * getPackQueue / getBestSellers / getDailyMetrics). The only mockup
+ * metric still absent is "Besök/konv." — it needs the Plausible Stats
+ * API (Phase 2), so the strip is 4-up until that lands.
  */
-export default async function AdminOverview() {
-  const [s, badges, activity] = await Promise.all([
-    getDashboardStats(),
-    getAdminBadges(),
-    getRecentActivity(8),
-  ]);
-  const monthName = monthFmt.format(new Date());
 
-  const revenueDelta =
-    s.revenuePrevMonth > 0
-      ? Math.round(
-          ((s.revenueThisMonth - s.revenuePrevMonth) / s.revenuePrevMonth) *
-            100
-        )
+const eyebrowDateFmt = new Intl.DateTimeFormat("sv-SE", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
+
+export default async function AdminOverview() {
+  const [admin, s, badges, pack, bestSellers, daily, visits] =
+    await Promise.all([
+      requireAdmin(),
+      getDashboardStats(),
+      getAdminBadges(),
+      getPackQueue(8),
+      getBestSellers(7, 4),
+      getDailyMetrics(30),
+      // Isolated from the DB stats: a Plausible outage degrades the
+      // "Besök" KPI to "—", it never breaks the dashboard.
+      getPlausibleSnapshot(),
+    ]);
+  const now = new Date();
+  const firstName = (admin.firstName || admin.name || "Adrian").split(/\s+/)[0];
+  const hour = now.getHours();
+  const greeting =
+    hour < 11 ? "God morgon" : hour < 18 ? "God eftermiddag" : "God kväll";
+
+  // Hero — today vs the same weekday last week.
+  const todayDeltaAbs = s.revenueToday - s.revenueSameWeekdayLastWeek;
+  const todayDeltaPct =
+    s.revenueSameWeekdayLastWeek > 0
+      ? Math.round((todayDeltaAbs / s.revenueSameWeekdayLastWeek) * 100)
       : null;
+
   const ordersDelta =
     s.paidOrdersPrevMonth > 0
       ? Math.round(
@@ -57,301 +64,387 @@ export default async function AdminOverview() {
             100
         )
       : null;
+  const aov =
+    s.paidOrdersThisMonth > 0 ? s.revenueThisMonth / s.paidOrdersThisMonth : 0;
+  const newCustDelta =
+    s.newCustomersPrev > 0
+      ? Math.round(
+          ((s.newCustomers - s.newCustomersPrev) / s.newCustomersPrev) * 100
+        )
+      : null;
 
-  const totalActions =
-    badges.ordersToPack +
-    badges.returnsToProcess +
-    badges.reviewsToModerate +
-    badges.productsLowStock;
+  // Besök / konv. — Plausible visitors today + today's conversion
+  // (paid orders ÷ visitors). `visits === null` = not configured or
+  // API down → KPI shows "—". Zero visitors → "0" with no conv. %
+  // (no division-by-zero theatre).
+  const visitsToday = visits?.visitorsToday ?? null;
+  const conversionPct =
+    visitsToday && visitsToday > 0
+      ? (s.paidOrdersToday / visitsToday) * 100
+      : null;
+  const visitsSub =
+    visits === null
+      ? "ej anslutet"
+      : conversionPct !== null
+        ? `${conversionPct.toLocaleString("sv-SE", {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1,
+          })} % konv.`
+        : "idag";
+
+  // Honest todo summary line under the greeting.
+  const summaryParts: string[] = [];
+  if (pack.total > 0) summaryParts.push(`${pack.total} att packa`);
+  if (badges.productsLowStock > 0)
+    summaryParts.push(`${badges.productsLowStock} produkter behöver inköp`);
+  if (badges.returnsToProcess > 0)
+    summaryParts.push(`${badges.returnsToProcess} returer i kö`);
+  if (badges.reviewsToModerate > 0)
+    summaryParts.push(`${badges.reviewsToModerate} recensioner att granska`);
+  const summary =
+    summaryParts.length > 0
+      ? summaryParts.join(" · ")
+      : "Inget kräver din uppmärksamhet just nu — lugnt och fint.";
+
+  const maxUnits = Math.max(1, ...bestSellers.map((b) => b.units));
 
   return (
-    <>
-      <AdminPageHeader
-        eyebrow="Översikt"
-        title={
-          totalActions > 0
-            ? `${totalActions} att hantera`
-            : "Allt är under kontroll"
-        }
-        subtitle={
-          totalActions > 0
-            ? "Saker som väntar på dig nedan. Klicka på en rad för att gå direkt dit."
-            : "Inget kräver din uppmärksamhet just nu — bra jobbat."
-        }
-      />
-
-      {/* ── 1. ATT GÖRA NU ─────────────────────────────────────── */}
-      {totalActions > 0 && (
-        <section className="mb-12">
-          <p className="font-sans text-[11px] uppercase tracking-[0.22em] font-semibold text-ink-soft mb-3">
-            Att göra nu
-          </p>
-          <ul className="space-y-2">
-            <ActionRow
-              count={badges.ordersToPack}
-              labelPlural="ordrar att packa"
-              labelSingular="order att packa"
-              href="/admin/packlista"
-              cta="Öppna packlista"
-            />
-            <ActionRow
-              count={badges.returnsToProcess}
-              labelPlural="returer väntar på godkännande"
-              labelSingular="retur väntar på godkännande"
-              href="/admin/returer"
-              cta="Granska returer"
-            />
-            <ActionRow
-              count={badges.reviewsToModerate}
-              labelPlural="recensioner att granska"
-              labelSingular="recension att granska"
-              href="/admin/recensioner"
-              cta="Granska recensioner"
-            />
-            <ActionRow
-              count={badges.productsLowStock}
-              labelPlural="produkter låga i lagret"
-              labelSingular="produkt låg i lagret"
-              href="/admin/lager"
-              cta="Visa lager"
-            />
-          </ul>
-        </section>
-      )}
-
-      {/* ── 2. DENNA MÅNAD ─────────────────────────────────────── */}
-      <section className="mb-12">
-        <p className="font-sans text-[11px] uppercase tracking-[0.22em] font-semibold text-ink-soft mb-3">
-          Denna månad · {monthName}
+    <div className="flex flex-col gap-8">
+      {/* ── Greeting ─────────────────────────────────────────────── */}
+      <header>
+        <p className="d-eyebrow">{eyebrowDateFmt.format(now)}</p>
+        <h1 className="d-title mt-2.5">
+          {greeting},{" "}
+          <span className="d-display-italic text-[var(--d-ink-3)]">
+            {firstName}
+          </span>
+        </h1>
+        <p className="mt-2.5 font-sans text-[14px] text-[var(--d-ink-2)]">
+          {summary}
         </p>
-        <dl className="bg-surface-alt border border-border rounded-2xl divide-y divide-border-soft">
-          <TrendRow
-            label="Intäkter"
-            value={formatPriceSEK(s.revenueThisMonth)}
-            delta={revenueDelta}
+      </header>
+
+      {/* ── Hero numeric + chart ─────────────────────────────────── */}
+      {/* No top border here — the mockup separates the greeting from
+          the hero numeric with whitespace only. The first horizontal
+          rule is on the KPI strip (hero → KPI), not greeting → hero. */}
+      <section className="grid grid-cols-1 lg:grid-cols-[minmax(0,360px)_1fr] gap-8 lg:gap-0 items-end">
+        <div className="lg:pr-12">
+          <p className="d-eyebrow">Intäkter · idag</p>
+          <p className="d-hero d-num mt-2">
+            <Stat value={formatPriceSEK(s.revenueToday)} />
+          </p>
+          <div className="mt-3 flex items-center gap-2.5">
+            {todayDeltaPct !== null && (
+              <span
+                className={`d-pill ${
+                  todayDeltaPct >= 0 ? "d-pill-success" : "d-pill-danger"
+                }`}
+              >
+                {todayDeltaPct >= 0 ? "↑" : "↓"} {Math.abs(todayDeltaPct)}%
+              </span>
+            )}
+            <span className="font-mono text-[12px] text-[var(--d-ink-3)] tabular-nums">
+              {todayDeltaAbs >= 0 ? "+" : "−"}
+              {formatPriceSEK(Math.abs(todayDeltaAbs))} vs samma dag förra
+              veckan
+            </span>
+          </div>
+        </div>
+        <div className="min-w-0 lg:border-l lg:border-[var(--d-line)] lg:pl-12">
+          <DAreaChart
+            data={daily.revenue}
+            height={96}
+            ariaLabel="Intäkter senaste 30 dagarna"
           />
-          <TrendRow
-            label="Betalda ordrar"
-            value={s.paidOrdersThisMonth.toString()}
-            delta={ordersDelta}
-          />
-          <TrendRow
-            label="Snittordervärde"
-            value={
-              s.paidOrdersThisMonth > 0
-                ? formatPriceSEK(s.revenueThisMonth / s.paidOrdersThisMonth)
-                : "—"
-            }
-            delta={null}
-          />
-        </dl>
+          <div className="mt-1.5 flex justify-between font-mono text-[10px] tracking-[0.12em] uppercase text-[var(--d-muted)]">
+            <span>30d</span>
+            <span>23d</span>
+            <span>16d</span>
+            <span>9d</span>
+            <span>idag</span>
+          </div>
+        </div>
       </section>
 
-      {/* ── 3 + 4. RECENT ORDERS + LOW STOCK ──────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-6">
-        <section>
-          <div className="flex items-baseline justify-between mb-3">
-            <p className="font-sans text-[11px] uppercase tracking-[0.22em] font-semibold text-ink-soft">
-              Senaste ordrar
-            </p>
-            <Link
-              href="/admin/ordrar"
-              className="font-sans text-[13px] font-semibold text-primary-deep underline decoration-accent/40 underline-offset-[3px] hover:decoration-accent"
-            >
-              Alla ordrar →
-            </Link>
-          </div>
-          {s.recentOrders.length === 0 ? (
-            <p className="font-sans text-[14px] text-ink-mute italic">
-              Inga ordrar än.
-            </p>
-          ) : (
-            <ul className="bg-surface-alt border border-border rounded-2xl divide-y divide-border-soft">
-              {s.recentOrders.map((o) => (
-                <li key={o.id}>
-                  <Link
-                    href={`/admin/ordrar/${o.orderNumber}`}
-                    className="grid grid-cols-[1fr_auto_auto] items-center gap-4 px-5 py-4 hover:bg-surface-warm transition-colors min-h-[72px]"
-                  >
-                    <div className="min-w-0">
-                      <p className="font-display text-[15px] font-medium text-primary-deep">
-                        {o.orderNumber}
-                      </p>
-                      <p className="font-sans text-[13px] text-ink-mute truncate">
-                        {o.email} · {dateFmt.format(o.createdAt)} ·{" "}
-                        {o._count.items} st
-                      </p>
-                    </div>
-                    <OrderStatusBadge status={o.status} />
-                    <p className="font-display text-[15px] font-medium text-primary-deep tabular-nums whitespace-nowrap">
-                      {formatPriceSEK(o.totalAmount.toString())}
-                    </p>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+      {/* ── KPI strip — 5-up (Direction D rule: 5-up by default) ── */}
+      <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 border-t border-[var(--d-line)] divide-y sm:divide-y-0 sm:divide-x divide-[var(--d-line-soft)]">
+        <Kpi
+          label="Betalda ordrar"
+          value={s.paidOrdersThisMonth.toLocaleString("sv-SE")}
+          delta={ordersDelta}
+          sub="denna månad"
+        />
+        <Kpi
+          label="Snittordervärde"
+          value={aov > 0 ? formatPriceSEK(aov) : "—"}
+          delta={null}
+          sub={`${s.paidOrdersThisMonth} ordrar`}
+        />
+        <Kpi
+          label="Besök"
+          value={
+            visitsToday !== null ? visitsToday.toLocaleString("sv-SE") : "—"
+          }
+          delta={null}
+          sub={visitsSub}
+        />
+        <Kpi
+          label="Nya kunder"
+          value={s.newCustomers.toLocaleString("sv-SE")}
+          delta={newCustDelta}
+          sub="rull. 30 d"
+        />
+        <Kpi
+          label="Återköpsfrekvens"
+          value={`${s.repurchaseRate} %`}
+          delta={null}
+          sub={`${s.repurchaseActiveCustomers} aktiva · 90 d`}
+        />
+      </section>
 
-        <section>
-          <div className="flex items-baseline justify-between mb-3">
-            <p className="font-sans text-[11px] uppercase tracking-[0.22em] font-semibold text-ink-soft">
-              Lågt lager
-            </p>
-            <Link
-              href="/admin/lager"
-              className="font-sans text-[13px] font-semibold text-primary-deep underline decoration-accent/40 underline-offset-[3px] hover:decoration-accent"
-            >
-              Visa lager →
-            </Link>
-          </div>
+      {/* ── Att packa ────────────────────────────────────────────── */}
+      <DSection
+        title="Att packa"
+        hint={
+          pack.total === 0
+            ? "allt skickat"
+            : pack.oldestAgeHours !== null
+              ? `${pack.total} ${pack.total === 1 ? "order" : "ordrar"} · äldsta sedan ${pack.oldestAgeHours} ${
+                  pack.oldestAgeHours === 1 ? "timme" : "timmar"
+                }`
+              : `${pack.total} ${pack.total === 1 ? "order" : "ordrar"}`
+        }
+        cta={{ href: "/admin/packlista", label: "Öppna packlista" }}
+      >
+        <OverviewPackTable rows={pack.rows} />
+        {pack.total > pack.rows.length && (
+          <p className="d-hint mt-3 pl-1">
+            Visar {pack.rows.length} av {pack.total} — se hela kön i
+            packlistan.
+          </p>
+        )}
+      </DSection>
+
+      {/* ── Lågt lager + Bästsäljare ─────────────────────────────── */}
+      <div className="grid grid-cols-1 min-[1080px]:grid-cols-2 gap-8">
+        <DSection
+          title="Lågt lager"
+          hint={`${s.lowStock.length} under påfyllningsgräns`}
+          cta={{ href: "/admin/lager", label: "Till lager" }}
+        >
           {s.lowStock.length === 0 ? (
-            <p className="font-sans text-[14px] text-ink-mute italic">
+            <p className="d-hint py-6">
               Inga publicerade produkter under tröskeln.
             </p>
           ) : (
-            <ul className="bg-surface-alt border border-border rounded-2xl divide-y divide-border-soft">
+            <ul>
               {s.lowStock.map((p, i) => (
-                <li key={`${p.kind}-${p.sku}-${i}`}>
+                <li
+                  key={`${p.kind}-${p.sku}-${i}`}
+                  className="border-b border-[var(--d-line-soft)] last:border-0"
+                >
                   <Link
                     href={`/admin/produkter/${p.slug}`}
-                    className="flex items-center justify-between gap-4 px-5 py-3.5 hover:bg-surface-warm transition-colors"
+                    className="flex items-center gap-3 min-h-[38px] py-1.5 hover:bg-[var(--d-surface)] -mx-1 px-1 rounded-[4px] transition-colors"
                   >
-                    <div className="min-w-0">
-                      <p className="font-display text-[14.5px] font-medium text-primary-deep truncate">
+                    <span
+                      aria-hidden
+                      className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
+                        p.stock === 0
+                          ? "bg-[var(--d-danger)]"
+                          : "bg-[var(--d-warn)]"
+                      }`}
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-sans text-[13.5px] text-[var(--d-ink)] truncate">
                         {p.name}
-                      </p>
-                      <p className="font-sans text-[12.5px] text-ink-mute">
+                      </span>
+                      <span className="block font-mono text-[11px] text-[var(--d-ink-3)] tabular-nums">
                         {p.sku}
-                      </p>
-                    </div>
-                    <p
-                      className={`font-display text-base font-semibold tabular-nums whitespace-nowrap ${
-                        p.stock === 0 ? "text-[#B5523B]" : "text-[#8A5A2C]"
+                      </span>
+                    </span>
+                    <span
+                      className={`d-pill ${
+                        p.stock === 0 ? "d-pill-danger" : "d-pill-warn"
                       }`}
                     >
-                      {p.stock === 0 ? "Slut" : `${p.stock} st`}
-                    </p>
+                      {p.stock === 0 ? "Slut" : `${p.stock} kvar`}
+                    </span>
                   </Link>
                 </li>
               ))}
             </ul>
           )}
-        </section>
-      </div>
+        </DSection>
 
-      {/* ── 5. Senaste aktivitet ──────────────────────────────── */}
-      {activity.length > 0 && (
-        <section className="mt-12">
-          <p className="font-sans text-[11px] uppercase tracking-[0.22em] font-semibold text-ink-soft mb-3">
-            Senaste aktivitet
-          </p>
-          <ul className="bg-surface-alt border border-border rounded-2xl divide-y divide-border-soft">
-            {activity.map((row) => (
-              <li
-                key={row.id}
-                className="px-5 py-3.5 grid grid-cols-[1fr_auto] items-baseline gap-4"
-              >
-                <p className="font-sans text-[14.5px] text-ink-body min-w-0">
-                  <strong className="font-semibold text-primary-deep">
-                    {row.actorName}
-                  </strong>
-                  : {row.actionLabel.toLowerCase()}
-                  {row.entityLabel && (
-                    <>
-                      {" "}
-                      <span className="text-ink-soft">·</span>{" "}
-                      {row.entityHref ? (
-                        <Link
-                          href={row.entityHref}
-                          className="text-primary-deep underline decoration-accent/40 underline-offset-[3px] hover:decoration-accent"
-                        >
-                          {row.entityLabel}
-                        </Link>
-                      ) : (
-                        <span className="text-primary-deep">
-                          {row.entityLabel}
+        <DSection
+          title="Bästsäljare"
+          hint="senaste 7 dagar"
+          cta={{ href: "/admin/produkter", label: "Alla produkter" }}
+        >
+          {bestSellers.length === 0 ? (
+            <p className="d-hint py-6">
+              Inga sålda enheter de senaste 7 dagarna.
+            </p>
+          ) : (
+            <ul>
+              {bestSellers.map((b, i) => (
+                <li
+                  key={b.productId}
+                  className="border-b border-[var(--d-line-soft)] last:border-0"
+                >
+                  <Link
+                    href={b.slug ? `/admin/produkter/${b.slug}` : "/admin/produkter"}
+                    className="flex items-center gap-3 h-9 hover:bg-[var(--d-surface)] -mx-1 px-1 rounded-[4px] transition-colors"
+                  >
+                    <span className="font-mono text-[11px] text-[var(--d-muted)] tabular-nums w-[18px] flex-shrink-0">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span
+                      aria-hidden
+                      className="w-2.5 h-2.5 rounded-full bg-[var(--d-accent-soft)] border border-[var(--d-accent)]/30 flex-shrink-0"
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-sans text-[13.5px] text-[var(--d-ink)] truncate">
+                        {b.name}
+                      </span>
+                      {b.category && (
+                        <span className="block font-mono text-[11px] text-[var(--d-ink-3)] truncate">
+                          {b.category}
                         </span>
                       )}
-                    </>
-                  )}
-                </p>
-                <p className="font-sans text-[12.5px] text-ink-mute whitespace-nowrap">
-                  {dateFmt.format(row.createdAt)}
-                </p>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+                    </span>
+                    {/* mini bar — share of the top seller's units */}
+                    <span
+                      aria-hidden
+                      className="hidden sm:block w-[64px] h-[3px] rounded-full bg-[var(--d-line-soft)] flex-shrink-0 overflow-hidden"
+                    >
+                      <span
+                        className="block h-full bg-[var(--d-accent)] rounded-full"
+                        style={{ width: `${(b.units / maxUnits) * 100}%` }}
+                      />
+                    </span>
+                    <span className="font-sans text-[13.5px] font-medium text-[var(--d-ink)] tabular-nums w-[36px] text-right flex-shrink-0">
+                      {b.units}
+                    </span>
+                    <span
+                      className={`font-mono text-[11px] tabular-nums w-[44px] text-right flex-shrink-0 ${
+                        b.deltaPct === null
+                          ? "text-[var(--d-muted)]"
+                          : b.deltaPct >= 0
+                            ? "text-[var(--d-success)]"
+                            : "text-[var(--d-danger)]"
+                      }`}
+                    >
+                      {b.deltaPct === null
+                        ? "ny"
+                        : `${b.deltaPct >= 0 ? "+" : ""}${b.deltaPct}%`}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </DSection>
+      </div>
+    </div>
+  );
+}
+
+/* ── Direction D primitives ───────────────────────────────────────── */
+
+/**
+ * Renders a formatted stat with its trailing unit (" kr" / " %") split
+ * out into `.d-unit` — smaller, italic serif, ink-3 (Direction D rule
+ * ix + the hero "italic unit in Ink 3" spec). Plain numbers ("2 788")
+ * and the em-dash placeholder pass through untouched.
+ */
+function Stat({ value }: { value: string }) {
+  let num = value;
+  let unit = "";
+  if (value.endsWith(" kr")) {
+    num = value.slice(0, -3);
+    unit = "kr";
+  } else if (value.endsWith(" %")) {
+    num = value.slice(0, -2);
+    unit = "%";
+  }
+  return (
+    <>
+      {num}
+      {unit && <span className="d-unit">&nbsp;{unit}</span>}
     </>
   );
 }
 
-/* ── Helpers ────────────────────────────────────────────────── */
-
-function ActionRow({
-  count,
-  labelPlural,
-  labelSingular,
-  href,
-  cta,
-}: {
-  count: number;
-  labelPlural: string;
-  labelSingular: string;
-  href: string;
-  cta: string;
-}) {
-  if (count === 0) return null;
-  return (
-    <li>
-      <Link
-        href={href}
-        className="flex flex-wrap items-center gap-4 bg-surface-alt border border-border rounded-2xl px-5 py-4 hover:border-[#C68A4F]/60 hover:bg-[#C68A4F]/5 transition-colors min-h-[72px]"
-      >
-        <span className="inline-flex items-center justify-center min-w-[44px] h-11 px-3 rounded-full bg-[#C68A4F] text-surface font-display text-xl font-medium tabular-nums">
-          {count}
-        </span>
-        <span className="flex-1 font-sans text-[15.5px] text-ink-body">
-          {count === 1 ? labelSingular : labelPlural}
-        </span>
-        <span className="font-sans text-[13.5px] font-semibold text-primary-deep">
-          {cta} →
-        </span>
-      </Link>
-    </li>
-  );
-}
-
-function TrendRow({
+function Kpi({
   label,
   value,
   delta,
+  sub,
 }: {
   label: string;
   value: string;
   delta: number | null;
+  sub: string;
 }) {
   return (
-    <div className="grid grid-cols-[1fr_auto_auto] items-baseline gap-6 px-5 py-3.5">
-      <dt className="font-sans text-[14.5px] text-ink-mute">{label}</dt>
-      <dd className="font-display text-[20px] font-medium text-primary-deep tabular-nums">
-        {value}
-      </dd>
-      <dd className="font-sans text-[13px] font-semibold tabular-nums w-[140px] text-right">
-        {delta === null ? (
-          <span className="text-ink-soft">—</span>
-        ) : delta === 0 ? (
-          <span className="text-ink-soft">oförändrat</span>
-        ) : delta > 0 ? (
-          <span className="text-accent-deep">↑ {delta} % vs förra</span>
-        ) : (
-          <span className="text-[#B5523B]">
-            ↓ {Math.abs(delta)} % vs förra
+    <div className="py-4 lg:px-6 lg:first:pl-0">
+      <p className="d-eyebrow">{label}</p>
+      <div className="mt-2 flex items-baseline gap-2">
+        <span className="d-kpi d-num">
+          <Stat value={value} />
+        </span>
+        {delta !== null && (
+          <span
+            className={`font-mono text-[11px] font-semibold tabular-nums ${
+              delta >= 0
+                ? "text-[var(--d-success)]"
+                : "text-[var(--d-danger)]"
+            }`}
+          >
+            {delta >= 0 ? "+" : ""}
+            {delta}%
           </span>
         )}
-      </dd>
+      </div>
+      <p className="mt-1 font-mono text-[11px] text-[var(--d-ink-3)]">{sub}</p>
     </div>
+  );
+}
+
+function DSection({
+  title,
+  hint,
+  cta,
+  children,
+}: {
+  title: string;
+  hint?: string;
+  cta?: { href: string; label: string };
+  children: React.ReactNode;
+}) {
+  return (
+    // Divider is the title's BOTTOM border — it sits under the title,
+    // above the content (mockup pattern), not as a section-top rule.
+    // Section separation from the block above is whitespace only.
+    <section>
+      <div className="flex items-baseline justify-between gap-4 pb-2 mb-2 border-b border-[var(--d-line)]">
+        <div className="flex items-baseline gap-2.5 min-w-0">
+          <h2 className="d-section-title">{title}</h2>
+          {hint && <span className="d-hint truncate">{hint}</span>}
+        </div>
+        {cta && (
+          <Link
+            href={cta.href}
+            className="font-sans text-[13px] font-medium text-[var(--d-ink-2)] hover:text-[var(--d-accent)] transition-colors whitespace-nowrap"
+          >
+            {cta.label} →
+          </Link>
+        )}
+      </div>
+      {children}
+    </section>
   );
 }

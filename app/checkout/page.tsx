@@ -4,6 +4,8 @@ import { Header } from "@/components/site/header";
 import { Footer } from "@/components/site/footer";
 import { isKlarnaConfigured } from "@/lib/klarna/client";
 import { currentUser } from "@/lib/session";
+import { getTrustpilotSummary } from "@/lib/integrations/trustpilot";
+import { prisma } from "@/lib/prisma";
 import { CheckoutFlow } from "./checkout-flow";
 
 export const metadata: Metadata = {
@@ -15,6 +17,27 @@ export const metadata: Metadata = {
 export default async function CheckoutPage() {
   const user = await currentUser();
   const klarnaConfigured = isKlarnaConfigured();
+  const trustpilot = await getTrustpilotSummary();
+  const recommendations = (
+    await prisma.product.findMany({
+      where: { status: "PUBLISHED" },
+      take: 3,
+      orderBy: { createdAt: "desc" },
+      select: {
+        slug: true,
+        name: true,
+        shortDescription: true,
+        imageUrl: true,
+        price: true,
+      },
+    })
+  ).map((p) => ({
+    slug: p.slug,
+    name: p.name,
+    sub: p.shortDescription,
+    imageUrl: p.imageUrl,
+    priceKr: parseFloat(p.price.toString()),
+  }));
   return (
     <>
       <TopBar />
@@ -22,6 +45,8 @@ export default async function CheckoutPage() {
       <main className="bg-surface min-h-[60vh]">
         <CheckoutFlow
           klarnaConfigured={klarnaConfigured}
+          trustpilot={trustpilot}
+          recommendations={recommendations}
           user={
             user
               ? {

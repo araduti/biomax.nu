@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { AdminStatusPill } from "./admin-status-pill";
 
 /**
  * One order card on the packlista with "Bocka av"-checkboxes per row.
@@ -86,42 +87,40 @@ export function PacklistaOrderCard({ order }: { order: OrderInput }) {
 
   return (
     <section
-      className={`bg-surface-alt border rounded-2xl p-5 md:p-6 transition-colors print:border-0 print:rounded-none print:p-0 print:mb-8 print:break-inside-avoid ${
-        allChecked
-          ? "border-accent-deep/30 bg-accent/[0.04]"
-          : "border-border"
+      className={`pt-6 border-t border-[var(--d-line)] transition-opacity print:border-0 print:p-0 print:mb-8 print:break-inside-avoid ${
+        allChecked ? "opacity-55" : ""
       }`}
     >
-      <header className="flex flex-wrap items-baseline justify-between gap-3 mb-4 pb-3 border-b border-border-soft">
+      <header className="flex flex-wrap items-baseline justify-between gap-3 mb-4">
         <div className="flex items-baseline gap-3">
-          <p className="font-display text-lg md:text-xl font-medium text-primary-deep tracking-tight">
+          <p className="font-mono text-[13px] font-medium text-[var(--d-ink)] tabular-nums">
             {order.orderNumber}
           </p>
           {allChecked && (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent/15 text-accent-deep font-sans text-[12.5px] font-semibold">
-              <span aria-hidden>✓</span>
-              Packad
-            </span>
+            <AdminStatusPill kind="ok">Packad</AdminStatusPill>
           )}
         </div>
-        <p className="font-sans text-[13px] text-ink-mute">
+        <p className="font-sans text-[13.5px] text-[var(--d-ink-2)]">
           {order.email}
           {order.isSubscription && (
-            <span className="ml-2 text-accent-deep font-semibold">
+            <span className="ml-2 text-[var(--d-accent-2)] font-medium">
               · Prenumeration
             </span>
           )}
         </p>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-5">
-        <ul className="space-y-2">
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-6">
+        <ul>
           {order.items.map((it) => {
             const isChecked = hydrated && checked.has(it.id);
             return (
-              <li key={it.id}>
+              <li
+                key={it.id}
+                className="border-b border-[var(--d-line-soft)] last:border-0"
+              >
                 <label
-                  className={`flex items-center gap-3 py-3 px-3 rounded-xl cursor-pointer hover:bg-surface-warm/60 transition-colors min-h-[72px] ${
+                  className={`flex items-center gap-3 py-2 min-h-[48px] cursor-pointer hover:bg-[var(--d-surface)] -mx-1 px-1 rounded-[4px] transition-colors ${
                     isChecked ? "opacity-50" : ""
                   }`}
                 >
@@ -130,30 +129,30 @@ export function PacklistaOrderCard({ order }: { order: OrderInput }) {
                     checked={isChecked}
                     onChange={() => toggle(it.id)}
                     aria-label={`Bocka av ${it.productName}`}
-                    className="w-7 h-7 flex-shrink-0 accent-accent-deep cursor-pointer print:hidden"
+                    className="w-4 h-4 flex-shrink-0 accent-[var(--d-accent)] cursor-pointer print:hidden"
                   />
-                  <div className="relative w-14 h-14 flex-shrink-0 rounded-md overflow-hidden bg-surface-warm print:hidden">
+                  <div className="relative w-9 h-9 flex-shrink-0 rounded-[4px] overflow-hidden bg-[var(--d-surface-2)] print:hidden">
                     <Image
                       src={it.imageUrl || "/products/_placeholder.svg"}
                       alt={it.productName}
                       fill
-                      sizes="56px"
+                      sizes="36px"
                       className="object-cover mix-blend-darken"
                     />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p
-                      className={`font-display text-[15.5px] font-medium text-primary-deep ${
-                        isChecked ? "line-through decoration-2" : ""
+                      className={`font-sans text-[14px] font-medium text-[var(--d-ink)] truncate ${
+                        isChecked ? "line-through decoration-1" : ""
                       }`}
                     >
                       {it.productName}
                     </p>
-                    <p className="font-sans text-[12.5px] uppercase tracking-[0.14em] text-ink-mute font-semibold">
-                      SKU: {it.productSku || "—"}
+                    <p className="font-mono text-[11px] text-[var(--d-ink-3)]">
+                      {it.productSku || "—"}
                     </p>
                   </div>
-                  <p className="font-display text-[28px] font-medium text-primary-deep tabular-nums">
+                  <p className="font-sans text-[15px] font-semibold text-[var(--d-ink)] tabular-nums">
                     ×{it.quantity}
                   </p>
                 </label>
@@ -163,12 +162,10 @@ export function PacklistaOrderCard({ order }: { order: OrderInput }) {
         </ul>
 
         {order.shippingAddress && (
-          <aside className="md:min-w-[220px] md:text-right font-sans text-[13.5px] text-ink-body leading-relaxed border-t md:border-t-0 md:border-l border-border-soft md:pl-5 pt-4 md:pt-0">
-            <p className="font-sans text-[11px] uppercase tracking-[0.18em] text-ink-soft font-semibold mb-1">
-              Skicka till
-            </p>
+          <aside className="md:min-w-[220px] md:text-right font-sans text-[13.5px] text-[var(--d-ink-2)] leading-relaxed border-t md:border-t-0 md:border-l border-[var(--d-line-soft)] md:pl-6 pt-4 md:pt-0">
+            <p className="d-eyebrow mb-1.5">Skicka till</p>
             <p>
-              <strong className="font-semibold text-primary-deep">
+              <strong className="font-medium text-[var(--d-ink)]">
                 {order.shippingAddress.fullName}
               </strong>
               <br />
@@ -182,18 +179,15 @@ export function PacklistaOrderCard({ order }: { order: OrderInput }) {
       </div>
 
       {order.items.length > 1 && (
-        <p className="mt-3 pt-3 border-t border-border-soft font-sans text-[13px] text-ink-mute text-right">
+        <p className="mt-3 pt-3 border-t border-[var(--d-line-soft)] font-mono text-[12px] text-[var(--d-ink-3)] text-right tabular-nums">
           Total: {order.items.reduce((s, it) => s + it.quantity, 0)} st{" "}
-          {someChecked &&
-            !allChecked && (
-              <span className="text-accent-deep font-semibold ml-2">
-                ·{" "}
-                {
-                  order.items.filter((it) => checked.has(it.id)).length
-                }
-                /{order.items.length} avbockade
-              </span>
-            )}
+          {someChecked && !allChecked && (
+            <span className="text-[var(--d-accent-2)] font-semibold ml-2">
+              ·{" "}
+              {order.items.filter((it) => checked.has(it.id)).length}/
+              {order.items.length} avbockade
+            </span>
+          )}
         </p>
       )}
     </section>

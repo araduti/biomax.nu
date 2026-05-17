@@ -134,7 +134,7 @@ export default async function AdminOrderInvoice({
         {/* Parties */}
         <section className="grid grid-cols-2 gap-8 py-6 border-b border-[#111]/15">
           <div>
-            <p className="text-[10.5px] uppercase tracking-[0.18em] font-semibold text-[#666] mb-2">
+            <p className="text-[10.5px] uppercase tracking-[0.16em] font-semibold text-[#666] mb-2">
               Fakturaadress
             </p>
             {billing ? (
@@ -155,7 +155,7 @@ export default async function AdminOrderInvoice({
           </div>
           {order.shippingAddress && (
             <div>
-              <p className="text-[10.5px] uppercase tracking-[0.18em] font-semibold text-[#666] mb-2">
+              <p className="text-[10.5px] uppercase tracking-[0.16em] font-semibold text-[#666] mb-2">
                 Leveransadress
               </p>
               <p className="text-[13px] leading-relaxed text-[#111]">

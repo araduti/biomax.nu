@@ -100,7 +100,7 @@ export function ReturnAdminRow({ data }: { data: ReturnRowData }) {
     data.status === "REQUESTED" || data.status === "APPROVED";
 
   return (
-    <li className="bg-surface-alt border border-border rounded-2xl p-5 md:p-6">
+    <li className="bg-surface-alt border border-border rounded-xl p-5 md:p-6">
       <header className="flex flex-wrap items-baseline justify-between gap-3 mb-4">
         <div className="flex flex-wrap items-baseline gap-3">
           <span
@@ -195,7 +195,7 @@ export function ReturnAdminRow({ data }: { data: ReturnRowData }) {
             type="button"
             onClick={() => setConfirmingReject(true)}
             disabled={pending}
-            className="ml-auto font-sans text-[13px] text-ink-soft hover:text-[#B5523B] transition-colors underline decoration-ink-soft/30 underline-offset-[3px]"
+            className="ml-auto font-sans text-[13px] text-ink-soft hover:text-status-error transition-colors underline decoration-ink-soft/30 underline-offset-[3px]"
           >
             Avvisa retur
           </button>
@@ -203,7 +203,7 @@ export function ReturnAdminRow({ data }: { data: ReturnRowData }) {
       </div>
 
       {confirmingReject && (
-        <div className="mt-4 pt-4 border-t border-border-soft bg-[#B5523B]/5 -mx-5 md:-mx-6 px-5 md:px-6 py-4 rounded-b-2xl">
+        <div className="mt-4 pt-4 border-t border-border-soft bg-status-error/5 -mx-5 md:-mx-6 px-5 md:px-6 py-4 rounded-b-2xl">
           <p className="font-sans text-[14.5px] text-ink-body mb-3">
             Avvisa {data.returnNumber}? Kunden får ingen återbetalning och
             varan returneras inte. Skriv en kort intern notering om varför —
@@ -215,14 +215,14 @@ export function ReturnAdminRow({ data }: { data: ReturnRowData }) {
             placeholder="T.ex. utanför 14-dagars-fönstret, eller produkten är öppnad."
             rows={2}
             maxLength={500}
-            className="w-full px-3 py-2 mb-3 bg-surface border-2 border-border rounded-md font-sans text-[14.5px] focus:border-[#B5523B] focus:ring-2 focus:ring-[#B5523B]/15"
+            className="w-full px-3 py-2 mb-3 bg-surface border-2 border-border rounded-md font-sans text-[14.5px] focus:border-status-error focus:ring-2 focus:ring-status-error/15"
           />
           <div className="flex flex-wrap gap-3">
             <button
               type="button"
               onClick={() => moderate("REJECTED", rejectNote || undefined)}
               disabled={pending}
-              className="h-12 px-5 rounded-md bg-[#B5523B] text-surface font-sans text-[14px] font-semibold hover:bg-[#9F4630] disabled:opacity-50"
+              className="h-12 px-5 rounded-md bg-status-error text-surface font-sans text-[14px] font-semibold hover:bg-[#9F4630] disabled:opacity-50"
             >
               {pending ? "Avvisar…" : "Ja, avvisa retur"}
             </button>
@@ -301,7 +301,7 @@ export function ReturnAdminRow({ data }: { data: ReturnRowData }) {
       {error && (
         <p
           role="alert"
-          className="mt-3 font-sans text-[12.5px] text-[#B5523B]"
+          className="mt-3 font-sans text-[12.5px] text-status-error"
         >
           {error}
         </p>

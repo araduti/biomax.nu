@@ -44,7 +44,7 @@ const STATUS_LABEL: Record<RowSubscription["status"], string> = {
 
 const STATUS_TONE: Record<RowSubscription["status"], string> = {
   ACTIVE: "bg-accent-deep/12 text-accent-deep",
-  PAUSED: "bg-[#C68A4F]/15 text-[#8A5A2C]",
+  PAUSED: "bg-status-warn/15 text-status-low",
   CANCELLED: "bg-ink-soft/12 text-ink-soft",
 };
 
@@ -215,7 +215,7 @@ export function SubscriptionRow({
           <button
             type="button"
             onClick={() => setConfirmingCancel(true)}
-            className="ml-auto font-sans text-[12.5px] text-ink-soft hover:text-[#B5523B] transition-colors"
+            className="ml-auto font-sans text-[12.5px] text-ink-soft hover:text-status-error transition-colors"
           >
             Avsluta prenumerationen
           </button>
@@ -245,7 +245,7 @@ export function SubscriptionRow({
                 )
               }
               disabled={pending}
-              className="px-4 py-1.5 rounded-md bg-[#B5523B] text-surface hover:bg-[#9F4630] font-sans text-[13px] font-semibold transition-colors"
+              className="px-4 py-1.5 rounded-md bg-status-error text-surface hover:bg-[#9F4630] font-sans text-[13px] font-semibold transition-colors"
             >
               {pending ? "Avslutar…" : "Ja, avsluta"}
             </button>
@@ -267,7 +267,7 @@ export function SubscriptionRow({
       {error && (
         <p
           role="alert"
-          className="mt-3 font-sans text-[12.5px] text-[#B5523B] bg-[#B5523B]/10 px-3 py-2 rounded-md"
+          className="mt-3 font-sans text-[12.5px] text-status-error bg-status-error/10 px-3 py-2 rounded-md"
         >
           {error}
         </p>

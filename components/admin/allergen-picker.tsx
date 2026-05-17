@@ -35,7 +35,7 @@ export function AllergenPicker({
             aria-pressed={active}
             className={`px-3 py-1.5 rounded-full border font-sans text-[12.5px] font-semibold transition-colors ${
               active
-                ? "bg-[#C68A4F] text-surface border-[#C68A4F]"
+                ? "bg-status-warn text-surface border-status-warn"
                 : "bg-surface text-ink-body border-border hover:border-border-soft hover:bg-surface-warm"
             }`}
           >

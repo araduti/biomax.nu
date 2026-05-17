@@ -23,6 +23,15 @@ import { sendTransactional } from "@/lib/email/client";
 import { orderConfirmationEmail } from "@/lib/email/templates";
 import { cronAuthorized } from "@/lib/api/cron-auth";
 import { shippingForSubtotal, CURRENT_VAT_BP } from "@/lib/klarna/cart-to-order";
+import {
+  reserveStock,
+  InsufficientStockError,
+  type StockReservation,
+} from "@/lib/checkout/stock";
+
+/** Thrown inside the renewal txn when a concurrent cron run already
+ *  advanced this subscription. Caught + skipped (not an error). */
+class AlreadyRenewedError extends Error {}
 
 export const runtime = "nodejs";
 
@@ -85,6 +94,7 @@ export async function GET(req: Request) {
       unitPrice: number;
       totalPrice: number;
       decrementVariant: boolean;
+      manageStock: boolean;
     };
     const resolved: Resolved[] = [];
     for (const line of sub.lines) {
@@ -132,6 +142,7 @@ export async function GET(req: Request) {
         unitPrice,
         totalPrice: unitPrice * line.quantity,
         decrementVariant: !!variant,
+        manageStock: variant ? variant.manageStock : product.manageStock,
       });
     }
 
@@ -163,6 +174,21 @@ export async function GET(req: Request) {
 
     try {
       await prisma.$transaction(async (tx) => {
+        // Idempotency guard: claim this renewal by advancing nextOrderAt
+        // conditionally. If a concurrent / retried cron run already
+        // advanced it, count === 0 and we abort WITHOUT creating a
+        // duplicate order (prevents double-charge on cron retry).
+        const claim = await tx.subscription.updateMany({
+          where: {
+            id: sub.id,
+            status: "ACTIVE",
+            nextOrderAt: { lte: now },
+          },
+          data: { nextOrderAt: nextNext, lastRenewedAt: now },
+        });
+        if (claim.count === 0) {
+          throw new AlreadyRenewedError();
+        }
         await tx.order.create({
           data: {
             orderNumber,
@@ -195,10 +221,18 @@ export async function GET(req: Request) {
             },
           },
         });
-        await tx.subscription.update({
-          where: { id: sub.id },
-          data: { nextOrderAt: nextNext, lastRenewedAt: now },
-        });
+        // Reserve stock atomically — a subscription renewal is real
+        // demand and must not oversell against ad-hoc checkouts.
+        await reserveStock(
+          tx,
+          resolved.map<StockReservation>((r) => ({
+            kind: r.decrementVariant && r.variantId ? "variant" : "product",
+            id: r.decrementVariant && r.variantId ? r.variantId : r.productId,
+            quantity: r.quantity,
+            manageStock: r.manageStock,
+            label: r.name,
+          }))
+        );
       });
       renewed++;
 
@@ -248,6 +282,20 @@ export async function GET(req: Request) {
         })();
       }
     } catch (err) {
+      if (err instanceof AlreadyRenewedError) {
+        // Concurrent/retried run already handled this subscription.
+        // Not an error — skip silently.
+        continue;
+      }
+      if (err instanceof InsufficientStockError) {
+        // Renewal rolled back (nextOrderAt NOT advanced) — it will be
+        // retried next run once stock is replenished.
+        console.error(
+          `[subscription-renewals] out of stock for ${sub.id}: ${err.message} — will retry next run`
+        );
+        errors.push({ subscriptionId: sub.id, error: err.message });
+        continue;
+      }
       console.error(`[subscription-renewals] renewal failed for ${sub.id}:`, err);
       errors.push({
         subscriptionId: sub.id,

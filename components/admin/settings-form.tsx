@@ -142,7 +142,7 @@ export function SettingsForm({
 
   return (
     <div className="space-y-6">
-      <section className="bg-surface-alt border border-border rounded-2xl p-6 md:p-8">
+      <section className="bg-surface-alt border border-border rounded-xl p-6 md:p-8">
         <h2 className="font-display text-xl font-medium tracking-tight text-primary-deep mb-1">
           Frakt
         </h2>
@@ -185,7 +185,7 @@ export function SettingsForm({
         </div>
       </section>
 
-      <section className="bg-surface-alt border border-border rounded-2xl p-6 md:p-8">
+      <section className="bg-surface-alt border border-border rounded-xl p-6 md:p-8">
         <h2 className="font-display text-xl font-medium tracking-tight text-primary-deep mb-1">
           Lager
         </h2>
@@ -217,7 +217,7 @@ export function SettingsForm({
         </div>
       </section>
 
-      <section className="bg-surface-alt border border-border rounded-2xl p-6 md:p-8">
+      <section className="bg-surface-alt border border-border rounded-xl p-6 md:p-8">
         <h2 className="font-display text-xl font-medium tracking-tight text-primary-deep mb-1">
           Lagerlarm
         </h2>
@@ -245,7 +245,7 @@ export function SettingsForm({
         </div>
       </section>
 
-      <section className="bg-surface-alt border border-border rounded-2xl p-6 md:p-8">
+      <section className="bg-surface-alt border border-border rounded-xl p-6 md:p-8">
         <h2 className="font-display text-xl font-medium tracking-tight text-primary-deep mb-1">
           Trustpilot
         </h2>
@@ -300,7 +300,7 @@ export function SettingsForm({
       {error && (
         <p
           role="alert"
-          className="font-sans text-[12.5px] text-[#B5523B] bg-[#B5523B]/10 px-3 py-2 rounded-md"
+          className="font-sans text-[12.5px] text-status-error bg-status-error/10 px-3 py-2 rounded-md"
         >
           {error}
         </p>

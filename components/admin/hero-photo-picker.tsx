@@ -216,7 +216,7 @@ function UnsplashSearchTab({
       </div>
 
       {error && (
-        <p className="mb-4 font-sans text-[14px] text-[#B5523B]">{error}</p>
+        <p className="mb-4 font-sans text-[14px] text-status-error">{error}</p>
       )}
 
       {photos === null && !searching && (
@@ -445,7 +445,7 @@ function UploadTab({
           const f = e.dataTransfer.files?.[0];
           if (f) handleFile(f);
         }}
-        className={`relative border-2 rounded-2xl overflow-hidden transition-colors ${
+        className={`relative border-2 rounded-xl overflow-hidden transition-colors ${
           dragOver
             ? "border-primary border-solid bg-primary/5"
             : "border-border border-dashed bg-surface-warm hover:bg-surface-alt"
@@ -481,7 +481,7 @@ function UploadTab({
         )}
       </div>
       {error && (
-        <p className="font-sans text-[14px] text-[#B5523B]">{error}</p>
+        <p className="font-sans text-[14px] text-status-error">{error}</p>
       )}
 
       <div>

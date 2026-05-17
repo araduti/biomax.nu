@@ -20,11 +20,11 @@ const STATUS_LABEL = {
 } as const;
 
 const STATUS_TONE = {
-  REQUESTED: "bg-[#C68A4F]/15 text-[#8A5A2C]",
+  REQUESTED: "bg-status-warn/15 text-status-low",
   APPROVED: "bg-accent-deep/12 text-accent-deep",
   RECEIVED: "bg-primary/12 text-primary-deep",
   REFUNDED: "bg-ink-soft/12 text-ink-soft",
-  REJECTED: "bg-[#B5523B]/12 text-[#B5523B]",
+  REJECTED: "bg-status-error/12 text-status-error",
 } as const;
 
 /**

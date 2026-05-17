@@ -19,11 +19,11 @@ const STATUS_TONE: Record<
 > = {
   up: { dot: "bg-accent-deep", label: "Online", text: "text-accent-deep" },
   degraded: {
-    dot: "bg-[#C68A4F]",
+    dot: "bg-status-warn",
     label: "Långsam",
-    text: "text-[#7A4D2A]",
+    text: "text-status-warn-text",
   },
-  down: { dot: "bg-[#B5523B]", label: "Nere", text: "text-[#B5523B]" },
+  down: { dot: "bg-status-error", label: "Nere", text: "text-status-error" },
 };
 
 const dateTimeFmt = new Intl.DateTimeFormat("sv-SE", {
@@ -113,13 +113,13 @@ function UrlCard({
     }
   })();
   return (
-    <li className="bg-surface-alt border border-border rounded-2xl p-5 md:p-6">
+    <li className="border-b border-border-soft py-6 first:pt-0 last:border-b-0">
       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 mb-4">
         <span aria-hidden className={`inline-block w-2.5 h-2.5 rounded-full ${tone.dot}`} />
-        <h2 className="font-display text-lg md:text-xl font-medium text-primary-deep">
+        <h2 className="font-sans text-[14.5px] md:text-[15.5px] font-semibold text-primary-deep">
           {path || "/"}
         </h2>
-        <span className={`font-sans text-[12px] font-semibold uppercase tracking-[0.18em] ${tone.text}`}>
+        <span className={`font-sans text-[12px] font-semibold uppercase tracking-[0.16em] ${tone.text}`}>
           {tone.label}
         </span>
         <span className="font-sans text-[11.5px] text-ink-soft ml-auto tabular-nums">
@@ -127,13 +127,14 @@ function UrlCard({
         </span>
       </div>
 
-      <div className="grid grid-cols-3 gap-3 mb-4">
+      {/* Inline 3-stat row — flat (no inner borders) to avoid the
+          box-in-box density. The outer URL card already provides the
+          container; these are its content, not their own cards. */}
+      <dl className="grid grid-cols-3 divide-x divide-border-soft mb-4">
         <Stat
           label="Uptime 30d"
           value={`${uptimePct.toFixed(2)} %`}
-          tone={
-            uptimePct >= 99.5 ? "ok" : uptimePct >= 98 ? "warn" : "error"
-          }
+          tone={uptimePct >= 99.5 ? "ok" : uptimePct >= 98 ? "warn" : "error"}
         />
         <Stat
           label="Median latens"
@@ -151,11 +152,11 @@ function UrlCard({
           value={incidents.toString()}
           tone={incidents === 0 ? "ok" : incidents <= 2 ? "warn" : "error"}
         />
-      </div>
+      </dl>
 
       {/* 24h tick timeline */}
       <div>
-        <p className="font-sans text-[10.5px] uppercase tracking-[0.18em] font-semibold text-ink-soft mb-1.5">
+        <p className="font-sans text-[10.5px] uppercase tracking-[0.16em] font-semibold text-ink-soft mb-1.5">
           Senaste 24h
         </p>
         {ticks.length === 0 ? (
@@ -169,8 +170,8 @@ function UrlCard({
                 t.status === "up"
                   ? "bg-accent-deep"
                   : t.status === "degraded"
-                    ? "bg-[#C68A4F]"
-                    : "bg-[#B5523B]";
+                    ? "bg-status-warn"
+                    : "bg-status-error";
               return (
                 <span
                   key={i}
@@ -184,7 +185,7 @@ function UrlCard({
       </div>
 
       {status.error && (
-        <p className="mt-3 font-sans text-[12.5px] text-[#B5523B] bg-[#B5523B]/[0.06] border border-[#B5523B]/20 rounded-md px-3 py-2">
+        <p className="mt-3 font-sans text-[12.5px] text-status-error bg-status-error/[0.06] border border-status-error/20 rounded-md px-3 py-2">
           ⚠ {status.error}
           {status.httpStatus > 0 && ` (HTTP ${status.httpStatus})`}
         </p>
@@ -206,16 +207,18 @@ function Stat({
     tone === "ok"
       ? "text-accent-deep"
       : tone === "warn"
-        ? "text-[#7A4D2A]"
-        : "text-[#B5523B]";
+        ? "text-status-warn-text"
+        : "text-status-error";
   return (
-    <div className="bg-surface rounded-lg border border-border-soft p-3 text-center">
-      <p className={`font-display text-lg font-medium tabular-nums ${valueColor}`}>
+    <div className="px-4 first:pl-0 last:pr-0 text-center">
+      <dd
+        className={`font-sans text-[18px] font-semibold tabular-nums ${valueColor}`}
+      >
         {value}
-      </p>
-      <p className="mt-0.5 font-sans text-[10.5px] uppercase tracking-[0.16em] font-semibold text-ink-mute">
+      </dd>
+      <dt className="mt-0.5 font-sans text-[10.5px] uppercase tracking-[0.16em] font-semibold text-ink-mute">
         {label}
-      </p>
+      </dt>
     </div>
   );
 }

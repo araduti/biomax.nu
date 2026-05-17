@@ -36,7 +36,7 @@ export function HomepageBlocksEditor({ blocks }: { blocks: Row[] }) {
 
   if (blocks.length === 0) {
     return (
-      <div className="rounded-2xl border border-border bg-surface-alt p-8 max-w-[640px]">
+      <div className="rounded-xl border border-border bg-surface-alt p-8 max-w-[640px]">
         <h2 className="font-display text-xl font-medium tracking-tight text-primary-deep mb-2">
           Tom tabell
         </h2>
@@ -55,7 +55,7 @@ export function HomepageBlocksEditor({ blocks }: { blocks: Row[] }) {
         {error && (
           <p
             role="alert"
-            className="mt-4 font-sans text-[12.5px] text-[#B5523B] bg-[#B5523B]/10 px-3 py-2 rounded-md"
+            className="mt-4 font-sans text-[12.5px] text-status-error bg-status-error/10 px-3 py-2 rounded-md"
           >
             {error}
           </p>
@@ -112,7 +112,7 @@ export function HomepageBlocksEditor({ blocks }: { blocks: Row[] }) {
                 run(() => deleteBlock(b.id));
               }}
               disabled={pending}
-              className="w-7 h-7 rounded-md bg-[#B5523B]/10 text-[#B5523B] hover:bg-[#B5523B]/20"
+              className="w-7 h-7 rounded-md bg-status-error/10 text-status-error hover:bg-status-error/20"
               aria-label="Ta bort"
             >
               ✕
@@ -155,7 +155,7 @@ export function HomepageBlocksEditor({ blocks }: { blocks: Row[] }) {
       {error && (
         <p
           role="alert"
-          className="mt-4 font-sans text-[12.5px] text-[#B5523B] bg-[#B5523B]/10 px-3 py-2 rounded-md max-w-[560px]"
+          className="mt-4 font-sans text-[12.5px] text-status-error bg-status-error/10 px-3 py-2 rounded-md max-w-[560px]"
         >
           {error}
         </p>

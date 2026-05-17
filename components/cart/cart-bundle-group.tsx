@@ -49,7 +49,7 @@ export function CartBundleGroup({
         <button
           type="button"
           onClick={() => removeBundle(bundleId)}
-          className="font-sans text-[11.5px] text-ink-soft hover:text-[#B5523B] transition-colors flex-shrink-0"
+          className="font-sans text-[11.5px] text-ink-soft hover:text-status-error transition-colors flex-shrink-0"
         >
           Ta bort paket
         </button>

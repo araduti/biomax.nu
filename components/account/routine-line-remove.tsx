@@ -24,7 +24,7 @@ export function RoutineLineRemove({ productId }: { productId: string }) {
         });
       }}
       disabled={pending}
-      className="mt-2 font-sans text-[12px] text-ink-soft hover:text-[#B5523B] transition-colors"
+      className="mt-2 font-sans text-[12px] text-ink-soft hover:text-status-error transition-colors"
     >
       {pending ? "Tar bort…" : error ? error : "Ta bort"}
     </button>

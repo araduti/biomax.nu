@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { confirmDialog } from "@/components/admin/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { StarRating } from "@/components/reviews/star-rating";
 import {
@@ -37,9 +38,9 @@ function formatDate(d: Date): string {
 }
 
 const STATUS_TONE: Record<ReviewStatus, string> = {
-  PENDING: "bg-[#C68A4F]/15 text-[#7A4D2A]",
+  PENDING: "bg-status-warn/15 text-status-warn-text",
   APPROVED: "bg-accent/15 text-accent-deep",
-  REJECTED: "bg-[#B5523B]/15 text-[#B5523B]",
+  REJECTED: "bg-status-error/15 text-status-error",
 };
 
 const STATUS_LABEL: Record<ReviewStatus, string> = {
@@ -69,7 +70,7 @@ export function ReviewModerationRow({ review }: { review: Review }) {
   }
 
   return (
-    <article className="bg-surface-alt border border-border rounded-2xl p-5 md:p-6">
+    <article className="bg-surface-alt border border-border rounded-xl p-5 md:p-6">
       {/* Top row: meta + status pill */}
       <div className="flex items-start justify-between gap-4 mb-3">
         <div className="min-w-0">
@@ -204,7 +205,7 @@ export function ReviewModerationRow({ review }: { review: Review }) {
                   })
                 }
                 disabled={pending}
-                className="text-[#B5523B] hover:bg-[#B5523B]/10"
+                className="text-status-error hover:bg-status-error/10"
               >
                 Ta bort svar
               </Button>
@@ -251,13 +252,18 @@ export function ReviewModerationRow({ review }: { review: Review }) {
           type="button"
           size="sm"
           variant="ghost"
-          onClick={() => {
-            if (!confirm("Ta bort recensionen helt? Detta går inte att ångra."))
-              return;
+          onClick={async () => {
+            const ok = await confirmDialog({
+              title: "Ta bort recensionen?",
+              body: "Recensionen försvinner helt från databasen. Detta går inte att ångra.",
+              confirmLabel: "Ta bort",
+              intent: "destructive",
+            });
+            if (!ok) return;
             run(() => deleteReview(review.id));
           }}
           disabled={pending}
-          className="text-[#B5523B] hover:bg-[#B5523B]/10 ml-auto"
+          className="text-status-error hover:bg-status-error/10 ml-auto"
         >
           Ta bort
         </Button>
@@ -272,7 +278,7 @@ export function ReviewModerationRow({ review }: { review: Review }) {
         {error && (
           <span
             role="alert"
-            className="font-sans text-[12px] text-[#B5523B] font-semibold"
+            className="font-sans text-[12px] text-status-error font-semibold"
           >
             {error}
           </span>

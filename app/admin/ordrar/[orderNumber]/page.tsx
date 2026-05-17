@@ -90,8 +90,8 @@ export default async function AdminOrderDetail({
       </div>
 
       {/* Status actions */}
-      <section className="bg-surface-alt border border-border rounded-2xl p-6 mb-6">
-        <h2 className="font-display text-xl font-medium tracking-tight text-primary-deep mb-4">
+      <section className="mb-8 pb-6 border-b border-border-soft">
+        <h2 className="font-sans text-[15px] md:text-[16px] font-semibold tracking-tight text-primary-deep mb-3">
           Hantera order
         </h2>
         <OrderStatusUpdate
@@ -102,8 +102,8 @@ export default async function AdminOrderDetail({
 
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
         {/* Items + totals */}
-        <section className="bg-surface-alt border border-border rounded-2xl overflow-hidden">
-          <h2 className="px-6 py-4 border-b border-border-soft font-sans text-[12px] uppercase tracking-[0.22em] text-ink-mute font-semibold">
+        <section className="border-y border-border-soft">
+          <h2 className="px-6 py-4 border-b border-border-soft font-sans text-[12px] uppercase tracking-[0.16em] text-ink-mute font-semibold">
             Innehåll · {order.items.length} produkter
           </h2>
           {order.items.length > 0 ? (
@@ -130,7 +130,7 @@ export default async function AdminOrderDetail({
                     <div className="w-20 h-20 rounded-lg bg-surface-warm flex-shrink-0" />
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="font-display text-[16px] font-medium tracking-tight text-primary-deep line-clamp-2">
+                    <p className="font-sans text-[14px] font-semibold tracking-tight text-primary-deep line-clamp-2">
                       {item.productName}
                     </p>
                     <p className="font-sans text-[13px] text-ink-mute mt-1">
@@ -139,7 +139,7 @@ export default async function AdminOrderDetail({
                       {formatPriceSEK(item.unitPrice.toString())}
                     </p>
                   </div>
-                  <span className="font-display text-[16px] font-medium text-primary-deep tabular-nums whitespace-nowrap">
+                  <span className="font-sans text-[14px] font-semibold text-primary-deep tabular-nums whitespace-nowrap">
                     {formatPriceSEK(item.totalPrice.toString())}
                   </span>
                 </li>
@@ -183,7 +183,7 @@ export default async function AdminOrderDetail({
                 {formatPriceSEK(order.taxAmount.toString())}
               </dd>
             </div>
-            <div className="flex justify-between text-primary-deep font-display text-[20px] pt-3 border-t border-border-soft mt-3">
+            <div className="flex justify-between text-primary-deep font-sans text-[17px] font-semibold pt-3 border-t border-border-soft mt-3">
               <dt>Totalt</dt>
               <dd className="font-medium tabular-nums">
                 {formatPriceSEK(order.totalAmount.toString())}
@@ -192,11 +192,14 @@ export default async function AdminOrderDetail({
           </dl>
         </section>
 
-        {/* Customer + address + payment sidebar */}
-        <aside className="flex flex-col gap-4">
-          <div className="bg-surface-alt border border-border rounded-2xl p-5">
-            <div className="flex items-baseline justify-between gap-2 mb-3">
-              <h3 className="font-sans text-[12px] uppercase tracking-[0.22em] text-ink-mute font-semibold">
+        {/* Sidebar — single bordered container with three divided rows
+            (Kund / Levereras till / Betalning). Was previously three
+            separate bordered cards stacked vertically; same content, less
+            visual noise. */}
+        <aside className="border border-border-soft rounded-xl divide-y divide-border-soft self-start">
+          <div className="p-5">
+            <div className="flex items-baseline justify-between gap-2 mb-2">
+              <h3 className="font-sans text-[11px] uppercase tracking-[0.16em] text-ink-mute font-semibold">
                 Kund
               </h3>
               <CopyButton value={order.email} label="Kopiera e-post" />
@@ -204,12 +207,12 @@ export default async function AdminOrderDetail({
             {order.user ? (
               <Link
                 href={`/admin/kunder/${order.user.id}`}
-                className="font-display text-[17px] font-medium tracking-tight text-primary-deep hover:text-primary transition-colors"
+                className="font-sans text-[14px] font-semibold tracking-tight text-primary-deep hover:text-primary transition-colors"
               >
                 {order.user.name ?? order.user.email}
               </Link>
             ) : (
-              <p className="font-display text-[17px] font-medium text-primary-deep">
+              <p className="font-sans text-[14px] font-semibold text-primary-deep">
                 Gästbeställning
               </p>
             )}
@@ -224,9 +227,9 @@ export default async function AdminOrderDetail({
           </div>
 
           {order.shippingAddress && (
-            <div className="bg-surface-alt border border-border rounded-2xl p-5">
-              <div className="flex items-baseline justify-between gap-2 mb-3">
-                <h3 className="font-sans text-[12px] uppercase tracking-[0.22em] text-ink-mute font-semibold">
+            <div className="p-5">
+              <div className="flex items-baseline justify-between gap-2 mb-2">
+                <h3 className="font-sans text-[11px] uppercase tracking-[0.16em] text-ink-mute font-semibold">
                   Levereras till
                 </h3>
                 <CopyButton value={addressLines} label="Kopiera adress" />
@@ -252,8 +255,8 @@ export default async function AdminOrderDetail({
             </div>
           )}
 
-          <div className="bg-surface-alt border border-border rounded-2xl p-5">
-            <h3 className="font-sans text-[12px] uppercase tracking-[0.22em] text-ink-mute font-semibold mb-3">
+          <div className="p-5">
+            <h3 className="font-sans text-[11px] uppercase tracking-[0.16em] text-ink-mute font-semibold mb-2">
               Betalning
             </h3>
             <p className="font-sans text-[15px] text-ink-body">
@@ -283,6 +286,7 @@ export default async function AdminOrderDetail({
         trackingNumber={order.trackingNumber}
         labelPdfUrl={order.labelPdfUrl}
         carrier={order.carrier}
+        servicePointId={order.servicePointId}
       />
     </>
   );

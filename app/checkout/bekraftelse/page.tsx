@@ -7,7 +7,11 @@ import { Footer } from "@/components/site/footer";
 import { Display, Eyebrow, Accent } from "@/components/ui/typography";
 import { ButtonLink } from "@/components/ui/button";
 import { formatPriceSEK } from "@/lib/format";
-import { getOrderForConfirmation } from "@/lib/checkout/order-actions";
+import {
+  getOrderForConfirmation,
+  ensureOrderFromKustomOrder,
+} from "@/lib/checkout/order-actions";
+import { getKlarnaOrder, isKlarnaConfigured } from "@/lib/klarna/client";
 import { ClearCartOnMount, DeliveryReminder } from "./clear-cart";
 
 export const metadata: Metadata = {
@@ -19,19 +23,19 @@ export const metadata: Metadata = {
 const STEPS: { title: string; body: string }[] = [
   {
     title: "Bekräftelse skickad",
-    body: "Du får en orderbekräftelse på e-post inom någon minut. Kontrollera skräpkorgen om den dröjer.",
+    body: "Du får en orderbekräftelse via e-post inom någon minut. Kolla skräpposten om den dröjer.",
   },
   {
     title: "Vi packar i Kållered",
-    body: "Vårt lager hanterar ordrar varje vardag. Orderar lagda före kl 13 packas oftast samma dag.",
+    body: "Vårt lager packar beställningar varje vardag. Det du beställer före kl 13 skickas oftast samma dag.",
   },
   {
     title: "PostNord tar över",
-    body: "Du får en spårningslänk per e-post så fort paketet är inlämnat. Leverans inom 1–3 arbetsdagar.",
+    body: "Du får en spårningslänk via e-post så snart paketet har lämnats in. Leverans inom 1–3 arbetsdagar.",
   },
   {
     title: "Frågor eller fel?",
-    body: "Maila kontakt@biomax.nu med ditt ordernummer så hjälper vi dig så snart vi kan.",
+    body: "Mejla kontakt@biomax.nu med ditt ordernummer så hjälper vi dig så snart vi kan.",
   },
 ];
 
@@ -57,17 +61,90 @@ function CheckmarkSeal() {
   );
 }
 
+/**
+ * Shown when payment succeeded but we can't render the full order yet
+ * (Kustom read failed / Order row not visible — the push webhook
+ * persists it out-of-band). Never 404 a customer who has paid.
+ */
+function PaymentReceivedFallback() {
+  return (
+    <>
+      <TopBar />
+      <Header />
+      <ClearCartOnMount />
+      <main className="bg-surface min-h-[60vh] py-14 md:py-20 px-6 md:px-8">
+        <div className="max-w-[640px] mx-auto">
+          <CheckmarkSeal />
+          <Eyebrow className="text-accent-deep">Tack för ditt köp</Eyebrow>
+          <Display as="h1" size="xl" className="mt-4 mb-4">
+            Betalning <Accent>mottagen</Accent>
+          </Display>
+          <p className="font-sans text-base md:text-lg text-ink-body leading-relaxed">
+            Vi har tagit emot din betalning. En orderbekräftelse med alla
+            detaljer skickas till din e-post inom kort. Kolla gärna
+            skräpposten om den dröjer.
+          </p>
+          <div className="mt-10 flex flex-wrap gap-3">
+            <ButtonLink href="/produkter" variant="primary" size="md">
+              Fortsätt handla
+            </ButtonLink>
+            <ButtonLink href="/konto" variant="outline" size="md">
+              Mina ordrar
+            </ButtonLink>
+          </div>
+          <div className="mt-14 pt-8 border-t border-border-soft">
+            <p className="font-sans text-[13px] text-ink-mute leading-relaxed">
+              Frågor om din beställning? Mejla{" "}
+              <Link
+                href="mailto:kontakt@biomax.nu"
+                className="text-primary-deep underline decoration-accent/40 underline-offset-[3px] hover:decoration-accent"
+              >
+                kontakt@biomax.nu
+              </Link>
+              .
+            </p>
+          </div>
+        </div>
+      </main>
+      <Footer />
+    </>
+  );
+}
+
 export default async function ConfirmationPage({
   searchParams,
 }: {
   searchParams: Promise<{ order?: string; klarna_order_id?: string }>;
 }) {
   const params = await searchParams;
-  const orderNumber = params.order;
+  let orderNumber = params.order;
+
+  // Real Kustom flow: Kustom redirects here with ?klarna_order_id=.
+  // Read the order back, then idempotently create our Order row (the
+  // push webhook does the same — whichever lands first wins). If the
+  // read fails we still show a graceful "payment received" page
+  // because the webhook will persist the order out-of-band.
+  const kustomOrderId = params.klarna_order_id;
+  if (!orderNumber && kustomOrderId && isKlarnaConfigured()) {
+    try {
+      const kustomOrder = await getKlarnaOrder(kustomOrderId);
+      const res = await ensureOrderFromKustomOrder(kustomOrder);
+      if (res.ok) orderNumber = res.orderNumber;
+    } catch (err) {
+      console.error("[bekraftelse] Kustom read/ensure failed", err);
+    }
+    if (!orderNumber) return <PaymentReceivedFallback />;
+  }
+
   if (!orderNumber) redirect("/");
 
   const order = await getOrderForConfirmation(orderNumber);
-  if (!order) redirect("/");
+  if (!order) {
+    // Real-flow row not visible yet (webhook still in flight) — don't
+    // 404 a paying customer; the email + webhook will catch up.
+    if (kustomOrderId) return <PaymentReceivedFallback />;
+    redirect("/");
+  }
 
   return (
     <>
@@ -197,7 +274,7 @@ export default async function ConfirmationPage({
           {/* Support footer */}
           <div className="mt-14 pt-8 border-t border-border-soft">
             <p className="font-sans text-[13px] text-ink-mute leading-relaxed">
-              Något som inte stämmer i ordern? Maila{" "}
+              Något som inte stämmer i beställningen? Mejla{" "}
               <Link
                 href="mailto:kontakt@biomax.nu"
                 className="text-primary-deep underline decoration-accent/40 underline-offset-[3px] hover:decoration-accent"

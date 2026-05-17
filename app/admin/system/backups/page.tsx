@@ -2,6 +2,7 @@ import { existsSync, statSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { AdminEmptyState } from "@/components/admin/admin-empty-state";
+import { AdminSummaryStrip } from "@/components/admin/admin-summary-strip";
 
 export const metadata = { title: "Backups" };
 export const dynamic = "force-dynamic";
@@ -128,16 +129,16 @@ export default function BackupsPage() {
       />
 
       <div
-        className={`mb-8 rounded-2xl px-5 py-4 border ${
+        className={`mb-8 rounded-xl px-5 py-4 border ${
           newestStale
-            ? "border-[#B5523B]/30 bg-[#B5523B]/[0.05]"
+            ? "border-status-error/30 bg-status-error/[0.05]"
             : "border-accent/30 bg-accent/[0.05]"
         }`}
       >
-        <p className="font-sans text-[10.5px] uppercase tracking-[0.22em] font-semibold text-ink-soft mb-1">
+        <p className="font-sans text-[10.5px] uppercase tracking-[0.16em] font-semibold text-ink-soft mb-1">
           {newestStale ? "Backup verkar inaktuell" : "Backup är färsk"}
         </p>
-        <p className="font-display text-lg font-medium text-primary-deep">
+        <p className="font-sans text-[14.5px] font-semibold text-primary-deep">
           {newest > 0
             ? `Senaste dump skapad ${hoursAgo(newest)} (${dateTimeFmt.format(new Date(newest))})`
             : "Ingen dump hittad i någon tier."}
@@ -150,39 +151,16 @@ export default function BackupsPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {tiers.map((t) => (
-          <div
-            key={t.name}
-            className="bg-surface-alt border border-border rounded-2xl p-5"
-          >
-            <p className="font-sans text-[10.5px] uppercase tracking-[0.22em] font-semibold text-accent-deep mb-1">
-              {t.name}
-            </p>
-            <p className="font-display text-2xl font-medium text-primary-deep tabular-nums mb-2">
-              {t.count}{" "}
-              <span className="font-sans text-[12px] font-medium text-ink-mute uppercase tracking-[0.18em] not-italic">
-                filer
-              </span>
-            </p>
-            {t.latest ? (
-              <div className="font-sans text-[13px] text-ink-body leading-relaxed">
-                <p className="truncate">
-                  <span className="text-ink-mute">Senast:</span>{" "}
-                  <span className="font-mono text-[12px]">{t.latest.name}</span>
-                </p>
-                <p className="text-ink-mute text-[12px] mt-1 tabular-nums">
-                  {formatSize(t.latest.size)} · {hoursAgo(t.latest.mtimeMs)}
-                </p>
-              </div>
-            ) : (
-              <p className="font-sans text-[13px] text-ink-mute italic">
-                Inga filer i denna tier än.
-              </p>
-            )}
-          </div>
-        ))}
-      </div>
+      <AdminSummaryStrip
+        stats={tiers.map((t) => ({
+          label: t.name,
+          value: `${t.count} ${t.count === 1 ? "fil" : "filer"}`,
+          subtle: t.latest
+            ? `Senast ${hoursAgo(t.latest.mtimeMs)} · ${formatSize(t.latest.size)}`
+            : "Inga filer än",
+          accent: t.count === 0 ? "error" : "ok",
+        }))}
+      />
 
       <aside className="mt-10 pt-6 border-t border-border-soft">
         <p className="font-sans text-[13px] text-ink-mute leading-relaxed max-w-[720px]">

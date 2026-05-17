@@ -3,32 +3,29 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import {
-  bookOrderShipment,
-  markFulfilled,
-} from "@/lib/admin/shipment-actions";
+import { printOrderLabel, markFulfilled } from "@/lib/admin/shipment-actions";
 
 /**
- * Admin shipment + fulfilment controls on the order detail page.
+ * Admin shipment panel — ADR 0020 (TMS route).
  *
- * Two-step flow:
- *   1. "Boka frakt"  → calls PostNord (or stub) to mint a tracking
- *      number + label. The Order row gets `trackingNumber` /
- *      `labelPdfUrl` / `carrier`. Order stays in PAID.
- *   2. "Markera som skickad" → flips status to FULFILLED. The
- *      review-request cron picks it up 14 days later.
+ * KSA/the TMS books the shipment with PostNord at checkout. We do NOT
+ * book here (that would double-book). This panel:
+ *   - shows the customer-selected delivery + tracking, read-only;
+ *   - "Skriv ut fraktsedel" pulls the PostNord fraktsedel PDF for the
+ *     existing item id (the tracking number) and links it;
+ *   - "Markera som skickad" flips PAID → FULFILLED (warehouse step).
  *
- * Stub mode is identified by the synthetic tracking number prefix
- * (STUB-…). In that case the "Ladda ner fraktsedel"-button is hidden
- * since there's no real label to download.
+ * The label may already be present (pre-fetched on order-paid) — then
+ * we just show the link. Stub mode (no POSTNORD_API_KEY) yields no
+ * label; the panel says so instead of offering a dead button.
  */
 export function ShipmentControls({
   orderId,
-  orderNumber,
   status,
   trackingNumber,
   labelPdfUrl,
   carrier,
+  servicePointId,
 }: {
   orderId: string;
   orderNumber: string;
@@ -36,12 +33,15 @@ export function ShipmentControls({
   trackingNumber: string | null;
   labelPdfUrl: string | null;
   carrier: string | null;
+  servicePointId: string | null;
 }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const router = useRouter();
 
-  function dispatch(action: () => Promise<{ ok: boolean; error?: string }>) {
+  function dispatch(
+    action: () => Promise<{ ok: boolean; error?: string }>
+  ) {
     setError(null);
     start(async () => {
       const result = await action();
@@ -53,83 +53,72 @@ export function ShipmentControls({
     });
   }
 
-  const stub = trackingNumber?.startsWith("STUB-") ?? false;
-  const showBook = status === "PAID" && !trackingNumber;
-  const showRebook = status === "PAID" && trackingNumber;
-  const showFulfill = status === "PAID";
-
-  if (status !== "PAID" && !trackingNumber) {
+  // Nothing to show until the order is paid (KSA hasn't booked before that).
+  if (status !== "PAID" && status !== "FULFILLED" && !trackingNumber) {
     return null;
   }
 
+  const stubTracking = trackingNumber?.startsWith("STUB-") ?? false;
+  const deliveryLabel = servicePointId
+    ? `Hämtas hos ombud · ${servicePointId}`
+    : "Hemleverans / postlåda";
+
   return (
     <section className="mt-12 pt-8 border-t border-border">
-      <p className="font-sans text-[11px] uppercase tracking-[0.22em] text-ink-soft font-semibold mb-4">
+      <p className="font-sans text-[11px] uppercase tracking-[0.16em] text-ink-soft font-semibold mb-4">
         Frakt
       </p>
 
-      {trackingNumber && (
-        <div className="bg-surface-alt border border-border rounded-2xl p-5 mb-4">
-          <p className="font-display text-base font-medium text-primary-deep mb-1">
-            {carrier ?? "PostNord"} ·{" "}
-            <code className="font-mono text-sm">{trackingNumber}</code>
-            {stub && (
-              <span className="ml-2 font-sans text-[11px] uppercase tracking-[0.16em] font-semibold text-[#8A5A2C] bg-[#C68A4F]/15 px-2 py-0.5 rounded-full">
-                Stub
-              </span>
-            )}
-          </p>
-          {labelPdfUrl ? (
-            <a
-              href={labelPdfUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-sans text-[13px] text-primary-deep underline decoration-accent/40 underline-offset-[3px] hover:decoration-accent"
-            >
-              Ladda ner fraktsedel (PDF) ↗
-            </a>
+      <div className="bg-surface-alt border border-border rounded-xl p-5 mb-4 space-y-2">
+        <p className="font-display text-base font-medium text-primary-deep">
+          {deliveryLabel}
+        </p>
+        <p className="font-sans text-[13px] text-ink-mute">
+          {carrier ?? "PostNord"}
+          {trackingNumber ? (
+            <>
+              {" · "}
+              <code className="font-mono text-[12.5px]">
+                {trackingNumber}
+              </code>
+            </>
           ) : (
-            <p className="font-sans text-[12.5px] text-ink-mute">
-              {stub
-                ? "Ingen fraktsedel — PostNord-creds inte konfigurerade."
-                : "Fraktsedel inte tillgänglig än."}
-            </p>
+            " · väntar på spårningsnummer från PostNord"
           )}
-        </div>
-      )}
+        </p>
+        {labelPdfUrl ? (
+          <a
+            href={labelPdfUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block font-sans text-[13px] font-semibold text-primary-deep underline decoration-accent/40 underline-offset-[3px] hover:decoration-accent"
+          >
+            Öppna fraktsedel (PDF) ↗
+          </a>
+        ) : stubTracking ? (
+          <p className="font-sans text-[12.5px] text-ink-mute">
+            Testförsändelse — ingen fraktsedel (PostNord-nyckel saknas).
+          </p>
+        ) : null}
+      </div>
 
       <div className="flex flex-wrap gap-3">
-        {showBook && (
-          <Button
-            type="button"
-            onClick={() => dispatch(() => bookOrderShipment({ orderId }))}
-            disabled={pending}
-          >
-            {pending ? "Bokar…" : "Boka frakt"}
-          </Button>
-        )}
-        {showRebook && (
+        {!labelPdfUrl && trackingNumber && !stubTracking && (
           <Button
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => dispatch(() => bookOrderShipment({ orderId }))}
+            onClick={() => dispatch(() => printOrderLabel({ orderId }))}
             disabled={pending}
           >
-            Boka om
+            {pending ? "Hämtar…" : "Skriv ut fraktsedel"}
           </Button>
         )}
-        {showFulfill && (
+        {status === "PAID" && (
           <Button
             type="button"
-            variant={trackingNumber ? "primary" : "outline"}
             onClick={() => dispatch(() => markFulfilled({ orderId }))}
-            disabled={pending || !trackingNumber}
-            title={
-              trackingNumber
-                ? undefined
-                : "Boka frakt först."
-            }
+            disabled={pending}
           >
             Markera som skickad
           </Button>
@@ -139,7 +128,7 @@ export function ShipmentControls({
       {error && (
         <p
           role="alert"
-          className="mt-3 font-sans text-[12.5px] text-[#B5523B]"
+          className="mt-3 font-sans text-[12.5px] text-status-error"
         >
           {error}
         </p>

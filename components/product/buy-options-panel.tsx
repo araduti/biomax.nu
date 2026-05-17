@@ -228,7 +228,7 @@ export function BuyOptionsPanel({
       {error && (
         <p
           role="alert"
-          className="mt-3 font-sans text-[12.5px] text-[#B5523B] bg-[#B5523B]/10 px-3 py-2 rounded-md inline-block"
+          className="mt-3 font-sans text-[12.5px] text-status-error bg-status-error/10 px-3 py-2 rounded-md inline-block"
         >
           {error}
         </p>

@@ -75,11 +75,8 @@ export default async function AdminCustomersPage({
     <>
       <AdminPageHeader
         eyebrow="Beställningar"
-        title={`${total.toLocaleString("sv-SE")} ${total === 1 ? "kund" : "kunder"}`}
-        crumbs={[
-          { label: "Beställningar", href: "/admin/ordrar" },
-          { label: "Kunder" },
-        ]}
+        title="Kunder"
+        metric={`${total.toLocaleString("sv-SE")} ${total === 1 ? "kund" : "kunder"}`}
         subtitle='Sök på namn eller e-post. Importerade kunder från gamla biomax.nu märks med "arkiverad".'
       />
 
@@ -93,7 +90,7 @@ export default async function AdminCustomersPage({
         />
       </form>
 
-      <div className="bg-surface-alt border border-border rounded-2xl overflow-hidden">
+      <div className="bg-surface-alt border border-border rounded-xl overflow-hidden">
         <ul>
           {customers.map((c, i) => {
             const fullName =
@@ -108,10 +105,10 @@ export default async function AdminCustomersPage({
               >
                 <Link
                   href={`/admin/kunder/${c.id}`}
-                  className="grid grid-cols-[1.4fr_2fr_auto_auto_auto] items-center gap-4 px-5 py-4 hover:bg-surface-warm transition-colors min-h-[72px]"
+                  className="grid grid-cols-[1.4fr_2fr_auto_auto_auto] items-center gap-4 px-5 py-2.5 hover:bg-surface-warm transition-colors min-h-[44px]"
                 >
                   <div className="min-w-0">
-                    <p className="font-display text-[15.5px] font-medium tracking-tight text-primary-deep truncate">
+                    <p className="font-sans text-[13.5px] font-semibold tracking-tight text-primary-deep truncate">
                       {fullName ?? "—"}
                     </p>
                     <p className="font-sans text-[12.5px] text-ink-mute mt-1">
@@ -125,7 +122,7 @@ export default async function AdminCustomersPage({
                   <p className="font-sans text-[13px] text-ink-mute whitespace-nowrap tabular-nums">
                     {c._count.orders} ordrar
                   </p>
-                  <p className="font-display text-[15.5px] font-medium text-primary-deep tabular-nums whitespace-nowrap min-w-[88px] text-right">
+                  <p className="font-sans text-[13.5px] font-semibold text-primary-deep tabular-nums whitespace-nowrap min-w-[88px] text-right">
                     {formatPriceSEK(lifetime)}
                   </p>
                   <span aria-hidden className="text-primary text-lg">

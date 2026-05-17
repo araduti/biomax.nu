@@ -57,22 +57,19 @@ export default async function AdminInventoryPage({
     { slug: "all", label: "Allt", count: snapshot.counts.all },
   ];
 
-  const headerTitle =
+  const metricLabel =
     visible.length === 0
       ? filter === "needs-action"
-        ? "Inget i lagret kräver åtgärd"
-        : `Inga produkter (${filter})`
-      : `${visible.length} ${visible.length === 1 ? "produkt" : "produkter"}`;
+        ? "Inget kräver åtgärd"
+        : "Inga"
+      : `${visible.length.toLocaleString("sv-SE")} ${visible.length === 1 ? "produkt" : "produkter"}`;
 
   return (
     <>
       <AdminPageHeader
         eyebrow="Katalog"
-        title={headerTitle}
-        crumbs={[
-          { label: "Katalog" },
-          { label: "Lager" },
-        ]}
+        title="Lager"
+        metric={metricLabel}
         subtitle={
           filter === "needs-action" && visible.length === 0
             ? `Alla publicerade produkter har lager över sin tröskel (${snapshot.threshold} st).`
@@ -116,7 +113,7 @@ export default async function AdminInventoryPage({
           Inga rader att visa.
         </p>
       ) : (
-        <div className="bg-surface-alt border border-border rounded-2xl overflow-hidden">
+        <div className="bg-surface-alt border border-border rounded-xl overflow-hidden">
           <ul>
             {visible.map((row, i) => (
               <li

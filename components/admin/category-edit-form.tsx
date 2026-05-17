@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { confirmDialog } from "@/components/admin/confirm-dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -60,14 +61,15 @@ export function CategoryEditForm({
     });
   }
 
-  function remove() {
+  async function remove() {
     if (productCount > 0) return;
-    if (
-      !confirm(
-        `Ta bort kategorin "${initial.name}"? Detta går inte att ångra.`
-      )
-    )
-      return;
+    const ok = await confirmDialog({
+      title: `Ta bort kategorin "${initial.name}"?`,
+      body: "Kategorin tas bort permanent. Produkter som tillhör kategorin behåller sina kopplingar tills du redigerar dem.",
+      confirmLabel: "Ta bort",
+      intent: "destructive",
+    });
+    if (!ok) return;
     setError(null);
     startDelete(async () => {
       const result = await deleteCategory(initial.slug);
@@ -162,7 +164,7 @@ export function CategoryEditForm({
             variant="ghost"
             onClick={remove}
             disabled={deleting || productCount > 0}
-            className="text-[#B5523B] hover:bg-[#B5523B]/10"
+            className="text-status-error hover:bg-status-error/10"
           >
             {deleting ? "Tar bort…" : "Ta bort kategori"}
           </Button>
@@ -185,7 +187,7 @@ export function CategoryEditForm({
       {error && (
         <p
           role="alert"
-          className="font-sans text-[12.5px] text-[#B5523B] bg-[#B5523B]/10 px-3 py-2 rounded-md"
+          className="font-sans text-[12.5px] text-status-error bg-status-error/10 px-3 py-2 rounded-md"
         >
           {error}
         </p>

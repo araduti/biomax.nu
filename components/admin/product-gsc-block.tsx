@@ -25,8 +25,8 @@ export function ProductGscBlock({
 }) {
   if (!configured) {
     return (
-      <fieldset className="bg-surface-alt border border-border rounded-2xl p-6 md:p-8">
-        <legend className="px-2 -ml-2 font-sans text-[11px] uppercase tracking-[0.22em] font-semibold text-ink-mute">
+      <fieldset className="bg-surface-alt border border-border rounded-xl p-6 md:p-8">
+        <legend className="px-2 -ml-2 font-sans text-[11px] uppercase tracking-[0.16em] font-semibold text-ink-mute">
           Sökanalys (Google Search Console)
         </legend>
         <div className="mt-4">
@@ -37,8 +37,8 @@ export function ProductGscBlock({
   }
 
   return (
-    <fieldset className="bg-surface-alt border border-border rounded-2xl p-6 md:p-8">
-      <legend className="px-2 -ml-2 font-sans text-[11px] uppercase tracking-[0.22em] font-semibold text-ink-mute">
+    <fieldset className="bg-surface-alt border border-border rounded-xl p-6 md:p-8">
+      <legend className="px-2 -ml-2 font-sans text-[11px] uppercase tracking-[0.16em] font-semibold text-ink-mute">
         Sökanalys (Google Search Console)
       </legend>
       <p className="mt-3 mb-5 font-sans text-[13px] text-ink-mute leading-relaxed">

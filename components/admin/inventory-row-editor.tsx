@@ -8,30 +8,16 @@ import {
   setProductStock,
   setVariantStock,
 } from "@/lib/admin/inventory-actions";
+import { AdminStatusPill, type StatusKind } from "./admin-status-pill";
 import type { InventoryRow } from "@/lib/admin/inventory";
 
 const SEVERITY: Record<
   InventoryRow["severity"],
-  { label: string; icon: string; pillBg: string; pillFg: string }
+  { label: string; icon: string; kind: StatusKind }
 > = {
-  out: {
-    label: "Slut",
-    icon: "⚠",
-    pillBg: "bg-[#B5523B]/12",
-    pillFg: "text-[#B5523B]",
-  },
-  low: {
-    label: "Lågt",
-    icon: "○",
-    pillBg: "bg-[#C68A4F]/15",
-    pillFg: "text-[#8A5A2C]",
-  },
-  ok: {
-    label: "I lager",
-    icon: "✓",
-    pillBg: "bg-accent/15",
-    pillFg: "text-accent-deep",
-  },
+  out: { label: "Slut", icon: "⚠", kind: "error" },
+  low: { label: "Lågt", icon: "○", kind: "warn" },
+  ok: { label: "I lager", icon: "✓", kind: "ok" },
 };
 
 /**
@@ -84,17 +70,17 @@ export function InventoryRowEditor({ row }: { row: InventoryRow }) {
   }
 
   return (
-    <div className="grid grid-cols-[80px_1fr_auto] items-center gap-4 px-5 py-4 min-h-[88px] hover:bg-surface-warm/40 transition-colors">
+    <div className="grid grid-cols-[40px_1fr_auto] items-center gap-4 px-5 py-2 min-h-[56px] hover:bg-surface-warm/40 transition-colors">
       <Link
         href={`/admin/produkter/${row.productSlug}`}
-        className="relative w-20 h-20 rounded-lg overflow-hidden bg-surface-warm"
+        className="relative w-10 h-10 rounded-md overflow-hidden bg-surface-warm"
         aria-label={`Öppna ${row.name}`}
       >
         <Image
           src={row.imageUrl || "/products/_placeholder.svg"}
-          alt={row.name}
+          alt=""
           fill
-          sizes="80px"
+          sizes="40px"
           className="object-cover mix-blend-darken"
         />
       </Link>
@@ -103,16 +89,13 @@ export function InventoryRowEditor({ row }: { row: InventoryRow }) {
         <div className="flex flex-wrap items-baseline gap-3">
           <Link
             href={`/admin/produkter/${row.productSlug}`}
-            className="font-display text-[16px] font-medium text-primary-deep hover:text-primary transition-colors"
+            className="font-sans text-[14px] font-semibold text-primary-deep hover:text-primary transition-colors"
           >
             {row.name}
           </Link>
-          <span
-            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-sans text-[12.5px] font-semibold ${severity.pillBg} ${severity.pillFg}`}
-          >
-            <span aria-hidden>{severity.icon}</span>
+          <AdminStatusPill kind={severity.kind} icon={severity.icon}>
             {severity.label}
-          </span>
+          </AdminStatusPill>
         </div>
         <p className="mt-1 font-sans text-[13px] text-ink-mute">
           {row.sku}
@@ -123,7 +106,7 @@ export function InventoryRowEditor({ row }: { row: InventoryRow }) {
         {error && (
           <p
             role="alert"
-            className="mt-2 font-sans text-[13px] text-[#B5523B]"
+            className="mt-2 font-sans text-[13px] text-status-error"
           >
             {error}
           </p>
@@ -166,11 +149,11 @@ export function InventoryRowEditor({ row }: { row: InventoryRow }) {
       ) : (
         <div className="flex items-center gap-4">
           <p
-            className={`font-display text-[22px] font-medium tabular-nums whitespace-nowrap ${
+            className={`font-sans text-[15px] font-semibold tabular-nums whitespace-nowrap min-w-[60px] text-right ${
               row.severity === "out"
-                ? "text-[#B5523B]"
+                ? "text-status-error"
                 : row.severity === "low"
-                  ? "text-[#8A5A2C]"
+                  ? "text-status-low"
                   : "text-primary-deep"
             }`}
           >

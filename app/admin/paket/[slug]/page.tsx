@@ -51,7 +51,7 @@ export default async function AdminBundleEditPage({
         }
       />
 
-      <div className="bg-surface-alt border border-border rounded-2xl p-6 md:p-8 max-w-[720px]">
+      <div className="bg-surface-alt border border-border rounded-xl p-6 md:p-8 max-w-[720px]">
         <BundleEditForm
           initial={{
             slug: bundle.slug,

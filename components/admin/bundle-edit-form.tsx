@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { confirmDialog } from "@/components/admin/confirm-dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { updateBundle, deleteBundle } from "@/lib/admin/bundle-actions";
@@ -65,8 +66,14 @@ export function BundleEditForm({
     });
   }
 
-  function remove() {
-    if (!confirm("Ta bort paketet?")) return;
+  async function remove() {
+    const ok = await confirmDialog({
+      title: "Ta bort paketet?",
+      body: `"${initial.name}" tas bort. Pågående ordrar med paketet behåller sin information.`,
+      confirmLabel: "Ta bort",
+      intent: "destructive",
+    });
+    if (!ok) return;
     startDelete(async () => {
       const r = await deleteBundle(initial.slug);
       if (!r.ok) {
@@ -154,7 +161,7 @@ export function BundleEditForm({
           variant="ghost"
           onClick={remove}
           disabled={deleting}
-          className="text-[#B5523B] hover:bg-[#B5523B]/10 ml-auto"
+          className="text-status-error hover:bg-status-error/10 ml-auto"
         >
           {deleting ? "Tar bort…" : "Ta bort"}
         </Button>
@@ -171,7 +178,7 @@ export function BundleEditForm({
       {error && (
         <p
           role="alert"
-          className="font-sans text-[12.5px] text-[#B5523B] bg-[#B5523B]/10 px-3 py-2 rounded-md"
+          className="font-sans text-[12.5px] text-status-error bg-status-error/10 px-3 py-2 rounded-md"
         >
           {error}
         </p>

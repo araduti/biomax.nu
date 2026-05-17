@@ -114,7 +114,7 @@ export function CartLine({
         <button
           type="button"
           onClick={() => remove(item.productId, item.variantId, item.bundleId)}
-          className="self-start mt-2 font-sans text-[12px] text-ink-soft hover:text-[#B5523B] transition-colors"
+          className="self-start mt-2 font-sans text-[12px] text-ink-soft hover:text-status-error transition-colors"
         >
           Ta bort
         </button>

@@ -160,7 +160,7 @@ export function ReturnRequestForm({
           {error && (
             <p
               role="alert"
-              className="mb-3 font-sans text-[12.5px] text-[#B5523B]"
+              className="mb-3 font-sans text-[12.5px] text-status-error"
             >
               {error}
             </p>

@@ -3,6 +3,7 @@
 import { useState, useRef, type ChangeEvent } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { confirmDialog } from "@/components/admin/confirm-dialog";
 import {
   uploadGalleryImage,
   setGalleryUrls,
@@ -88,8 +89,14 @@ export function ProductGalleryEditor({
     void persist(next);
   }
 
-  function remove(idx: number) {
-    if (!confirm("Ta bort den här bilden från galleriet?")) return;
+  async function remove(idx: number) {
+    const ok = await confirmDialog({
+      title: "Ta bort bilden från galleriet?",
+      body: "Bildfilen ligger kvar i /products/ — bara länken försvinner.",
+      confirmLabel: "Ta bort",
+      intent: "destructive",
+    });
+    if (!ok) return;
     void persist(urls.filter((_, i) => i !== idx));
   }
 
@@ -189,7 +196,7 @@ export function ProductGalleryEditor({
       {error && (
         <p
           role="alert"
-          className="mt-3 font-sans text-[12.5px] text-[#B5523B] bg-[#B5523B]/10 px-3 py-2 rounded-md"
+          className="mt-3 font-sans text-[12.5px] text-status-error bg-status-error/10 px-3 py-2 rounded-md"
         >
           {error}
         </p>
@@ -214,7 +221,7 @@ function IconButton({
     "inline-flex items-center justify-center w-7 h-7 rounded-md font-sans text-[14px] font-semibold transition-colors disabled:opacity-30 disabled:cursor-not-allowed";
   const palette =
     variant === "danger"
-      ? "bg-[#B5523B] text-white hover:bg-[#7A331E]"
+      ? "bg-status-error text-white hover:bg-[#7A331E]"
       : "bg-surface text-primary-deep hover:bg-surface-warm";
   return (
     <button

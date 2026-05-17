@@ -308,7 +308,7 @@ function PreviewChip({
 }) {
   const palette =
     tone === "amber"
-      ? "bg-[#C68A4F]/10 text-[#7A4D2A] border-[#C68A4F]/30"
+      ? "bg-status-warn/10 text-status-warn-text border-status-warn/30"
       : "bg-accent/12 text-accent-deep border-accent/25";
   return (
     <span

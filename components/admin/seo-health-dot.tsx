@@ -21,14 +21,14 @@ const PALETTE: Record<
   partial: {
     label: "Delvis",
     icon: "○",
-    bg: "bg-[#C68A4F]/15",
-    fg: "text-[#8A5A2C]",
+    bg: "bg-status-warn/15",
+    fg: "text-status-low",
   },
   "needs-work": {
     label: "Åtgärd",
     icon: "⚠",
-    bg: "bg-[#B5523B]/12",
-    fg: "text-[#B5523B]",
+    bg: "bg-status-error/12",
+    fg: "text-status-error",
   },
 };
 

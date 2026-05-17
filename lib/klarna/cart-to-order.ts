@@ -1,6 +1,8 @@
 import type {
+  KlarnaAddress,
   KlarnaCreateOrderPayload,
   KlarnaOrderLine,
+  KustomShippingOption,
 } from "./types";
 import { CURRENT_VAT_BP } from "@/lib/checkout/vat";
 
@@ -55,6 +57,7 @@ function buildLine(
     unit_price,
     tax_rate: CURRENT_VAT_BP,
     total_amount,
+    total_discount_amount: 0,
     total_tax_amount,
     image_url: line.imageUrl
       ? line.imageUrl.startsWith("http")
@@ -118,30 +121,38 @@ export type CheckoutDiscount = {
 export async function buildKlarnaPayload(
   lines: CheckoutLine[],
   baseURL: string,
-  discount?: CheckoutDiscount | null
+  discount?: CheckoutDiscount | null,
+  /** Pre-fill for logged-in customers. Kustom shows these in the
+   *  iframe pre-filled but still editable; omit for guests. */
+  billingAddress?: KlarnaAddress | null
 ): Promise<KlarnaCreateOrderPayload> {
   const productLines = lines.map((l) => buildLine(l, baseURL));
   const productAmount = productLines.reduce((s, l) => s + l.total_amount, 0);
   const subtotalSek = productAmount / 100;
   const shippingSek = await shippingForSubtotal(subtotalSek);
 
+  // ADR 0020: KSA-driven shipping. We do NOT emit a `shipping_fee`
+  // order line — Kustom adds the customer-selected option's price
+  // itself (and pulls portal-configured PostNord pickup points).
+  // `order_amount` therefore excludes shipping. We still pass one
+  // fallback option, priced from our SiteSetting rules, so KSA has a
+  // baseline if the carrier TMS returns nothing.
   const allLines = [...productLines];
-  if (shippingSek > 0) {
-    const shippingOre = shippingSek * 100;
-    const shippingTax = Math.round(
-      (shippingOre * CURRENT_VAT_BP) / (10000 + CURRENT_VAT_BP)
-    );
-    allLines.push({
-      type: "shipping_fee",
-      reference: "SHIPPING-STANDARD",
-      name: "Standardfrakt",
-      quantity: 1,
-      unit_price: shippingOre,
+  const shippingOre = Math.round(shippingSek * 100);
+  const shippingTax = Math.round(
+    (shippingOre * CURRENT_VAT_BP) / (10000 + CURRENT_VAT_BP)
+  );
+  const shipping_options: KustomShippingOption[] = [
+    {
+      id: "postnord-home",
+      name: "PostNord Hemleverans",
+      price: shippingOre,
+      tax_amount: shippingTax,
       tax_rate: CURRENT_VAT_BP,
-      total_amount: shippingOre,
-      total_tax_amount: shippingTax,
-    });
-  }
+      shipping_method: "Home",
+      preselected: true,
+    },
+  ];
 
   // Discount line — Klarna convention is negative unit_price + total_amount
   // for `type: "discount"`. We cap at the productAmount so we never push
@@ -165,6 +176,7 @@ export async function buildKlarnaPayload(
         unit_price: negOre,
         tax_rate: CURRENT_VAT_BP,
         total_amount: negOre,
+        total_discount_amount: 0,
         total_tax_amount,
       });
     }
@@ -183,11 +195,37 @@ export async function buildKlarnaPayload(
     order_amount,
     order_tax_amount,
     order_lines: allLines,
+    shipping_options,
+    options: {
+      allow_separate_shipping_address: true,
+      // Biomax brand (deep navy) — see ADR 0020. HEX only; Kustom
+      // passes these to Stripe Elements which rejects rgba().
+      color_button: "#0F2440",
+      color_button_text: "#FBFAF7",
+      color_header: "#0F2440",
+      color_link: "#1E3A5F",
+      color_checkbox: "#0F2440",
+      color_checkbox_checkmark: "#FBFAF7",
+      color_background: "#FFFFFF",
+      radius_border: "12",
+      // Kustom owns the authoritative summary in-iframe; make it the
+      // full breakdown so our sidebar doesn't need to duplicate it.
+      show_subtotal_detail: true,
+    },
+    ...(billingAddress ? { billing_address: billingAddress } : {}),
     merchant_urls: {
       terms: `${baseURL}/villkor`,
       checkout: `${baseURL}/checkout`,
       confirmation: `${baseURL}/checkout/bekraftelse?klarna_order_id={checkout.order.id}`,
-      push: `${baseURL}/api/webhooks/klarna?klarna_order_id={checkout.order.id}`,
+      // Append the shared webhook secret so the push receiver can
+      // authenticate the caller (Kustom/Klarna v3 push is unsigned —
+      // a secret query param is the documented mitigation). Omitted
+      // when unset so dev/stub keeps working.
+      push: `${baseURL}/api/webhooks/klarna?klarna_order_id={checkout.order.id}${
+        process.env.KLARNA_WEBHOOK_SECRET
+          ? `&token=${encodeURIComponent(process.env.KLARNA_WEBHOOK_SECRET)}`
+          : ""
+      }`,
     },
   };
 }

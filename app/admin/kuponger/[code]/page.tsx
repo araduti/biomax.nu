@@ -46,7 +46,7 @@ export default async function AdminCouponEditPage({
         }
       />
 
-      <div className="max-w-[640px] bg-surface-alt border border-border rounded-2xl p-6 md:p-8">
+      <div className="max-w-[640px] bg-surface-alt border border-border rounded-xl p-6 md:p-8">
         <CouponEditForm
           initial={{
             code: coupon.code,

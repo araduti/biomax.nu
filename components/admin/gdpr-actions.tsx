@@ -60,7 +60,7 @@ export function GdprActions({ userId }: { userId: string }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {/* Article 15 — export */}
-      <div className="bg-surface-alt border border-border rounded-2xl p-5">
+      <div className="bg-surface-alt border border-border rounded-xl p-5">
         <p className="font-display text-base font-medium text-primary-deep mb-1">
           Exportera all data
         </p>
@@ -80,7 +80,7 @@ export function GdprActions({ userId }: { userId: string }) {
       </div>
 
       {/* Article 17 — anonymisation */}
-      <div className="bg-surface-alt border border-border rounded-2xl p-5">
+      <div className="bg-surface-alt border border-border rounded-xl p-5">
         <p className="font-display text-base font-medium text-primary-deep mb-1">
           Anonymisera kund
         </p>
@@ -115,7 +115,7 @@ export function GdprActions({ userId }: { userId: string }) {
                 type="button"
                 onClick={doAnonymize}
                 disabled={pending || confirmText !== "ANONYMISERA"}
-                className="px-3 py-1.5 rounded-md bg-[#B5523B] text-surface hover:bg-[#9F4630] disabled:opacity-40 disabled:cursor-not-allowed font-sans text-[13px] font-semibold transition-colors"
+                className="px-3 py-1.5 rounded-md bg-status-error text-surface hover:bg-[#9F4630] disabled:opacity-40 disabled:cursor-not-allowed font-sans text-[13px] font-semibold transition-colors"
               >
                 {pending ? "Anonymiserar…" : "Anonymisera"}
               </button>
@@ -139,7 +139,7 @@ export function GdprActions({ userId }: { userId: string }) {
       {error && (
         <p
           role="alert"
-          className="md:col-span-2 font-sans text-[12.5px] text-[#B5523B]"
+          className="md:col-span-2 font-sans text-[12.5px] text-status-error"
         >
           {error}
         </p>

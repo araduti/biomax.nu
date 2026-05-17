@@ -28,7 +28,7 @@ export default async function AdminIngredientPinsIndexPage() {
         ]}
       />
 
-      <div className="bg-surface-alt border border-border rounded-2xl overflow-hidden">
+      <div className="bg-surface-alt border border-border rounded-xl overflow-hidden">
         <ul>
           {ingredients.map((ing, i) => {
             const count = countBySlug.get(ing.slug) ?? 0;

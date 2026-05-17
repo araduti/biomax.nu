@@ -250,7 +250,7 @@ export function ReviewForm({
       {status.kind === "error" && (
         <p
           role="alert"
-          className="mt-4 font-sans text-[12.5px] text-[#B5523B] bg-[#B5523B]/10 px-3 py-2 rounded-md"
+          className="mt-4 font-sans text-[12.5px] text-status-error bg-status-error/10 px-3 py-2 rounded-md"
         >
           {status.message}
         </p>

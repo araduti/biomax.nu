@@ -53,21 +53,31 @@ const SUPPRESS_EVENTS = new Set<BrevoEvent>([
   "invalid_email",
 ]);
 
+function constantTimeEq(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return diff === 0;
+}
+
 function tokenAuthorized(req: Request): boolean {
   const expected = process.env.BREVO_WEBHOOK_SECRET;
-  const url = new URL(req.url);
-  const provided = url.searchParams.get("token") ?? "";
   if (!expected) {
     const host = req.headers.get("host") ?? "";
     return host.startsWith("localhost") || host.startsWith("127.0.0.1");
   }
-  // Constant-time compare to dodge timing oracles.
-  if (provided.length !== expected.length) return false;
-  let diff = 0;
-  for (let i = 0; i < expected.length; i++) {
-    diff |= expected.charCodeAt(i) ^ provided.charCodeAt(i);
-  }
-  return diff === 0;
+  // Prefer a header — not written to access logs / Referer / browser
+  // history the way a query string is. Fall back to the query param
+  // for Brevo's native sender, which can only deliver the secret via
+  // the URL (their documented IP-allowlist + secret-param approach).
+  const auth = req.headers.get("authorization");
+  if (auth?.startsWith("Bearer ")) return constantTimeEq(auth.slice(7), expected);
+  const xToken = req.headers.get("x-webhook-token");
+  if (xToken) return constantTimeEq(xToken, expected);
+  const provided = new URL(req.url).searchParams.get("token") ?? "";
+  return constantTimeEq(provided, expected);
 }
 
 export async function POST(req: Request) {

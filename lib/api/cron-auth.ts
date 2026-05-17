@@ -10,6 +10,16 @@
 export function cronAuthorized(req: Request): boolean {
   const secret = process.env.CRON_SECRET;
   if (!secret) {
+    // Fail closed in production. A missing secret there means every
+    // cron silently 401s (renewals, abandoned-cart, …) — log loudly so
+    // the misconfiguration surfaces in Sentry/logs instead of being
+    // discovered weeks later via missing orders.
+    if (process.env.NODE_ENV === "production") {
+      console.error(
+        "[cron-auth] CRON_SECRET is unset in production — all cron routes are disabled. Set CRON_SECRET."
+      );
+      return false;
+    }
     const host = req.headers.get("host") ?? "";
     return host.startsWith("localhost") || host.startsWith("127.0.0.1");
   }

@@ -158,7 +158,7 @@ function AddressEditor({
           {error && (
             <p
               role="alert"
-              className="font-sans text-[12.5px] text-[#B5523B]"
+              className="font-sans text-[12.5px] text-status-error"
             >
               {error}
             </p>
@@ -226,7 +226,7 @@ function CancelOrderControl({
         <button
           type="button"
           onClick={() => setConfirming(true)}
-          className="font-sans text-[13px] text-[#B5523B] underline decoration-[#B5523B]/40 underline-offset-[3px] hover:decoration-[#B5523B]"
+          className="font-sans text-[13px] text-status-error underline decoration-status-error/40 underline-offset-[3px] hover:decoration-status-error"
         >
           Avbryt ordern
         </button>
@@ -246,7 +246,7 @@ function CancelOrderControl({
           {error && (
             <p
               role="alert"
-              className="font-sans text-[12.5px] text-[#B5523B]"
+              className="font-sans text-[12.5px] text-status-error"
             >
               {error}
             </p>
@@ -256,7 +256,7 @@ function CancelOrderControl({
               type="button"
               onClick={submit}
               disabled={pending}
-              className="px-4 py-1.5 rounded-md bg-[#B5523B] text-surface hover:bg-[#9F4630] font-sans text-[13px] font-semibold transition-colors"
+              className="px-4 py-1.5 rounded-md bg-status-error text-surface hover:bg-[#9F4630] font-sans text-[13px] font-semibold transition-colors"
             >
               {pending ? "Avbryter…" : "Ja, avbryt"}
             </button>

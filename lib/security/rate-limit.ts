@@ -155,6 +155,16 @@ export const BREVO_WEBHOOK_RULE: RateLimitRule = {
   windowMs: 60 * 1000, // 1000 events / minute
 };
 
+export const KLARNA_WEBHOOK_RULE: RateLimitRule = {
+  // Klarna/Kustom retries a push a bounded number of times per order.
+  // A generous global ceiling stops an unauthenticated flood from
+  // hammering getKlarnaOrder + the order pipeline without throttling
+  // legitimate bursts.
+  scope: "klarna-webhook",
+  limit: 600,
+  windowMs: 60 * 1000,
+};
+
 export const ORDER_PLACEMENT_RULE: RateLimitRule = {
   scope: "order-placement",
   // 10 orders/hour from one IP is generous for legitimate use (multi-

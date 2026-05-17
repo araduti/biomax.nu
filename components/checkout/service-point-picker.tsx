@@ -117,7 +117,7 @@ export function ServicePointPicker({
       </div>
 
       {mode === "stub" && (
-        <p className="mt-2 font-sans text-[11.5px] text-[#7A4D2A] italic">
+        <p className="mt-2 font-sans text-[11.5px] text-status-warn-text italic">
           Visar exempeldata — riktiga ombud kopplas på när PostNord-nyckeln är
           aktiverad.
         </p>
@@ -126,7 +126,7 @@ export function ServicePointPicker({
       {error && (
         <p
           role="alert"
-          className="mt-3 font-sans text-[12.5px] text-[#B5523B] bg-[#B5523B]/10 px-3 py-2 rounded-md"
+          className="mt-3 font-sans text-[12.5px] text-status-error bg-status-error/10 px-3 py-2 rounded-md"
         >
           {error}
         </p>

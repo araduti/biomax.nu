@@ -153,7 +153,7 @@ export function TwoFactorPanel({
           {error && (
             <p
               role="alert"
-              className="mt-2 font-sans text-[12.5px] text-[#B5523B]"
+              className="mt-2 font-sans text-[12.5px] text-status-error"
             >
               {error}
             </p>
@@ -200,7 +200,7 @@ export function TwoFactorPanel({
           autoComplete="current-password"
         />
         {error && (
-          <p role="alert" className="mt-2 font-sans text-[12.5px] text-[#B5523B]">
+          <p role="alert" className="mt-2 font-sans text-[12.5px] text-status-error">
             {error}
           </p>
         )}

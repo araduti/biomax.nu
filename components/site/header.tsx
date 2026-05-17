@@ -3,6 +3,7 @@ import { BiomaxLogo } from "@/components/brand/BiomaxLogo";
 import { currentUser } from "@/lib/session";
 import { CartButton } from "@/components/cart/cart-button";
 import { BehovNav } from "@/components/site/behov-nav";
+import { MobileNav } from "@/components/site/mobile-nav";
 import { BEHOV_LABELS } from "@/lib/symptoms/behov-labels";
 
 // "Efter behov" replaces the old "Hjälp" link as the goal-first shopping
@@ -69,6 +70,10 @@ export async function Header() {
             </Link>
           )}
           <CartButton />
+          {/* Mobile hamburger — visible below `lg`. Slides in a drawer
+              with the same nav items as the desktop bar; without this,
+              phone users see no navigation at all. */}
+          <MobileNav signedIn={user !== null} />
         </div>
       </div>
     </header>

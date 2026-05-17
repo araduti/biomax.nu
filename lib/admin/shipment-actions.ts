@@ -6,112 +6,86 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "./guard";
 import { audit } from "./audit";
 import { cuidSchema, fail } from "@/lib/validation/shared";
-import { bookShipment } from "@/lib/postnord/booking";
+import { fetchOrderLabel } from "@/lib/postnord/booking";
+import { captureKlarnaOrder, isKlarnaConfigured } from "@/lib/klarna/client";
 
-const FALLBACK_WEIGHT_GRAMS = 100;
-
-const BookShipmentSchema = z.object({ orderId: cuidSchema });
+const LabelSchema = z.object({ orderId: cuidSchema });
 
 const FulfillSchema = z.object({ orderId: cuidSchema });
 
 export type ShipmentActionResult =
-  | { ok: true; trackingNumber: string; labelPdfUrl: string | null }
+  | { ok: true; labelPdfUrl: string | null; stub: boolean }
   | { ok: false; error: string };
 
 /**
- * Admin "Boka frakt"-action: takes a PAID order, asks PostNord (or the
- * stub) to create a shipment, persists the resulting tracking number +
- * label URL onto the Order row. Idempotent — re-booking returns the
- * same stub id, and once real PostNord is wired we'll guard against
- * double-booking inside `bookShipment`.
+ * ADR 0020 (TMS route): "Skriv ut fraktsedel". KSA/TMS already
+ * pre-booked the shipment with PostNord at checkout, so we do NOT
+ * create a consignment (that would double-book). We only retrieve the
+ * fraktsedel PDF for the existing PostNord item id (= the KSA tracking
+ * number) via PostNord's label-by-ids endpoint, and persist the URL.
  *
- * Does NOT flip status to FULFILLED — that's a separate admin action
- * once the package is physically in PostNord's hands. The tracking
- * link goes live on /spara as soon as the number is on the row.
+ * Idempotent: if the label URL is already on the order we return it
+ * without re-calling PostNord. Manual retry/refresh from admin.
  */
-export async function bookOrderShipment(
+export async function printOrderLabel(
   raw: unknown
 ): Promise<ShipmentActionResult> {
   const admin = await requireAdmin();
-  const parsed = BookShipmentSchema.safeParse(raw);
+  const parsed = LabelSchema.safeParse(raw);
   if (!parsed.success) return fail(parsed.error);
 
   const order = await prisma.order.findUnique({
     where: { id: parsed.data.orderId },
-    include: {
-      items: {
-        include: {
-          product: { select: { weight: true } },
-        },
-      },
-      shippingAddress: true,
+    select: {
+      id: true,
+      orderNumber: true,
+      status: true,
+      trackingNumber: true,
+      labelPdfUrl: true,
     },
   });
   if (!order) return { ok: false, error: "Ordern hittades inte." };
-  if (!order.shippingAddress) {
-    return { ok: false, error: "Ingen leveransadress på ordern." };
-  }
-  if (order.status !== "PAID") {
+  if (order.status !== "PAID" && order.status !== "FULFILLED") {
     return {
       ok: false,
-      error: "Endast PAID-ordrar kan bokas. Kontrollera betalningsstatus.",
+      error: "Fraktsedel kan bara hämtas för betalda ordrar.",
+    };
+  }
+  // Already have it — don't re-hit PostNord.
+  if (order.labelPdfUrl) {
+    return { ok: true, labelPdfUrl: order.labelPdfUrl, stub: false };
+  }
+  if (!order.trackingNumber) {
+    return {
+      ok: false,
+      error: "Saknar PostNord-id (tracking) — ingen fraktsedel kan hämtas än.",
     };
   }
 
-  // Weight: sum product weights × quantity (grams). Missing weights
-  // fall back to FALLBACK_WEIGHT_GRAMS so PostNord doesn't reject the
-  // booking. Bookkeeping concern only; PostNord re-weighs the parcel
-  // on intake.
-  const weightGrams = order.items.reduce((sum, it) => {
-    const productGrams = it.product?.weight
-      ? Math.round(parseFloat(it.product.weight.toString()) * 1000)
-      : FALLBACK_WEIGHT_GRAMS;
-    return sum + productGrams * it.quantity;
-  }, 0);
-
-  const result = await bookShipment({
-    orderId: order.id,
+  const result = await fetchOrderLabel({
     orderNumber: order.orderNumber,
-    shippingAddress: {
-      fullName: order.shippingAddress.fullName,
-      street: order.shippingAddress.street,
-      postalCode: order.shippingAddress.postalCode,
-      city: order.shippingAddress.city,
-      countryCode: order.shippingAddress.countryCode,
-      phone: order.shippingAddress.phone,
-      email: order.email,
-    },
-    servicePointId: order.servicePointId,
-    weightGrams,
+    trackingNumber: order.trackingNumber,
   });
   if (!result.ok) return result;
 
-  await prisma.order.update({
-    where: { id: order.id },
-    data: {
-      trackingNumber: result.trackingNumber,
-      labelPdfUrl: result.labelPdfUrl,
-      carrier: result.carrier,
-    },
-  });
-
-  await audit({
-    actorId: admin.id,
-    action: "order.book-shipment",
-    entityType: "Order",
-    entityId: order.id,
-    diff: {
-      orderNumber: order.orderNumber,
-      trackingNumber: result.trackingNumber,
-      stub: result.stub,
-    },
-  });
-
-  revalidatePath(`/admin/ordrar/${order.orderNumber}`);
+  if (result.labelPdfUrl) {
+    await prisma.order.update({
+      where: { id: order.id },
+      data: { labelPdfUrl: result.labelPdfUrl },
+    });
+    await audit({
+      actorId: admin.id,
+      action: "order.print-label",
+      entityType: "Order",
+      entityId: order.id,
+      diff: { orderNumber: order.orderNumber, stub: result.stub },
+    });
+    revalidatePath(`/admin/ordrar/${order.orderNumber}`);
+  }
   return {
     ok: true,
-    trackingNumber: result.trackingNumber,
     labelPdfUrl: result.labelPdfUrl,
+    stub: result.stub,
   };
 }
 
@@ -129,7 +103,13 @@ export async function markFulfilled(
 
   const order = await prisma.order.findUnique({
     where: { id: parsed.data.orderId },
-    select: { id: true, orderNumber: true, status: true },
+    select: {
+      id: true,
+      orderNumber: true,
+      status: true,
+      paymentReference: true,
+      totalAmount: true,
+    },
   });
   if (!order) return { ok: false, error: "Ordern hittades inte." };
   if (order.status !== "PAID") {
@@ -137,6 +117,33 @@ export async function markFulfilled(
       ok: false,
       error: "Endast PAID-ordrar kan markeras som skickade.",
     };
+  }
+
+  // ADR: capture-at-ship. The customer's payment is only *authorised*
+  // until we capture it — capture happens exactly here, on the
+  // PAID→FULFILLED transition. We capture BEFORE flipping status: if
+  // the charge fails we must NOT mark the parcel shipped (that would
+  // ship goods we never got paid for). Stub / non-Kustom orders
+  // (no real payment reference) skip capture.
+  const ref = order.paymentReference;
+  const isRealKustom =
+    Boolean(ref) && !ref!.startsWith("stub-") && isKlarnaConfigured();
+  if (isRealKustom) {
+    try {
+      const capturedAmountOre = Math.round(
+        parseFloat(order.totalAmount.toString()) * 100
+      );
+      await captureKlarnaOrder(ref!, capturedAmountOre);
+    } catch (err) {
+      console.error("[markFulfilled] capture failed", err);
+      return {
+        ok: false,
+        error:
+          err instanceof Error
+            ? `Betalningen kunde inte debiteras — ordern markeras inte som skickad. ${err.message}`
+            : "Betalningen kunde inte debiteras — ordern markeras inte som skickad.",
+      };
+    }
   }
 
   await prisma.order.update({
@@ -149,7 +156,11 @@ export async function markFulfilled(
     action: "order.fulfill",
     entityType: "Order",
     entityId: order.id,
-    diff: { orderNumber: order.orderNumber, fromStatus: "PAID" },
+    diff: {
+      orderNumber: order.orderNumber,
+      fromStatus: "PAID",
+      captured: isRealKustom,
+    },
   });
 
   revalidatePath(`/admin/ordrar/${order.orderNumber}`);

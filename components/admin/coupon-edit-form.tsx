@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { confirmDialog } from "@/components/admin/confirm-dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { updateCoupon, deleteCoupon } from "@/lib/admin/coupon-actions";
@@ -71,9 +72,15 @@ export function CouponEditForm({
     });
   }
 
-  function remove() {
+  async function remove() {
     if (usedCount > 0) return;
-    if (!confirm(`Ta bort rabattkoden "${initial.code}"?`)) return;
+    const ok = await confirmDialog({
+      title: `Ta bort rabattkoden "${initial.code}"?`,
+      body: "Koden försvinner permanent. Befintliga ordrar som använt koden behåller sin rabatt.",
+      confirmLabel: "Ta bort",
+      intent: "destructive",
+    });
+    if (!ok) return;
     startDelete(async () => {
       const result = await deleteCoupon(initial.code);
       if (!result.ok) {
@@ -208,7 +215,7 @@ export function CouponEditForm({
           variant="ghost"
           onClick={remove}
           disabled={deleting || usedCount > 0}
-          className="text-[#B5523B] hover:bg-[#B5523B]/10"
+          className="text-status-error hover:bg-status-error/10"
         >
           {deleting ? "Tar bort…" : "Ta bort"}
         </Button>
@@ -231,7 +238,7 @@ export function CouponEditForm({
       {error && (
         <p
           role="alert"
-          className="font-sans text-[12.5px] text-[#B5523B] bg-[#B5523B]/10 px-3 py-2 rounded-md"
+          className="font-sans text-[12.5px] text-status-error bg-status-error/10 px-3 py-2 rounded-md"
         >
           {error}
         </p>

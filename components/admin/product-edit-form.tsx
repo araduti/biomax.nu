@@ -41,13 +41,17 @@ import { stripHtml } from "@/lib/sanitize";
 import type { IngredientList } from "@/lib/products/ingredient-list";
 import { updateProduct } from "@/lib/admin/product-actions";
 
+// Anchor-rail sections — order matches the visual flow. "Synlighet"
+// was removed when its contents (status + featured + schedule) moved
+// to the publish rail on the right. "Pris & lager" was renamed to
+// "Lager & frakt" since price/stock now live in the rail; the section
+// itself still holds threshold + logistics + internal notes.
 const SECTIONS = [
   { id: "grunder", label: "Grunder" },
-  { id: "pris-lager", label: "Pris & lager" },
+  { id: "lager-frakt", label: "Lager & frakt" },
   { id: "innehall", label: "Innehåll" },
   { id: "anvandning", label: "Användning" },
   { id: "sokoptimering", label: "Sökoptimering" },
-  { id: "synlighet", label: "Synlighet" },
 ] as const;
 
 const SEO_TABS = [
@@ -72,7 +76,7 @@ function FormSection({
   return (
     <section
       id={id}
-      className="bg-surface-alt border border-border rounded-2xl p-6 md:p-8 scroll-mt-24"
+      className="bg-surface-alt border border-border rounded-xl p-6 md:p-8 scroll-mt-24"
     >
       <header className="mb-6">
         <h2 className="font-display text-[22px] md:text-[26px] font-medium tracking-tight text-primary-deep">
@@ -338,10 +342,54 @@ export function ProductEditForm({ initial }: { initial: Initial }) {
 
   return (
     <form onSubmit={onSubmit} method="post" action="#" noValidate>
-      <div className="grid grid-cols-1 lg:grid-cols-[180px_1fr] gap-8 lg:gap-10 pb-24">
-        <EditorAnchorRail sections={[...SECTIONS]} />
+      {/*
+        Three-column layout (xl+):
+          [anchor rail 140px] [main editor 1fr] [publish rail 280px]
 
-        <div className="space-y-6 min-w-0">
+        At `lg` (1024–1279 px) the anchor rail hides — the right rail
+        is the highest-leverage column for daily edits (publish state,
+        price, stock, category) and 660 px is the smallest comfortable
+        main width with a 280 px rail next to it. Anchor reappears at
+        `xl` where there's room for all three columns.
+
+        Below `lg` everything stacks: rail first (so high-frequency
+        publish controls land above the long edit form), main second,
+        anchor hidden entirely (anchors aren't useful on a phone).
+
+        The rail is `sticky` on lg+, pinned 24 px below the topbar.
+      */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] xl:grid-cols-[140px_1fr_280px] gap-8 lg:gap-10 pb-24">
+        <aside
+          aria-label="Publicering & nyckelfält"
+          className="lg:order-3 lg:col-start-2 xl:col-start-3 lg:sticky lg:top-20 lg:self-start"
+        >
+          <PublishRail
+            status={status}
+            setStatus={setStatus}
+            price={price}
+            setPrice={setPrice}
+            compareAtPrice={compareAtPrice}
+            setCompareAtPrice={setCompareAtPrice}
+            stock={stock}
+            setStock={setStock}
+            manageStock={manageStock}
+            setManageStock={setManageStock}
+            categorySlugs={categorySlugs}
+            setCategorySlugs={setCategorySlugs}
+            allCategories={initial.allCategories}
+            featured={featured}
+            setFeatured={setFeatured}
+            availableFrom={availableFrom}
+            setAvailableFrom={setAvailableFrom}
+            availableUntil={availableUntil}
+            setAvailableUntil={setAvailableUntil}
+          />
+        </aside>
+        <div className="hidden xl:block xl:order-1">
+          <EditorAnchorRail sections={[...SECTIONS]} />
+        </div>
+
+        <div className="space-y-6 min-w-0 lg:order-2 xl:order-2">
           {/* ── Grunder ─────────────────────────────────────────── */}
           <FormSection
             id="grunder"
@@ -374,16 +422,6 @@ export function ProductEditForm({ initial }: { initial: Initial }) {
               />
               <div>
                 <p className="font-sans text-[11px] uppercase tracking-[0.2em] font-semibold text-ink-soft mb-2">
-                  Kategorier
-                </p>
-                <CategoryMultiselect
-                  options={initial.allCategories}
-                  value={categorySlugs}
-                  onChange={setCategorySlugs}
-                />
-              </div>
-              <div>
-                <p className="font-sans text-[11px] uppercase tracking-[0.2em] font-semibold text-ink-soft mb-2">
                   Märken på kortet
                 </p>
                 <BadgesEditor values={badges} onChange={setBadges} />
@@ -403,55 +441,11 @@ export function ProductEditForm({ initial }: { initial: Initial }) {
 
           {/* ── Pris & lager ────────────────────────────────────── */}
           <FormSection
-            id="pris-lager"
-            title="Pris & lager"
-            description="Visningspris i kassan och lagerstatus. Avaktivera lagerkontroll för obegränsade produkter."
+            id="lager-frakt"
+            title="Lager & frakt"
+            description="Lågnivå-tröskel, logistikmått och interna anteckningar. Pris, lagersaldo och publiceringsstatus styrs i högerpanelen."
           >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Input
-                label="Pris (SEK)"
-                name="price"
-                type="number"
-                step="0.01"
-                min="0"
-                required
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-              />
-              <Input
-                label="Jämförpris (SEK)"
-                name="compareAtPrice"
-                type="number"
-                step="0.01"
-                min="0"
-                value={compareAtPrice}
-                onChange={(e) => setCompareAtPrice(e.target.value)}
-                hint="Tidigare pris vid kampanj. Lämna tom om ej rea."
-              />
-              <Input
-                label="Lager"
-                name="stock"
-                type="number"
-                min="0"
-                value={stock}
-                onChange={(e) => setStock(e.target.value)}
-                disabled={!manageStock}
-                hint={manageStock ? "Antal i lager." : "Lagerkontroll inaktiverad."}
-              />
-            </div>
-            <label className="flex items-center gap-2 mt-4 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={manageStock}
-                onChange={(e) => setManageStock(e.target.checked)}
-                className="w-4 h-4"
-              />
-              <span className="font-sans text-[13px] text-ink-body">
-                Hantera lager
-              </span>
-            </label>
-
-            <div className="mt-6 pt-6 border-t border-border-soft">
+            <div>
               <p className="font-sans text-[11px] uppercase tracking-[0.2em] font-semibold text-ink-soft mb-3">
                 Lågnivå-tröskel
               </p>
@@ -536,7 +530,7 @@ export function ProductEditForm({ initial }: { initial: Initial }) {
           >
             <div className="space-y-6">
               <div>
-                <p className="font-sans text-[11px] uppercase tracking-[0.18em] font-semibold text-ink-soft mb-2">
+                <p className="font-sans text-[11px] uppercase tracking-[0.16em] font-semibold text-ink-soft mb-2">
                   Strukturerad tabell
                 </p>
                 <IngredientListEditor
@@ -545,7 +539,7 @@ export function ProductEditForm({ initial }: { initial: Initial }) {
                 />
               </div>
               <div>
-                <p className="font-sans text-[11px] uppercase tracking-[0.18em] font-semibold text-ink-soft mb-2">
+                <p className="font-sans text-[11px] uppercase tracking-[0.16em] font-semibold text-ink-soft mb-2">
                   Fritext (fallback)
                 </p>
                 <TextArea
@@ -754,97 +748,12 @@ export function ProductEditForm({ initial }: { initial: Initial }) {
             )}
           </FormSection>
 
-          {/* ── Synlighet ───────────────────────────────────────── */}
-          <FormSection
-            id="synlighet"
-            title="Synlighet"
-            description="Styr om produkten visas på sajten, ligger som utkast eller är arkiverad."
-          >
-            <div className="space-y-2">
-              {(["PUBLISHED", "DRAFT", "ARCHIVED"] as ProductStatus[]).map(
-                (s) => (
-                  <label
-                    key={s}
-                    className="flex items-center gap-3 cursor-pointer"
-                  >
-                    <input
-                      type="radio"
-                      name="status"
-                      value={s}
-                      checked={status === s}
-                      onChange={() => setStatus(s)}
-                      className="w-4 h-4"
-                    />
-                    <span className="font-sans text-[14px] text-ink-body">
-                      {s === "PUBLISHED"
-                        ? "Publicerad — synlig på sajten"
-                        : s === "DRAFT"
-                          ? "Utkast — dold"
-                          : "Arkiverad — borttagen från katalogen"}
-                    </span>
-                  </label>
-                )
-              )}
-            </div>
-
-            <div className="mt-6 pt-6 border-t border-border-soft">
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={featured}
-                  onChange={(e) => setFeatured(e.target.checked)}
-                  className="w-4 h-4 mt-0.5"
-                />
-                <span>
-                  <span className="font-sans text-[14px] text-ink-body font-semibold">
-                    Säsongsval
-                  </span>
-                  <span className="block font-sans text-[11.5px] text-ink-soft mt-0.5 leading-snug">
-                    Lyfts på startsidan när aktuell säsong matchar produkten.
-                    Senast uppdaterad valbar produkt vinner när flera är
-                    markerade.
-                  </span>
-                </span>
-              </label>
-            </div>
-
-            <div className="mt-6 pt-6 border-t border-border-soft grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label
-                  htmlFor="availableFrom"
-                  className="block font-sans text-[12px] font-semibold text-ink-soft mb-1.5"
-                >
-                  Tillgänglig från
-                </label>
-                <Input
-                  id="availableFrom"
-                  type="datetime-local"
-                  value={availableFrom}
-                  onChange={(e) => setAvailableFrom(e.target.value)}
-                />
-                <p className="mt-1 font-sans text-[11.5px] text-ink-soft leading-snug">
-                  Schemalägg lansering. Lämnas tom = visas direkt.
-                </p>
-              </div>
-              <div>
-                <label
-                  htmlFor="availableUntil"
-                  className="block font-sans text-[12px] font-semibold text-ink-soft mb-1.5"
-                >
-                  Tillgänglig till
-                </label>
-                <Input
-                  id="availableUntil"
-                  type="datetime-local"
-                  value={availableUntil}
-                  onChange={(e) => setAvailableUntil(e.target.value)}
-                />
-                <p className="mt-1 font-sans text-[11.5px] text-ink-soft leading-snug">
-                  Säsongsdragning. Lämnas tom = ingen automatisk avpublicering.
-                </p>
-              </div>
-            </div>
-          </FormSection>
+          {/* "Synlighet" section removed — status, featured-toggle, and
+              schedule fields all moved to the publish rail on the right.
+              The rail makes those the most-prominent controls on the
+              page (matching Stripe's "publish state always visible"
+              pattern), and folding them out of the long form removes a
+              redundant bottom section. */}
         </div>
       </div>
 
@@ -857,7 +766,7 @@ export function ProductEditForm({ initial }: { initial: Initial }) {
       <div
         className={
           dirty || pending || saved || error
-            ? "fixed bottom-0 left-0 lg:left-[280px] right-0 bg-surface-alt border-t-2 border-[#C68A4F] z-40 px-6 md:px-10 py-4 flex items-center justify-between gap-4 shadow-[0_-6px_24px_rgba(15,32,44,0.12)]"
+            ? "fixed bottom-0 left-0 lg:left-[280px] right-0 bg-surface-alt border-t-2 border-status-warn z-40 px-6 md:px-10 py-4 flex items-center justify-between gap-4 shadow-[0_-6px_24px_rgba(15,32,44,0.12)]"
             : "hidden"
         }
         role="region"
@@ -865,7 +774,7 @@ export function ProductEditForm({ initial }: { initial: Initial }) {
       >
         <div className="font-sans text-[15px] min-w-0 flex-1">
           {error ? (
-            <span role="alert" className="text-[#B5523B] font-semibold">
+            <span role="alert" className="text-status-error font-semibold">
               ⚠ {error}
             </span>
           ) : saved ? (
@@ -875,7 +784,7 @@ export function ProductEditForm({ initial }: { initial: Initial }) {
           ) : pending ? (
             <span className="text-ink-mute italic">Sparar…</span>
           ) : dirty ? (
-            <span className="text-[#7A4D2A]">
+            <span className="text-status-warn-text">
               <span className="font-semibold">Osparade ändringar</span>
               <span className="hidden sm:inline text-ink-mute font-normal">
                 {" "}
@@ -907,7 +816,7 @@ function TextArea({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="font-sans text-[12px] uppercase tracking-[0.18em] font-semibold text-ink-mute">
+      <label className="font-sans text-[12px] uppercase tracking-[0.16em] font-semibold text-ink-mute">
         {label}
       </label>
       <textarea
@@ -919,6 +828,255 @@ function TextArea({
       {hint && (
         <p className="font-sans text-[12px] text-ink-soft">{hint}</p>
       )}
+    </div>
+  );
+}
+
+/**
+ * Publish rail — sticky aside on /admin/produkter/[slug].
+ *
+ * Surfaces the highest-frequency edit targets (status, price, stock,
+ * category, schedule) at all times so they don't sit at the bottom of
+ * a 6-section form. The Stripe dashboard pattern: publish state is
+ * always visible, supporting edits flow next to it, content edits get
+ * the main column.
+ *
+ * State is passed in from the parent form rather than lifted to a
+ * context — the form owns the single source of truth for dirty
+ * tracking and the save action, and the rail's fields are part of the
+ * same persisted record. Prop-drilling is fine at one level deep.
+ *
+ * Compact eyebrow + control rhythm; `.admin-shell` already enforces
+ * the 44 px input minimum so we don't repeat sizing here.
+ */
+function PublishRail({
+  status,
+  setStatus,
+  price,
+  setPrice,
+  compareAtPrice,
+  setCompareAtPrice,
+  stock,
+  setStock,
+  manageStock,
+  setManageStock,
+  categorySlugs,
+  setCategorySlugs,
+  allCategories,
+  featured,
+  setFeatured,
+  availableFrom,
+  setAvailableFrom,
+  availableUntil,
+  setAvailableUntil,
+}: {
+  status: ProductStatus;
+  setStatus: (s: ProductStatus) => void;
+  price: string;
+  setPrice: (v: string) => void;
+  compareAtPrice: string;
+  setCompareAtPrice: (v: string) => void;
+  stock: string;
+  setStock: (v: string) => void;
+  manageStock: boolean;
+  setManageStock: (v: boolean) => void;
+  categorySlugs: string[];
+  setCategorySlugs: (v: string[]) => void;
+  allCategories: CategoryOption[];
+  featured: boolean;
+  setFeatured: (v: boolean) => void;
+  availableFrom: string;
+  setAvailableFrom: (v: string) => void;
+  availableUntil: string;
+  setAvailableUntil: (v: string) => void;
+}) {
+  return (
+    <div className="bg-surface-alt border border-border rounded-xl overflow-hidden divide-y divide-border-soft">
+      {/* ── Status ─────────────────────────────────────────────── */}
+      <RailSection label="Publicering">
+        <div className="space-y-1.5">
+          {(
+            [
+              { v: "PUBLISHED", label: "Publicerad", hint: "Synlig på sajten" },
+              { v: "DRAFT", label: "Utkast", hint: "Dold för kunder" },
+              { v: "ARCHIVED", label: "Arkiverad", hint: "Borttagen från katalogen" },
+            ] as { v: ProductStatus; label: string; hint: string }[]
+          ).map((opt) => {
+            const active = status === opt.v;
+            return (
+              <label
+                key={opt.v}
+                className={`flex items-start gap-2.5 px-2.5 py-2 rounded-md cursor-pointer transition-colors ${
+                  active ? "bg-surface-warm" : "hover:bg-surface-warm/60"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="rail-status"
+                  value={opt.v}
+                  checked={active}
+                  onChange={() => setStatus(opt.v)}
+                  className="w-4 h-4 mt-0.5 flex-shrink-0"
+                />
+                <span className="min-w-0">
+                  <span className="block font-sans text-[13.5px] font-semibold text-ink-body leading-tight">
+                    {opt.label}
+                  </span>
+                  <span className="block font-sans text-[11.5px] text-ink-soft mt-0.5 leading-snug">
+                    {opt.hint}
+                  </span>
+                </span>
+              </label>
+            );
+          })}
+        </div>
+      </RailSection>
+
+      {/* ── Pris ───────────────────────────────────────────────── */}
+      <RailSection label="Pris">
+        <div className="space-y-3">
+          <RailField label="Pris (SEK)" htmlFor="rail-price">
+            <input
+              id="rail-price"
+              type="number"
+              step="0.01"
+              min="0"
+              required
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              className="w-full h-11 px-3 rounded-md border border-border bg-surface font-sans text-[14.5px] tabular-nums text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+            />
+          </RailField>
+          <RailField label="Jämförpris" htmlFor="rail-compare">
+            <input
+              id="rail-compare"
+              type="number"
+              step="0.01"
+              min="0"
+              value={compareAtPrice}
+              onChange={(e) => setCompareAtPrice(e.target.value)}
+              placeholder="Lämna tom om ej rea"
+              className="w-full h-11 px-3 rounded-md border border-border bg-surface font-sans text-[14.5px] tabular-nums text-ink placeholder:text-ink-soft outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+            />
+          </RailField>
+        </div>
+      </RailSection>
+
+      {/* ── Lager ──────────────────────────────────────────────── */}
+      <RailSection label="Lager">
+        <div className="space-y-3">
+          <RailField label="Antal i lager" htmlFor="rail-stock">
+            <input
+              id="rail-stock"
+              type="number"
+              min="0"
+              value={stock}
+              onChange={(e) => setStock(e.target.value)}
+              disabled={!manageStock}
+              className="w-full h-11 px-3 rounded-md border border-border bg-surface font-sans text-[14.5px] tabular-nums text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:bg-surface-warm disabled:text-ink-soft"
+            />
+          </RailField>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={manageStock}
+              onChange={(e) => setManageStock(e.target.checked)}
+              className="w-4 h-4"
+            />
+            <span className="font-sans text-[12.5px] text-ink-body">
+              Hantera lager
+            </span>
+          </label>
+        </div>
+      </RailSection>
+
+      {/* ── Kategorier ─────────────────────────────────────────── */}
+      <RailSection label="Kategori">
+        <CategoryMultiselect
+          options={allCategories}
+          value={categorySlugs}
+          onChange={setCategorySlugs}
+        />
+      </RailSection>
+
+      {/* ── Schemalägg / framhäv ──────────────────────────────── */}
+      <RailSection label="Schemalägg">
+        <div className="space-y-3">
+          <RailField label="Tillgänglig från" htmlFor="rail-from">
+            <input
+              id="rail-from"
+              type="datetime-local"
+              value={availableFrom}
+              onChange={(e) => setAvailableFrom(e.target.value)}
+              className="w-full h-11 px-3 rounded-md border border-border bg-surface font-sans text-[13.5px] text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+            />
+          </RailField>
+          <RailField label="Tillgänglig till" htmlFor="rail-until">
+            <input
+              id="rail-until"
+              type="datetime-local"
+              value={availableUntil}
+              onChange={(e) => setAvailableUntil(e.target.value)}
+              className="w-full h-11 px-3 rounded-md border border-border bg-surface font-sans text-[13.5px] text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+            />
+          </RailField>
+          <label className="flex items-start gap-2 cursor-pointer pt-1">
+            <input
+              type="checkbox"
+              checked={featured}
+              onChange={(e) => setFeatured(e.target.checked)}
+              className="w-4 h-4 mt-0.5 flex-shrink-0"
+            />
+            <span className="min-w-0">
+              <span className="block font-sans text-[12.5px] font-semibold text-ink-body leading-tight">
+                Säsongsval
+              </span>
+              <span className="block font-sans text-[11px] text-ink-soft mt-0.5 leading-snug">
+                Lyfts på startsidan när säsongen matchar.
+              </span>
+            </span>
+          </label>
+        </div>
+      </RailSection>
+    </div>
+  );
+}
+
+function RailSection({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="px-4 py-4">
+      <p className="font-sans text-[10.5px] uppercase tracking-[0.16em] font-semibold text-ink-soft mb-3">
+        {label}
+      </p>
+      {children}
+    </div>
+  );
+}
+
+function RailField({
+  label,
+  htmlFor,
+  children,
+}: {
+  label: string;
+  htmlFor: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label
+        htmlFor={htmlFor}
+        className="font-sans text-[11.5px] font-semibold text-ink-soft"
+      >
+        {label}
+      </label>
+      {children}
     </div>
   );
 }

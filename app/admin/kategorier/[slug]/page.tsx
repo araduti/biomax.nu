@@ -52,7 +52,7 @@ export default async function AdminCategoryEditPage({
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 items-start">
-        <div className="bg-surface-alt border border-border rounded-2xl p-6 md:p-8">
+        <div className="bg-surface-alt border border-border rounded-xl p-6 md:p-8">
           <CategoryEditForm
             initial={{
               slug: category.slug,
@@ -63,8 +63,8 @@ export default async function AdminCategoryEditPage({
           />
         </div>
 
-        <aside className="bg-surface-alt border border-border rounded-2xl p-5">
-          <h2 className="font-display text-[18px] font-medium tracking-tight text-primary-deep mb-3">
+        <aside className="bg-surface-alt border border-border rounded-xl p-5">
+          <h2 className="font-sans text-[15px] font-semibold tracking-tight text-primary-deep mb-3">
             Produkter ({products.length})
           </h2>
           {products.length === 0 ? (

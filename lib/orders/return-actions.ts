@@ -6,6 +6,8 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { currentUser } from "@/lib/session";
 import { cuidSchema, fail } from "@/lib/validation/shared";
+import { restockReturnedItems } from "@/lib/checkout/stock";
+import { canTransitionOrder } from "@/lib/orders/status";
 
 /**
  * Customer + admin actions on the Return model.
@@ -192,13 +194,42 @@ export async function recordRefund(raw: unknown): Promise<ReturnActionResult> {
 
   const existing = await prisma.return.findUnique({
     where: { id: parsed.data.returnId },
-    select: { id: true, returnNumber: true, orderId: true },
+    select: {
+      id: true,
+      returnNumber: true,
+      orderId: true,
+      order: { select: { status: true } },
+      items: {
+        select: {
+          quantity: true,
+          orderItem: {
+            select: { productId: true, variantId: true },
+          },
+        },
+      },
+    },
   });
   if (!existing) return { ok: false, error: "Returen hittades inte." };
 
+  // State-machine guard: only PAID/FULFILLED orders may move to
+  // REFUNDED. Without this an admin could refund a CANCELLED order
+  // (already settled at Kustom) or double-refund a REFUNDED one.
+  if (
+    existing.order.status !== "REFUNDED" &&
+    !canTransitionOrder(existing.order.status, "REFUNDED")
+  ) {
+    return {
+      ok: false,
+      error: `Ordern är i status ${existing.order.status} och kan inte återbetalas.`,
+    };
+  }
+
   await prisma.$transaction(async (tx) => {
-    await tx.return.update({
-      where: { id: existing.id },
+    // Idempotency guard: only the transition INTO refunded restocks.
+    // A second recordRefund() call (or admin double-click) matches
+    // zero rows here and skips the restock — stock is never doubled.
+    const claim = await tx.return.updateMany({
+      where: { id: existing.id, status: { not: "REFUNDED" } },
       data: {
         status: "REFUNDED",
         refundAmount: parsed.data.refundAmount,
@@ -206,6 +237,20 @@ export async function recordRefund(raw: unknown): Promise<ReturnActionResult> {
         refundedAt: new Date(),
       },
     });
+
+    if (claim.count === 1) {
+      // Return the physical units to inventory. Without this, refunded
+      // stock is lost from on-hand counts forever (phantom shrinkage).
+      await restockReturnedItems(
+        tx,
+        existing.items.map((it) => ({
+          productId: it.orderItem.productId,
+          variantId: it.orderItem.variantId,
+          quantity: it.quantity,
+        }))
+      );
+    }
+
     // Mark the parent order REFUNDED only when this return fully covers
     // it. For v1 we just flip — admins can use partial-refund refs in
     // the reference field to disambiguate.

@@ -26,6 +26,9 @@ export type KlarnaOrderLine = {
   tax_rate: number;
   /** öre, quantity × unit_price (post-discount). */
   total_amount: number;
+  /** öre, per-line discount already reflected in total_amount. Kustom
+   *  lists this on every order line; emit 0 when no line-level discount. */
+  total_discount_amount: number;
   /** öre, tax portion of total_amount. */
   total_tax_amount: number;
   product_url?: string;
@@ -42,6 +45,47 @@ export type KlarnaMerchantUrls = {
   validation?: string;
 };
 
+/**
+ * Fallback shipping option that triggers the Kustom Shipping Assistant.
+ * When present, Kustom prices/handles shipping itself (and pulls
+ * portal-configured carrier options like PostNord), so the payload
+ * must NOT also carry a `shipping_fee` order line. Money in öre.
+ */
+export type KustomShippingOption = {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  tax_amount: number;
+  tax_rate: number;
+  /** Kustom delivery class, e.g. "Home" | "PickUpStore". */
+  shipping_method: string;
+  preselected?: boolean;
+};
+
+/** Kustom create-order `options` object (subset Biomax uses).
+ *  All colours MUST be HEX/rgb()/hsl() — Kustom forwards them to
+ *  Stripe Elements, which rejects rgba() (see the colorDanger
+ *  incident). Keep these as #RRGGBB. */
+export type KustomOrderOptions = {
+  /** Lets Kustom collect a delivery address separate from billing —
+   *  required for KSA to resolve a full address and fetch real
+   *  (non-preview) shipping options. */
+  allow_separate_shipping_address?: boolean;
+  /** Brand theming — Biomax design tokens (deep navy). */
+  color_button?: string;
+  color_button_text?: string;
+  color_header?: string;
+  color_link?: string;
+  color_checkbox?: string;
+  color_checkbox_checkmark?: string;
+  color_background?: string;
+  /** Border radius in px, as a string per Kustom's API. */
+  radius_border?: string;
+  /** Show the subtotal/line breakdown inside Kustom's own summary. */
+  show_subtotal_detail?: boolean;
+};
+
 export type KlarnaCreateOrderPayload = {
   purchase_country: "SE";
   purchase_currency: "SEK";
@@ -50,6 +94,14 @@ export type KlarnaCreateOrderPayload = {
   order_tax_amount: number;
   order_lines: KlarnaOrderLine[];
   merchant_urls: KlarnaMerchantUrls;
+  /** KSA trigger — see ADR 0020. */
+  shipping_options?: KustomShippingOption[];
+  /** Kustom nests behavioural flags here — NOT top-level. */
+  options?: KustomOrderOptions;
+  /** Passthrough (max 6000 chars) — echoed back on read-order. We
+   *  stash the loyalty redemption here so the confirmation/webhook
+   *  can burn points + record the discount. JSON string. */
+  merchant_data?: string;
   /** Optional pre-fill of customer details. */
   shipping_address?: KlarnaAddress;
   billing_address?: KlarnaAddress;
@@ -66,18 +118,55 @@ export type KlarnaAddress = {
   phone?: string;
 };
 
+/** Legacy Klarna (lowercase) + Kustom (uppercase) status strings.
+ *  Compare case-insensitively — never assume one casing. */
 export type KlarnaOrderStatus =
   | "checkout_incomplete"
   | "checkout_complete"
   | "captured"
-  | "cancelled";
+  | "cancelled"
+  | "CHECKOUT_INCOMPLETE"
+  | "CHECKOUT_COMPLETE"
+  | "CHECKOUT_ORDER"
+  | "CAPTURED"
+  | "CANCELLED"
+  | (string & {});
+
+/** True when the customer has completed checkout (paid/authorised),
+ *  regardless of Klarna/Kustom casing. */
+export function isKustomOrderComplete(status: string): boolean {
+  const s = status.toUpperCase();
+  return (
+    s === "CHECKOUT_COMPLETE" || s === "CHECKOUT_ORDER" || s === "CAPTURED"
+  );
+}
+
+/** Read-order's selected option carries the customer's pickup point +
+ *  tracking under delivery_details. Read defensively — Kustom has
+ *  shipped casing/shape variants (cf. lib/postnord/booking.ts). */
+export type KustomSelectedShippingOption = KustomShippingOption & {
+  delivery_details?: {
+    carrier?: string;
+    pickup_location?: {
+      id?: string;
+      name?: string;
+      address?: KlarnaAddress & { street_name?: string };
+    };
+    tracking_id?: string;
+    tracking_number?: string;
+  };
+  tms_reference?: string;
+};
 
 export type KlarnaOrder = KlarnaCreateOrderPayload & {
   order_id: string;
   status: KlarnaOrderStatus;
-  /** HTML snippet to embed in our checkout page (the Klarna iframe). */
+  /** HTML snippet to embed: the checkout iframe on /checkout, the
+   *  confirmation snippet when read back on /checkout/bekraftelse. */
   html_snippet: string;
   started_at?: string;
   completed_at?: string;
   customer?: KlarnaAddress;
+  /** Customer-selected shipping option (read-order response). */
+  selected_shipping_option?: KustomSelectedShippingOption;
 };

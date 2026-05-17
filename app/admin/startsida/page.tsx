@@ -24,9 +24,9 @@ export default async function AdminHomepagePage() {
         ]}
       />
 
-      <div className="mb-8 bg-surface-warm border border-accent/30 rounded-2xl p-5 flex flex-wrap items-center gap-4">
+      <div className="mb-8 bg-surface-warm border border-accent/30 rounded-xl p-5 flex flex-wrap items-center gap-4">
         <div className="flex-1 min-w-[280px]">
-          <p className="font-display text-[18px] font-medium tracking-tight text-primary-deep">
+          <p className="font-sans text-[15px] font-semibold tracking-tight text-primary-deep">
             Hero-bilder
           </p>
           <p className="font-sans text-[13.5px] text-ink-mute mt-1 leading-relaxed">

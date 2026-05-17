@@ -159,10 +159,10 @@ export function ProductContent({ product, reviews }: Props) {
                 </div>
               )}
               {product.warnings?.trim() && (
-                <div className="rounded-2xl border border-[#B5523B]/20 bg-[#B5523B]/[0.035] px-6 md:px-7 py-5 md:py-6 flex gap-4 items-start">
+                <div className="rounded-2xl border border-status-error/20 bg-status-error/[0.035] px-6 md:px-7 py-5 md:py-6 flex gap-4 items-start">
                   <span
                     aria-hidden
-                    className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#B5523B]/12 text-[#B5523B] flex-shrink-0 mt-0.5"
+                    className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-status-error/12 text-status-error flex-shrink-0 mt-0.5"
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
@@ -171,7 +171,7 @@ export function ProductContent({ product, reviews }: Props) {
                     </svg>
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="font-sans text-[10.5px] uppercase tracking-[0.22em] font-semibold text-[#B5523B] mb-1">
+                    <p className="font-sans text-[10.5px] uppercase tracking-[0.22em] font-semibold text-status-error mb-1">
                       Observera
                     </p>
                     <p className="font-sans text-[14px] text-ink-body leading-[1.65] whitespace-pre-line">

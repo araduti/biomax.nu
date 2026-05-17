@@ -30,7 +30,7 @@ export default async function AdminBundlesPage() {
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 items-start">
-        <div className="bg-surface-alt border border-border rounded-2xl overflow-hidden">
+        <div className="bg-surface-alt border border-border rounded-xl overflow-hidden">
           {bundles.length === 0 ? (
             <p className="p-6 font-sans text-[14px] text-ink-mute italic">
               Inga paket än — skapa det första till höger.
@@ -60,7 +60,7 @@ export default async function AdminBundlesPage() {
                     <span className="font-sans text-[12px] text-ink-soft tabular-nums">
                       {b._count.items} produkter
                       {!b.active && (
-                        <span className="ml-2 text-[#B5523B] uppercase tracking-[0.14em] text-[10.5px] font-semibold">
+                        <span className="ml-2 text-status-error uppercase tracking-[0.14em] text-[10.5px] font-semibold">
                           inaktiv
                         </span>
                       )}
@@ -72,16 +72,18 @@ export default async function AdminBundlesPage() {
           )}
         </div>
 
-        <aside className="bg-surface-alt border border-border rounded-2xl p-5">
-          <h2 className="font-display text-[18px] font-medium tracking-tight text-primary-deep mb-1">
+        <aside>
+          <h2 className="font-sans text-[15px] font-semibold tracking-tight text-primary-deep">
             Nytt paket
           </h2>
-          <p className="font-sans text-[12.5px] text-ink-mute mb-4 leading-relaxed">
+          <p className="mt-1 mb-3 font-sans text-[12.5px] text-ink-mute leading-relaxed">
             Minst 2 produkter. Rabatten räknas mot summan av priserna.
           </p>
-          <BundleCreateForm
-            allProducts={allProducts.map((p) => ({ slug: p.slug, name: p.name }))}
-          />
+          <div className="border border-border-soft rounded-xl p-5">
+            <BundleCreateForm
+              allProducts={allProducts.map((p) => ({ slug: p.slug, name: p.name }))}
+            />
+          </div>
         </aside>
       </div>
     </>

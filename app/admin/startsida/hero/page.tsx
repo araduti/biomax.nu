@@ -71,7 +71,7 @@ export default async function HeroListPage() {
         </Link>
       </div>
 
-      <ul className="bg-surface-alt border border-border rounded-2xl divide-y divide-border-soft">
+      <ul className="bg-surface-alt border border-border rounded-xl divide-y divide-border-soft">
         {heros.map((h) => {
           const isActive = activeIds.has(h.id);
           return (
@@ -96,7 +96,7 @@ export default async function HeroListPage() {
                   )}
                 </div>
                 <div className="min-w-0">
-                  <p className="font-display text-[16px] font-medium tracking-tight text-primary-deep">
+                  <p className="font-sans text-[14px] font-semibold tracking-tight text-primary-deep">
                     {h.name}
                   </p>
                   <p className="font-sans text-[13px] text-ink-mute mt-1 truncate">
@@ -150,8 +150,8 @@ function StatusPill({ status }: { status: "DRAFT" | "PUBLISHED" | "ARCHIVED" }) 
     },
     ARCHIVED: {
       label: "Arkiverad",
-      bg: "bg-[#B5523B]/12",
-      color: "text-[#B5523B]",
+      bg: "bg-status-error/12",
+      color: "text-status-error",
     },
   } as const;
   const s = map[status];

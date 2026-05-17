@@ -80,9 +80,9 @@ export default function MomsReportPage() {
       <form
         method="get"
         action="/api/admin/moms-export"
-        className="bg-surface-alt border border-border rounded-2xl p-5 max-w-[640px]"
+        className="bg-surface-alt border border-border rounded-xl p-5 max-w-[640px]"
       >
-        <p className="font-display text-lg font-medium text-primary-deep mb-3">
+        <p className="font-sans text-[14.5px] font-semibold text-primary-deep mb-3">
           Anpassad period
         </p>
         <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 items-end">

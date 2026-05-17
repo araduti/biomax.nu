@@ -1,17 +1,8 @@
 import Link from "next/link";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
-import { OrderStatusBadge } from "@/components/admin/order-status-badge";
-import { formatPriceSEK } from "@/lib/format";
+import { OrdrarList } from "@/components/admin/ordrar-list";
 import { prisma } from "@/lib/prisma";
 import type { OrderStatus, Prisma } from "@prisma/client";
-
-const dateFmt = new Intl.DateTimeFormat("sv-SE", {
-  year: "numeric",
-  month: "short",
-  day: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-});
 
 /**
  * Status filters. `paid` is the default ("att packa") because that's
@@ -118,18 +109,24 @@ export default async function AdminOrdersPage({
     return countByStatus.get(f.status) ?? 0;
   };
 
-  const headerTitle =
+  // Title stays clean ("Ordrar · Att packa") so the eye reads category
+  // first; the live count moves to the muted secondary `metric` slot so
+  // it reads as supporting data rather than competing for the H1.
+  const titleBase = activeFilter.legacyOnly
+    ? "Arkiv"
+    : "Ordrar";
+  const titleSuffix = activeFilter.legacyOnly ? "" : ` · ${activeFilter.label}`;
+  const metricLabel =
     total === 0
-      ? activeFilter.legacyOnly
-        ? "Inga arkiverade ordrar"
-        : `Inga ${activeFilter.label.toLowerCase()}`
-      : `${total} ${total === 1 ? "order" : "ordrar"} · ${activeFilter.label}`;
+      ? "Inga"
+      : `${total.toLocaleString("sv-SE")} ${total === 1 ? "order" : "ordrar"}`;
 
   return (
     <>
       <AdminPageHeader
         eyebrow="Beställningar"
-        title={headerTitle}
+        title={`${titleBase}${titleSuffix}`}
+        metric={metricLabel}
         subtitle={
           activeFilter.slug === "paid"
             ? "Ordrar som väntar på att packas. Klicka in på en order för att boka frakt eller markera som skickad."
@@ -191,8 +188,11 @@ export default async function AdminOrdersPage({
         </form>
       </div>
 
-      {/* List */}
-      <div className="bg-surface-alt border border-border rounded-2xl overflow-hidden">
+      {/* List — client component handles hover quick-actions,
+          keyboard nav (↑/↓/j/k between rows), and bulk selection +
+          sticky bulk-action toolbar. Server still owns data fetching;
+          the list just consumes plain-shape rows. */}
+      <div className="bg-surface-alt border border-border rounded-xl overflow-hidden">
         {orders.length === 0 ? (
           <p className="px-5 py-12 text-center font-sans text-[14.5px] text-ink-mute">
             {activeFilter.slug === "paid"
@@ -200,39 +200,18 @@ export default async function AdminOrdersPage({
               : "Inga ordrar matchar filtret."}
           </p>
         ) : (
-          <ul>
-            {orders.map((o, i) => (
-              <li
-                key={o.id}
-                className={i > 0 ? "border-t border-border-soft" : ""}
-              >
-                <Link
-                  href={`/admin/ordrar/${o.orderNumber}`}
-                  className="grid grid-cols-[1.4fr_2fr_auto_auto_auto] items-center gap-4 px-5 py-4 hover:bg-surface-warm transition-colors min-h-[72px]"
-                >
-                  <div className="min-w-0">
-                    <p className="font-display text-[15px] font-medium text-primary-deep">
-                      {o.orderNumber}
-                    </p>
-                    <p className="font-sans text-[12.5px] text-ink-mute mt-0.5">
-                      {dateFmt.format(o.createdAt)}
-                      {o.legacySource ? " · arkiverad" : ""}
-                    </p>
-                  </div>
-                  <p className="font-sans text-[14px] text-ink-body truncate">
-                    {o.email}
-                  </p>
-                  <p className="font-sans text-[12.5px] text-ink-mute whitespace-nowrap">
-                    {o._count.items} st
-                  </p>
-                  <OrderStatusBadge status={o.status} />
-                  <p className="font-display text-[15px] font-medium text-primary-deep tabular-nums whitespace-nowrap min-w-[80px] text-right">
-                    {formatPriceSEK(o.totalAmount.toString())}
-                  </p>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <OrdrarList
+            orders={orders.map((o) => ({
+              id: o.id,
+              orderNumber: o.orderNumber,
+              email: o.email,
+              status: o.status,
+              totalAmount: o.totalAmount.toString(),
+              createdAt: o.createdAt,
+              legacySource: o.legacySource,
+              itemCount: o._count.items,
+            }))}
+          />
         )}
         {total > orders.length && (
           <p className="px-5 py-3 border-t border-border-soft font-sans text-[13px] text-ink-mute text-center">

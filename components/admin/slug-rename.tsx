@@ -103,7 +103,7 @@ export function SlugRename({ currentSlug }: { currentSlug: string }) {
       {error && (
         <p
           role="alert"
-          className="mt-2 font-sans text-[12px] text-[#B5523B] bg-[#B5523B]/10 px-3 py-1.5 rounded-md"
+          className="mt-2 font-sans text-[12px] text-status-error bg-status-error/10 px-3 py-1.5 rounded-md"
         >
           {error}
         </p>

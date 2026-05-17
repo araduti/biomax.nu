@@ -165,7 +165,7 @@ function Result({
       </p>
 
       {result.onMedication && (
-        <div className="mb-8 rounded-xl border border-[#C68A4F]/40 bg-[#C68A4F]/8 px-5 py-4">
+        <div className="mb-8 rounded-xl border border-status-warn/40 bg-status-warn/8 px-5 py-4">
           <p className="font-sans text-[13.5px] text-ink-body leading-relaxed">
             <strong className="font-semibold">Viktigt:</strong> du angav att
             du tar receptbelagda läkemedel. Vissa kosttillskott kan

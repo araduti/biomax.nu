@@ -35,16 +35,20 @@ const SECURITY_HEADERS: { key: string; value: string }[] = [
       "default-src 'self'",
       // Tailwind v4 emits inline <style> on RSC streaming. `unsafe-inline`
       // is the realistic option for styles short of nonce middleware.
-      "style-src 'self' 'unsafe-inline'",
+      // api.fontshare.com serves the General Sans @font-face stylesheet
+      // (Direction D admin UI font — no exact Google equivalent).
+      "style-src 'self' 'unsafe-inline' https://api.fontshare.com",
       // Scripts: self + Plausible + Klarna on-site messaging. `unsafe-inline`
       // for the JSON-LD <script type="application/ld+json"> tags we render
       // server-side. (LD-JSON isn't executable JS so the practical risk is
       // tiny; future hardening: SHA hashes per ld+json block.)
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://plausible.io https://*.klarna.com https://x.klarnacdn.net",
-      "img-src 'self' data: blob: https://images.unsplash.com https://*.klarnacdn.net",
-      "font-src 'self' data:",
-      "connect-src 'self' https://plausible.io https://*.sentry.io https://*.klarna.com https://api.brevo.com",
-      "frame-src 'self' https://*.klarna.com",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://plausible.io https://*.klarna.com https://x.klarnacdn.net https://*.kustom.co",
+      "img-src 'self' data: blob: https://images.unsplash.com https://*.klarnacdn.net https://*.kustom.co",
+      // cdn.fontshare.com hosts the General Sans woff2 files referenced
+      // by the api.fontshare.com stylesheet above.
+      "font-src 'self' data: https://cdn.fontshare.com",
+      "connect-src 'self' https://plausible.io https://*.sentry.io https://*.klarna.com https://api.brevo.com https://*.kustom.co",
+      "frame-src 'self' https://*.klarna.com https://*.kustom.co",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",
@@ -54,6 +58,12 @@ const SECURITY_HEADERS: { key: string; value: string }[] = [
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // Hide the floating "N" build-activity pill in the bottom-right corner
+  // of every dev page. It overlapped the admin's sticky bulk-action
+  // toolbar and the publish rail on /admin/produkter/[slug], and it's
+  // of no use during regular admin work — when we actually need to see
+  // dev-build state we read the terminal.
+  devIndicators: false,
   async headers() {
     return [
       {
@@ -66,10 +76,21 @@ const nextConfig: NextConfig = {
   // Without this, Next.js 16 blocks the JS bundles cross-origin, the page
   // renders without React hydration, and forms fall back to default browser
   // submission (PUTTING PASSWORDS IN THE URL BAR — never again).
+  // Derive the dev tunnel host from KUSTOM_MERCHANT_BASE_URL (the
+  // HTTPS tunnel we already point Kustom at) so it stays correct
+  // across ngrok restarts instead of hardcoding a rotating host.
   allowedDevOrigins: [
     "10.12.10.14",
     "127.0.0.1",
     "*.local",
+    ...(() => {
+      try {
+        const h = process.env.KUSTOM_MERCHANT_BASE_URL;
+        return h ? [new URL(h).hostname] : [];
+      } catch {
+        return [];
+      }
+    })(),
   ],
   images: {
     remotePatterns: [

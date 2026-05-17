@@ -1,41 +1,36 @@
 import type { OrderStatus } from "@prisma/client";
+import { AdminStatusPill, type StatusKind } from "./admin-status-pill";
 
 /**
  * Order status pill — text + icon, never colour-only.
  *
- * Reasoning: ~8% of men have red-green colourblindness, and blue-yellow
- * distinction degrades with age. The previous version was a tiny 10 px
- * uppercase pill where state was decoded by a faint background hue
- * (`bg-accent/15`). Inside admin we promote to 13 px sentence-case with
- * an icon character carrying the redundant signal.
+ * Now a thin wrapper around `<AdminStatusPill>` so all status chips
+ * in admin share one spec (radius, size, type weight, palette). The
+ * icon character is preserved per status because ~8% of men have
+ * red-green colourblindness and the icon carries the redundant signal:
  *
- *   ⏳  Väntar     PENDING    amber
- *   ✓   Betald     PAID       sage green
- *   📦  Skickad    FULFILLED  primary blue
- *   ↩   Avbruten   CANCELLED  brick red
- *   ⟲   Återbetald REFUNDED   ink-mute grey
+ *   ⏳  Väntar     PENDING    warn  (amber)
+ *   ✓   Betald     PAID       ok    (sage)
+ *   📦  Skickad    FULFILLED  info  (primary blue)
+ *   ↩   Avbruten   CANCELLED  error (rust)
+ *   ⟲   Återbetald REFUNDED   muted (ink-mute)
  */
-const STYLES: Record<
+const STATUS_MAP: Record<
   OrderStatus,
-  { label: string; icon: string; bg: string; fg: string }
+  { kind: StatusKind; icon: string; label: string }
 > = {
-  PENDING: { label: "Väntar", icon: "⏳", bg: "bg-[#C68A4F]/15", fg: "text-[#8A5A2C]" },
-  PAID: { label: "Betald", icon: "✓", bg: "bg-accent/15", fg: "text-accent-deep" },
-  FULFILLED: { label: "Skickad", icon: "📦", bg: "bg-primary/10", fg: "text-primary-deep" },
-  CANCELLED: { label: "Avbruten", icon: "↩", bg: "bg-[#B5523B]/10", fg: "text-[#B5523B]" },
-  REFUNDED: { label: "Återbetald", icon: "⟲", bg: "bg-ink-soft/15", fg: "text-ink-mute" },
+  PENDING: { kind: "warn", icon: "⏳", label: "Väntar" },
+  PAID: { kind: "ok", icon: "✓", label: "Betald" },
+  FULFILLED: { kind: "info", icon: "📦", label: "Skickad" },
+  CANCELLED: { kind: "error", icon: "↩", label: "Avbruten" },
+  REFUNDED: { kind: "muted", icon: "⟲", label: "Återbetald" },
 };
 
 export function OrderStatusBadge({ status }: { status: OrderStatus }) {
-  const s = STYLES[status];
+  const s = STATUS_MAP[status];
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-sans text-[13px] font-semibold ${s.bg} ${s.fg}`}
-    >
-      <span aria-hidden className="text-[14px] leading-none">
-        {s.icon}
-      </span>
+    <AdminStatusPill kind={s.kind} icon={s.icon}>
       {s.label}
-    </span>
+    </AdminStatusPill>
   );
 }

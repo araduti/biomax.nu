@@ -149,7 +149,7 @@ export function KeywordChipsEditor({
       </div>
       {unusedGsc.length > 0 && remaining > 0 && (
         <div className="mt-3">
-          <p className="font-sans text-[11px] uppercase tracking-[0.18em] font-semibold text-accent-deep mb-1.5">
+          <p className="font-sans text-[11px] uppercase tracking-[0.16em] font-semibold text-accent-deep mb-1.5">
             Från Google Search Console — riktiga sökningar
           </p>
           <div className="flex flex-wrap gap-1.5">
@@ -178,7 +178,7 @@ export function KeywordChipsEditor({
       )}
       {unusedSuggestions.length > 0 && remaining > 0 && (
         <div className="mt-2.5 flex flex-wrap gap-1.5 items-baseline">
-          <span className="font-sans text-[11px] uppercase tracking-[0.18em] font-semibold text-ink-soft">
+          <span className="font-sans text-[11px] uppercase tracking-[0.16em] font-semibold text-ink-soft">
             Från sajten:
           </span>
           {unusedSuggestions.slice(0, 8).map((s) => (

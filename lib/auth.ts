@@ -46,6 +46,16 @@ export const auth = betterAuth({
         "http://127.0.0.1:3001",
         "http://*:3001",
         "http://*:3002",
+        // HTTPS dev tunnel (same one Kustom is pointed at) so auth
+        // works when browsing via ngrok to test the Kustom flow.
+        ...(() => {
+          try {
+            const h = process.env.KUSTOM_MERCHANT_BASE_URL;
+            return h ? [new URL(h).origin] : [];
+          } catch {
+            return [];
+          }
+        })(),
       ]
     : [process.env.BETTER_AUTH_URL ?? "https://www.biomax.nu"],
 
@@ -55,6 +65,12 @@ export const auth = betterAuth({
     autoSignIn: true,
     // Email verification will flip to true in Phase 3D when Postmark is wired.
     requireEmailVerification: false,
+    // Account-takeover containment: a password RESET (forgot-password
+    // flow) revokes every existing session for that user. Without this
+    // a stolen 30-day session token survives the victim resetting their
+    // password. (The authenticated change-password path already passes
+    // revokeOtherSessions:true — see password-change-form.tsx.)
+    revokeSessionsOnPasswordReset: true,
     sendResetPassword: async ({ user, url }) => {
       // Phase 3D will replace this with a Postmark transactional email.
       // For now (dev), log the link prominently so it's easy to grab from

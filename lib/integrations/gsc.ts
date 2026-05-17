@@ -124,12 +124,46 @@ const DEFAULT_WINDOW_DAYS = 28;
  * ~2-day GSC freshness lag applied). Returns an empty array when GSC is not
  * configured so callers don't need to special-case.
  */
+/**
+ * Google's Search Analytics API returns rows shaped `{ keys: [...],
+ * clicks, impressions, ctr, position }`, where `keys` is positional and
+ * indexed by the request's `dimensions` array. We map `keys[0]` to the
+ * named field consumers expect (`query` / `page`).
+ */
+type RawGscRow = {
+  keys?: string[];
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number;
+};
+
+function mapToQueryRow(r: RawGscRow): GscRow {
+  return {
+    query: r.keys?.[0],
+    clicks: r.clicks,
+    impressions: r.impressions,
+    ctr: r.ctr,
+    position: r.position,
+  };
+}
+
+function mapToPageRow(r: RawGscRow): GscRow {
+  return {
+    page: r.keys?.[0],
+    clicks: r.clicks,
+    impressions: r.impressions,
+    ctr: r.ctr,
+    position: r.position,
+  };
+}
+
 export async function getTopQueries(limit = 25): Promise<GscRow[]> {
   if (!isGscConfigured()) return [];
   const startDate = daysAgo(DEFAULT_LAG_DAYS + DEFAULT_WINDOW_DAYS);
   const endDate = daysAgo(DEFAULT_LAG_DAYS);
   try {
-    const data = await gscFetch<{ rows?: GscRow[] }>(
+    const data = await gscFetch<{ rows?: RawGscRow[] }>(
       "/searchAnalytics/query",
       {
         startDate,
@@ -138,7 +172,7 @@ export async function getTopQueries(limit = 25): Promise<GscRow[]> {
         rowLimit: limit,
       }
     );
-    return data.rows ?? [];
+    return (data.rows ?? []).map(mapToQueryRow);
   } catch (err) {
     console.error("[gsc] getTopQueries failed:", err);
     return [];
@@ -151,7 +185,7 @@ export async function getTopPages(limit = 25): Promise<GscRow[]> {
   const startDate = daysAgo(DEFAULT_LAG_DAYS + DEFAULT_WINDOW_DAYS);
   const endDate = daysAgo(DEFAULT_LAG_DAYS);
   try {
-    const data = await gscFetch<{ rows?: GscRow[] }>(
+    const data = await gscFetch<{ rows?: RawGscRow[] }>(
       "/searchAnalytics/query",
       {
         startDate,
@@ -160,7 +194,7 @@ export async function getTopPages(limit = 25): Promise<GscRow[]> {
         rowLimit: limit,
       }
     );
-    return data.rows ?? [];
+    return (data.rows ?? []).map(mapToPageRow);
   } catch (err) {
     console.error("[gsc] getTopPages failed:", err);
     return [];
@@ -227,7 +261,7 @@ async function _getQueriesForPage(
   const startDate = daysAgo(DEFAULT_LAG_DAYS + DEFAULT_WINDOW_DAYS);
   const endDate = daysAgo(DEFAULT_LAG_DAYS);
   try {
-    const data = await gscFetch<{ rows?: GscRow[] }>(
+    const data = await gscFetch<{ rows?: RawGscRow[] }>(
       "/searchAnalytics/query",
       {
         startDate,
@@ -243,7 +277,7 @@ async function _getQueriesForPage(
         ],
       }
     );
-    return data.rows ?? [];
+    return (data.rows ?? []).map(mapToQueryRow);
   } catch (err) {
     console.error("[gsc] getQueriesForPage failed:", err);
     return [];
