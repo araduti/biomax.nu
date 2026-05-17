@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import QRCode from "qrcode";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,16 +13,15 @@ import { Input } from "@/components/ui/input";
  * State machine:
  *   - off                 → "Aktivera"-button.
  *   - confirming-password → enter current password to authorise enrol.
- *   - showing-qr          → render the otpauth URI as a QR-friendly URL
- *                           + manual key + backup codes; user scans into
- *                           their authenticator, types the 6-digit code.
+ *   - showing-qr          → render a scannable QR of the otpauth URI
+ *                           + the manual-entry secret + backup codes;
+ *                           user scans, then types the 6-digit code.
  *   - on                  → "Stäng av"-button (re-prompts for password).
  *
- * We don't render an actual QR image — the URL is shown and the user can
- * paste into their authenticator manually. Authenticator apps also accept
- * the secret directly via a copy-paste field. (A real QR image would
- * require either a server-side renderer or a client dep; deferred — for
- * the v1 admin use case the URL works.)
+ * The QR is generated **client-side** (`qrcode`) into a data URL — the
+ * TOTP secret never touches the network or a third party. The raw
+ * otpauth URI + the bare secret are kept as manual-entry fallbacks
+ * (password managers / apps without a camera).
  */
 type Mode = "off" | "confirming" | "showing-qr" | "on";
 
@@ -39,7 +39,30 @@ export function TwoFactorPanel({
     backupCodes: string[];
   } | null>(null);
   const [pending, start] = useTransition();
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const router = useRouter();
+
+  // Render the otpauth URI to a QR data URL locally (no network).
+  const totpURI = enrolment?.totpURI;
+  useEffect(() => {
+    if (!totpURI) return;
+    let cancelled = false;
+    QRCode.toDataURL(totpURI, { margin: 1, width: 220 })
+      .then((url) => {
+        if (!cancelled) setQrDataUrl(url);
+      })
+      .catch(() => {
+        if (!cancelled) setQrDataUrl(null); // URI/secret fallback still shown
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [totpURI]);
+
+  // Bare secret for "add manually" in authenticator apps.
+  const manualSecret = enrolment?.totpURI
+    ? new URLSearchParams(enrolment.totpURI.split("?")[1] ?? "").get("secret")
+    : null;
 
   function reset() {
     setPassword("");
@@ -76,7 +99,7 @@ export function TwoFactorPanel({
 
   function verifyEnrolment() {
     if (!/^\d{6}$/.test(code)) {
-      setError("Ange den sex-siffriga koden från din app.");
+      setError("Ange den sexsiffriga koden från din app.");
       return;
     }
     setError(null);
@@ -124,13 +147,46 @@ export function TwoFactorPanel({
           Skanna in i din app
         </h3>
         <p className="font-sans text-[13.5px] text-ink-mute mb-4 leading-relaxed">
-          Kopiera URL:en nedan och klistra in i din authenticator-app (eller
-          använd appens &quot;lägg till manuellt&quot; för hemligheten direkt).
-          Spara backup-koderna — du behöver dem om du tappar telefonen.
+          Skanna QR-koden med din authenticator-app (Google Authenticator,
+          1Password, Authy m.fl.). Kan du inte skanna? Lägg till manuellt
+          med nyckeln nedan. Spara backup-koderna — du behöver dem om du
+          tappar telefonen.
         </p>
-        <pre className="block w-full overflow-x-auto bg-surface border border-border rounded-md px-3 py-2 font-mono text-[12px] text-ink-body mb-4 whitespace-pre-wrap break-all">
-          {enrolment.totpURI}
-        </pre>
+
+        {qrDataUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={qrDataUrl}
+            alt="QR-kod för tvåfaktorsinloggning"
+            width={220}
+            height={220}
+            className="mb-4 rounded-md border border-border bg-white p-2"
+          />
+        ) : (
+          <p className="font-sans text-[13px] text-ink-mute mb-4">
+            Kunde inte rita QR-koden — använd den manuella nyckeln nedan.
+          </p>
+        )}
+
+        {manualSecret && (
+          <>
+            <p className="font-sans text-[12px] uppercase tracking-[0.16em] font-semibold text-ink-soft mb-2">
+              Manuell nyckel
+            </p>
+            <pre className="block w-full overflow-x-auto bg-surface border border-border rounded-md px-3 py-2 font-mono text-[13px] tracking-wider text-ink-body mb-4 break-all">
+              {manualSecret}
+            </pre>
+          </>
+        )}
+
+        <details className="mb-4">
+          <summary className="font-sans text-[13px] text-ink-soft cursor-pointer hover:text-ink-body">
+            Visa hela otpauth-URL:en
+          </summary>
+          <pre className="mt-2 block w-full overflow-x-auto bg-surface border border-border rounded-md px-3 py-2 font-mono text-[12px] text-ink-body whitespace-pre-wrap break-all">
+            {enrolment.totpURI}
+          </pre>
+        </details>
 
         <p className="font-sans text-[12px] uppercase tracking-[0.16em] font-semibold text-ink-soft mb-2">
           Backup-koder · spara säkert
@@ -143,7 +199,7 @@ export function TwoFactorPanel({
 
         <div className="border-t border-border pt-5">
           <Input
-            label="Sex-siffrig kod från appen"
+            label="Sexsiffrig kod från appen"
             value={code}
             onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
             maxLength={6}
