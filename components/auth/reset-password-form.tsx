@@ -14,17 +14,21 @@ export function ResetPasswordForm() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    setPasswordError(null);
+    setConfirmError(null);
     if (password.length < 10) {
-      setError("Lösenordet behöver vara minst 10 tecken.");
+      setPasswordError("Lösenordet behöver vara minst 10 tecken.");
       return;
     }
     if (password !== confirm) {
-      setError("Lösenorden matchar inte.");
+      setConfirmError("Lösenorden matchar inte.");
       return;
     }
     if (!token) {
@@ -57,8 +61,12 @@ export function ResetPasswordForm() {
         required
         minLength={10}
         hint="Minst 10 tecken."
+        error={passwordError ?? undefined}
         value={password}
-        onChange={(e) => setPassword(e.target.value)}
+        onChange={(e) => {
+          setPassword(e.target.value);
+          if (passwordError) setPasswordError(null);
+        }}
       />
       <Input
         label="Bekräfta lösenord"
@@ -66,8 +74,12 @@ export function ResetPasswordForm() {
         type="password"
         autoComplete="new-password"
         required
+        error={confirmError ?? undefined}
         value={confirm}
-        onChange={(e) => setConfirm(e.target.value)}
+        onChange={(e) => {
+          setConfirm(e.target.value);
+          if (confirmError) setConfirmError(null);
+        }}
       />
       {error && (
         <p

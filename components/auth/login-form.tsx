@@ -51,6 +51,8 @@ export function LoginForm() {
         required
         value={email}
         onChange={(e) => setEmail(e.target.value)}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? "login-error" : undefined}
       />
       <Input
         label="Lösenord"
@@ -60,9 +62,12 @@ export function LoginForm() {
         required
         value={password}
         onChange={(e) => setPassword(e.target.value)}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? "login-error" : undefined}
       />
       {error && (
         <p
+          id="login-error"
           role="alert"
           className="font-sans text-[13px] text-status-error bg-status-error/10 px-3 py-2 rounded-md"
         >

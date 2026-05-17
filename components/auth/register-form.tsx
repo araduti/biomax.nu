@@ -14,15 +14,19 @@ export function RegisterForm() {
   const [lastName, setLastName] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
   const [accountExists, setAccountExists] = useState(false);
   const [pending, setPending] = useState(false);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    setPasswordError(null);
     setAccountExists(false);
     if (password.length < 10) {
-      setError("Lösenordet behöver vara minst 10 tecken.");
+      // Field-specific → own it on the password input so screen
+      // readers announce it on the field, not as a detached alert.
+      setPasswordError("Lösenordet behöver vara minst 10 tecken.");
       return;
     }
     setPending(true);
@@ -93,8 +97,12 @@ export function RegisterForm() {
         required
         minLength={10}
         hint="Minst 10 tecken."
+        error={passwordError ?? undefined}
         value={password}
-        onChange={(e) => setPassword(e.target.value)}
+        onChange={(e) => {
+          setPassword(e.target.value);
+          if (passwordError) setPasswordError(null);
+        }}
       />
       {accountExists && (
         <div
