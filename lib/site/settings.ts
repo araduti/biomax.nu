@@ -1,4 +1,7 @@
+import { unstable_cache } from "next/cache";
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
+import { siteSettingsCacheTag } from "@/lib/cache/tags";
 
 /**
  * All site-setting keys. Adding a new setting? Add it here, the default
@@ -58,7 +61,7 @@ export type ShippingRules = {
   freeThresholdSek: number | null;
 };
 
-export async function getShippingRules(): Promise<ShippingRules> {
+async function getShippingRulesUncached(): Promise<ShippingRules> {
   const [flat, thresholdRow] = await Promise.all([
     readRaw(SETTING_KEYS.shippingFlatSek),
     // Read the raw row separately so we can distinguish "row exists with
@@ -82,6 +85,20 @@ export async function getShippingRules(): Promise<ShippingRules> {
     freeThresholdSek,
   };
 }
+
+/**
+ * Cached shipping rules. Called from the root layout, top-bar and
+ * product hero — i.e. several times per render. `cache()` collapses
+ * same-render duplicates; `unstable_cache` (tag `site-settings`)
+ * serves it from cache between admin saves instead of hitting the DB
+ * on every page render. Invalidated by `updateShippingRules`.
+ */
+export const getShippingRules = cache((): Promise<ShippingRules> =>
+  unstable_cache(getShippingRulesUncached, ["site:shipping-rules"], {
+    tags: [siteSettingsCacheTag()],
+    revalidate: 3600,
+  })()
+);
 
 export async function getLowStockDefault(): Promise<number> {
   return asInt(await readRaw(SETTING_KEYS.lowStockDefault), 5);
@@ -112,7 +129,7 @@ export type TrustpilotSummary = {
  * rating/count as "we haven't got data yet" and renders a CTA-only
  * variant instead of fabricating a score.
  */
-export async function getTrustpilotSummary(): Promise<TrustpilotSummary> {
+async function getTrustpilotSummaryUncached(): Promise<TrustpilotSummary> {
   const [ratingRaw, countRaw, urlRaw] = await Promise.all([
     readRaw(SETTING_KEYS.trustpilotRating),
     readRaw(SETTING_KEYS.trustpilotReviewCount),
@@ -135,6 +152,18 @@ export async function getTrustpilotSummary(): Promise<TrustpilotSummary> {
     profileUrl,
   };
 }
+
+/**
+ * Cached Trustpilot summary. Rendered in the homepage Trustpilot bar
+ * on every ISR revalidation; the numbers are admin-written, not
+ * per-request. Invalidated by `updateTrustpilotSummary`.
+ */
+export const getTrustpilotSummary = cache((): Promise<TrustpilotSummary> =>
+  unstable_cache(getTrustpilotSummaryUncached, ["site:trustpilot"], {
+    tags: [siteSettingsCacheTag()],
+    revalidate: 3600,
+  })()
+);
 
 /** Bulk read used by the admin settings page so all keys round-trip in one query. */
 export async function getAllSettings(): Promise<Record<SettingKey, unknown>> {

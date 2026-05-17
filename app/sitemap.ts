@@ -152,16 +152,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
  * matching products so the sitemap doesn't claim 0-product surfaces.
  */
 async function buyRoutes(now: Date): Promise<MetadataRoute.Sitemap> {
-  const out: MetadataRoute.Sitemap = [];
-  for (const ing of getAllIngredients()) {
-    const products = await findProductsForIngredient(ing);
-    if (products.length === 0) continue;
-    out.push({
-      url: `${SITE}/kop/${ing.slug}`,
-      lastModified: now,
-      changeFrequency: "weekly",
-      priority: 0.75,
-    });
-  }
-  return out;
+  const ings = getAllIngredients();
+  // One parallel batch instead of N sequential round-trips.
+  const matches = await Promise.all(
+    ings.map((ing) => findProductsForIngredient(ing))
+  );
+  return ings.flatMap((ing, i) =>
+    matches[i].length === 0
+      ? []
+      : [
+          {
+            url: `${SITE}/kop/${ing.slug}`,
+            lastModified: now,
+            changeFrequency: "weekly" as const,
+            priority: 0.75,
+          },
+        ]
+  );
 }

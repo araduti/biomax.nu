@@ -17,6 +17,7 @@ export const productCacheTag = (slug: string) => `product:${slug}`;
 export const productListCacheTag = () => `product:list`;
 export const categoryCacheTag = (slug: string) => `category:${slug}`;
 export const homepageCacheTag = () => `homepage`;
+export const siteSettingsCacheTag = () => `site-settings`;
 
 /** Mark a tagged cache entry stale with SWR semantics. */
 export function bumpTag(tag: string): void {

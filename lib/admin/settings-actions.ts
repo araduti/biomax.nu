@@ -6,6 +6,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "./guard";
 import { SETTING_KEYS } from "@/lib/site/settings";
+import { bumpTag, siteSettingsCacheTag } from "@/lib/cache/tags";
 import { fail } from "@/lib/validation/shared";
 
 export type SettingsResult = { ok: true } | { ok: false; error: string };
@@ -67,6 +68,7 @@ export async function updateShippingRules(input: {
     return { ok: false, error: "Kunde inte spara." };
   }
 
+  bumpTag(siteSettingsCacheTag());
   revalidatePath("/admin/installningar");
   revalidatePath("/checkout");
   return { ok: true };
@@ -219,6 +221,7 @@ export async function updateTrustpilotSummary(
     return { ok: false, error: "Kunde inte spara." };
   }
 
+  bumpTag(siteSettingsCacheTag());
   revalidatePath("/admin/installningar");
   revalidatePath("/");
   return { ok: true };

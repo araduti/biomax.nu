@@ -15,6 +15,12 @@ import { withSentryConfig } from "@sentry/nextjs";
  *
  * HSTS only kicks in over HTTPS; harmless in dev.
  */
+// Turbopack / React Fast Refresh use eval() in dev only; production
+// bundles never do, and no third party we load (Plausible, Klarna,
+// Kustom) requires it. So `'unsafe-eval'` is dev-only — removing it
+// from the production CSP restores script-src as a real XSS control.
+const IS_PROD = process.env.NODE_ENV === "production";
+
 const SECURITY_HEADERS: { key: string; value: string }[] = [
   {
     key: "Strict-Transport-Security",
@@ -42,7 +48,8 @@ const SECURITY_HEADERS: { key: string; value: string }[] = [
       // for the JSON-LD <script type="application/ld+json"> tags we render
       // server-side. (LD-JSON isn't executable JS so the practical risk is
       // tiny; future hardening: SHA hashes per ld+json block.)
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://plausible.io https://*.klarna.com https://x.klarnacdn.net https://*.kustom.co",
+      // `'unsafe-eval'` is dev-only (Turbopack/Fast Refresh) — never prod.
+      `script-src 'self' 'unsafe-inline'${IS_PROD ? "" : " 'unsafe-eval'"} https://plausible.io https://*.klarna.com https://x.klarnacdn.net https://*.kustom.co`,
       "img-src 'self' data: blob: https://images.unsplash.com https://*.klarnacdn.net https://*.kustom.co",
       // cdn.fontshare.com hosts the General Sans woff2 files referenced
       // by the api.fontshare.com stylesheet above.

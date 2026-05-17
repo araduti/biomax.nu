@@ -83,12 +83,19 @@ export async function GET() {
     "Sidor som matchar köpintention mot enskilda råvaror — komponerar monografi-utdrag och de Biomax-produkter som innehåller ämnet."
   );
   lines.push("");
-  for (const ing of getAllIngredients()) {
-    const matched = await findProductsForIngredient(ing);
-    if (matched.length === 0) continue;
-    lines.push(
-      `- [Köp ${ing.name}](${SITE}/kop/${ing.slug}): ${matched.length} produkt${matched.length === 1 ? "" : "er"} med ${ing.name}.`
+  {
+    const ings = getAllIngredients();
+    // One parallel batch instead of N sequential round-trips.
+    const matchedCounts = await Promise.all(
+      ings.map((ing) => findProductsForIngredient(ing))
     );
+    ings.forEach((ing, i) => {
+      const matched = matchedCounts[i];
+      if (matched.length === 0) return;
+      lines.push(
+        `- [Köp ${ing.name}](${SITE}/kop/${ing.slug}): ${matched.length} produkt${matched.length === 1 ? "" : "er"} med ${ing.name}.`
+      );
+    });
   }
   lines.push("");
 
