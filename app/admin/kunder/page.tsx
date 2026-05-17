@@ -74,8 +74,9 @@ export default async function AdminCustomersPage({
   return (
     <>
       <AdminPageHeader
-        eyebrow="Drift"
-        title={`${total.toLocaleString("sv-SE")} ${total === 1 ? "kund" : "kunder"}`}
+        eyebrow="Beställningar"
+        title="Kunder"
+        metric={`${total.toLocaleString("sv-SE")} ${total === 1 ? "kund" : "kunder"}`}
         subtitle='Sök på namn eller e-post. Importerade kunder från gamla biomax.nu märks med "arkiverad".'
       />
 
@@ -85,11 +86,11 @@ export default async function AdminCustomersPage({
           name="q"
           defaultValue={q ?? ""}
           placeholder="Sök på namn eller e-post"
-          className="h-10 px-4 rounded-lg border border-border bg-surface-alt font-sans text-[14px] text-ink placeholder:text-ink-soft outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 min-w-[320px] w-full md:w-auto"
+          className="h-12 px-4 rounded-lg border-2 border-border bg-surface-alt font-sans text-[15px] text-ink placeholder:text-ink-soft outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 min-w-[320px] w-full md:w-auto"
         />
       </form>
 
-      <div className="bg-surface-alt border border-border rounded-2xl overflow-hidden">
+      <div className="bg-surface-alt border border-border rounded-xl overflow-hidden">
         <ul>
           {customers.map((c, i) => {
             const fullName =
@@ -104,27 +105,29 @@ export default async function AdminCustomersPage({
               >
                 <Link
                   href={`/admin/kunder/${c.id}`}
-                  className="grid grid-cols-[1.4fr_2fr_auto_auto_auto] items-center gap-4 px-5 py-4 hover:bg-surface-warm transition-colors"
+                  className="grid grid-cols-[1.4fr_2fr_auto_auto_auto] items-center gap-4 px-5 py-2.5 hover:bg-surface-warm transition-colors min-h-[44px]"
                 >
                   <div className="min-w-0">
-                    <p className="font-display text-[14px] font-medium tracking-tight text-primary-deep truncate">
+                    <p className="font-sans text-[13.5px] font-semibold tracking-tight text-primary-deep truncate">
                       {fullName ?? "—"}
                     </p>
-                    <p className="font-sans text-[11px] text-ink-mute mt-0.5">
+                    <p className="font-sans text-[12.5px] text-ink-mute mt-1">
                       Skapad {dateFmt.format(c.createdAt)}
                       {c.legacyWpId ? " · arkiverad" : ""}
                     </p>
                   </div>
-                  <p className="font-sans text-[13px] text-ink-body truncate">
+                  <p className="font-sans text-[14px] text-ink-body truncate">
                     {c.email}
                   </p>
-                  <p className="font-sans text-[12px] text-ink-mute whitespace-nowrap">
+                  <p className="font-sans text-[13px] text-ink-mute whitespace-nowrap tabular-nums">
                     {c._count.orders} ordrar
                   </p>
-                  <p className="font-display text-[14px] font-medium text-primary-deep tracking-tight whitespace-nowrap min-w-[80px] text-right">
+                  <p className="font-sans text-[13.5px] font-semibold text-primary-deep tabular-nums whitespace-nowrap min-w-[88px] text-right">
                     {formatPriceSEK(lifetime)}
                   </p>
-                  <span aria-hidden className="text-primary">→</span>
+                  <span aria-hidden className="text-primary text-lg">
+                    →
+                  </span>
                 </Link>
               </li>
             );

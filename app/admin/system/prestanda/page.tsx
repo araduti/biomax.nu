@@ -1,5 +1,6 @@
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { AdminEmptyState } from "@/components/admin/admin-empty-state";
+import { AdminSummaryStrip } from "@/components/admin/admin-summary-strip";
 import {
   getPerfSnapshot,
   formatValue,
@@ -46,22 +47,38 @@ export default async function PrestandaPage() {
         />
       ) : (
         <>
-          <p className="font-sans text-[12.5px] uppercase tracking-[0.18em] font-semibold text-ink-soft mb-4">
+          <p className="font-sans text-[12.5px] uppercase tracking-[0.16em] font-semibold text-ink-soft mb-4">
             {snapshot.totalSamples.toLocaleString("sv-SE")} sampel · senaste{" "}
             {snapshot.windowDays} dagar
           </p>
 
-          {/* Site-wide tiles */}
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-10">
-            {CORE_METRICS.map((m) => {
+          <AdminSummaryStrip
+            className="mb-10"
+            stats={CORE_METRICS.map((m) => {
               const summary = snapshot.siteWide.find((s) => s.metric === m);
-              return (
-                <SiteMetricTile key={m} metric={m} summary={summary} />
-              );
+              if (!summary) {
+                return {
+                  label: `${m} (p75)`,
+                  value: "—",
+                  subtle: "inga sampel",
+                  accent: "muted" as const,
+                };
+              }
+              return {
+                label: `${m} (p75)`,
+                value: formatValue(m, summary.p75),
+                subtle: `p50 ${formatValue(m, summary.p50)} · p95 ${formatValue(m, summary.p95)}`,
+                accent:
+                  summary.verdict === "good"
+                    ? ("ok" as const)
+                    : summary.verdict === "ok"
+                      ? ("warn" as const)
+                      : ("error" as const),
+              };
             })}
-          </div>
+          />
 
-          <h2 className="font-display text-2xl md:text-[28px] font-medium tracking-tight text-primary-deep mb-2">
+          <h2 className="font-sans text-[18px] md:text-[22px] font-semibold tracking-tight text-primary-deep mb-2">
             Per route (p75)
           </h2>
           <p className="font-sans text-[13px] text-ink-mute leading-relaxed mb-5 max-w-[720px]">
@@ -71,8 +88,8 @@ export default async function PrestandaPage() {
             vad Google använder för att betygsätta Core Web Vitals.
           </p>
 
-          <div className="bg-surface-alt border border-border rounded-2xl overflow-hidden">
-            <div className="grid grid-cols-[1fr_repeat(5,minmax(80px,1fr))_auto] gap-3 px-5 py-3 bg-surface-warm font-sans text-[10.5px] uppercase tracking-[0.18em] font-semibold text-ink-mute">
+          <div className="bg-surface-alt border border-border rounded-xl overflow-hidden">
+            <div className="grid grid-cols-[1fr_repeat(5,minmax(80px,1fr))_auto] gap-3 px-5 py-3 bg-surface-warm font-sans text-[10.5px] uppercase tracking-[0.16em] font-semibold text-ink-mute">
               <span>Route</span>
               {CORE_METRICS.map((m) => (
                 <span key={m} className="text-right tabular-nums">
@@ -122,55 +139,6 @@ export default async function PrestandaPage() {
 
 function verdictColor(v: Verdict): string {
   if (v === "good") return "text-accent-deep";
-  if (v === "ok") return "text-[#7A4D2A]";
-  return "text-[#B5523B] font-semibold";
-}
-
-function SiteMetricTile({
-  metric,
-  summary,
-}: {
-  metric: CoreMetric;
-  summary: MetricSummary | undefined;
-}) {
-  if (!summary) {
-    return (
-      <div className="rounded-2xl border border-border bg-surface-alt p-4">
-        <p className="font-sans text-[10px] uppercase tracking-[0.22em] text-ink-mute font-semibold">
-          {metric}
-        </p>
-        <p className="mt-1.5 font-display text-2xl font-medium text-ink-soft tabular-nums">
-          —
-        </p>
-        <p className="mt-1 font-sans text-[11px] text-ink-soft">inga sampel</p>
-      </div>
-    );
-  }
-  const ringClass =
-    summary.verdict === "good"
-      ? "border-accent"
-      : summary.verdict === "ok"
-        ? "border-[#C68A4F]"
-        : "border-[#B5523B]";
-  const valueColor =
-    summary.verdict === "good"
-      ? "text-accent-deep"
-      : summary.verdict === "ok"
-        ? "text-[#7A4D2A]"
-        : "text-[#B5523B]";
-  return (
-    <div className={`rounded-2xl border bg-surface-alt p-4 ${ringClass}`}>
-      <p className="font-sans text-[10px] uppercase tracking-[0.22em] text-ink-mute font-semibold">
-        {metric} (p75)
-      </p>
-      <p
-        className={`mt-1.5 font-display text-2xl md:text-[26px] font-medium tracking-tight tabular-nums ${valueColor}`}
-      >
-        {formatValue(metric, summary.p75)}
-      </p>
-      <p className="mt-1 font-sans text-[11.5px] text-ink-mute tabular-nums">
-        p50 {formatValue(metric, summary.p50)} · p95 {formatValue(metric, summary.p95)}
-      </p>
-    </div>
-  );
+  if (v === "ok") return "text-status-warn-text";
+  return "text-status-error font-semibold";
 }

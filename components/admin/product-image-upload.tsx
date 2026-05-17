@@ -83,8 +83,8 @@ export function ProductImageUpload({
   }
 
   return (
-    <div className="bg-surface-alt border border-border rounded-2xl p-6 md:p-8">
-      <p className="font-sans text-[11px] uppercase tracking-[0.22em] font-semibold text-ink-mute mb-4">
+    <div className="bg-surface-alt border border-border rounded-xl p-6 md:p-8">
+      <p className="font-sans text-[11px] uppercase tracking-[0.16em] font-semibold text-ink-mute mb-4">
         Produktbild
       </p>
 
@@ -157,7 +157,7 @@ export function ProductImageUpload({
                 : "Byt bild"}
           </p>
           <p
-            className="font-sans text-[12px] uppercase tracking-[0.22em] font-semibold"
+            className="font-sans text-[12px] uppercase tracking-[0.16em] font-semibold"
             style={
               isDragging || pending
                 ? { opacity: 0.9 }
@@ -200,7 +200,7 @@ export function ProductImageUpload({
       {error && (
         <p
           role="alert"
-          className="mt-4 font-sans text-[13px] text-[#B5523B] bg-[#B5523B]/10 px-3 py-2 rounded-md"
+          className="mt-4 font-sans text-[13px] text-status-error bg-status-error/10 px-3 py-2 rounded-md"
         >
           {error}
         </p>

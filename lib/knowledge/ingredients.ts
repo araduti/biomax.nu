@@ -1,3 +1,5 @@
+import { slugify } from "@/lib/text/slug";
+
 /**
  * Code-based ingredient knowledge registry.
  *
@@ -443,15 +445,25 @@ export const INGREDIENTS: IngredientMeta[] = [
   },
   {
     slug: "aloe-vera",
-    name: "Aloe Vera",
-    aliases: ["aloe barbadensis", "aloe vera-extrakt"],
+    name: "Aloe",
+    aliases: [
+      "aloe",
+      "aloe vera",
+      "aloe vera-extrakt",
+      "aloeblad",
+      "aloe-blad",
+      "aloe barbadensis",
+      "aloe ferox",
+      "cape aloe",
+    ],
     category: "botanical",
     summary:
-      "Saftig sukkulent från ökenklimat. Bladets innergel innehåller polysackariden acemannan tillsammans med en rad enzymer och sekundära metaboliter.",
+      "Saftrik suckulent från ökenklimat. Bladets innergel innehåller polysackariden acemannan tillsammans med en rad enzymer och sekundära metaboliter.",
     body: [
-      "Aloe vera odlas som medicinalväxt i tropiska och subtropiska regioner. Bladets gul-bruna yttre lager (latex) skiljer sig kraftigt från den klara innergelen — extrakt avsett som kosttillskott baseras nästan uteslutande på innergelen, eftersom latexens antrakinoner kan vara laxerande.",
+      "Aloe odlas som medicinalväxt i tropiska och subtropiska delar av världen. De två arter som vanligast används i kosttillskott är Aloe barbadensis (den klassiska aloe veran) och Aloe ferox (sydafrikansk kap-aloe). De delar samma grundsammansättning, men ferox ger ett bittrare och mer koncentrerat extrakt.",
+      "Bladets gulbruna yttre lager (latex) skiljer sig kraftigt från den klara innergelen. Extrakt som är avsedda som kosttillskott baseras nästan uteslutande på innergelen, eftersom de antrakinoner som finns i latexen kan ha en laxerande verkan.",
     ],
-    relatedSlugs: ["olivbladextrakt", "boswellia", "stevia"],
+    relatedSlugs: ["slemalm", "olivbladextrakt", "boswellia", "stevia"],
     references: [
       {
         title: "Aloe Vera",
@@ -657,6 +669,326 @@ export const INGREDIENTS: IngredientMeta[] = [
     ],
     relatedSlugs: ["koenzym-q10", "boswellia", "olivbladextrakt"],
   },
+  {
+    slug: "slemalm",
+    name: "Slemalm",
+    aliases: [
+      "slemalmsbark",
+      "slemalm-bark",
+      "slippery elm",
+      "slippery elm bark",
+      "ulmus rubra",
+      "ulmus fulva",
+      "rödalm",
+    ],
+    category: "botanical",
+    summary:
+      "Innerbarken av det nordamerikanska almträdet Ulmus rubra. Innehåller en slemsubstans — en viskös fiber som sväller i kontakt med vatten — som traditionellt använts för matsmältningskanalens slemhinna.",
+    body: [
+      "Slemalm (på engelska slippery elm) är innerbarken av Ulmus rubra, ett lövträd i östra Nordamerika. Barken har använts i flera hundra år av Nordamerikas ursprungsbefolkningar, både invärtes vid magbesvär och utvärtes på huden.",
+      "Det aktiva ämnet är en slemsubstans — en blandning av polysackarider (främst galaktosaminoglykaner) som i kontakt med vatten bildar en mjuk, viskös gel. Inom traditionell användning beskrivs den som att den lägger en mild hinna över matsmältningskanalens slemhinna.",
+      "Slemalm kombineras ofta med andra mjuka örter (aloe, vit ekbark) i mag- och tarmformler. I kapselform sväller slemsubstansen efter att den intagits tillsammans med vätska, vilket är anledningen till att man rekommenderas dricka ett glas vatten till.",
+    ],
+    relatedSlugs: ["aloe-vera", "vit-ekbark", "gentianarot"],
+    references: [
+      {
+        title: "Slippery Elm",
+        cite: "Memorial Sloan Kettering Cancer Center — Integrative Medicine",
+        url: "https://www.mskcc.org/cancer-care/integrative-medicine/herbs/slippery-elm",
+        kind: "web",
+      },
+    ],
+  },
+  {
+    slug: "vit-ekbark",
+    name: "Vit ekbark",
+    aliases: [
+      "vit ek",
+      "vitek",
+      "vitekbark",
+      "vit-ek",
+      "vit ekbark",
+      "white oak bark",
+      "quercus alba",
+    ],
+    category: "botanical",
+    summary:
+      "Barkens sammandragande egenskaper kommer från ett högt innehåll av garvämnen (tanniner). Använd i nordamerikansk och europeisk växtmedicin för matsmältningskomfort och slemhinnestöd.",
+    body: [
+      "Vit ek (Quercus alba) är ett nordamerikanskt lövträd vars bark traditionellt använts inom örtmedicinen i både Nordamerika och Europa. Det är garvämnena — kondenserade tanniner och hydrolyserbara tanniner — som ger barken dess karakteristiska adstringerande (sammandragande) verkan.",
+      "Inom traditionell användning kombineras vit ekbark ofta med mjukare örter som slemalm och aloe i mag- och tarmformler, där sammandragningen balanseras upp av de slemhinnemjuka delarna. Garvämnena binder också tungmetaller och vissa alkaloider, vilket är anledningen till att vit ekbark inte bör tas tillsammans med vissa läkemedel.",
+    ],
+    relatedSlugs: ["slemalm", "gentianarot", "boswellia"],
+  },
+  {
+    slug: "gentianarot",
+    name: "Gentianarot",
+    aliases: [
+      "gentian",
+      "gentian root",
+      "gentiana lutea",
+      "gulgentiana",
+      "gul gentiana",
+    ],
+    category: "botanical",
+    summary:
+      "Roten av gul gentiana (Gentiana lutea) — en av Europas klassiska bitterörter. Använd sedan antiken som matsmältningsstöd via sin uttalat beska smak.",
+    body: [
+      "Gentianarot är en av de mest karakteristiska bitterörterna inom europeisk växtmedicin. Den gula gentianan växer vild i bergsområden i mellan- och Sydeuropa, och den torkade roten är så bitter att den än i dag används som referens för mätning av bitterämnen (\"gentian taste units\").",
+      "Den bittra smaken kommer från sekoiridoider (främst gentiopikrosid och amarogentin). Inom traditionell användning ges gentian före måltid för att sätta igång saliv- och magsaftutsöndringen — det är den klassiska principen bakom bittermedel, som också ligger till grund för flera likörer (Angostura bitter, Aperol).",
+      "I sammansatta mag- och tarmformler bidrar gentianarot med en stimulerande, magsyraväckande del som balanserar de mjukare, slemhinneskyddande örterna.",
+    ],
+    relatedSlugs: ["slemalm", "vit-ekbark", "bla-verbena"],
+    references: [
+      {
+        title: "Gentiana lutea — bitter principles and digestive use",
+        cite: "WHO Monographs on Selected Medicinal Plants, vol. 4",
+        url: "https://apps.who.int/iris/handle/10665/44478",
+        kind: "book",
+      },
+    ],
+  },
+  {
+    slug: "bla-verbena",
+    name: "Blå verbena",
+    aliases: [
+      "blå verbena",
+      "bla verbena",
+      "blue vervain",
+      "verbena hastata",
+      "järnört",
+      "jarnort",
+      "verbena",
+    ],
+    category: "botanical",
+    summary:
+      "Nordamerikansk ört (Verbena hastata) som inom traditionell folkmedicin använts som ett mångsidigt mag- och nervstöd. Ska inte förväxlas med citronverbena eller den europeiska järnörten Verbena officinalis.",
+    body: [
+      "Blå verbena är en högväxande, blåblommande ört som växer i östra och centrala Nordamerika. Inom traditionell folkmedicin — främst hos cherokee och iroquois — har de torkade ovanjordsdelarna använts som matsmältningsstöd och som ett allmänt avslappnande nervstöd.",
+      "Blå verbena ska inte förväxlas med den europeiska järnörten Verbena officinalis, som har en något annan användningstradition, eller med citronverbena (Aloysia citrodora), som är en kulinarisk ört.",
+      "I sammansatta tarmformler bidrar blå verbena ofta med en lugnande not till en annars stimulerande örtblandning.",
+    ],
+    relatedSlugs: ["gentianarot", "slemalm", "griffonia"],
+  },
+  {
+    slug: "alfa-liponsyra",
+    name: "Alfa-liponsyra",
+    aliases: [
+      "alfa liponsyra",
+      "alfaliponsyra",
+      "alpha lipoic acid",
+      "ala",
+      "alpha-lipoic acid",
+      "thioctic acid",
+      "tioktinsyra",
+    ],
+    category: "other",
+    summary:
+      "Svavelhaltigt fettsyrederivat som cellerna själva tillverkar och använder i energiomsättningen. Ovanlig bland antioxidanter — verksam i både vatten- och fettlösliga miljöer.",
+    body: [
+      "Alfa-liponsyra (ALA) är en kort fettsyra med två svavelatomer som kroppen själv bildar i mitokondrierna. Den fungerar som koenzym för flera enzymkomplex som är centrala i glukos- och energiomsättningen — främst pyruvatdehydrogenas och alfa-ketoglutaratdehydrogenas i citronsyracykeln.",
+      "Det molekylärt ovanliga är att ALA är både vatten- och fettlöslig — de flesta antioxidanter är det ena eller det andra. Det betyder att den kan fånga upp fria radikaler både i cellens vattenfas (cytoplasma) och i fettrika membran. ALA kan dessutom återställa andra antioxidanter (vitamin C, vitamin E, glutation) efter att de förbrukats.",
+      "ALA finns naturligt i små mängder i livsmedel som rött kött, spenat, broccoli och potatis. Kroppens egen produktion avtar med åldern.",
+    ],
+    relatedSlugs: ["koenzym-q10", "n-acetylcystein", "vitamin-e"],
+    references: [
+      {
+        title: "Alpha-Lipoic Acid",
+        cite: "Oregon State University — Linus Pauling Institute Micronutrient Information Center",
+        url: "https://lpi.oregonstate.edu/mic/dietary-factors/lipoic-acid",
+        kind: "web",
+      },
+    ],
+  },
+  {
+    slug: "chanca-piedra",
+    name: "Chanca Piedra",
+    aliases: [
+      "phyllanthus niruri",
+      "phyllanthus",
+      "stenkrossaren",
+      "stone breaker",
+      "bhumi amla",
+      "chanca",
+    ],
+    category: "botanical",
+    summary:
+      "Liten tropisk växt vars portugisiska namn betyder \"stenkrossaren\". Använd inom amazonsk och ayurvedisk tradition i hundratals år för stöd åt lever och urinvägar.",
+    body: [
+      "Chanca Piedra (Phyllanthus niruri) växer vild i Amazonas, södra Indien, Sri Lanka och Filippinerna. Trots vad namnet antyder är det de tunna grenarna och bladen som används medicinalt — inte stenar.",
+      "Inom ayurvedisk medicin är växten känd som bhumi amla och har sedan 2000 år tillbaka en plats i klassiska formuleringar för lever och urinvägar. Inom amazonsk folkmedicin har örten en motsvarande roll. Den moderna forskningen har kretsat kring just dessa traditionella användningsområden — lever, gallvägar och urinvägshälsa.",
+      "Växtens aktiva ämnen är blandade — lignaner (phyllanthin, hypophyllanthin), flavonoider, alkaloider och tanniner. Fullspektrumextrakt försöker bevara hela ämnesinnehållet i stället för att isolera ett enskilt ämne.",
+    ],
+    relatedSlugs: ["bjorkglukos", "olivbladextrakt"],
+  },
+  {
+    slug: "djavulsklo",
+    name: "Djävulsklo",
+    aliases: [
+      "djavulsklo",
+      "djavulsklon",
+      "djävulsklon",
+      "harpago",
+      "harpagophytum",
+      "harpagophytum procumbens",
+      "harpagophytum spp",
+      "devils claw",
+      "devil's claw",
+      "grapple plant",
+    ],
+    category: "botanical",
+    summary:
+      "Afrikansk växt vars fruktkapsel har karakteristiska krokar — därav namnet. Roten har en lång tradition i södra Afrika och en väl utforskad användning i europeisk fytoterapi vid ledbesvär.",
+    body: [
+      "Djävulsklo (Harpagophytum procumbens) är en sydafrikansk växt vars torkade sekundärrötter används medicinalt. Bland khoisanfolken i Kalahari har den varit en del av traditionell medicin i flera hundra år, framför allt för leder och rörlighet.",
+      "Den togs upp i europeisk växtmedicin på 1950-talet och är idag en av de mest studerade örterna inom ledhälsa — flera randomiserade studier har undersökt extrakten vid knä- och ländryggsbesvär. EMA (Europeiska läkemedelsmyndigheten) har en monografi för traditionell användning.",
+      "De aktiva ämnena är iridoidglykosider, främst harpagosid, samt fytosteroler och flavonoider. Fullspektrumextrakt syftar till att bevara hela ämnesinnehållet.",
+      "**Försiktighet:** djävulsklo bör inte användas vid magsår eller av personer som tar blodförtunnande läkemedel utan att man först pratat med sin läkare.",
+    ],
+    relatedSlugs: ["boswellia", "natriumaskorbat", "magnesium"],
+    references: [
+      {
+        title: "Harpagophytum procumbens — Community herbal monograph",
+        cite: "European Medicines Agency, HMPC",
+        url: "https://www.ema.europa.eu/en/medicines/herbal/harpagophyti-radix",
+        kind: "book",
+      },
+    ],
+  },
+  {
+    slug: "lakritsrot",
+    name: "Lakritsrot (DGL)",
+    aliases: [
+      "lakritsrot",
+      "lakrits",
+      "lakritsrotsextrakt",
+      "lakritsrotextrakt",
+      "lakritsrotextrakt glycyrrhiza glabra",
+      // Cover both Swedish spellings (-inerad / -iniserad) and both
+      // "rotextrakt" / "rotsextrakt" forms — Rockland's label uses one,
+      // EMA monographs another, third-party suppliers a third.
+      "deglycyrrhizinerad lakritsrotextrakt",
+      "deglycyrrhizinerad lakritsrotsextrakt",
+      "deglycyrrhiziniserad lakritsrot",
+      "deglycyrrhiziniserad lakritsrotextrakt",
+      "deglycyrrhiziniserad lakritsrotsextrakt",
+      "deglycyrrhizinated licorice",
+      "dgl",
+      "glycyrrhiza glabra",
+      "licorice root",
+      "licorice",
+    ],
+    category: "botanical",
+    summary:
+      "Roten av Glycyrrhiza glabra — en av de äldsta dokumenterade örterna inom både kinesisk och europeisk medicin. I DGL-formen har glycyrrhizinet tagits bort för att undvika biverkningar på blodtryck och kalium.",
+    body: [
+      "Lakritsrot har använts inom traditionell medicin i minst 4 000 år. Den finns dokumenterad i egyptiska papyrusrullar, i den kinesiska Shen Nong-skriften och i den grekisk-romerska antikens medicin. Inom traditionell kinesisk medicin är gan cao (lakritsrot) en av de allra mest använda ingredienserna i sammansatta recept.",
+      "Glycyrrhizin är det ämne som ger lakrits sin karaktäristiska söta smak — ungefär 50 gånger sötare än socker. Det är också det ämne som vid längre tids hög konsumtion kan höja blodtrycket och sänka kaliumnivåerna genom att hämma enzymet 11β-HSD2.",
+      "Deglycyrrhiziniserad lakritsrot (DGL) är ett extrakt där glycyrrhizinet tagits bort — vanligtvis ner till under 2 %. Det som finns kvar är flavonoiderna (liquiritin, isoliquiritin) och chalkonerna — de ämnen som förknippas med den traditionella användningen för magslemhinnan.",
+      "DGL säljs ofta som tuggtablett snarare än kapsel, eftersom kontakten med saliv anses bidra till effekten i mun- och magslemhinnan.",
+    ],
+    relatedSlugs: ["slemalm", "aloe-vera", "glycin"],
+  },
+  {
+    slug: "n-acetylcystein",
+    name: "N-acetylcystein",
+    aliases: [
+      "n-acetyl cystein",
+      "n-acetyl-cystein",
+      "n acetyl cystein",
+      "nac",
+      "n-acetyl l-cystein",
+      "n-acetyl-l-cystein",
+      "n-acetylcysteine",
+      "acetylcystein",
+      "acetylcysteine",
+    ],
+    category: "amino",
+    summary:
+      "Acetylerad form av den svavelhaltiga aminosyran cystein. Kroppen använder cystein som byggsten för glutation — en av kroppens mest centrala egna antioxidanter.",
+    body: [
+      "N-acetylcystein (NAC) är cystein med en acetylgrupp tillagd på aminosidan. Den acetylerade formen är mer stabil och tas upp bättre än ren cystein, som lätt oxiderar.",
+      "Cystein har en central roll i kroppen som hastighetsbegränsande byggsten för glutation — en tripeptid (glutaminsyra + cystein + glycin) som finns i alla celler och utgör en av kroppens viktigaste interna antioxidanter. Glutationnivåerna sjunker med åldern, vid hög oxidativ belastning och vid vissa kroniska tillstånd.",
+      "NAC har också en lång klinisk historia som slemlösare för luftvägarna — det var den användningen som ledde till att ämnet upptäcktes på 1960-talet, och det är fortfarande som receptfritt läkemedel mot slembildning som det säljs i flera länder.",
+      "Den karaktäristiska svaveldoften kommer från cysteinets svavelatom och är ett tecken på att produkten är som den ska — inte en kvalitetsbrist.",
+    ],
+    relatedSlugs: ["alfa-liponsyra", "vitamin-e", "glutamin"],
+    references: [
+      {
+        title: "N-Acetylcysteine — A safe antidote for cysteine/glutathione deficiency",
+        cite: "Atkuri et al., Curr Opin Pharmacol 2007",
+        url: "https://pubmed.ncbi.nlm.nih.gov/17602868/",
+        kind: "pubmed",
+      },
+    ],
+  },
+  {
+    slug: "probiotika",
+    name: "Probiotika",
+    aliases: [
+      "probiotika",
+      "probiotics",
+      "mjölksyrabakterier",
+      "mjolksyrabakterier",
+      "lactobacillus",
+      "lactobacillus acidophilus",
+      "lactobacillus brevis",
+      "lactobacillus casei",
+      "lactobacillus helveticus",
+      "lactobacillus paracasei",
+      "lactobacillus plantarum",
+      "lactobacillus reuteri",
+      "lactobacillus rhamnosus",
+      "lactobacillus salivarius",
+      "lactobacillus gasseri",
+      "lactococcus lactis",
+      "bifidobacterium",
+      "bifidobacterium longum",
+      "bifidobacterium bifidum",
+      "bifidobacterium breve",
+      "bifidobacterium lactis",
+      "streptococcus thermophilus",
+    ],
+    category: "other",
+    summary:
+      "Levande mikroorganismer — främst mjölksyrabakterier — som tillförs i tillräckliga mängder för att klara passagen genom magsäcken och nå tarmen. WHO:s definition kräver dokumenterad effekt och säkerhet ner på enskild stamnivå.",
+    body: [
+      "Den vetenskapliga definitionen av probiotika kommer från FAO/WHO 2001: \"levande mikroorganismer som, när de tillförs i tillräckliga mängder, ger en hälsofördel för värden\". Definitionen är medvetet stamspecifik — det räcker inte med att säga \"Lactobacillus är bra\", det måste handla om en specifik stam med dokumenterad effekt.",
+      "De vanligaste släktena i kosttillskott är Lactobacillus, Bifidobacterium, Lactococcus och Streptococcus thermophilus. Varje art rymmer många stammar (till exempel Lactobacillus rhamnosus GG jämfört med Lactobacillus rhamnosus LB21), och effekter som är dokumenterade för en stam går inte automatiskt att generalisera till en annan stam av samma art.",
+      "Dosen anges i kolonibildande enheter (CFU = colony-forming units), oftast i miljarder per dos. Produkter med blandade stammar — så kallade multi-strain — siktar mot en bredare ekologisk effekt i tarmen snarare än mot att maxa en enskild stams aktivitet.",
+      "Probiotika kombineras ofta med prebiotika (till exempel FOS, frukto-oligosackarider) — icke-nedbrytbara fibrer som fungerar som näring åt bakterierna. Kombinationen kallas synbiotika.",
+    ],
+    relatedSlugs: ["fos", "slemalm", "aloe-vera"],
+    references: [
+      {
+        title: "The International Scientific Association for Probiotics and Prebiotics consensus statement on the scope and appropriate use of the term probiotic",
+        cite: "Hill et al., Nat Rev Gastroenterol Hepatol 2014",
+        url: "https://pubmed.ncbi.nlm.nih.gov/24912386/",
+        kind: "pubmed",
+      },
+    ],
+  },
+  {
+    slug: "fos",
+    name: "FOS — frukto-oligosackarider",
+    aliases: [
+      "fos",
+      "frukto-oligosackarider",
+      "fructo-oligosaccharides",
+      "frukto oligosackarider",
+      "fos prebiotika",
+      "inulin-typ-fruktaner",
+    ],
+    category: "fiber",
+    summary:
+      "Kortkedjiga oligosackarider av fruktosenheter som passerar tunntarmen oförändrade och bryts ner av bakterier i tjocktarmen — ett av de mest använda prebiotika.",
+    body: [
+      "Frukto-oligosackarider (FOS) är kortkedjiga sockermolekyler — vanligtvis 2–10 fruktosenheter — som finns naturligt i bland annat lök, vitlök, kronärtskocka, jordärtskocka och bananer. De passerar tunntarmen utan att tas upp och blir i stället näring åt bakterierna i tjocktarmen.",
+      "Som prebiotikum gynnar FOS främst släktet Bifidobacterium, vars bakterier är effektiva på att bryta ner just de här kedjelängderna. Slutprodukterna är kortkedjiga fettsyror (acetat, propionat, butyrat) som i sin tur är energikälla åt cellerna i tjocktarmens slemhinna.",
+      "FOS kombineras ofta med probiotika i samma produkt — då talar man om en synbiotika. Dosen i kosttillskott ligger vanligtvis på 0,5–5 g, vilket är väl under de mängder som kan ge gasbildning hos känsliga personer.",
+    ],
+    relatedSlugs: ["probiotika", "beta-glucan", "slemalm"],
+  },
 ];
 
 const SLUG_MAP: Map<string, IngredientMeta> = new Map();
@@ -669,17 +1001,6 @@ for (const ing of INGREDIENTS) {
   }
 }
 
-function slugify(s: string): string {
-  return s
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .replace(/å/g, "a")
-    .replace(/ä/g, "a")
-    .replace(/ö/g, "o")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
 
 /**
  * Look up by row name (or slug). Tries progressively looser matching:

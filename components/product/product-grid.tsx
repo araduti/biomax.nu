@@ -8,7 +8,15 @@ type GridProduct = Pick<
   categories?: Pick<Category, "name">[];
 };
 
-export function ProductGrid({ products }: { products: GridProduct[] }) {
+type RatingMap = Map<string, { count: number; average: number }>;
+
+export function ProductGrid({
+  products,
+  ratings,
+}: {
+  products: GridProduct[];
+  ratings?: RatingMap;
+}) {
   if (products.length === 0) {
     return (
       <div className="py-20 text-center">
@@ -22,7 +30,10 @@ export function ProductGrid({ products }: { products: GridProduct[] }) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-8 md:gap-x-12 lg:gap-x-16 gap-y-20">
       {products.map((p) => (
-        <ProductCard key={p.id} product={p} />
+        <ProductCard
+          key={p.id}
+          product={{ ...p, rating: ratings?.get(p.id) }}
+        />
       ))}
     </div>
   );

@@ -1,23 +1,36 @@
 import type { OrderStatus } from "@prisma/client";
+import { AdminStatusPill, type StatusKind } from "./admin-status-pill";
 
-const STYLES: Record<
+/**
+ * Order status pill — text + icon, never colour-only.
+ *
+ * Now a thin wrapper around `<AdminStatusPill>` so all status chips
+ * in admin share one spec (radius, size, type weight, palette). The
+ * icon character is preserved per status because ~8% of men have
+ * red-green colourblindness and the icon carries the redundant signal:
+ *
+ *   ⏳  Väntar     PENDING    warn  (amber)
+ *   ✓   Betald     PAID       ok    (sage)
+ *   📦  Skickad    FULFILLED  info  (primary blue)
+ *   ↩   Avbruten   CANCELLED  error (rust)
+ *   ⟲   Återbetald REFUNDED   muted (ink-mute)
+ */
+const STATUS_MAP: Record<
   OrderStatus,
-  { label: string; bg: string; fg: string }
+  { kind: StatusKind; icon: string; label: string }
 > = {
-  PENDING: { label: "Väntar", bg: "bg-surface-warm", fg: "text-ink-mute" },
-  PAID: { label: "Betald", bg: "bg-accent/15", fg: "text-accent-deep" },
-  FULFILLED: { label: "Skickad", bg: "bg-primary/10", fg: "text-primary-deep" },
-  CANCELLED: { label: "Avbruten", bg: "bg-[#B5523B]/10", fg: "text-[#B5523B]" },
-  REFUNDED: { label: "Återbetald", bg: "bg-ink-soft/15", fg: "text-ink-mute" },
+  PENDING: { kind: "warn", icon: "⏳", label: "Väntar" },
+  PAID: { kind: "ok", icon: "✓", label: "Betald" },
+  FULFILLED: { kind: "info", icon: "📦", label: "Skickad" },
+  CANCELLED: { kind: "error", icon: "↩", label: "Avbruten" },
+  REFUNDED: { kind: "muted", icon: "⟲", label: "Återbetald" },
 };
 
 export function OrderStatusBadge({ status }: { status: OrderStatus }) {
-  const s = STYLES[status];
+  const s = STATUS_MAP[status];
   return (
-    <span
-      className={`inline-flex items-center px-2.5 py-1 rounded-full font-sans text-[10px] uppercase tracking-[0.18em] font-bold ${s.bg} ${s.fg}`}
-    >
+    <AdminStatusPill kind={s.kind} icon={s.icon}>
       {s.label}
-    </span>
+    </AdminStatusPill>
   );
 }

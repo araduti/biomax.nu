@@ -1,14 +1,16 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { bumpTag, productCacheTag, productListCacheTag } from "@/lib/cache/tags";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "./guard";
+import { audit } from "./audit";
 import type { ProductStatus } from "@prisma/client";
 import {
   isIngredientList,
   type IngredientList,
 } from "@/lib/products/ingredient-list";
 import { isDose, type Dose } from "@/lib/products/dose";
+import { syncSeoHealth, syncProductIngredients } from "./post-save-sync";
 
 export type ProductUpdateInput = {
   slug: string;
@@ -34,6 +36,7 @@ export type ProductUpdateInput = {
   ogImageUrl?: string | null;
   aiKeywords?: string[];
   badges?: string[];
+  allergens?: string[];
   categorySlugs?: string[];
   galleryUrls?: string[];
   faqItems?: { question: string; answer: string }[] | null;
@@ -56,11 +59,11 @@ export type ProductUpdateResult =
 export async function updateProduct(
   input: ProductUpdateInput
 ): Promise<ProductUpdateResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   const existing = await prisma.product.findUnique({
     where: { slug: input.slug },
-    select: { id: true },
+    select: { id: true, stock: true, manageStock: true, status: true },
   });
   if (!existing) return { ok: false, error: "Produkten hittades inte." };
 
@@ -200,6 +203,20 @@ export async function updateProduct(
     }
     data.badges = cleaned;
   }
+  if (input.allergens !== undefined) {
+    // Whitelist against the EU 1169/2011 catalogue; unknown slugs are
+    // dropped silently. Dedupe + preserve display order from the picker.
+    const { ALLERGENS } = await import("@/lib/products/allergens");
+    const known = new Set(ALLERGENS.map((a) => a.slug));
+    const seen = new Set<string>();
+    const cleaned: string[] = [];
+    for (const slug of input.allergens) {
+      if (!known.has(slug) || seen.has(slug)) continue;
+      seen.add(slug);
+      cleaned.push(slug);
+    }
+    data.allergens = cleaned;
+  }
   if (input.galleryUrls !== undefined) {
     // Preserve order, dedupe, cap.
     const seen = new Set<string>();
@@ -264,10 +281,72 @@ export async function updateProduct(
     return { ok: false, error: "Kunde inte spara ändringarna." };
   }
 
-  revalidatePath("/produkter");
-  revalidatePath(`/produkter/${input.slug}`);
-  revalidatePath("/admin/produkter");
-  revalidatePath(`/admin/produkter/${input.slug}`);
-  revalidatePath("/");
+  // Stock transition 0 → positive: fan out pending notify-me requests.
+  // Soft-fails — a Brevo issue must not block the admin save itself.
+  const wasOutOfStock =
+    existing.manageStock && existing.stock <= 0 && existing.status === "PUBLISHED";
+  const willBeInStock =
+    (input.manageStock ?? existing.manageStock) === false ||
+    (input.stock !== undefined && input.stock > 0) ||
+    (input.stock === undefined && existing.stock > 0);
+  const willBePublished =
+    (input.status ?? existing.status) === "PUBLISHED";
+  if (wasOutOfStock && willBeInStock && willBePublished) {
+    try {
+      const { fanoutStockNotifications } = await import(
+        "@/lib/stock-notifications/actions"
+      );
+      const result = await fanoutStockNotifications(existing.id);
+      if (result.sent > 0) {
+        console.log(
+          `[stock-notify] fanned out ${result.sent} mails for ${input.slug}`
+        );
+      }
+    } catch (err) {
+      console.error("[stock-notify] fanout threw:", err);
+    }
+  }
+
+  // Post-save derivations: recompute SEO health + resolved ingredient join.
+  // Both read the freshly-updated row, both are best-effort (errors logged
+  // but never block the admin save).
+  const refreshed = await prisma.product.findUnique({
+    where: { id: existing.id },
+    select: {
+      id: true,
+      seoTitle: true,
+      seoDescription: true,
+      seoFocusKw: true,
+      shortDescription: true,
+      longDescription: true,
+      ingredientList: true,
+      usage: true,
+      warnings: true,
+    },
+  });
+  if (refreshed) {
+    await Promise.all([
+      syncSeoHealth(refreshed),
+      syncProductIngredients(refreshed),
+    ]);
+  }
+
+  // Tag-scoped: invalidates only the PDP's `unstable_cache` entry + the
+  // shared product-list tag (catalogue grid, related-products fallback).
+  // Admin routes are dynamic so they don't need explicit invalidation.
+  bumpTag(productCacheTag(input.slug));
+  bumpTag(productListCacheTag());
+
+  // Audit-log the save. `data` carries only the changed fields (the rest
+  // are undefined and dropped from the JSON write), so the entry is
+  // already a partial diff. Productname/slug pulled from input for the
+  // human-readable column in the admin log view.
+  await audit({
+    actorId: admin.id,
+    action: "product.update",
+    entityType: "Product",
+    entityId: existing.id,
+    diff: { slug: input.slug, fields: Object.keys(input).filter((k) => k !== "slug") },
+  });
   return { ok: true };
 }

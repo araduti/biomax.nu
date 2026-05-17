@@ -28,7 +28,7 @@ export const Input = forwardRef<HTMLInputElement, Props>(function Input(
         className={cn(
           "h-12 px-4 rounded-lg border border-border bg-surface-alt font-sans text-[15px] text-ink placeholder:text-ink-soft outline-none transition-colors",
           "focus:border-primary focus:ring-2 focus:ring-primary/15",
-          error && "border-[#B5523B] focus:ring-[#B5523B]/20",
+          error && "border-status-error focus:ring-status-error/20",
           className
         )}
         aria-invalid={error ? true : undefined}
@@ -38,7 +38,7 @@ export const Input = forwardRef<HTMLInputElement, Props>(function Input(
         {...props}
       />
       {error && (
-        <p id={`${inputId}-error`} className="font-sans text-[13px] text-[#B5523B]">
+        <p id={`${inputId}-error`} className="font-sans text-[13px] text-status-error">
           {error}
         </p>
       )}

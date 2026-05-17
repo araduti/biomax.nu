@@ -2,11 +2,17 @@ import Link from "next/link";
 import { BiomaxLogo } from "@/components/brand/BiomaxLogo";
 import { currentUser } from "@/lib/session";
 import { CartButton } from "@/components/cart/cart-button";
+import { BehovNav } from "@/components/site/behov-nav";
+import { MobileNav } from "@/components/site/mobile-nav";
+import { BEHOV_LABELS } from "@/lib/symptoms/behov-labels";
 
+// "Efter behov" replaces the old "Hjälp" link as the goal-first shopping
+// primitive (research note 2026-05-13). Renders as a dropdown to give
+// customers a one-glance map of the 10 behovsområden.
 const NAV = [
   { label: "Produkter", href: "/produkter" },
-  { label: "Kategorier", href: "/kategorier" },
-  { label: "Behandlingar", href: "/behandlingar" },
+  { label: "Paket", href: "/paket" },
+  { label: "Hjälp mig välja", href: "/hjalp-mig-valja" },
   { label: "Kunskap", href: "/kunskap" },
   { label: "Om oss", href: "/om-oss" },
 ];
@@ -24,9 +30,13 @@ export async function Header() {
         </Link>
         <nav
           aria-label="Huvudnavigation"
-          className="hidden lg:flex gap-8 font-sans text-[15px] text-ink-body font-medium"
+          className="hidden lg:flex items-center gap-8 font-sans text-[15px] text-ink-body font-medium"
         >
-          {NAV.map((n) => (
+          <Link href="/produkter" className="hover:text-primary transition-colors">
+            Produkter
+          </Link>
+          <BehovNav items={BEHOV_LABELS} />
+          {NAV.filter((n) => n.label !== "Produkter").map((n) => (
             <Link
               key={n.href}
               href={n.href}
@@ -37,13 +47,13 @@ export async function Header() {
           ))}
         </nav>
         <div className="flex items-center gap-3 font-sans text-sm text-ink-body">
-          <button
-            type="button"
+          <Link
+            href="/sok"
             className="hidden md:inline px-3 py-2 rounded-full hover:bg-surface-warm transition-colors"
             aria-label="Sök"
           >
             Sök
-          </button>
+          </Link>
           {user ? (
             <Link
               href="/konto"
@@ -60,6 +70,10 @@ export async function Header() {
             </Link>
           )}
           <CartButton />
+          {/* Mobile hamburger — visible below `lg`. Slides in a drawer
+              with the same nav items as the desktop bar; without this,
+              phone users see no navigation at all. */}
+          <MobileNav signedIn={user !== null} />
         </div>
       </div>
     </header>

@@ -5,6 +5,8 @@ import { ButtonLink } from "@/components/ui/button";
 import { formatPriceSEK } from "@/lib/format";
 import { currentUser } from "@/lib/session";
 import { getOrdersForUser, statusDisplay } from "@/lib/account/orders";
+import { getAccountBalance, ensureAccount } from "@/lib/loyalty/account";
+import { LOYALTY_PROGRAM_NAME, pointsToKr } from "@/lib/loyalty/constants";
 
 export const metadata: Metadata = {
   title: "Mitt konto",
@@ -29,6 +31,15 @@ export default async function AccountOverview() {
     (sum, o) => sum + parseFloat(o.totalAmount.toString()),
     0
   );
+
+  // Loyalty: legacy customers (pre-program) get an account lazily on
+  // first visit so the balance card always renders for logged-in users.
+  // No-op when an account already exists.
+  let loyalty = await getAccountBalance(user.id);
+  if (!loyalty) {
+    await ensureAccount(user.id);
+    loyalty = await getAccountBalance(user.id);
+  }
 
   return (
     <>
@@ -57,6 +68,43 @@ export default async function AccountOverview() {
           smallValue
         />
       </div>
+
+      {/* Familjen Biomax — loyalty balance card */}
+      {loyalty && (
+        <section className="mt-10 bg-surface-warm border border-accent/30 rounded-2xl p-6 md:p-7">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="min-w-0">
+              <Eyebrow className="text-accent-deep">
+                {LOYALTY_PROGRAM_NAME}
+              </Eyebrow>
+              <p className="mt-3 font-display text-[34px] md:text-[40px] font-medium tracking-tight text-primary-deep leading-none">
+                {loyalty.balance.toLocaleString("sv-SE")}{" "}
+                <span className="font-sans text-[15px] text-ink-mute font-normal align-middle">
+                  poäng
+                </span>
+              </p>
+              <p className="mt-2 font-sans text-[13.5px] text-ink-mute">
+                Värde just nu:{" "}
+                <span className="text-primary-deep font-semibold">
+                  {formatPriceSEK(pointsToKr(loyalty.balance))}
+                </span>
+                {loyalty.lifetimeEarned > 0 && (
+                  <>
+                    {" · "}Totalt tjänat{" "}
+                    {loyalty.lifetimeEarned.toLocaleString("sv-SE")} poäng
+                  </>
+                )}
+              </p>
+            </div>
+            <Link
+              href="/konto/familjen"
+              className="font-sans text-[13px] font-semibold text-primary-deep underline decoration-accent/40 underline-offset-[3px] hover:decoration-accent whitespace-nowrap"
+            >
+              Visa historik →
+            </Link>
+          </div>
+        </section>
+      )}
 
       {/* Recent orders */}
       <section className="mt-12">

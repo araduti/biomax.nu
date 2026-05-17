@@ -45,7 +45,7 @@ export function FounderBand() {
           />
           {/* Caption */}
           <div className="absolute left-6 right-6 bottom-6 flex flex-col gap-1">
-            <span className="font-sans text-[10px] font-bold uppercase tracking-[0.24em] text-accent">
+            <span className="font-sans text-[10px] font-bold uppercase tracking-[0.24em] text-accent-on-dark">
               Grundare · Sedan 2001
             </span>
             <span className="font-display text-2xl md:text-[26px] font-medium tracking-tight text-surface leading-tight">
@@ -56,7 +56,7 @@ export function FounderBand() {
 
         {/* Quote block */}
         <div>
-          <Eyebrow className="text-accent">Vår berättelse · Sedan 2001</Eyebrow>
+          <Eyebrow className="text-accent-on-dark">Vår berättelse · Sedan 2001</Eyebrow>
           <Display
             size="xl"
             as="p"
@@ -78,7 +78,7 @@ export function FounderBand() {
             <ButtonLink
               href="/om-oss"
               variant="primary"
-              className="bg-accent text-primary-deep hover:bg-accent-deep hover:text-surface"
+              className="bg-accent-on-dark text-primary-deep hover:bg-accent-deep hover:text-surface"
             >
               Läs hela berättelsen
             </ButtonLink>

@@ -3,8 +3,8 @@ import { indexBadge } from "@/lib/integrations/gsc-index-coverage";
 
 const TONE_CLASSES = {
   ok: "border-accent/40 bg-accent/[0.08] text-accent-deep",
-  warn: "border-[#C68A4F]/40 bg-[#C68A4F]/[0.08] text-[#7A4D2A]",
-  error: "border-[#B5523B]/30 bg-[#B5523B]/[0.06] text-[#B5523B]",
+  warn: "border-status-warn/40 bg-status-warn/[0.08] text-status-warn-text",
+  error: "border-status-error/30 bg-status-error/[0.06] text-status-error",
   muted: "border-border bg-surface-warm text-ink-mute",
 } as const;
 
@@ -38,8 +38,8 @@ export function IndexStatusBadge({
     <>
       <span aria-hidden className={`inline-block w-2 h-2 rounded-full ${
         badge.tone === "ok" ? "bg-accent-deep"
-        : badge.tone === "warn" ? "bg-[#C68A4F]"
-        : badge.tone === "error" ? "bg-[#B5523B]"
+        : badge.tone === "warn" ? "bg-status-warn"
+        : badge.tone === "error" ? "bg-status-error"
         : "bg-ink-soft"
       }`} />
       <span className="font-sans text-[12px] font-semibold">

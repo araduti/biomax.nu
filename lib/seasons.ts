@@ -23,11 +23,16 @@ export const seasons: Record<Season, SeasonMeta> = {
   var: {
     id: "var",
     label: "Vår",
-    motif: "Våren vaknar",
-    caption: "På spång genom lövsprickningen",
+    motif: "När häggen blommar",
+    caption: "Vit hägg mot djupgrön skog, mitten av maj",
     accent: "#7A8B6F",
-    photoUrl: "https://images.unsplash.com/photo-1715756603568-6b30b8933071",
-    photoAlt: "Person på träspång genom vårskog",
+    // Hägg / bird cherry — the specifically Swedish vår-into-försommar
+    // ritual. White blossom canopy against deep green; older-reader
+    // nostalgia note. If this URL 404s, swap to another Unsplash photo
+    // of Prunus padus / spring white blossom — the brand pillar is the
+    // motif, not any one image.
+    photoUrl: "https://images.unsplash.com/photo-1588280991779-bf36c2af6727",
+    photoAlt: "Häggens vita blomklasar mot djupgrön vårskog",
   },
   sommar: {
     id: "sommar",

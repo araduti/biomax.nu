@@ -1,0 +1,89 @@
+/* Biomax — Nordic Steel · refined */
+:root{
+  /* surfaces */
+  --paper:#FBFAF7;          /* pure off-white */
+  --paper-2:#F4F0E8;        /* cream · warm */
+  --surface:#FFFFFF;
+  --surface-warm:#F4F0E8;
+
+  /* brand blues */
+  --blue:#1E3A5F;           /* deep clinical blue */
+  --blue-deep:#0F2440;      /* midnight ink */
+  --blue-50:#E6ECF3;
+  --blue-100:#C9D5E2;
+
+  /* sage */
+  --sage:#7A8B6F;
+  --sage-deep:#56654D;
+  --sage-50:#EAEEE6;
+
+  /* ink */
+  --ink:#0A0A0A;            /* near-black */
+  --ink-2:#2A2D33;
+  --mute:#6E7079;
+  --mute-2:#9CA0AB;
+
+  /* borders */
+  --line:#E7E3DA;
+  --line-2:#D2CDC0;
+  --line-strong:#0A0A0A;
+
+  /* feedback */
+  --rose:#B8463D;
+  --rose-50:#F5DDD8;
+
+  /* loyalty accent — sage on cream */
+  --loyalty-bg:#F4F0E8;
+  --loyalty-bg-deep:#EAE3D2;
+  --loyalty-ink:#3A3526;
+  --loyalty-accent:#7A8B6F;
+
+  /* aliases used in components (kept for compatibility) */
+  --green-900:#0F2440;      /* repointed to midnight */
+  --green-700:#1E3A5F;
+  --green-500:#7A8B6F;
+  --green-50:#E6ECF3;
+  --amber-900:#56654D;      /* sage-deep — points text */
+  --amber-700:#7A8B6F;      /* sage — points accent */
+  --amber-500:#7A8B6F;
+  --amber-100:#D5DDC8;
+  --amber-50:#EAEEE6;
+
+  /* type */
+  --serif:'Playfair Display', ui-serif, Georgia, serif;
+  --sans:'Inter', ui-sans-serif, -apple-system, system-ui, sans-serif;
+  --mono:'JetBrains Mono', ui-monospace, monospace;
+
+  /* radius */
+  --r-sm:4px;
+  --r-md:8px;
+  --r-lg:14px;
+  --r-xl:20px;
+
+  /* shadow */
+  --shadow-sm:0 1px 0 rgba(10,10,10,.04), 0 1px 2px rgba(10,10,10,.04);
+  --shadow-md:0 1px 0 rgba(10,10,10,.04), 0 8px 22px -10px rgba(10,10,10,.14);
+}
+
+*,*::before,*::after{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:var(--sans);
+  color:var(--ink);
+  background:var(--paper);
+  font-feature-settings:'ss01','cv11';
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+button{font-family:inherit;color:inherit;}
+input,select,textarea{font-family:inherit;color:inherit;}
+
+.eyebrow{
+  font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  font-weight:600;color:var(--mute);
+  font-family:var(--sans);
+}
+.hr{height:1px;background:var(--line);border:0;margin:0;}
+.focusable:focus-visible{outline:2px solid var(--blue);outline-offset:2px;}
+
+.tnum{font-variant-numeric:tabular-nums;}

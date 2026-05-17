@@ -3,12 +3,16 @@ import Link from "next/link";
 import type { Product, Category } from "@prisma/client";
 import { stripHtml } from "@/lib/sanitize";
 import { formatPriceSEK } from "@/lib/format";
+import { StarRating } from "@/components/reviews/star-rating";
 
 type ProductCardProduct = Pick<
   Product,
   "id" | "slug" | "name" | "shortDescription" | "imageUrl" | "price" | "totalSales"
 > & {
   categories?: Pick<Category, "name">[];
+  /** Optional rating summary — when provided, renders a small "★ 4.6 (24)"
+   * line above the price. Computed via getRatingsByProductIds() upstream. */
+  rating?: { count: number; average: number };
 };
 
 const TAG_BY_SLUG: Record<string, string> = {
@@ -63,6 +67,16 @@ export function ProductCard({ product }: { product: ProductCardProduct }) {
         <p className="mt-2 font-sans text-[13px] text-ink-mute leading-relaxed line-clamp-2">
           {description}
         </p>
+      )}
+
+      {product.rating && product.rating.count > 0 && (
+        <div className="mt-2 flex items-center gap-1.5 text-accent-deep">
+          <StarRating value={product.rating.average} size={13} />
+          <span className="font-sans text-[12px] text-ink-mute tabular-nums">
+            {product.rating.average.toFixed(1)}
+            <span className="text-ink-soft"> ({product.rating.count})</span>
+          </span>
+        </div>
       )}
 
       <div className="mt-3 font-display text-[15px] font-medium text-primary-deep tracking-tight">

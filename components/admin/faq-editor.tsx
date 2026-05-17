@@ -93,7 +93,7 @@ export function FaqEditor({
                 type="button"
                 onClick={() => remove(i)}
                 aria-label="Ta bort"
-                className="w-7 h-7 inline-flex items-center justify-center rounded-md border border-[#B5523B]/30 bg-[#B5523B]/[0.04] text-[#B5523B] hover:bg-[#B5523B]/10"
+                className="w-7 h-7 inline-flex items-center justify-center rounded-md border border-status-error/30 bg-status-error/[0.04] text-status-error hover:bg-status-error/10"
               >
                 ✕
               </button>

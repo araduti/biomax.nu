@@ -61,13 +61,13 @@ export function Sparkline({
     trend === "up"
       ? "var(--color-accent-deep)"
       : trend === "down"
-        ? "#B5523B"
+        ? "var(--color-status-error)"
         : "var(--color-ink-soft)";
   const fill =
     trend === "up"
       ? "var(--color-accent)"
       : trend === "down"
-        ? "#B5523B"
+        ? "var(--color-status-error)"
         : "var(--color-ink-soft)";
 
   return (

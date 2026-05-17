@@ -10,14 +10,30 @@ export const SETTING_KEYS = {
   shippingFlatSek: "shipping_flat_sek",
   freeShippingThresholdSek: "free_shipping_threshold_sek",
   lowStockDefault: "low_stock_default",
+  /// Comma-separated emails that receive the daily low-stock alert.
+  /// Stored as a single string for simplicity; the cron splits on `,`.
+  warehouseAlertEmails: "warehouse_alert_emails",
+  /// Trustpilot live numbers — pasted by an admin (or, when paid-tier
+  /// API access lands, refreshed by a weekly cron). When unset, the
+  /// hero strip renders a CTA-only variant (no fabricated score).
+  trustpilotRating: "trustpilot_rating",
+  trustpilotReviewCount: "trustpilot_review_count",
+  trustpilotProfileUrl: "trustpilot_profile_url",
 } as const;
 
 type SettingKey = (typeof SETTING_KEYS)[keyof typeof SETTING_KEYS];
 
 const DEFAULTS: Record<SettingKey, unknown> = {
   shipping_flat_sek: 49,
-  free_shipping_threshold_sek: 599,
+  // Matches the historical value used across the site (top-bar, cart,
+  // checkout, /faq, /villkor, /kop, /frakt-och-retur). Source-of-truth
+  // here; everywhere else reads via getShippingRules().
+  free_shipping_threshold_sek: 499,
   low_stock_default: 5,
+  warehouse_alert_emails: "",
+  trustpilot_rating: null,
+  trustpilot_review_count: null,
+  trustpilot_profile_url: "https://se.trustpilot.com/review/biomax.nu",
 };
 
 async function readRaw(key: SettingKey): Promise<unknown> {
@@ -69,6 +85,55 @@ export async function getShippingRules(): Promise<ShippingRules> {
 
 export async function getLowStockDefault(): Promise<number> {
   return asInt(await readRaw(SETTING_KEYS.lowStockDefault), 5);
+}
+
+/**
+ * Parsed list of emails that receive the daily low-stock alert. Empty
+ * array means "no warehouse contact configured" — the cron logs and
+ * exits without sending.
+ */
+export async function getWarehouseAlertEmails(): Promise<string[]> {
+  const raw = await readRaw(SETTING_KEYS.warehouseAlertEmails);
+  if (typeof raw !== "string" || raw.trim().length === 0) return [];
+  return raw
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter((e) => e.includes("@"));
+}
+
+export type TrustpilotSummary = {
+  rating: number | null;
+  reviewCount: number | null;
+  profileUrl: string;
+};
+
+/**
+ * Live Trustpilot numbers from SiteSetting. The widget treats null
+ * rating/count as "we haven't got data yet" and renders a CTA-only
+ * variant instead of fabricating a score.
+ */
+export async function getTrustpilotSummary(): Promise<TrustpilotSummary> {
+  const [ratingRaw, countRaw, urlRaw] = await Promise.all([
+    readRaw(SETTING_KEYS.trustpilotRating),
+    readRaw(SETTING_KEYS.trustpilotReviewCount),
+    readRaw(SETTING_KEYS.trustpilotProfileUrl),
+  ]);
+  const rating =
+    typeof ratingRaw === "number"
+      ? ratingRaw
+      : typeof ratingRaw === "string" && ratingRaw.trim().length > 0
+        ? parseFloat(ratingRaw)
+        : null;
+  const reviewCount = asInt(countRaw, 0) || null;
+  const profileUrl =
+    typeof urlRaw === "string" && urlRaw.trim().length > 0
+      ? urlRaw
+      : "https://se.trustpilot.com/review/biomax.nu";
+  return {
+    rating: rating && Number.isFinite(rating) ? rating : null,
+    reviewCount,
+    profileUrl,
+  };
 }
 
 /** Bulk read used by the admin settings page so all keys round-trip in one query. */

@@ -49,7 +49,7 @@ export function IngredientListEditor({
       <div className="flex flex-wrap items-center gap-3">
         <label
           htmlFor={`${tableId}-perUnit`}
-          className="font-sans text-[12px] uppercase tracking-[0.18em] font-semibold text-ink-mute"
+          className="font-sans text-[12px] uppercase tracking-[0.16em] font-semibold text-ink-mute"
         >
           Mängd per
         </label>
@@ -73,7 +73,7 @@ export function IngredientListEditor({
 
       {/* Table */}
       <div className="border border-border rounded-lg overflow-hidden">
-        <div className="grid grid-cols-[1fr_180px_auto] gap-2 px-3 py-2 bg-surface-warm border-b border-border-soft font-sans text-[10px] uppercase tracking-[0.22em] font-semibold text-ink-mute">
+        <div className="grid grid-cols-[1fr_180px_auto] gap-2 px-3 py-2 bg-surface-warm border-b border-border-soft font-sans text-[10px] uppercase tracking-[0.16em] font-semibold text-ink-mute">
           <span>Ingrediens</span>
           <span>Mängd per {value.perUnit || "enhet"}</span>
           <span aria-hidden className="w-[88px]" />
@@ -126,7 +126,7 @@ export function IngredientListEditor({
                     type="button"
                     onClick={() => removeRow(i)}
                     aria-label={`Ta bort rad ${i + 1}`}
-                    className="w-8 h-8 rounded text-ink-mute hover:bg-[#B5523B]/10 hover:text-[#B5523B] transition-colors"
+                    className="w-8 h-8 rounded text-ink-mute hover:bg-status-error/10 hover:text-status-error transition-colors"
                   >
                     ✕
                   </button>
@@ -150,7 +150,7 @@ export function IngredientListEditor({
       <div className="flex flex-col gap-1.5">
         <label
           htmlFor={`${tableId}-footnote`}
-          className="font-sans text-[12px] uppercase tracking-[0.18em] font-semibold text-ink-mute"
+          className="font-sans text-[12px] uppercase tracking-[0.16em] font-semibold text-ink-mute"
         >
           Fotnot
         </label>

@@ -5,12 +5,13 @@
       "url": [
         "http://localhost:3000/",
         "http://localhost:3000/produkter",
-        "http://localhost:3000/produkter/q10-100mg-100-kapslar",
         "http://localhost:3000/kunskap",
-        "http://localhost:3000/kunskap/ingredienser/koenzym-q10",
-        "http://localhost:3000/kop/koenzym-q10",
         "http://localhost:3000/om-oss",
-        "http://localhost:3000/faq"
+        "http://localhost:3000/faq",
+        "http://localhost:3000/hjalp",
+        "http://localhost:3000/paket",
+        "http://localhost:3000/hjalp-mig-valja",
+        "http://localhost:3000/sok"
       ],
       "numberOfRuns": 3,
       "settings": {
@@ -23,7 +24,6 @@
       "outputDir": ".lighthouseci"
     },
     "assert": {
-      "preset": "lighthouse:no-pwa",
       "assertions": {
         "categories:performance": ["warn", { "minScore": 0.8 }],
         "categories:accessibility": ["error", { "minScore": 0.9 }],

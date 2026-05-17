@@ -1,19 +1,25 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Product } from "@prisma/client";
-import { type Season, seasons } from "@/lib/seasons";
+import { type Season, type SeasonMeta, seasons } from "@/lib/seasons";
 import { ButtonLink } from "@/components/ui/button";
 import { AddToCartButton } from "@/components/cart/add-to-cart-button";
 import { formatPriceSEK } from "@/lib/format";
 
 type Props = {
   season: Season;
+  /**
+   * Optional resolved hero metadata from the editor-managed
+   * `HomepageHero` table. When NULL, falls back to the hardcoded
+   * `seasons[season]` map so the component remains drop-in usable.
+   */
+  meta?: SeasonMeta | null;
   /** "Säsongens favorit" — fetched server-side, passed in. Optional. */
   featured?: Pick<Product, "id" | "slug" | "name" | "price" | "imageUrl"> | null;
 };
 
-export function Hero({ season, featured }: Props) {
-  const s = seasons[season];
+export function Hero({ season, meta, featured }: Props) {
+  const s = meta ?? seasons[season];
   return (
     <section className="relative bg-primary-deep overflow-hidden">
       <div className="relative h-[62svh] min-h-[560px] max-h-[780px]">

@@ -11,6 +11,7 @@ import { DoseChips } from "./dose-chips";
 import { DoseTimeline } from "./dose-timeline";
 import { findIngredient } from "@/lib/knowledge/ingredients";
 import { getEffectiveDose } from "@/lib/products/dose";
+import { AllergenCallout } from "./allergen-callout";
 import Link from "next/link";
 
 type Props = {
@@ -24,8 +25,20 @@ type Props = {
     | "storage"
     | "warnings"
     | "seoFocusKw"
+    | "allergens"
   >;
-  reviewCount?: number;
+  /**
+   * Reviews tab payload. Rendered by the caller because review fetching
+   * (list, aggregate, goal filters, viewer's existing review) is async
+   * and depends on session state that doesn't belong in this presentational
+   * component. When omitted the Recensioner tab simply isn't shown.
+   */
+  reviews?: {
+    /** Tab counter — usually the aggregate review count. */
+    count: number;
+    /** Body rendered inside the active tabpanel. */
+    content: React.ReactNode;
+  };
 };
 
 /**
@@ -38,7 +51,7 @@ type Props = {
  * Tabs only render if their content exists; an empty product just shows
  * Beskrivning, no chrome.
  */
-export function ProductContent({ product, reviewCount = 0 }: Props) {
+export function ProductContent({ product, reviews }: Props) {
   const html = sanitizeRichText(product.longDescription);
   const list = parseIngredientList(product.ingredientList);
   // Manual editorial override wins; falls back to parsing the usage free-text.
@@ -47,7 +60,9 @@ export function ProductContent({ product, reviewCount = 0 }: Props) {
     usage: product.usage ?? null,
   });
   const hasIngredients =
-    ingredientListHasContent(list) || !!product.ingredients?.trim();
+    ingredientListHasContent(list) ||
+    !!product.ingredients?.trim() ||
+    product.allergens.length > 0;
   const hasInfo =
     hasIngredients ||
     !!product.usage?.trim() ||
@@ -110,6 +125,7 @@ export function ProductContent({ product, reviewCount = 0 }: Props) {
                   <span aria-hidden>→</span>
                 </Link>
               )}
+              <AllergenCallout allergens={product.allergens} />
             </section>
           )}
           {hasGuidance && (
@@ -143,10 +159,10 @@ export function ProductContent({ product, reviewCount = 0 }: Props) {
                 </div>
               )}
               {product.warnings?.trim() && (
-                <div className="rounded-2xl border border-[#B5523B]/20 bg-[#B5523B]/[0.035] px-6 md:px-7 py-5 md:py-6 flex gap-4 items-start">
+                <div className="rounded-2xl border border-status-error/20 bg-status-error/[0.035] px-6 md:px-7 py-5 md:py-6 flex gap-4 items-start">
                   <span
                     aria-hidden
-                    className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#B5523B]/12 text-[#B5523B] flex-shrink-0 mt-0.5"
+                    className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-status-error/12 text-status-error flex-shrink-0 mt-0.5"
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
@@ -155,7 +171,7 @@ export function ProductContent({ product, reviewCount = 0 }: Props) {
                     </svg>
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="font-sans text-[10.5px] uppercase tracking-[0.22em] font-semibold text-[#B5523B] mb-1">
+                    <p className="font-sans text-[10.5px] uppercase tracking-[0.22em] font-semibold text-status-error mb-1">
                       Observera
                     </p>
                     <p className="font-sans text-[14px] text-ink-body leading-[1.65] whitespace-pre-line">
@@ -170,30 +186,29 @@ export function ProductContent({ product, reviewCount = 0 }: Props) {
       ),
     });
   }
-  // Reviews tab placeholder — real review widget wired in Phase 8
-  tabs.push({
-    id: "recensioner",
-    label: "Recensioner",
-    count: reviewCount,
-    content: (
-      <div className="max-w-[760px]">
-        {reviewCount === 0 ? (
-          <p className="font-display italic text-xl text-ink-mute">
-            Inga recensioner ännu. Var den första att lämna ett omdöme.
-          </p>
-        ) : (
-          <p className="font-sans text-[15px] text-ink-mute">
-            {reviewCount} recension{reviewCount === 1 ? "" : "er"}
-          </p>
-        )}
-      </div>
-    ),
-  });
+  // Recensioner — same tab strip as Beskrivning / Innehåll so reviews
+  // sit as a peer information surface rather than a duplicate inline
+  // section below. The `#recensioner` URL hash from the hero link is
+  // picked up by ProductTabs and activates this tab on mount.
+  if (reviews) {
+    tabs.push({
+      id: "recensioner",
+      label: "Recensioner",
+      count: reviews.count,
+      content: reviews.content,
+    });
+  }
 
   if (tabs.length === 0) return null;
 
   return (
-    <section className="bg-surface py-16 md:py-24 px-6 md:px-8">
+    <section
+      id="recensioner-anchor"
+      className="bg-surface py-16 md:py-24 px-6 md:px-8 scroll-mt-6"
+    >
+      {/* Hash target — separate from the section id so the URL hash
+          `#recensioner` survives even if we restructure the wrapper. */}
+      <div id="recensioner" className="sr-only" aria-hidden="true" />
       <div className="max-w-[1240px] mx-auto">
         <ProductTabs tabs={tabs} />
       </div>

@@ -50,7 +50,7 @@ export function LegalPage({
       </header>
 
       {!reviewedByLegal && (
-        <div className="mb-10 rounded-2xl border border-[#C68A4F]/30 bg-[#C68A4F]/[0.06] px-5 py-4 font-sans text-[13.5px] text-[#7A4D2A] leading-relaxed">
+        <div className="mb-10 rounded-2xl border border-status-warn/30 bg-status-warn/[0.06] px-5 py-4 font-sans text-[13.5px] text-status-warn-text leading-relaxed">
           <strong className="font-semibold">Förhandsversion.</strong>{" "}
           Innehållet på den här sidan är ett utkast som ska granskas av jurist
           före lansering. Reglerna nedan är formulerade utifrån gällande svensk

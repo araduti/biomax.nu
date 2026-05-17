@@ -48,7 +48,7 @@ export function SeoSnippetPreview({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <p className="font-sans text-[10px] uppercase tracking-[0.22em] font-semibold text-ink-mute">
+        <p className="font-sans text-[10px] uppercase tracking-[0.16em] font-semibold text-ink-mute">
           Google-förhandsvisning
         </p>
         <div className="flex rounded-md border border-border overflow-hidden text-[11px] font-sans font-semibold">
@@ -78,7 +78,7 @@ export function SeoSnippetPreview({
       </div>
 
       <div
-        className={`${widthClass} rounded-2xl bg-white border border-border-soft px-5 py-4 shadow-[0_1px_0_rgba(15,32,44,0.04)] transition-[max-width] duration-200`}
+        className={`${widthClass} rounded-xl bg-white border border-border-soft px-5 py-4 shadow-[0_1px_0_rgba(15,32,44,0.04)] transition-[max-width] duration-200`}
       >
         <p className="font-sans text-[12px] text-[#5f6368] leading-snug truncate">
           {breadcrumb}
@@ -140,10 +140,10 @@ function truncate(s: string, max: number): string {
 }
 
 const STATUS_COLOR: Record<Status, string> = {
-  empty: "bg-[#B5523B]",
-  short: "bg-[#C68A4F]",
+  empty: "bg-status-error",
+  short: "bg-status-warn",
   good: "bg-accent-deep",
-  long: "bg-[#C68A4F]",
+  long: "bg-status-warn",
 };
 
 const STATUS_LABEL: Record<Status, string> = {
@@ -170,7 +170,7 @@ function CounterRow({
   return (
     <div className="bg-surface-alt border border-border rounded-xl p-3">
       <div className="flex items-baseline justify-between gap-2 mb-1.5">
-        <span className="font-sans text-[11px] uppercase tracking-[0.18em] font-semibold text-ink-mute">
+        <span className="font-sans text-[11px] uppercase tracking-[0.16em] font-semibold text-ink-mute">
           {label}
         </span>
         <span className="font-sans text-[12px] tabular-nums">

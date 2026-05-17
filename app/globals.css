@@ -18,6 +18,14 @@
   /* Accent — lichen sage */
   --color-accent: #7a8b6f;
   --color-accent-deep: #5c6e55;
+  /* Lightened sage for use ON the deep-navy surface (footer, dark
+     bands). Plain --color-accent is only 4.26:1 on --color-primary-deep
+     (fails WCAG AA for the small eyebrow text); this lifts it to
+     ~6.6:1 while keeping the sage identity. Dual-purpose: also use it
+     as a *surface* (`bg-accent-on-dark`) when dark ink sits on a sage
+     button — plain --color-accent as a button bg is only 4.26:1 with
+     navy text. Use `text-accent-on-dark` / `bg-accent-on-dark`. */
+  --color-accent-on-dark: #9fb091;
 
   /* Surfaces */
   --color-surface: #fbfaf7;
@@ -28,14 +36,34 @@
   --color-ink: #0a0a0a;
   --color-ink-body: #1f2530;
   --color-ink-mute: #525860;
-  --color-ink-soft: #7a8290;
+  /* Was #7a8290 — only ~3.7:1 on the cream/white surfaces, failing
+     WCAG AA for the muted caption text it's used for site-wide.
+     Darkened to clear 4.5:1 on every light surface (incl.
+     --color-surface-warm, the darkest at ~5:1) while staying a step
+     lighter than --color-ink-mute. */
+  --color-ink-soft: #5f6672;
 
-  /* Borders */
-  --color-border: #e8e5de;
-  --color-border-soft: #f0ede5;
+  /* Borders — keep a touch of brand warmth but lean slightly cooler so
+     they recede behind content the way Stripe's #e3e8ee does. The shift
+     is small (~3% delta) and keeps the cream canvas feeling cohesive. */
+  --color-border: #e3dfd6;
+  --color-border-soft: #ece8df;
 
-  /* Trustpilot brand color (for the Utmärkt rating) */
+  /* Trustpilot brand green — for the star glyphs only (graphical,
+     WCAG-exempt). It is just 2.6:1 on white, so NEVER use it for text. */
   --color-trustpilot: #00b67a;
+  /* Darkened Trustpilot green for text accents (rating label, the
+     "Trustpilot" word). ~6:1 on white / ~5.6:1 on surface-warm. */
+  --color-trustpilot-text: #006d4d;
+
+  /* Status colours — single source of truth. Used across admin
+     dashboards, status pills, KPI accents, and form validation. Pair
+     each with a `-text` value for use on tinted backgrounds. */
+  --color-status-ok: #5c6e55; /* same as accent-deep — explicit alias for status use */
+  --color-status-warn: #c68a4f; /* amber pill bg / accent */
+  --color-status-warn-text: #7a4d2a; /* readable text on amber tints */
+  --color-status-error: #b5523b; /* rust — destructive / blocking */
+  --color-status-low: #8a5a2c; /* low-stock medium amber */
 
   /* Typography — names map next/font CSS variables */
   --font-display: var(--font-playfair);
@@ -158,3 +186,389 @@
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
+
+/* ───────────────────────────────────────────────────────────────────
+   Admin UI — sized for 50+/60+ users.
+
+   Single, calmly-opinionated density. (The previous toggle between
+   "comfortable" and "dense" was removed — employees never used it and
+   two modes was visible design debt.) The token values below are the
+   accessibility floor for older eyes: 16 px body, 48 px hit targets,
+   6.5:1 ink contrast.
+
+   Why scope to `.admin-shell` rather than overriding Tailwind globally?
+   The public site is built around the brand's editorial proportions and
+   shouldn't shift. The admin lives behind `requireAdmin()` and serves a
+   different audience.
+
+   Token names mirror the public scale so a future merge stays sane.
+   ─────────────────────────────────────────────────────────────────── */
+
+/* The legacy 60+-density `.admin-shell` cascade is GONE. It defined a
+   14px body, 48px hit floor, a contrast-bumped ink-mute, and blanket
+   `.admin-shell p/li/button/input` element rules — and every one of
+   those forced a specificity workaround on the Direction D `.d-*`
+   classes (the hero number was rendering at 13px because
+   `.admin-shell p` (0,1,1) beat `.d-hero` (0,1,0)).
+
+   The entire admin is Direction D now, so there is no second density
+   to reconcile. `--admin-*` vars survive ONLY to feed the explicit
+   opt-in utilities below (`.admin-text-*`, `.admin-row-h`), and they
+   point straight at Direction D values — no counter-override pass. */
+.admin-shell {
+  --admin-body: 14px;
+  --admin-body-lh: 1.45;
+  --admin-input: 14px;
+  --admin-small: 12px;
+  --admin-label: 12px;
+  --admin-heading: 24px;
+  --admin-hit: 28px;
+  --admin-hit-lg: 32px;
+  --admin-input-h: 28px;
+  --admin-stepper: 28px;
+  --admin-gap: 12px;
+  --admin-section-gap: 28px;
+  --admin-row-h: 36px;
+  --admin-border-w: 1px;
+}
+
+/* One clean Direction D base. Sets the inherited defaults on the root
+   only — it never targets `p`/`li`, so `.d-*` classes win on their
+   own elements with zero specificity tricks. */
+[data-direction="d"] {
+  font-family: var(--d-font-sans);
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--d-ink-2);
+}
+[data-direction="d"] :focus-visible {
+  outline: 2px solid var(--d-accent);
+  outline-offset: 2px;
+}
+
+/* Control sizing — Direction D compact (28px), tokens used directly.
+   `data-admin-compact` still opts a control out of the floor. */
+[data-direction="d"] button,
+[data-direction="d"] [role="button"],
+[data-direction="d"] a.button,
+[data-direction="d"] input[type="submit"],
+[data-direction="d"] input[type="button"] {
+  min-height: var(--d-h-btn);
+}
+[data-direction="d"] button[data-admin-compact],
+[data-direction="d"] [role="button"][data-admin-compact] {
+  min-height: 0;
+}
+[data-direction="d"] input[type="text"],
+[data-direction="d"] input[type="email"],
+[data-direction="d"] input[type="password"],
+[data-direction="d"] input[type="number"],
+[data-direction="d"] input[type="search"],
+[data-direction="d"] input[type="tel"],
+[data-direction="d"] input[type="url"],
+[data-direction="d"] input[type="date"],
+[data-direction="d"] input[type="datetime-local"],
+[data-direction="d"] select {
+  min-height: var(--d-h-input);
+  font-size: 14px;
+}
+[data-direction="d"] textarea {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Utility classes — used by admin components for the new scale. */
+.admin-text-body {
+  font-size: var(--admin-body);
+  line-height: var(--admin-body-lh);
+}
+.admin-text-small {
+  font-size: var(--admin-small);
+  line-height: 1.55;
+}
+.admin-text-label {
+  font-size: var(--admin-label);
+  line-height: 1.4;
+}
+.admin-text-input {
+  font-size: var(--admin-input);
+}
+.admin-hit {
+  min-width: var(--admin-hit);
+  min-height: var(--admin-hit);
+}
+.admin-input-h {
+  min-height: var(--admin-input-h);
+}
+.admin-row-h {
+  min-height: var(--admin-row-h);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   DIRECTION D — "Linear-warm" admin theme.
+
+   Ratified design system (see "Direction D · Design Tokens" doc). A
+   dense operator UI on warm cream paper, single terracotta accent,
+   editorial display numerics. Scoped to the admin shell via
+   `[data-direction="d"]` — the public storefront keeps Playfair/Inter
+   and is completely unaffected.
+
+   Two layers:
+     1. TOKEN CONTRACT — the verbatim `--d-*` variables. Bespoke
+        Direction D components reference these directly.
+     2. BRIDGE — remaps the existing admin Tailwind theme variables
+        (`--color-*`, `--font-*`, density) to Direction D values *while
+        scoped*. This is what re-skins all ~30 existing admin pages
+        without rewriting each one: `bg-surface`, `text-primary-deep`,
+        `border-border-soft`, `font-sans` etc. all resolve through
+        these overridden custom properties.
+   ═══════════════════════════════════════════════════════════════════ */
+
+[data-direction="d"] {
+  /* ── 1 · TOKEN CONTRACT (verbatim) ─────────────────────────────── */
+  /* Nordic Steel — admin reskin (handoff design_handoff_nordic_steel).
+     Body Inter, display Playfair, mono unchanged. No General Sans. */
+  --d-font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
+  --d-font-display: var(--font-playfair), Georgia, serif;
+  --d-font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+
+  --d-bg: #fbfaf7;        /* off-white paper — page bg */
+  --d-surface: #ffffff;   /* cards, inputs, hover rows */
+  --d-surface-2: #f4f0e8; /* light cream — sidebar / secondary / badge */
+
+  --d-ink: #0a0a0a;
+  --d-ink-2: #3a3d45;
+  --d-ink-3: #71757d;
+  --d-muted: #9da0a6;
+
+  --d-line: #e5e1d6;
+  --d-line-soft: #efede6;
+  --d-line-strong: #d3cdba;
+
+  --d-accent: #1e3a5f;    /* deep clinical blue */
+  --d-accent-2: #0f2440;  /* midnight */
+  --d-accent-soft: #dde3ed;
+  --d-accent-ink: #fbfaf7;
+
+  --d-success: #7a8b6f;   /* sage — positive delta + italic flourish */
+  --d-success-soft: #dfe4d6;
+  --d-warn: #a36818;
+  --d-warn-soft: #eed9b0;
+  --d-danger: #9a4332;
+  --d-danger-soft: #ead0c8;
+
+  /* type scale */
+  --d-fs-9: 10px;
+  --d-fs-10: 11px;
+  --d-fs-11: 12px;
+  --d-fs-12: 13px;
+  --d-fs-13: 14px;
+  --d-tracking-mono: 0.12em;
+  --d-tracking-display: -0.015em;
+  --d-tracking-title: -0.01em;
+  --d-lh-tight: 1.05;
+  --d-lh-body: 1.45;
+
+  /* space / shape / motion */
+  --d-s-1: 4px;
+  --d-s-2: 8px;
+  --d-s-3: 12px;
+  --d-s-4: 16px;
+  --d-s-5: 20px;
+  --d-s-6: 24px;
+  --d-s-7: 32px;
+  --d-s-8: 36px;
+  --d-s-9: 48px;
+  --d-h-pill: 20px;
+  --d-h-nav: 26px;
+  --d-h-btn: 28px;
+  --d-h-input: 28px;
+  --d-h-row: 36px;
+  --d-r-pill: 3px;
+  --d-r-1: 4px;
+  --d-r-2: 5px;
+  --d-r-3: 6px;
+  --d-t-fast: 100ms;
+  --d-t: 160ms;
+  --d-ease: cubic-bezier(0.2, 0.6, 0.2, 1);
+
+  /* ── 2 · BRIDGE → existing admin Tailwind theme vars ───────────── */
+  /* Surfaces */
+  --color-surface: var(--d-bg);
+  --color-surface-alt: var(--d-surface);
+  --color-surface-warm: var(--d-surface-2);
+  /* Ink */
+  --color-ink: var(--d-ink);
+  --color-ink-body: var(--d-ink-2);
+  --color-ink-mute: var(--d-ink-3);
+  --color-ink-soft: var(--d-muted);
+  /* Lines */
+  --color-border: var(--d-line);
+  --color-border-soft: var(--d-line-soft);
+  /* Brand "primary" → ink (titles, primary CTA = ink-on-cream per the
+     color matrix). The scarce terracotta is applied explicitly by
+     Direction D components, not via the bridged primary token. */
+  --color-primary: var(--d-accent);
+  --color-primary-deep: var(--d-ink);
+  --color-primary-soft: var(--d-accent-2);
+  /* "accent" in legacy admin meant the sage positive/ok colour →
+     Direction D success green so positive deltas stay green, not
+     terracotta (terracotta is signal/CTA only). */
+  --color-accent: var(--d-success);
+  --color-accent-deep: var(--d-success);
+  /* Status — paired ink/fill */
+  --color-status-ok: var(--d-success);
+  --color-status-warn: var(--d-warn);
+  --color-status-warn-text: var(--d-warn);
+  --color-status-error: var(--d-danger);
+  --color-status-low: var(--d-warn);
+  /* Fonts — sans=Hanken (General Sans sub), display=Instrument Serif,
+     plus a mono token so `font-mono` utilities resolve in-scope. */
+  --font-sans: var(--d-font-sans);
+  --font-display: var(--d-font-display);
+  --font-mono: var(--d-font-mono);
+}
+
+/* (The legacy-density counter-override block that used to live here is
+   deleted. It only existed to fight `.admin-shell`'s 14px/48px/
+   ink-mute rules — which no longer exist. Density now comes straight
+   from the single clean base above; `text-ink-mute` resolves to
+   --d-ink-3 via the bridged `--color-ink-mute` token, no override
+   needed.) */
+
+/* ── Direction D type primitives — for the bespoke shell + Översikt
+   rebuild. Components opt in with these classes; the bridge handles
+   everything else. ───────────────────────────────────────────────── */
+/* All type-role classes are prefixed `[data-direction="d"]` so they
+   reach specificity (0,2,x) and beat the legacy density rule
+   `.admin-shell p` (0,1,1) — that selector sets `font-size:
+   var(--admin-body)` on every <p>/<li> and was silently shrinking any
+   role class used on a <p> (e.g. the hero number was rendering at the
+   13px body size instead of 64px). The whole admin shell carries
+   data-direction="d", so the prefix is always satisfied. */
+.d-eyebrow {
+  font-family: var(--d-font-mono);
+  font-size: var(--d-fs-9);
+  font-weight: 600;
+  color: var(--d-muted);
+  letter-spacing: var(--d-tracking-mono);
+  text-transform: uppercase;
+}
+.d-mono {
+  font-family: var(--d-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+/* Serif display roles — EXACT per the Direction D type table. Three
+   distinct specs (size / line-height 1 / tracking), not one shared
+   class. Sizes are fixed: Direction D is a desktop operator UI and the
+   mockup is a fixed comp — "pixel perfect" means these literal values,
+   not a responsive ramp. */
+.d-hero {
+  font-family: var(--d-font-display);
+  font-weight: 400;
+  font-size: 68px;
+  line-height: 1;
+  letter-spacing: -0.025em;
+  color: var(--d-ink);
+}
+.d-title {
+  font-family: var(--d-font-display);
+  font-weight: 400;
+  font-size: 46px;
+  line-height: 1;
+  letter-spacing: -0.015em;
+  color: var(--d-ink);
+}
+.d-kpi {
+  font-family: var(--d-font-display);
+  font-weight: 400;
+  font-size: 27px;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: var(--d-ink);
+}
+/* Back-compat alias — anything still on `.d-display` gets the
+   page-title spec (the most common prior use). Migrate call sites to
+   the explicit role class. */
+.d-display {
+  font-family: var(--d-font-display);
+  font-weight: 400;
+  font-size: 46px;
+  line-height: 1;
+  letter-spacing: -0.015em;
+  color: var(--d-ink);
+}
+.d-display-italic {
+  font-family: var(--d-font-display);
+  font-style: italic;
+  font-weight: 400;
+  /* size / tracking / line-height inherit from the role parent
+     (.d-hero/.d-title) so the italic name matches its heading exactly */
+}
+.d-hint {
+  font-family: var(--d-font-display);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--d-ink-3);
+}
+.d-section-title {
+  font-family: var(--d-font-sans);
+  font-weight: 500;
+  font-size: 17px;
+  line-height: 1.2;
+  letter-spacing: -0.005em;
+  color: var(--d-ink);
+}
+.d-num {
+  font-variant-numeric: tabular-nums;
+}
+/* Currency / percent unit (Direction D rule ix + the hero-number spec
+   "italic unit in Ink 3"). Sits inside a serif stat (.d-hero/.d-kpi),
+   one size smaller, italic, ink-3 — `em` so it scales with whatever
+   stat it's in (64px hero → ~29px unit, 24px KPI → ~11px unit). */
+.d-unit {
+  font-family: var(--d-font-display);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 0.45em;
+  line-height: 1;
+  letter-spacing: normal;
+  color: var(--d-ink-3);
+}
+/* Status pill — paired ink+fill, mono, 9 px, dot prefix (rule vii). */
+.d-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: var(--d-h-pill);
+  padding: 0 7px;
+  border-radius: var(--d-r-pill);
+  font-family: var(--d-font-mono);
+  font-size: var(--d-fs-9);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.d-pill::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+.d-pill-success { background: var(--d-success-soft); color: var(--d-success); }
+.d-pill-warn { background: var(--d-warn-soft); color: var(--d-warn); }
+.d-pill-danger { background: var(--d-danger-soft); color: var(--d-danger); }
+.d-pill-accent { background: var(--d-accent-soft); color: var(--d-accent-2); }
+.d-pill-neutral { background: var(--d-surface-2); color: var(--d-ink-2); }
+/* kbd hint — mono 9, muted, right-edge metadata (rule x). */
+.d-kbd {
+  font-family: var(--d-font-mono);
+  font-size: var(--d-fs-9);
+  font-weight: 600;
+  color: var(--d-muted);
+  letter-spacing: 0.06em;
+}
+

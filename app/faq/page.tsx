@@ -96,6 +96,51 @@ const FAQ_GROUPS: FaqGroup[] = [
         answer:
           "Nej. Vi säljer inga personuppgifter. Vi delar dem endast med de leverantörer vi behöver för att kunna leverera din beställning (PostNord, Klarna) eller skicka transaktionell e-post.",
       },
+      {
+        question: "Hur kontaktar jag er?",
+        answer:
+          "Skicka e-post till kontakt@biomax.nu så svarar vi så snart vi kan. Vi har idag ingen kundtjänst per telefon — all kommunikation går via mejl så att vi kan dokumentera ditt ärende ordentligt.",
+      },
+    ],
+  },
+  {
+    heading: "Prenumeration",
+    items: [
+      {
+        question: "Hur fungerar prenumeration?",
+        answer:
+          "Välj \"Prenumerera\" på en produktsida — du får 10 % rabatt på varje leverans och kan välja intervall (varje månad, varannan månad eller varje kvartal). Du måste vara inloggad. Hantera, pausa eller avsluta från /konto/prenumerationer.",
+      },
+      {
+        question: "Kan jag avsluta prenumerationen när som helst?",
+        answer:
+          "Ja, helt utan kostnad. Inga bindningstider, inga avgifter. Du kan också pausa tillfälligt och återuppta senare.",
+      },
+      {
+        question: "När blir nästa leverans betald?",
+        answer:
+          "Innan varje leverans skickar vi en orderbekräftelse där betalningen genomförs på samma sätt som vid ett vanligt köp. Du har då möjlighet att ändra eller avbryta innan paketet packas.",
+      },
+    ],
+  },
+  {
+    heading: "Innehåll & säkerhet",
+    items: [
+      {
+        question: "Är produkterna veganska / glutenfria / laktosfria?",
+        answer:
+          "Det varierar per produkt — vi har kapslar i veganska skal och kapslar med gelatin. Allergeninformation enligt EU 1169/2011 finns markerad i en gul ruta på varje produktsida. Läs alltid hela innehållsförteckningen om du har en känd intolerans eller allergi.",
+      },
+      {
+        question: "Är era produkter testade?",
+        answer:
+          "Råvarorna analyseras av leverantören enligt gällande EU-regler för kosttillskott. För många ingredienser finns det dessutom oberoende publicerade studier som vi beskriver i kunskapsbanken under varje monografi.",
+      },
+      {
+        question: "Kan jag kombinera flera tillskott samtidigt?",
+        answer:
+          "I de flesta fall ja, men vissa kombinationer (särskilt med receptbelagda läkemedel) kan vara problematiska. Rådfråga läkare eller apotekspersonal om du tar mediciner regelbundet.",
+      },
     ],
   },
 ];

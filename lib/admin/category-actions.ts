@@ -3,21 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "./guard";
+import { slugify } from "@/lib/text/slug";
 
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-
-function slugify(input: string): string {
-  return input
-    .toLowerCase()
-    .trim()
-    .normalize("NFKD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/å/g, "a")
-    .replace(/ä/g, "a")
-    .replace(/ö/g, "o")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
 
 export type CategoryActionResult =
   | { ok: true; slug: string }

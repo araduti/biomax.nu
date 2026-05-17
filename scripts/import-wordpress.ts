@@ -613,9 +613,13 @@ async function main() {
   for (let i = 0; i < wpOrders.length; i += batchSize) {
     const batch = wpOrders.slice(i, i + batchSize);
     const data = batch.map((o) => {
-      // Swedish supplements are 25% VAT, prices stored gross.
-      // VAT = total × (0.25 / 1.25) = total × 0.20
+      // Swedish supplements were 25% VAT pre-2026, prices stored gross.
+      // VAT = total × (0.25 / 1.25) = total × 0.20. taxRateBp = 2500
+      // is persisted on the row so the historical rate survives future
+      // rate changes (schema default was dropped in the post-audit
+      // migration to force callers to be explicit about the rate).
       const taxAmount = Math.round(o.total * 0.2 * 100) / 100;
+      const HISTORICAL_VAT_BP = 2500;
       return {
         orderNumber: `WP-${o.postId}`,
         email: o.email ?? "unknown@biomax.nu",
@@ -627,6 +631,7 @@ async function main() {
         subtotal: o.total, // we don't have line-item breakdown
         totalAmount: o.total,
         taxAmount,
+        taxRateBp: HISTORICAL_VAT_BP,
         legacyWpId: o.postId,
         legacySource: "wp-wxr-2026-05-10",
         createdAt: o.postDate ?? new Date(),

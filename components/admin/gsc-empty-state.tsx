@@ -9,7 +9,7 @@ export function GscEmptyState({
 }) {
   const inner = (
     <>
-      <p className="font-sans text-[10.5px] uppercase tracking-[0.22em] font-semibold text-accent-deep mb-1">
+      <p className="font-sans text-[10.5px] uppercase tracking-[0.16em] font-semibold text-accent-deep mb-1">
         Google Search Console
       </p>
       <h2 className="font-display text-xl font-medium tracking-tight text-primary-deep mb-3">
@@ -57,7 +57,7 @@ export function GscEmptyState({
   }
 
   return (
-    <section className="bg-surface-alt border border-dashed border-border rounded-2xl p-5 md:p-6 h-fit">
+    <section className="bg-surface-alt border border-dashed border-border rounded-xl p-5 md:p-6 h-fit">
       {inner}
     </section>
   );

@@ -74,7 +74,7 @@ export function CategoryMultiselect({
         })}
       </div>
       {value.length === 0 && (
-        <p className="font-sans text-[11.5px] text-[#7A4D2A] italic">
+        <p className="font-sans text-[11.5px] text-status-warn-text italic">
           Utan kategori dyker produkten inte upp på{" "}
           <code className="font-mono">/kategorier</code>-sidorna.
         </p>

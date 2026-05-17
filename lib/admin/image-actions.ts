@@ -3,7 +3,7 @@
 import { writeFile, unlink } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join, extname } from "node:path";
-import { revalidatePath } from "next/cache";
+import { bumpTag, productCacheTag, productListCacheTag } from "@/lib/cache/tags";
 import sharp from "sharp";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "./guard";
@@ -134,13 +134,10 @@ export async function uploadProductImage(
     }
   }
 
-  // Refresh affected views
-  revalidatePath(`/admin/produkter/${slug}`);
-  revalidatePath("/admin/produkter");
-  revalidatePath(`/produkter/${slug}`);
-  revalidatePath("/produkter");
-  revalidatePath("/");
-  revalidatePath("/kategorier");
+  // Tag-scoped: PDP entry for this slug + the shared catalogue/list tag.
+  // Admin views are dynamic; home/category pages share `productListCacheTag`.
+  bumpTag(productCacheTag(slug));
+  bumpTag(productListCacheTag());
 
   return { ok: true, imageUrl: newUrl };
 }
@@ -238,8 +235,7 @@ export async function uploadGalleryImage(
     return { ok: false, error: "Kunde inte uppdatera produkten." };
   }
 
-  revalidatePath(`/admin/produkter/${slug}`);
-  revalidatePath(`/produkter/${slug}`);
+  bumpTag(productCacheTag(slug));
 
   return { ok: true, imageUrl: newUrl };
 }
@@ -305,8 +301,7 @@ export async function setGalleryUrls(
     }
   }
 
-  revalidatePath(`/admin/produkter/${slug}`);
-  revalidatePath(`/produkter/${slug}`);
+  bumpTag(productCacheTag(slug));
 
   return { ok: true, galleryUrls: cleaned };
 }

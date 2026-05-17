@@ -33,6 +33,8 @@ import {
   getRelated,
 } from "@/lib/knowledge/ingredients";
 import { findProductsForIngredient } from "@/lib/knowledge/ingredient-products";
+import { stripHtml } from "@/lib/sanitize";
+import { formatPriceSEK } from "@/lib/format";
 
 type RouteParams = Promise<{ slug: string }>;
 
@@ -156,11 +158,11 @@ export default async function IngredientBuyPage({
                         {p.name}
                       </h3>
                       <p className="mt-2 font-sans text-[14px] text-ink-mute leading-snug line-clamp-2">
-                        {stripHtml(p.shortDescription, 120)}
+                        {stripHtml(p.shortDescription, 120) || ""}
                       </p>
                       <div className="mt-4 flex items-baseline justify-between gap-3">
                         <span className="font-display text-xl text-primary-deep">
-                          {formatPrice(p.price)}
+                          {formatPriceSEK(p.price)}
                         </span>
                         <span className="font-sans text-[12px] text-accent-deep uppercase tracking-[0.18em] font-semibold">
                           {p.inStock ? "Visa →" : "Slut →"}
@@ -239,18 +241,3 @@ export default async function IngredientBuyPage({
   );
 }
 
-function stripHtml(s: string, max: number): string {
-  const t = s
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&[a-z]+;/gi, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  if (t.length <= max) return t;
-  return t.slice(0, max - 1).trimEnd() + "…";
-}
-
-function formatPrice(price: string): string {
-  const n = parseFloat(price);
-  if (!Number.isFinite(n)) return `${price} kr`;
-  return `${Math.round(n).toLocaleString("sv-SE")} kr`;
-}

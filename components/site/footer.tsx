@@ -33,7 +33,7 @@ const COLS = [
   {
     title: "Hjälp",
     links: [
-      { label: "Frakt & retur", href: "/frakt-och-retur" },
+      { label: "Frakt, retur & återbetalning", href: "/frakt-och-retur" },
       { label: "Vanliga frågor", href: "/faq" },
       { label: "Integritet", href: "/integritet" },
       { label: "GDPR", href: "/gdpr" },
@@ -53,14 +53,22 @@ export function Footer() {
                 Sedan 2001 · Kållered
               </span>
             </Link>
-            <p className="mt-6 font-sans text-sm text-surface/70 leading-relaxed max-w-[320px]">
-              Biomax HB · Eken Hälsobutik. Ekenleden 15A, 428 36 Kållered.
-              Familjeägt sedan 2001.
-            </p>
+            {/* Postal-address shape — one line per address part so it
+                reads as an address rather than a comma-stuffed sentence.
+                The "sedan 2001" line lives in the eyebrow above; not
+                worth repeating. `address` element is the right semantic
+                container per HTML5. */}
+            <address className="mt-6 font-sans text-sm text-surface/75 leading-relaxed not-italic">
+              Biomax HB · Eken Hälsobutik
+              <br />
+              Ekenleden 15A
+              <br />
+              428 36 Kållered
+            </address>
           </div>
           {COLS.map((c) => (
             <div key={c.title}>
-              <p className="font-sans text-[11px] uppercase tracking-[0.22em] text-accent font-semibold mb-4">
+              <p className="font-sans text-[11px] uppercase tracking-[0.22em] text-accent-on-dark font-semibold mb-4">
                 {c.title}
               </p>
               <ul className="flex flex-col gap-2.5">

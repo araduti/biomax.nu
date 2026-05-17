@@ -90,7 +90,7 @@ export function InfoBox({
       className={cn(
         "relative rounded-2xl border h-full flex flex-col overflow-hidden",
         variant === "caution"
-          ? "border-[#B5523B]/25 bg-[#B5523B]/[0.04]"
+          ? "border-status-error/25 bg-status-error/[0.04]"
           : "border-border bg-surface-alt"
       )}
     >
@@ -98,7 +98,7 @@ export function InfoBox({
         aria-hidden
         className={cn(
           "absolute top-0 left-0 right-0 h-[3px]",
-          variant === "caution" ? "bg-[#B5523B]/40" : "bg-accent/40"
+          variant === "caution" ? "bg-status-error/40" : "bg-accent/40"
         )}
       />
       <div className="p-6 md:p-7 pt-7 md:pt-8 flex items-center gap-3.5">
@@ -107,7 +107,7 @@ export function InfoBox({
           className={cn(
             "inline-flex items-center justify-center w-9 h-9 rounded-full flex-shrink-0",
             variant === "caution"
-              ? "text-[#B5523B] bg-[#B5523B]/10"
+              ? "text-status-error bg-status-error/10"
               : "text-accent-deep bg-accent/15"
           )}
         >

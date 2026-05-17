@@ -6,6 +6,7 @@ import { Footer } from "@/components/site/footer";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { Display, Eyebrow } from "@/components/ui/typography";
 import { getAllIngredients } from "@/lib/knowledge/ingredients";
+import { getAllSymptoms } from "@/lib/symptoms/registry";
 
 export const metadata: Metadata = {
   title: "Kunskap — Biomax",
@@ -16,7 +17,11 @@ export const metadata: Metadata = {
 
 export default function KunskapPage() {
   const ingredientCount = getAllIngredients().length;
+  const symptomCount = getAllSymptoms().length;
 
+  // Every card here points at a real, live surface. If something isn't
+  // ready yet — leave it out of this list rather than ship a "kommer snart"-
+  // ruta. Tom yta är ärlig, platshållarkort är det inte.
   const sections = [
     {
       slug: "ingredienser",
@@ -27,37 +32,36 @@ export default function KunskapPage() {
       cta: "Utforska bibliotek",
       meta: `${ingredientCount} monografier`,
       href: "/kunskap/ingredienser",
-      live: true,
     },
     {
-      slug: "monografier",
-      eyebrow: "Botaniken",
-      title: "Växtmonografier",
-      blurb:
-        "Djupdykningar i de medicinalväxter vi arbetar med — botanik, etnomedicinsk historia och den moderna forskningens nuläge.",
-      cta: "Kommer snart",
-      meta: "Phase 6",
-      live: false,
-    },
-    {
-      slug: "studier",
-      eyebrow: "Forskningen",
-      title: "Studier & rapporter",
-      blurb:
-        "Sammanfattningar av kliniska studier som ligger till grund för våra produkter, översatta till klarspråk utan att förlora nyansen.",
-      cta: "Kommer snart",
-      meta: "Phase 6",
-      live: false,
-    },
-    {
-      slug: "vagledning",
+      slug: "hjalp",
       eyebrow: "Vägledning",
-      title: "Frågor & svar",
+      title: "Hjälp efter behov",
       blurb:
-        "Stöd kring sömn, magfunktion, immunförsvar och vardagsbalans — formulerat tillsammans med våra terapeuter.",
-      cta: "Kommer snart",
-      meta: "Phase 6",
-      live: false,
+        "Orientering efter besvär snarare än produkt — sömn, oro, mage, leder, urinvägar, energi, immunförsvar. Varje sida samlar de växter och näringsämnen som traditionellt använts inom området.",
+      cta: "Visa alla områden",
+      meta: `${symptomCount} områden`,
+      href: "/hjalp",
+    },
+    {
+      slug: "faq",
+      eyebrow: "Frågor & svar",
+      title: "Vanliga frågor",
+      blurb:
+        "Svar på det vi får frågor om oftast — beställning, betalning, dosering, retur, och hur kosttillskott passar in i en vardag.",
+      cta: "Läs vanliga frågor",
+      meta: "FAQ",
+      href: "/faq",
+    },
+    {
+      slug: "behandlingar",
+      eyebrow: "I butiken",
+      title: "Behandlingar i Kållered",
+      blurb:
+        "Konsultation, håranalys och laserbehandling i butiken på Ekenleden. För dig som vill ha personlig vägledning utöver det vi skriver online.",
+      cta: "Boka eller läs mer",
+      meta: "3 tjänster",
+      href: "/behandlingar",
     },
   ];
 
@@ -91,24 +95,15 @@ export default function KunskapPage() {
           </header>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
-            {sections.map((s) =>
-              s.live ? (
-                <Link
-                  key={s.slug}
-                  href={s.href!}
-                  className="group block bg-surface-alt border border-border rounded-2xl p-7 md:p-8 hover:border-accent hover:bg-surface transition-colors"
-                >
-                  <SectionCard {...s} />
-                </Link>
-              ) : (
-                <div
-                  key={s.slug}
-                  className="bg-surface-alt/60 border border-border-soft rounded-2xl p-7 md:p-8 opacity-75"
-                >
-                  <SectionCard {...s} />
-                </div>
-              )
-            )}
+            {sections.map((s) => (
+              <Link
+                key={s.slug}
+                href={s.href}
+                className="group block bg-surface-alt border border-border rounded-2xl p-7 md:p-8 hover:border-accent hover:bg-surface transition-colors"
+              >
+                <SectionCard {...s} />
+              </Link>
+            ))}
           </div>
         </section>
       </main>
@@ -123,14 +118,12 @@ function SectionCard({
   blurb,
   cta,
   meta,
-  live,
 }: {
   eyebrow: string;
   title: string;
   blurb: string;
   cta: string;
   meta: string;
-  live: boolean;
 }) {
   return (
     <>
@@ -148,12 +141,8 @@ function SectionCard({
       <p className="font-sans text-[15.5px] text-ink-body leading-[1.65] max-w-[480px]">
         {blurb}
       </p>
-      <p
-        className={`mt-5 font-sans text-[12.5px] uppercase tracking-[0.2em] font-semibold ${
-          live ? "text-accent-deep" : "text-ink-soft"
-        }`}
-      >
-        {cta} {live && "→"}
+      <p className="mt-5 font-sans text-[12.5px] uppercase tracking-[0.2em] font-semibold text-accent-deep">
+        {cta} →
       </p>
     </>
   );

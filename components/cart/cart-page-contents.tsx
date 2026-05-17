@@ -1,14 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useCart, selectCartCount, selectCartSubtotal } from "@/lib/cart-store";
+import {
+  useCart,
+  selectCartCount,
+  selectCartSubtotal,
+  selectBundleSavings,
+} from "@/lib/cart-store";
 import { Display, Eyebrow } from "@/components/ui/typography";
 import { ButtonLink } from "@/components/ui/button";
 import { formatPriceSEK } from "@/lib/format";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
+import { useShippingConfig } from "@/lib/site/shipping-config-context";
 import { CartLine } from "./cart-line";
-
-const FREE_SHIPPING_THRESHOLD = 499;
+import { CartBundleGroup, groupCartItems } from "./cart-bundle-group";
+import { CartCrossSells } from "./cart-cross-sells";
+import { LoyaltyEarnPreview } from "./loyalty-earn-preview";
 
 const crumbs = [
   { label: "Hem", href: "/" },
@@ -19,8 +26,11 @@ export function CartPageContents() {
   const items = useCart((s) => s.items);
   const count = useCart(selectCartCount);
   const subtotal = useCart(selectCartSubtotal);
+  const bundleSavings = useCart(selectBundleSavings);
   const hydrated = useCart((s) => s.hydrated);
-  const remainingForFreeShip = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
+  const { freeThresholdSek } = useShippingConfig();
+  const freeShipThreshold = freeThresholdSek ?? Infinity;
+  const remainingForFreeShip = Math.max(0, freeShipThreshold - subtotal);
 
   if (!hydrated) {
     return (
@@ -68,9 +78,22 @@ export function CartPageContents() {
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-12 items-start">
         {/* Lines */}
         <ul className="bg-surface-alt border border-border rounded-2xl px-6 md:px-8">
-          {items.map((item) => (
-            <CartLine key={item.productId} item={item} variant="page" />
-          ))}
+          {groupCartItems(items).map((group) =>
+            group.kind === "line" ? (
+              <CartLine
+                key={`${group.item.productId}::${group.item.variantId ?? ""}::${group.item.bundleId ?? ""}`}
+                item={group.item}
+                variant="page"
+              />
+            ) : (
+              <CartBundleGroup
+                key={group.bundleId}
+                bundleId={group.bundleId}
+                lines={group.lines}
+                variant="page"
+              />
+            )
+          )}
         </ul>
 
         {/* Summary sidebar */}
@@ -81,10 +104,18 @@ export function CartPageContents() {
               <dt>Delsumma</dt>
               <dd className="font-semibold">{formatPriceSEK(subtotal)}</dd>
             </div>
+            {bundleSavings > 0 && (
+              <div className="flex justify-between text-accent-deep">
+                <dt>Paketrabatt</dt>
+                <dd className="font-semibold">
+                  −{formatPriceSEK(bundleSavings)}
+                </dd>
+              </div>
+            )}
             <div className="flex justify-between text-ink-mute">
               <dt>Frakt</dt>
               <dd>
-                {subtotal >= FREE_SHIPPING_THRESHOLD ? (
+                {freeThresholdSek !== null && subtotal >= freeThresholdSek ? (
                   <span className="text-accent-deep font-semibold">Fri ✓</span>
                 ) : (
                   "Beräknas i kassan"
@@ -93,16 +124,20 @@ export function CartPageContents() {
             </div>
           </dl>
 
-          {remainingForFreeShip > 0 && subtotal > 0 && (
+          {freeThresholdSek !== null && remainingForFreeShip > 0 && subtotal > 0 && (
             <div className="mt-5 p-3 rounded-lg bg-surface-warm">
               <p className="font-sans text-[12px] text-ink-body leading-relaxed">
                 <strong className="font-semibold">
                   {formatPriceSEK(remainingForFreeShip)}
                 </strong>{" "}
-                kvar till fri frakt över {formatPriceSEK(FREE_SHIPPING_THRESHOLD)}
+                kvar till fri frakt över {formatPriceSEK(freeThresholdSek)}
               </p>
             </div>
           )}
+
+          <div className="mt-5">
+            <LoyaltyEarnPreview subtotalKr={subtotal} variant="page" />
+          </div>
 
           <div className="mt-6 pt-5 border-t border-border flex items-baseline justify-between">
             <span className="font-display text-xl text-primary-deep">
@@ -132,6 +167,8 @@ export function CartPageContents() {
           </Link>
         </aside>
       </div>
+
+      <CartCrossSells variant="page" />
     </div>
   );
 }

@@ -48,7 +48,7 @@ export function EditorAnchorRail({
       aria-label="Avsnitt"
       className="hidden lg:block sticky top-6 self-start"
     >
-      <p className="font-sans text-[10px] uppercase tracking-[0.22em] font-semibold text-ink-soft mb-3 px-3">
+      <p className="font-sans text-[10px] uppercase tracking-[0.16em] font-semibold text-ink-soft mb-3 px-3">
         Avsnitt
       </p>
       <ul className="flex flex-col">

@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { Eyebrow } from "@/components/ui/typography";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { AdminSummaryStrip } from "@/components/admin/admin-summary-strip";
+import { AdminSection } from "@/components/admin/admin-section";
 import {
   validateSchema,
   detectCannibalisation,
@@ -140,38 +141,40 @@ export default async function AdminSeoPage({
       {tab === "trafik" && (
         <>
           {gscOn && gscSummary ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
-              <SummaryTile
-                label="Klick (28 d)"
-                value={gscSummary.clicks.toLocaleString("sv-SE")}
-                subtle={
-                  gscSummary.previous
+            <AdminSummaryStrip
+              stats={[
+                {
+                  label: "Klick (28 d)",
+                  value: gscSummary.clicks.toLocaleString("sv-SE"),
+                  subtle: gscSummary.previous
                     ? deltaLabel(gscSummary.clicks, gscSummary.previous.clicks)
-                    : undefined
-                }
-                accent="ok"
-              />
-              <SummaryTile
-                label="Visningar (28 d)"
-                value={gscSummary.impressions.toLocaleString("sv-SE")}
-                subtle={
-                  gscSummary.previous
+                    : undefined,
+                  accent: "ok",
+                },
+                {
+                  label: "Visningar (28 d)",
+                  value: gscSummary.impressions.toLocaleString("sv-SE"),
+                  subtle: gscSummary.previous
                     ? deltaLabel(gscSummary.impressions, gscSummary.previous.impressions)
-                    : undefined
-                }
-                accent="ok"
-              />
-              <SummaryTile label="Snitt-CTR" value={fmtCtr(gscSummary.ctr)} accent="muted" />
-              <SummaryTile
-                label="Snittposition"
-                value={fmtPosition(gscSummary.position)}
-                subtle="lägre = bättre"
-                accent="muted"
-              />
-            </div>
+                    : undefined,
+                  accent: "ok",
+                },
+                { label: "Snitt-CTR", value: fmtCtr(gscSummary.ctr), accent: "muted" },
+                {
+                  label: "Snittposition",
+                  value: fmtPosition(gscSummary.position),
+                  subtle: "lägre = bättre",
+                  accent: "muted",
+                },
+              ]}
+            />
           ) : null}
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* 2-col grid with `items-start` so cards keep their natural
+              heights (no row-height stretching when one pair is taller).
+              On trafik tab the pairs balance well: Sökord with Toppsidor
+              (both long), Rankning with Indexering (both short). */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-10 items-start mt-6">
             {gscOn ? (
               <>
                 <GscQueriesCard rows={gscQueries} />
@@ -188,7 +191,7 @@ export default async function AdminSeoPage({
 
       {/* ── TAB: AI-sök ─────────────────────────────────────────────── */}
       {tab === "ai" && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="flex flex-col gap-10 max-w-[920px]">
           <LlmCitationCard
             latest={llmLatest}
             summary={llmSummary}
@@ -200,19 +203,21 @@ export default async function AdminSeoPage({
       {/* ── TAB: Innehållskvalitet ─────────────────────────────────── */}
       {tab === "innehall" && (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
-            <SummaryTile label="Schema OK" value={schemaClean.toString()} accent="ok" />
-            <SummaryTile label="Schema-fel" value={schemaErrors.toString()} accent={schemaErrors > 0 ? "error" : "muted"} />
-            <SummaryTile label="Kannibaliseringar" value={cannibals.length.toString()} accent={cannibals.length > 0 ? "warn" : "muted"} />
-            <SummaryTile
-              label="AI-nyckelord"
-              value={coverage.totalKeywords.toString()}
-              subtle={`${coverage.productsWithKeywords} / ${coverage.productsTotal} produkter`}
-              accent={coverage.orphans.length > 0 ? "warn" : "ok"}
-            />
-          </div>
+          <AdminSummaryStrip
+            stats={[
+              { label: "Schema OK", value: schemaClean.toString(), accent: "ok" },
+              { label: "Schema-fel", value: schemaErrors.toString(), accent: schemaErrors > 0 ? "error" : "muted" },
+              { label: "Kannibaliseringar", value: cannibals.length.toString(), accent: cannibals.length > 0 ? "warn" : "muted" },
+              {
+                label: "AI-nyckelord",
+                value: coverage.totalKeywords.toString(),
+                subtle: `${coverage.productsWithKeywords} / ${coverage.productsTotal} produkter`,
+                accent: coverage.orphans.length > 0 ? "warn" : "ok",
+              },
+            ]}
+          />
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-10 items-start">
             <SchemaCard reports={schemaReports} />
             <CannibalisationCard items={cannibals} />
             <KeywordCoverageCard coverage={coverage} />
@@ -237,7 +242,7 @@ function GscQueriesCard({
   rows: Awaited<ReturnType<typeof getTopQueries>>;
 }) {
   return (
-    <Card title="Sökord (28 dagar)" eyebrow="Google Search Console">
+    <AdminSection title="Sökord (28 dagar)" eyebrow="Google Search Console">
       <p className="font-sans text-[13px] text-ink-mute leading-relaxed mb-4">
         Faktiska söktermer som visat oss på Google. Här hittar du intent du
         kanske inte täcker än — lägg till som AI-nyckelord på relevant produkt.
@@ -266,7 +271,7 @@ function GscQueriesCard({
           ))}
         </ul>
       )}
-    </Card>
+    </AdminSection>
   );
 }
 
@@ -276,7 +281,7 @@ function GscPagesCard({
   rows: Awaited<ReturnType<typeof getTopPages>>;
 }) {
   return (
-    <Card title="Toppsidor (28 dagar)" eyebrow="Google Search Console">
+    <AdminSection title="Toppsidor (28 dagar)" eyebrow="Google Search Console">
       <p className="font-sans text-[13px] text-ink-mute leading-relaxed mb-4">
         Sidor som drar mest organisk trafik. Sortera mentalt på &quot;hög
         impressions, låg CTR&quot; — det är där meta-titel/beskrivning kan
@@ -314,7 +319,7 @@ function GscPagesCard({
           })}
         </ul>
       )}
-    </Card>
+    </AdminSection>
   );
 }
 
@@ -327,7 +332,7 @@ function SchemaCard({
 }) {
   const issues = reports.filter((r) => r.issues.length > 0);
   return (
-    <Card title="Strukturerad data" eyebrow="schema.org-validering">
+    <AdminSection title="Strukturerad data" eyebrow="schema.org-validering">
       <p className="font-sans text-[13px] text-ink-mute leading-relaxed mb-4">
         Strukturkontroll mot vad våra JSON-LD-renderare förväntar sig.
         Lättviktig — täcker fältnärvaro och uppenbara typfel, inte allt
@@ -358,7 +363,7 @@ function SchemaCard({
                 >
                   {r.page}
                 </Link>
-                <span className="font-sans text-[10.5px] uppercase tracking-[0.18em] font-semibold text-ink-soft whitespace-nowrap">
+                <span className="font-sans text-[10.5px] uppercase tracking-[0.16em] font-semibold text-ink-soft whitespace-nowrap">
                   {r.type}
                 </span>
               </div>
@@ -367,7 +372,7 @@ function SchemaCard({
                   <li
                     key={j}
                     className={`flex gap-2 items-baseline font-sans text-[12.5px] ${
-                      it.severity === "error" ? "text-[#B5523B]" : "text-[#7A4D2A]"
+                      it.severity === "error" ? "text-status-error" : "text-status-warn-text"
                     }`}
                   >
                     <span aria-hidden className="flex-shrink-0">
@@ -388,7 +393,7 @@ function SchemaCard({
           +{issues.length - 12} fler sidor med varningar — visa de viktigaste först.
         </p>
       )}
-    </Card>
+    </AdminSection>
   );
 }
 
@@ -398,7 +403,7 @@ function CannibalisationCard({
   items: Awaited<ReturnType<typeof detectCannibalisation>>;
 }) {
   return (
-    <Card title="Kannibalisering" eyebrow="Konkurrerande nyckelord">
+    <AdminSection title="Kannibalisering" eyebrow="Konkurrerande nyckelord">
       <p className="font-sans text-[13px] text-ink-mute leading-relaxed mb-4">
         Sidor som riktar sig mot samma nyckelord. Google rankar bara en —
         konsolidera, gör en kanonisk eller skifta inriktningen för dubbletter.
@@ -412,13 +417,13 @@ function CannibalisationCard({
           {items.map((c, i) => (
             <li
               key={i}
-              className="rounded-xl border border-[#C68A4F]/30 bg-[#C68A4F]/[0.05] p-3"
+              className="rounded-xl border border-status-warn/30 bg-status-warn/[0.05] p-3"
             >
               <div className="flex items-baseline justify-between gap-3 mb-1">
-                <span className="font-display text-[15px] font-medium text-primary-deep">
+                <span className="font-sans text-[13.5px] font-semibold text-primary-deep">
                   &quot;{c.keyword}&quot;
                 </span>
-                <span className="font-sans text-[10.5px] uppercase tracking-[0.18em] font-semibold text-[#7A4D2A]">
+                <span className="font-sans text-[10.5px] uppercase tracking-[0.16em] font-semibold text-status-warn-text">
                   {c.source === "seoFocusKw" ? "Fokus" : "AI-kluster"} · {c.pages.length} sidor
                 </span>
               </div>
@@ -439,7 +444,7 @@ function CannibalisationCard({
           ))}
         </ul>
       )}
-    </Card>
+    </AdminSection>
   );
 }
 
@@ -449,14 +454,14 @@ function KeywordCoverageCard({
   coverage: Awaited<ReturnType<typeof getKeywordCoverage>>;
 }) {
   return (
-    <Card title="Nyckelordstäckning" eyebrow="AI- & LLM-intent">
+    <AdminSection title="Nyckelordstäckning" eyebrow="AI- & LLM-intent">
       <p className="font-sans text-[13px] text-ink-mute leading-relaxed mb-4">
         AI-nyckelord (intent-kluster) tilldelade per produkt. Hjälper oss att
         rankas i AI-sök och att se var täckningen är tunn.
       </p>
 
       {coverage.orphans.length > 0 && (
-        <div className="mb-4 rounded-xl border border-[#B5523B]/25 bg-[#B5523B]/[0.04] px-3 py-2.5">
+        <div className="mb-4 rounded-xl border border-status-error/25 bg-status-error/[0.04] px-3 py-2.5">
           <p className="font-sans text-[12.5px] font-semibold text-[#7A331E] mb-1">
             {coverage.orphans.length}{" "}
             {coverage.orphans.length === 1 ? "produkt utan" : "produkter utan"} nyckelord
@@ -502,7 +507,7 @@ function KeywordCoverageCard({
           )}
         </ul>
       )}
-    </Card>
+    </AdminSection>
   );
 }
 
@@ -515,7 +520,7 @@ function IndexCoverageCard({
 }) {
   if (summary.total === 0) {
     return (
-      <Card title="Indexering" eyebrow="Google URL Inspection">
+      <AdminSection title="Indexering" eyebrow="Google URL Inspection">
         <p className="font-sans text-[13px] text-ink-mute leading-relaxed mb-3">
           Visar om Google har den faktiska sidan i sitt index. Kräver att GSC är
           anslutet och att veckokronan har körts minst en gång.
@@ -533,12 +538,12 @@ function IndexCoverageCard({
             Anslut GSC först — se ADR 0014.
           </p>
         )}
-      </Card>
+      </AdminSection>
     );
   }
 
   return (
-    <Card title="Indexering" eyebrow="Google URL Inspection">
+    <AdminSection title="Indexering" eyebrow="Google URL Inspection">
       <p className="font-sans text-[13px] text-ink-mute leading-relaxed mb-4">
         Är våra sidor faktiskt i Googles index? Veckokronan
         kontrollerar varje publicerad URL.
@@ -566,8 +571,8 @@ function IndexCoverageCard({
               const badge = indexBadge(p.verdict);
               const dot =
                 badge.tone === "ok" ? "bg-accent-deep"
-                : badge.tone === "warn" ? "bg-[#C68A4F]"
-                : badge.tone === "error" ? "bg-[#B5523B]"
+                : badge.tone === "warn" ? "bg-status-warn"
+                : badge.tone === "error" ? "bg-status-error"
                 : "bg-ink-soft";
               const path = (() => {
                 try {
@@ -598,7 +603,7 @@ function IndexCoverageCard({
           </ul>
         </>
       )}
-    </Card>
+    </AdminSection>
   );
 }
 
@@ -613,7 +618,7 @@ function LlmCitationCard({
 }) {
   if (!llmOn && latest.length === 0) {
     return (
-      <Card title="AI-citeringar" eyebrow="LLM-spårning">
+      <AdminSection title="AI-citeringar" eyebrow="LLM-spårning">
         <p className="font-sans text-[13px] text-ink-mute leading-relaxed mb-3">
           Provkör Claude / ChatGPT / valfri OpenAI-kompatibel modell mot
           kuraterade prompts (svenska sökintents) och se om svaret nämner
@@ -638,12 +643,12 @@ function LlmCitationCard({
           Se ADR 0015 för uppstart. Funkar mot Anthropic, OpenAI, Mistral,
           Together, Groq och självhostad Ollama / LiteLLM / vLLM.
         </p>
-      </Card>
+      </AdminSection>
     );
   }
 
   return (
-    <Card title="AI-citeringar" eyebrow="LLM-spårning">
+    <AdminSection title="AI-citeringar" eyebrow="LLM-spårning">
       <p className="font-sans text-[13px] text-ink-mute leading-relaxed mb-4">
         Får vi nämnande i AI-svar (ChatGPT, Claude, Perplexity, Gemini)? Vecka
         för vecka mot {LLM_PROMPTS.length} kuraterade prompts.
@@ -669,8 +674,8 @@ function LlmCitationCard({
             const dot = l.cited
               ? l.linked
                 ? "bg-accent-deep"
-                : "bg-[#C68A4F]"
-              : "bg-[#B5523B]";
+                : "bg-status-warn"
+              : "bg-status-error";
             const status = l.linked
               ? "Länkad"
               : l.cited
@@ -704,7 +709,7 @@ function LlmCitationCard({
           {LLM_PROMPTS.length - latest.length} av {LLM_PROMPTS.length} saknas.
         </p>
       )}
-    </Card>
+    </AdminSection>
   );
 }
 
@@ -716,7 +721,7 @@ function PositionAlertsCard({
   gscOn: boolean;
 }) {
   return (
-    <Card title="Rankningsvarningar" eyebrow="Positions- & klicktapp">
+    <AdminSection title="Rankningsvarningar" eyebrow="Positions- & klicktapp">
       <p className="font-sans text-[13px] text-ink-mute leading-relaxed mb-4">
         Sökord som tappat position eller klick under senaste 7 dagarna jämfört
         med veckan dessförinnan. Beräknat från lokalt sparad GSC-historik —
@@ -733,10 +738,10 @@ function PositionAlertsCard({
           {alerts.map((a, i) => {
             const tone =
               a.kind === "page1-drop"
-                ? "bg-[#B5523B]"
+                ? "bg-status-error"
                 : a.kind === "position-drop"
-                  ? "bg-[#C68A4F]"
-                  : "bg-[#7A4D2A]";
+                  ? "bg-status-warn"
+                  : "bg-status-warn-text";
             const path = (() => {
               try {
                 return new URL(a.page).pathname;
@@ -774,7 +779,7 @@ function PositionAlertsCard({
           })}
         </ul>
       )}
-    </Card>
+    </AdminSection>
   );
 }
 
@@ -791,13 +796,13 @@ function MiniCount({
     tone === "ok"
       ? "text-accent-deep"
       : tone === "warn"
-        ? "text-[#7A4D2A]"
+        ? "text-status-warn-text"
         : tone === "error"
-          ? "text-[#B5523B]"
+          ? "text-status-error"
           : "text-ink-mute";
   return (
     <div className="bg-surface rounded-lg border border-border-soft p-2 text-center">
-      <p className={`font-display text-[20px] font-medium tabular-nums ${valueColor}`}>
+      <p className={`font-sans text-[16px] font-semibold tabular-nums ${valueColor}`}>
         {value}
       </p>
       <p className="font-sans text-[10.5px] uppercase tracking-[0.16em] font-semibold text-ink-mute mt-0.5">
@@ -813,7 +818,7 @@ function ContentDepthCard({
   rows: Awaited<ReturnType<typeof getContentDepth>>;
 }) {
   return (
-    <Card title="Innehållsdjup" eyebrow="Per produktsida">
+    <AdminSection title="Innehållsdjup" eyebrow="Per produktsida">
       <p className="font-sans text-[13px] text-ink-mute leading-relaxed mb-4">
         Sammansatt poäng från ord, rubriker, bilder, ingredienstabell och FAQ.
         Svagaste sidor först — det här är arbetslistan.
@@ -827,11 +832,11 @@ function ContentDepthCard({
           {rows.slice(0, 12).map((r, i) => (
             <li key={i} className="px-1 py-2.5 flex items-baseline gap-3">
               <span
-                className={`inline-block w-12 text-right font-display text-[15px] font-medium tabular-nums ${
+                className={`inline-block w-12 text-right font-sans text-[13.5px] font-semibold tabular-nums ${
                   r.score < 50
-                    ? "text-[#B5523B]"
+                    ? "text-status-error"
                     : r.score < 75
-                      ? "text-[#7A4D2A]"
+                      ? "text-status-warn-text"
                       : "text-accent-deep"
                 }`}
               >
@@ -852,68 +857,6 @@ function ContentDepthCard({
           ))}
         </ul>
       )}
-    </Card>
-  );
-}
-
-// ─── Tile primitives ──────────────────────────────────────────────────
-
-function SummaryTile({
-  label,
-  value,
-  subtle,
-  accent,
-}: {
-  label: string;
-  value: string;
-  subtle?: string;
-  accent: "ok" | "warn" | "error" | "muted";
-}) {
-  const palette: Record<typeof accent, string> = {
-    ok: "border-accent",
-    warn: "border-[#C68A4F]",
-    error: "border-[#B5523B]",
-    muted: "border-border",
-  };
-  const valueColor: Record<typeof accent, string> = {
-    ok: "text-accent-deep",
-    warn: "text-[#7A4D2A]",
-    error: "text-[#B5523B]",
-    muted: "text-primary-deep",
-  };
-  return (
-    <div className={`bg-surface-alt rounded-2xl p-4 border ${palette[accent]}`}>
-      <p className="font-sans text-[10px] uppercase tracking-[0.22em] text-ink-mute font-semibold">
-        {label}
-      </p>
-      <p className={`mt-1 font-display text-2xl md:text-[28px] font-medium tracking-tight ${valueColor[accent]}`}>
-        {value}
-      </p>
-      {subtle && (
-        <p className="mt-0.5 font-sans text-[11.5px] text-ink-mute">{subtle}</p>
-      )}
-    </div>
-  );
-}
-
-function Card({
-  title,
-  eyebrow,
-  children,
-}: {
-  title: string;
-  eyebrow: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="bg-surface-alt border border-border rounded-2xl p-5 md:p-6 h-fit">
-      <p className="font-sans text-[10.5px] uppercase tracking-[0.22em] font-semibold text-accent-deep mb-1">
-        {eyebrow}
-      </p>
-      <h2 className="font-display text-xl font-medium tracking-tight text-primary-deep mb-4">
-        {title}
-      </h2>
-      {children}
-    </section>
+    </AdminSection>
   );
 }

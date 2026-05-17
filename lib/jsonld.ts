@@ -206,6 +206,66 @@ export function definedTermLd(input: {
 }
 
 /**
+ * WebSite + SearchAction for the homepage. Drives Google's sitelinks
+ * searchbox — the in-SERP search input under our brand result. The
+ * `urlTemplate` points at /sok which we wire below; the `{search_term_string}`
+ * literal is the Schema.org-mandated placeholder.
+ *
+ * Render once, on the homepage, *not* on every page (per Google's
+ * sitelinks searchbox guidelines).
+ */
+export function websiteLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Biomax",
+    url: SITE,
+    inLanguage: "sv-SE",
+    publisher: { "@type": "Organization", name: "Biomax", url: SITE },
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${SITE}/sok?q={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
+  };
+}
+
+/**
+ * Per-review JSON-LD for a product page. Renders alongside the existing
+ * Product+AggregateRating schema so individual reviews show up in
+ * Google's review-snippet eligibility check.
+ */
+export function reviewLd(input: {
+  productName: string;
+  rating: number;
+  body: string;
+  authorName: string;
+  /** ISO string. */
+  datePublished: string;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Review",
+    itemReviewed: {
+      "@type": "Product",
+      name: input.productName,
+    },
+    reviewRating: {
+      "@type": "Rating",
+      ratingValue: input.rating,
+      bestRating: 5,
+      worstRating: 1,
+    },
+    author: { "@type": "Person", name: input.authorName },
+    reviewBody: input.body,
+    datePublished: input.datePublished,
+  };
+}
+
+/**
  * FAQPage schema for product pages. Google rewards the rich result and LLMs
  * lift atomic Q&A pairs verbatim — both are well-served by structured FAQ.
  */

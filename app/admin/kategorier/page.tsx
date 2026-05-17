@@ -30,7 +30,7 @@ export default async function AdminCategoriesPage() {
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 items-start">
-        <div className="bg-surface-alt border border-border rounded-2xl overflow-hidden">
+        <div className="bg-surface-alt border border-border rounded-xl overflow-hidden">
           {categories.length === 0 ? (
             <p className="p-6 font-sans text-[14px] text-ink-mute italic">
               Inga kategorier än — skapa den första till höger.
@@ -66,13 +66,13 @@ export default async function AdminCategoriesPage() {
         </div>
 
         <aside>
-          <div className="bg-surface-alt border border-border rounded-2xl p-5">
-            <h2 className="font-display text-[18px] font-medium tracking-tight text-primary-deep mb-1">
-              Ny kategori
-            </h2>
-            <p className="font-sans text-[12.5px] text-ink-mute mb-4 leading-relaxed">
-              Slug genereras från namnet om du lämnar det tomt.
-            </p>
+          <h2 className="font-sans text-[15px] font-semibold tracking-tight text-primary-deep">
+            Ny kategori
+          </h2>
+          <p className="mt-1 mb-3 font-sans text-[12.5px] text-ink-mute leading-relaxed">
+            Slug genereras från namnet om du lämnar det tomt.
+          </p>
+          <div className="border border-border-soft rounded-xl p-5">
             <CategoryCreateForm />
           </div>
         </aside>

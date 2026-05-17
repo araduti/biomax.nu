@@ -34,6 +34,11 @@ yarn-error.log*
 .env
 .env.local
 .env.*.local
+# Any env variant + ad-hoc backups (e.g. .env.local.cibak, .env.bak).
+# Belt-and-braces so a transient backup can never be committed.
+.env.*
+*.cibak
+!.env.example
 # .env.example is intentionally committed
 
 # WordPress migration exports — contain PII, large binary, never commit
@@ -49,3 +54,37 @@ next-env.d.ts
 
 # Lighthouse CI artefacts
 .lighthouseci/
+
+# ── Secrets — credential files (NEVER commit) ────────────────────────
+# Google Cloud / GCP service-account JSON keys. Pattern matches anything
+# named like a key (e.g. biomax-gsc-key.json) regardless of folder.
+*-key.json
+*-keyfile.json
+*service-account*.json
+*credentials*.json
+*.serviceaccount.json
+# Other credential file shapes
+*.key
+secrets/
+.secrets/
+
+# ── Editor / tooling local state ─────────────────────────────────────
+# Claude Code's per-machine session + settings (e.g. settings.local.json)
+# stay out of the repo, but shared team subagents under .claude/agents/
+# (and project commands) ARE committed so the whole team gets them.
+.claude/*
+!.claude/agents/
+!.claude/commands/
+
+# ── User-uploaded runtime assets ─────────────────────────────────────
+# Hero photos editors upload from /admin/startsida/hero land here.
+# They're production state, not source code — never commit. Production
+# environments mount object storage instead. Pre-commit hero photos
+# (seeded migration thumbnails) point at Unsplash URLs and aren't on
+# disk, so this rule has no false positives today.
+/public/uploads/
+# Carrier-issued shipping-label PDFs written at booking time by
+# lib/postnord/booking.ts. Re-fetchable from PostNord by shipment id —
+# never source-controlled, never committed (contains customer
+# addresses).
+/public/labels/

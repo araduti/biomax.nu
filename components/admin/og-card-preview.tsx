@@ -43,7 +43,7 @@ export function OgCardPreview({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <p className="font-sans text-[10px] uppercase tracking-[0.22em] font-semibold text-ink-mute">
+        <p className="font-sans text-[10px] uppercase tracking-[0.16em] font-semibold text-ink-mute">
           Sociala kort — förhandsvisning
         </p>
         <div className="flex rounded-md border border-border overflow-hidden text-[11px] font-sans font-semibold">
@@ -208,7 +208,7 @@ function FallbackChip({
   return (
     <div className="bg-surface-alt border border-border rounded-xl p-3">
       <div className="flex items-baseline justify-between gap-2 mb-1">
-        <span className="font-sans text-[11px] uppercase tracking-[0.18em] font-semibold text-ink-mute">
+        <span className="font-sans text-[11px] uppercase tracking-[0.16em] font-semibold text-ink-mute">
           {label}
         </span>
         {length !== undefined && max !== undefined && (
@@ -216,7 +216,7 @@ function FallbackChip({
             <span
               className={`font-semibold ${
                 length === 0 || length > max
-                  ? "text-[#B5523B]"
+                  ? "text-status-error"
                   : "text-ink-body"
               }`}
             >

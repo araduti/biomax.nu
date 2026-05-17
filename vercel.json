@@ -1,0 +1,24 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/review-requests",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/welcome-series",
+      "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/cron/abandoned-cart",
+      "schedule": "0 */2 * * *"
+    },
+    {
+      "path": "/api/cron/replenishment",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/auth-expiry",
+      "schedule": "30 6 * * *"
+    }
+  ]
+}

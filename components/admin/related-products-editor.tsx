@@ -148,7 +148,7 @@ export function RelatedProductsEditor({
                   onClick={() => unpin(p.slug)}
                   disabled={saving}
                   aria-label="Ta bort"
-                  className="w-7 h-7 inline-flex items-center justify-center rounded-md bg-[#B5523B] text-white hover:bg-[#7A331E] disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="w-7 h-7 inline-flex items-center justify-center rounded-md bg-status-error text-white hover:bg-[#7A331E] disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   ✕
                 </button>
@@ -238,7 +238,7 @@ export function RelatedProductsEditor({
       {error && (
         <p
           role="alert"
-          className="mt-3 font-sans text-[12.5px] text-[#B5523B] bg-[#B5523B]/10 px-3 py-2 rounded-md"
+          className="mt-3 font-sans text-[12.5px] text-status-error bg-status-error/10 px-3 py-2 rounded-md"
         >
           {error}
         </p>

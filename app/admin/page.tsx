@@ -1,28 +1,61 @@
 import Link from "next/link";
-import { Eyebrow } from "@/components/ui/typography";
-import { OrderStatusBadge } from "@/components/admin/order-status-badge";
-import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { DAreaChart } from "@/components/admin/d-area-chart";
+import { OverviewPackTable } from "@/components/admin/overview-pack-table";
 import { formatPriceSEK } from "@/lib/format";
-import { getDashboardStats } from "@/lib/admin/stats";
+import {
+  getDashboardStats,
+  getDailyMetrics,
+  getPackQueue,
+  getBestSellers,
+} from "@/lib/admin/stats";
+import { getAdminBadges } from "@/lib/admin/badges";
+import { getPlausibleSnapshot } from "@/lib/integrations/plausible";
+import { requireAdmin } from "@/lib/admin/guard";
 
-const dateFmt = new Intl.DateTimeFormat("sv-SE", {
-  month: "short",
+/**
+ * Admin overview ("Översikt") — Direction D composition, Phase 1 data.
+ *
+ * Order per the Direction D shell spec: mono date · serif greeting ·
+ * hero numeric + chart · KPI strip · Att packa · Lågt lager +
+ * Bästsäljare. Every figure is real data (getDashboardStats /
+ * getPackQueue / getBestSellers / getDailyMetrics). The only mockup
+ * metric still absent is "Besök/konv." — it needs the Plausible Stats
+ * API (Phase 2), so the strip is 4-up until that lands.
+ */
+
+const eyebrowDateFmt = new Intl.DateTimeFormat("sv-SE", {
+  weekday: "long",
   day: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
+  month: "long",
+  year: "numeric",
 });
 
-const monthFmt = new Intl.DateTimeFormat("sv-SE", { month: "long" });
-
 export default async function AdminOverview() {
-  const s = await getDashboardStats();
-  const monthName = monthFmt.format(new Date());
-  const revenueDelta =
-    s.revenuePrevMonth > 0
-      ? Math.round(
-          ((s.revenueThisMonth - s.revenuePrevMonth) / s.revenuePrevMonth) * 100
-        )
+  const [admin, s, badges, pack, bestSellers, daily, visits] =
+    await Promise.all([
+      requireAdmin(),
+      getDashboardStats(),
+      getAdminBadges(),
+      getPackQueue(8),
+      getBestSellers(7, 4),
+      getDailyMetrics(30),
+      // Isolated from the DB stats: a Plausible outage degrades the
+      // "Besök" KPI to "—", it never breaks the dashboard.
+      getPlausibleSnapshot(),
+    ]);
+  const now = new Date();
+  const firstName = (admin.firstName || admin.name || "Adrian").split(/\s+/)[0];
+  const hour = now.getHours();
+  const greeting =
+    hour < 11 ? "God morgon" : hour < 18 ? "God eftermiddag" : "God kväll";
+
+  // Hero — today vs the same weekday last week.
+  const todayDeltaAbs = s.revenueToday - s.revenueSameWeekdayLastWeek;
+  const todayDeltaPct =
+    s.revenueSameWeekdayLastWeek > 0
+      ? Math.round((todayDeltaAbs / s.revenueSameWeekdayLastWeek) * 100)
       : null;
+
   const ordersDelta =
     s.paidOrdersPrevMonth > 0
       ? Math.round(
@@ -31,171 +64,316 @@ export default async function AdminOverview() {
             100
         )
       : null;
+  const aov =
+    s.paidOrdersThisMonth > 0 ? s.revenueThisMonth / s.paidOrdersThisMonth : 0;
+  const newCustDelta =
+    s.newCustomersPrev > 0
+      ? Math.round(
+          ((s.newCustomers - s.newCustomersPrev) / s.newCustomersPrev) * 100
+        )
+      : null;
+
+  // Besök / konv. — Plausible visitors today + today's conversion
+  // (paid orders ÷ visitors). `visits === null` = not configured or
+  // API down → KPI shows "—". Zero visitors → "0" with no conv. %
+  // (no division-by-zero theatre).
+  const visitsToday = visits?.visitorsToday ?? null;
+  const conversionPct =
+    visitsToday && visitsToday > 0
+      ? (s.paidOrdersToday / visitsToday) * 100
+      : null;
+  const visitsSub =
+    visits === null
+      ? "ej anslutet"
+      : conversionPct !== null
+        ? `${conversionPct.toLocaleString("sv-SE", {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1,
+          })} % konv.`
+        : "idag";
+
+  // Honest todo summary line under the greeting.
+  const summaryParts: string[] = [];
+  if (pack.total > 0) summaryParts.push(`${pack.total} att packa`);
+  if (badges.productsLowStock > 0)
+    summaryParts.push(`${badges.productsLowStock} produkter behöver inköp`);
+  if (badges.returnsToProcess > 0)
+    summaryParts.push(`${badges.returnsToProcess} returer i kö`);
+  if (badges.reviewsToModerate > 0)
+    summaryParts.push(`${badges.reviewsToModerate} recensioner att granska`);
+  const summary =
+    summaryParts.length > 0
+      ? summaryParts.join(" · ")
+      : "Inget kräver din uppmärksamhet just nu — lugnt och fint.";
+
+  const maxUnits = Math.max(1, ...bestSellers.map((b) => b.units));
 
   return (
-    <>
-      <AdminPageHeader
-        eyebrow="Drift"
-        title="Hur går det?"
-        subtitle={`Översikt över ${monthName}. Klicka in på en order eller produkt för detaljer.`}
-      />
+    <div className="flex flex-col gap-8">
+      {/* ── Greeting ─────────────────────────────────────────────── */}
+      <header>
+        <p className="d-eyebrow">{eyebrowDateFmt.format(now)}</p>
+        <h1 className="d-title mt-2.5">
+          {greeting},{" "}
+          <span className="d-display-italic text-[var(--d-ink-3)]">
+            {firstName}
+          </span>
+        </h1>
+        <p className="mt-2.5 font-sans text-[14px] text-[var(--d-ink-2)]">
+          {summary}
+        </p>
+      </header>
 
-      {/* Headline KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-        <Kpi
-          label={`Intäkter ${monthName}`}
-          value={formatPriceSEK(s.revenueThisMonth)}
-          delta={revenueDelta}
-        />
-        <Kpi
-          label={`Ordrar ${monthName}`}
-          value={s.paidOrdersThisMonth.toString()}
-          delta={ordersDelta}
-        />
-        <Kpi
-          label="Att skicka"
-          value={s.paidCount.toString()}
-          accent={s.paidCount > 0}
-        />
-        <Kpi
-          label="Att hantera"
-          value={s.pendingCount.toString()}
-          accent={s.pendingCount > 0}
-        />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-6">
-        {/* Recent orders */}
-        <section>
-          <div className="flex items-baseline justify-between mb-4">
-            <h2 className="font-display text-2xl font-medium tracking-tight text-primary-deep">
-              Senaste ordrar
-            </h2>
-            <Link
-              href="/admin/ordrar"
-              className="font-sans text-[13px] font-semibold text-primary border-b border-primary/40 pb-0.5 hover:border-primary"
-            >
-              Alla ordrar →
-            </Link>
-          </div>
-          <ul className="bg-surface-alt border border-border rounded-2xl overflow-hidden">
-            {s.recentOrders.map((o, i) => (
-              <li
-                key={o.id}
-                className={i > 0 ? "border-t border-border-soft" : ""}
+      {/* ── Hero numeric + chart ─────────────────────────────────── */}
+      {/* No top border here — the mockup separates the greeting from
+          the hero numeric with whitespace only. The first horizontal
+          rule is on the KPI strip (hero → KPI), not greeting → hero. */}
+      <section className="grid grid-cols-1 lg:grid-cols-[minmax(0,360px)_1fr] gap-8 lg:gap-0 items-end">
+        <div className="lg:pr-12">
+          <p className="d-eyebrow">Intäkter · idag</p>
+          <p className="d-hero d-num mt-2">
+            <Stat value={formatPriceSEK(s.revenueToday)} />
+          </p>
+          <div className="mt-3 flex items-center gap-2.5">
+            {todayDeltaPct !== null && (
+              <span
+                className={`d-pill ${
+                  todayDeltaPct >= 0 ? "d-pill-success" : "d-pill-danger"
+                }`}
               >
-                <Link
-                  href={`/admin/ordrar/${o.orderNumber}`}
-                  className="grid grid-cols-[1fr_auto_auto] items-center gap-4 px-5 py-4 hover:bg-surface-warm transition-colors"
-                >
-                  <div className="min-w-0">
-                    <p className="font-display text-[14px] font-medium tracking-tight text-primary-deep">
-                      {o.orderNumber}
-                    </p>
-                    <p className="font-sans text-[12px] text-ink-mute mt-0.5 truncate">
-                      {o.email} · {dateFmt.format(o.createdAt)} · {o._count.items}{" "}
-                      st
-                    </p>
-                  </div>
-                  <OrderStatusBadge status={o.status} />
-                  <span className="font-display text-[15px] font-medium text-primary-deep tracking-tight whitespace-nowrap min-w-[80px] text-right">
-                    {formatPriceSEK(o.totalAmount.toString())}
-                  </span>
-                </Link>
-              </li>
-            ))}
-            {s.recentOrders.length === 0 && (
-              <li className="px-5 py-8 text-center font-sans text-[14px] text-ink-mute">
-                Inga ordrar än.
-              </li>
+                {todayDeltaPct >= 0 ? "↑" : "↓"} {Math.abs(todayDeltaPct)}%
+              </span>
             )}
-          </ul>
-        </section>
+            <span className="font-mono text-[12px] text-[var(--d-ink-3)] tabular-nums">
+              {todayDeltaAbs >= 0 ? "+" : "−"}
+              {formatPriceSEK(Math.abs(todayDeltaAbs))} vs samma dag förra
+              veckan
+            </span>
+          </div>
+        </div>
+        <div className="min-w-0 lg:border-l lg:border-[var(--d-line)] lg:pl-12">
+          <DAreaChart
+            data={daily.revenue}
+            height={96}
+            ariaLabel="Intäkter senaste 30 dagarna"
+          />
+          <div className="mt-1.5 flex justify-between font-mono text-[10px] tracking-[0.12em] uppercase text-[var(--d-muted)]">
+            <span>30d</span>
+            <span>23d</span>
+            <span>16d</span>
+            <span>9d</span>
+            <span>idag</span>
+          </div>
+        </div>
+      </section>
 
-        {/* Side panels */}
-        <aside className="flex flex-col gap-6">
-          <div className="bg-surface-alt border border-border rounded-2xl p-5">
-            <h3 className="font-display text-xl font-medium tracking-tight text-primary-deep mb-4">
-              Lågt lager
-            </h3>
-            {s.lowStock.length === 0 ? (
-              <p className="font-sans text-[13px] text-ink-mute italic">
-                Allt välfyllt — inga produkter under 5 st.
-              </p>
-            ) : (
-              <ul className="flex flex-col gap-2">
-                {s.lowStock.map((p) => (
-                  <li
-                    key={p.id}
-                    className="flex items-baseline justify-between gap-2"
+      {/* ── KPI strip — 5-up (Direction D rule: 5-up by default) ── */}
+      <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 border-t border-[var(--d-line)] divide-y sm:divide-y-0 sm:divide-x divide-[var(--d-line-soft)]">
+        <Kpi
+          label="Betalda ordrar"
+          value={s.paidOrdersThisMonth.toLocaleString("sv-SE")}
+          delta={ordersDelta}
+          sub="denna månad"
+        />
+        <Kpi
+          label="Snittordervärde"
+          value={aov > 0 ? formatPriceSEK(aov) : "—"}
+          delta={null}
+          sub={`${s.paidOrdersThisMonth} ordrar`}
+        />
+        <Kpi
+          label="Besök"
+          value={
+            visitsToday !== null ? visitsToday.toLocaleString("sv-SE") : "—"
+          }
+          delta={null}
+          sub={visitsSub}
+        />
+        <Kpi
+          label="Nya kunder"
+          value={s.newCustomers.toLocaleString("sv-SE")}
+          delta={newCustDelta}
+          sub="rull. 30 d"
+        />
+        <Kpi
+          label="Återköpsfrekvens"
+          value={`${s.repurchaseRate} %`}
+          delta={null}
+          sub={`${s.repurchaseActiveCustomers} aktiva · 90 d`}
+        />
+      </section>
+
+      {/* ── Att packa ────────────────────────────────────────────── */}
+      <DSection
+        title="Att packa"
+        hint={
+          pack.total === 0
+            ? "allt skickat"
+            : pack.oldestAgeHours !== null
+              ? `${pack.total} ${pack.total === 1 ? "order" : "ordrar"} · äldsta sedan ${pack.oldestAgeHours} ${
+                  pack.oldestAgeHours === 1 ? "timme" : "timmar"
+                }`
+              : `${pack.total} ${pack.total === 1 ? "order" : "ordrar"}`
+        }
+        cta={{ href: "/admin/packlista", label: "Öppna packlista" }}
+      >
+        <OverviewPackTable rows={pack.rows} />
+        {pack.total > pack.rows.length && (
+          <p className="d-hint mt-3 pl-1">
+            Visar {pack.rows.length} av {pack.total} — se hela kön i
+            packlistan.
+          </p>
+        )}
+      </DSection>
+
+      {/* ── Lågt lager + Bästsäljare ─────────────────────────────── */}
+      <div className="grid grid-cols-1 min-[1080px]:grid-cols-2 gap-8">
+        <DSection
+          title="Lågt lager"
+          hint={`${s.lowStock.length} under påfyllningsgräns`}
+          cta={{ href: "/admin/lager", label: "Till lager" }}
+        >
+          {s.lowStock.length === 0 ? (
+            <p className="d-hint py-6">
+              Inga publicerade produkter under tröskeln.
+            </p>
+          ) : (
+            <ul>
+              {s.lowStock.map((p, i) => (
+                <li
+                  key={`${p.kind}-${p.sku}-${i}`}
+                  className="border-b border-[var(--d-line-soft)] last:border-0"
+                >
+                  <Link
+                    href={`/admin/produkter/${p.slug}`}
+                    className="flex items-center gap-3 min-h-[38px] py-1.5 hover:bg-[var(--d-surface)] -mx-1 px-1 rounded-[4px] transition-colors"
                   >
-                    <Link
-                      href={`/admin/produkter/${p.slug}`}
-                      className="font-sans text-[14px] text-primary-deep hover:text-primary truncate"
-                    >
-                      {p.name}
-                    </Link>
                     <span
-                      className={`font-display text-[14px] font-medium whitespace-nowrap ${
-                        p.stock === 0 ? "text-[#B5523B]" : "text-accent-deep"
+                      aria-hidden
+                      className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
+                        p.stock === 0
+                          ? "bg-[var(--d-danger)]"
+                          : "bg-[var(--d-warn)]"
+                      }`}
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-sans text-[13.5px] text-[var(--d-ink)] truncate">
+                        {p.name}
+                      </span>
+                      <span className="block font-mono text-[11px] text-[var(--d-ink-3)] tabular-nums">
+                        {p.sku}
+                      </span>
+                    </span>
+                    <span
+                      className={`d-pill ${
+                        p.stock === 0 ? "d-pill-danger" : "d-pill-warn"
                       }`}
                     >
-                      {p.stock} st
+                      {p.stock === 0 ? "Slut" : `${p.stock} kvar`}
                     </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          <div className="bg-surface-alt border border-border rounded-2xl p-5">
-            <div className="flex items-baseline justify-between mb-3">
-              <h3 className="font-display text-xl font-medium tracking-tight text-primary-deep">
-                Innehållshälsa
-              </h3>
-              <Link
-                href="/admin/produkter"
-                className="font-sans text-[12px] text-primary border-b border-primary/40 pb-px hover:border-primary"
-              >
-                Se →
-              </Link>
-            </div>
-            <p className="font-sans text-[10.5px] uppercase tracking-[0.2em] font-semibold text-ink-mute mb-2">
-              Produkter ({s.productCount})
-            </p>
-            <ul className="space-y-1.5 font-sans text-[13.5px] mb-4">
-              <HealthRow color="bg-accent-deep" label="Komplett" count={s.productHealth.complete} total={s.productCount} />
-              <HealthRow color="bg-[#C68A4F]" label="Delvis" count={s.productHealth.partial} total={s.productCount} />
-              <HealthRow color="bg-[#B5523B]" label="Behöver åtgärd" count={s.productHealth["needs-work"]} total={s.productCount} />
+                  </Link>
+                </li>
+              ))}
             </ul>
-            <p className="font-sans text-[10.5px] uppercase tracking-[0.2em] font-semibold text-ink-mute mb-2 mt-1">
-              Kunskapsbank
-            </p>
-            <dl className="space-y-1.5 font-sans text-[13.5px]">
-              <Stat label="Monografier" value={s.monographs.total.toString()} />
-              <Stat
-                label="Med källor"
-                value={`${s.monographs.withReferences} / ${s.monographs.total}`}
-              />
-              <Stat
-                label="Med relaterade"
-                value={`${s.monographs.withRelated} / ${s.monographs.total}`}
-              />
-            </dl>
-          </div>
+          )}
+        </DSection>
 
-          <div className="bg-surface-alt border border-border rounded-2xl p-5">
-            <h3 className="font-display text-xl font-medium tracking-tight text-primary-deep mb-3">
-              Bestånd
-            </h3>
-            <dl className="space-y-2 font-sans text-[14px]">
-              <Stat label="Kunder" value={s.customerCount.toString()} />
-              <Stat label="Produkter publicerade" value={s.productCount.toString()} />
-              <Stat label="Ordrar totalt (alla år)" value={s.totalOrdersAllTime.toString()} />
-            </dl>
-          </div>
-        </aside>
+        <DSection
+          title="Bästsäljare"
+          hint="senaste 7 dagar"
+          cta={{ href: "/admin/produkter", label: "Alla produkter" }}
+        >
+          {bestSellers.length === 0 ? (
+            <p className="d-hint py-6">
+              Inga sålda enheter de senaste 7 dagarna.
+            </p>
+          ) : (
+            <ul>
+              {bestSellers.map((b, i) => (
+                <li
+                  key={b.productId}
+                  className="border-b border-[var(--d-line-soft)] last:border-0"
+                >
+                  <Link
+                    href={b.slug ? `/admin/produkter/${b.slug}` : "/admin/produkter"}
+                    className="flex items-center gap-3 h-9 hover:bg-[var(--d-surface)] -mx-1 px-1 rounded-[4px] transition-colors"
+                  >
+                    <span className="font-mono text-[11px] text-[var(--d-muted)] tabular-nums w-[18px] flex-shrink-0">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span
+                      aria-hidden
+                      className="w-2.5 h-2.5 rounded-full bg-[var(--d-accent-soft)] border border-[var(--d-accent)]/30 flex-shrink-0"
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-sans text-[13.5px] text-[var(--d-ink)] truncate">
+                        {b.name}
+                      </span>
+                      {b.category && (
+                        <span className="block font-mono text-[11px] text-[var(--d-ink-3)] truncate">
+                          {b.category}
+                        </span>
+                      )}
+                    </span>
+                    {/* mini bar — share of the top seller's units */}
+                    <span
+                      aria-hidden
+                      className="hidden sm:block w-[64px] h-[3px] rounded-full bg-[var(--d-line-soft)] flex-shrink-0 overflow-hidden"
+                    >
+                      <span
+                        className="block h-full bg-[var(--d-accent)] rounded-full"
+                        style={{ width: `${(b.units / maxUnits) * 100}%` }}
+                      />
+                    </span>
+                    <span className="font-sans text-[13.5px] font-medium text-[var(--d-ink)] tabular-nums w-[36px] text-right flex-shrink-0">
+                      {b.units}
+                    </span>
+                    <span
+                      className={`font-mono text-[11px] tabular-nums w-[44px] text-right flex-shrink-0 ${
+                        b.deltaPct === null
+                          ? "text-[var(--d-muted)]"
+                          : b.deltaPct >= 0
+                            ? "text-[var(--d-success)]"
+                            : "text-[var(--d-danger)]"
+                      }`}
+                    >
+                      {b.deltaPct === null
+                        ? "ny"
+                        : `${b.deltaPct >= 0 ? "+" : ""}${b.deltaPct}%`}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </DSection>
       </div>
+    </div>
+  );
+}
+
+/* ── Direction D primitives ───────────────────────────────────────── */
+
+/**
+ * Renders a formatted stat with its trailing unit (" kr" / " %") split
+ * out into `.d-unit` — smaller, italic serif, ink-3 (Direction D rule
+ * ix + the hero "italic unit in Ink 3" spec). Plain numbers ("2 788")
+ * and the em-dash placeholder pass through untouched.
+ */
+function Stat({ value }: { value: string }) {
+  let num = value;
+  let unit = "";
+  if (value.endsWith(" kr")) {
+    num = value.slice(0, -3);
+    unit = "kr";
+  } else if (value.endsWith(" %")) {
+    num = value.slice(0, -2);
+    unit = "%";
+  }
+  return (
+    <>
+      {num}
+      {unit && <span className="d-unit">&nbsp;{unit}</span>}
     </>
   );
 }
@@ -204,68 +382,69 @@ function Kpi({
   label,
   value,
   delta,
-  accent,
+  sub,
 }: {
   label: string;
   value: string;
-  delta?: number | null;
-  accent?: boolean;
+  delta: number | null;
+  sub: string;
 }) {
-  const isPositive = (delta ?? 0) >= 0;
   return (
-    <div
-      className={`bg-surface-alt rounded-2xl p-5 border ${
-        accent ? "border-accent" : "border-border"
-      }`}
-    >
-      <p className="font-sans text-[10px] uppercase tracking-[0.22em] text-ink-mute font-semibold">
-        {label}
-      </p>
-      <p className="mt-1.5 font-display text-3xl font-medium tracking-tight text-primary-deep">
-        {value}
-      </p>
-      {delta !== undefined && delta !== null && (
-        <p
-          className={`mt-1 font-sans text-[12px] font-semibold ${
-            isPositive ? "text-accent-deep" : "text-[#B5523B]"
-          }`}
-        >
-          {isPositive ? "↑" : "↓"} {Math.abs(delta)} % vs föregående månad
-        </p>
-      )}
+    <div className="py-4 lg:px-6 lg:first:pl-0">
+      <p className="d-eyebrow">{label}</p>
+      <div className="mt-2 flex items-baseline gap-2">
+        <span className="d-kpi d-num">
+          <Stat value={value} />
+        </span>
+        {delta !== null && (
+          <span
+            className={`font-mono text-[11px] font-semibold tabular-nums ${
+              delta >= 0
+                ? "text-[var(--d-success)]"
+                : "text-[var(--d-danger)]"
+            }`}
+          >
+            {delta >= 0 ? "+" : ""}
+            {delta}%
+          </span>
+        )}
+      </div>
+      <p className="mt-1 font-mono text-[11px] text-[var(--d-ink-3)]">{sub}</p>
     </div>
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex justify-between text-ink-body">
-      <dt>{label}</dt>
-      <dd className="font-semibold">{value}</dd>
-    </div>
-  );
-}
-
-function HealthRow({
-  color,
-  label,
-  count,
-  total,
+function DSection({
+  title,
+  hint,
+  cta,
+  children,
 }: {
-  color: string;
-  label: string;
-  count: number;
-  total: number;
+  title: string;
+  hint?: string;
+  cta?: { href: string; label: string };
+  children: React.ReactNode;
 }) {
-  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
   return (
-    <li className="flex items-center gap-2.5 text-ink-body">
-      <span aria-hidden className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${color}`} />
-      <span className="flex-1">{label}</span>
-      <span className="font-semibold tabular-nums">{count}</span>
-      <span className="text-ink-mute tabular-nums text-[12px] min-w-[36px] text-right">
-        {pct} %
-      </span>
-    </li>
+    // Divider is the title's BOTTOM border — it sits under the title,
+    // above the content (mockup pattern), not as a section-top rule.
+    // Section separation from the block above is whitespace only.
+    <section>
+      <div className="flex items-baseline justify-between gap-4 pb-2 mb-2 border-b border-[var(--d-line)]">
+        <div className="flex items-baseline gap-2.5 min-w-0">
+          <h2 className="d-section-title">{title}</h2>
+          {hint && <span className="d-hint truncate">{hint}</span>}
+        </div>
+        {cta && (
+          <Link
+            href={cta.href}
+            className="font-sans text-[13px] font-medium text-[var(--d-ink-2)] hover:text-[var(--d-accent)] transition-colors whitespace-nowrap"
+          >
+            {cta.label} →
+          </Link>
+        )}
+      </div>
+      {children}
+    </section>
   );
 }

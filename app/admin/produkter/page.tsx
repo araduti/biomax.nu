@@ -2,146 +2,333 @@ import Link from "next/link";
 import Image from "next/image";
 import { formatPriceSEK } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { getSeoHealth } from "@/lib/admin/seo-health";
 import { SeoHealthDot } from "@/components/admin/seo-health-dot";
+import { AdminStatusPill } from "@/components/admin/admin-status-pill";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { getLowStockDefault } from "@/lib/site/settings";
+import type {
+  Prisma,
+  ProductStatus,
+  SeoHealthLevel,
+} from "@prisma/client";
 
 export const metadata = { title: "Produkter" };
 
-export default async function AdminProductsPage() {
-  const lowStockDefault = await getLowStockDefault();
-  const products = await prisma.product.findMany({
-    orderBy: [{ status: "asc" }, { totalSales: "desc" }],
-    select: {
-      id: true,
-      slug: true,
-      sku: true,
-      name: true,
-      imageUrl: true,
-      price: true,
-      stock: true,
-      manageStock: true,
-      lowStockThreshold: true,
-      totalSales: true,
-      status: true,
-      seoTitle: true,
-      seoDescription: true,
-      seoFocusKw: true,
-      shortDescription: true,
-      longDescription: true,
-      ingredientList: true,
-      usage: true,
-      warnings: true,
-      categories: { select: { name: true }, take: 1 },
-    },
-  });
+// Map persisted enum → the UI level the existing dot component uses.
+const PRISMA_TO_LEVEL = {
+  COMPLETE: "complete",
+  PARTIAL: "partial",
+  NEEDS_WORK: "needs-work",
+} as const;
+type UiLevel = (typeof PRISMA_TO_LEVEL)[keyof typeof PRISMA_TO_LEVEL];
 
-  // Aggregate health counts for the header summary line.
-  const healthCounts = { complete: 0, partial: 0, "needs-work": 0 };
-  const healths = new Map<string, ReturnType<typeof getSeoHealth>>();
-  for (const p of products) {
-    const h = getSeoHealth(p);
-    healths.set(p.id, h);
-    healthCounts[h.level]++;
+/**
+ * Status filter — defaults to PUBLISHED so the morning view is the
+ * live catalogue. Drafts show on demand; archived is reachable for
+ * housekeeping but never the default.
+ */
+type StatusFilter = "published" | "draft" | "archived" | "all";
+
+const STATUS_FILTERS: {
+  slug: StatusFilter;
+  label: string;
+  status?: ProductStatus;
+}[] = [
+  { slug: "published", label: "Publicerade", status: "PUBLISHED" },
+  { slug: "draft", label: "Utkast", status: "DRAFT" },
+  { slug: "archived", label: "Arkiverade", status: "ARCHIVED" },
+  { slug: "all", label: "Alla" },
+];
+
+/**
+ * Health filter — surfaces products with SEO health gaps. "Behöver
+ * åtgärd" is the action verb here (matches the chip on the dashboard);
+ * choosing it isolates the work queue for content editing.
+ */
+type HealthFilter = "all" | "needs-work" | "partial" | "complete";
+
+const HEALTH_FILTERS: {
+  slug: HealthFilter;
+  label: string;
+  prisma?: SeoHealthLevel;
+  color: string;
+}[] = [
+  { slug: "all", label: "Alla nivåer", color: "bg-ink-mute" },
+  { slug: "needs-work", label: "Behöver åtgärd", prisma: "NEEDS_WORK", color: "bg-status-error" },
+  { slug: "partial", label: "Delvis", prisma: "PARTIAL", color: "bg-status-warn" },
+  { slug: "complete", label: "Komplett", prisma: "COMPLETE", color: "bg-accent-deep" },
+];
+
+export default async function AdminProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    status?: string;
+    health?: string;
+    q?: string;
+  }>;
+}) {
+  const { status: statusParam, health: healthParam, q } = await searchParams;
+  const activeStatus =
+    STATUS_FILTERS.find((f) => f.slug === statusParam) ?? STATUS_FILTERS[0];
+  const activeHealth =
+    HEALTH_FILTERS.find((f) => f.slug === healthParam) ?? HEALTH_FILTERS[0];
+
+  const lowStockDefault = await getLowStockDefault();
+
+  const where: Prisma.ProductWhereInput = {};
+  if (activeStatus.status) where.status = activeStatus.status;
+  if (activeHealth.prisma) where.seoHealthLevel = activeHealth.prisma;
+  if (q) {
+    where.OR = [
+      { name: { contains: q, mode: "insensitive" } },
+      { sku: { contains: q, mode: "insensitive" } },
+      { slug: { contains: q, mode: "insensitive" } },
+    ];
   }
+
+  const [products, statusGroups, healthGroups, total] = await Promise.all([
+    prisma.product.findMany({
+      where,
+      orderBy: [{ status: "asc" }, { totalSales: "desc" }],
+      select: {
+        id: true,
+        slug: true,
+        sku: true,
+        name: true,
+        imageUrl: true,
+        price: true,
+        stock: true,
+        manageStock: true,
+        lowStockThreshold: true,
+        totalSales: true,
+        status: true,
+        // Persisted on product save (see lib/admin/post-save-sync.ts).
+        // Lets the list render the health dot without re-fetching
+        // longDescription + ingredientList JSON for every row.
+        seoHealthLevel: true,
+        categories: { select: { name: true }, take: 1 },
+      },
+    }),
+    // Per-filter counts — render the chip badges without re-querying.
+    // GroupBy stays cheap; we're paying for the data we're already
+    // showing.
+    prisma.product.groupBy({
+      by: ["status"],
+      _count: { _all: true },
+    }),
+    prisma.product.groupBy({
+      by: ["seoHealthLevel"],
+      _count: { _all: true },
+    }),
+    prisma.product.count(),
+  ]);
+
+  const countByStatus = new Map<ProductStatus, number>();
+  for (const g of statusGroups) countByStatus.set(g.status, g._count._all);
+  const countByHealth = new Map<SeoHealthLevel | null, number>();
+  for (const g of healthGroups)
+    countByHealth.set(g.seoHealthLevel, g._count._all);
+
+  const countForStatus = (f: (typeof STATUS_FILTERS)[number]) =>
+    f.status ? (countByStatus.get(f.status) ?? 0) : total;
+  const countForHealth = (f: (typeof HEALTH_FILTERS)[number]) => {
+    if (!f.prisma) return total;
+    // null seoHealthLevel rows roll into "needs-work" the same way the
+    // row render does — keeps the chip count honest.
+    if (f.prisma === "NEEDS_WORK")
+      return (countByHealth.get("NEEDS_WORK") ?? 0) + (countByHealth.get(null) ?? 0);
+    return countByHealth.get(f.prisma) ?? 0;
+  };
+
+  function buildHref(next: { status?: string; health?: string; q?: string }) {
+    const params = new URLSearchParams();
+    const status = next.status ?? activeStatus.slug;
+    const health = next.health ?? activeHealth.slug;
+    const search = next.q ?? q;
+    if (status !== "published") params.set("status", status);
+    if (health !== "all") params.set("health", health);
+    if (search) params.set("q", search);
+    const qs = params.toString();
+    return qs ? `/admin/produkter?${qs}` : "/admin/produkter";
+  }
+
+  // Title is the surface name; live count moves to the muted `metric`
+  // slot. When a filter narrows the list, the metric shows "X av Y" so
+  // both the visible and total counts stay legible at a glance.
+  const filteredSubtitle =
+    products.length !== total
+      ? "Aktivt filter — rensa för att se hela katalogen."
+      : "Klicka på en produkt för att redigera pris, lager, beskrivning och SEO.";
+  const metricLabel =
+    total === 0
+      ? "Inga"
+      : products.length !== total
+        ? `${products.length.toLocaleString("sv-SE")} av ${total.toLocaleString("sv-SE")}`
+        : `${total.toLocaleString("sv-SE")} ${total === 1 ? "produkt" : "produkter"}`;
 
   return (
     <>
       <AdminPageHeader
-        eyebrow="Drift"
-        title={`${products.length} produkter`}
-        subtitle="Klicka på en produkt för att redigera pris, lager, beskrivning och SEO. SEO-statusprick visas till vänster om varje rad."
+        eyebrow="Katalog"
+        title="Produkter"
+        metric={metricLabel}
+        subtitle={filteredSubtitle}
       />
 
-      <div className="flex flex-wrap gap-2 mb-6 font-sans text-[12px]">
-        <HealthChip color="bg-accent-deep" label="Komplett" count={healthCounts.complete} />
-        <HealthChip color="bg-[#C68A4F]" label="Delvis" count={healthCounts.partial} />
-        <HealthChip color="bg-[#B5523B]" label="Behöver åtgärd" count={healthCounts["needs-work"]} />
-      </div>
-
-      <div className="bg-surface-alt border border-border rounded-2xl overflow-visible">
-        <ul>
-          {products.map((p, i) => {
-            const threshold = p.lowStockThreshold ?? lowStockDefault;
-            const lowStock = p.manageStock && p.stock <= threshold;
-            const oos = p.manageStock && p.stock === 0;
-            const health = healths.get(p.id)!;
+      {/* Filter chips — status (publicerade / utkast / arkiverade / alla)
+          on the leading row; health filter + search on the second row.
+          Matches the ordrar list pattern so the muscle memory is one
+          gesture across both surfaces. */}
+      <div className="flex flex-col gap-3 mb-6">
+        <nav aria-label="Status" className="flex flex-wrap gap-2">
+          {STATUS_FILTERS.map((f) => {
+            const isActive = f.slug === activeStatus.slug;
+            const count = countForStatus(f);
             return (
-              <li
-                key={p.id}
-                className={i > 0 ? "border-t border-border-soft" : ""}
+              <Link
+                key={f.slug}
+                href={buildHref({ status: f.slug })}
+                className={
+                  isActive
+                    ? "inline-flex items-center gap-2 px-4 min-h-11 rounded-full bg-primary-deep text-surface font-sans text-[13.5px] font-semibold"
+                    : "inline-flex items-center gap-2 px-4 min-h-11 rounded-full bg-surface-alt border-2 border-border text-ink-body font-sans text-[13.5px] font-semibold hover:border-primary/40"
+                }
               >
-                <Link
-                  href={`/admin/produkter/${p.slug}`}
-                  className="grid grid-cols-[24px_64px_1fr_auto_auto_auto] items-center gap-4 px-5 py-4 hover:bg-surface-warm transition-colors"
-                >
-                  <SeoHealthDot health={health} />
-                  <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-surface-warm">
-                    <Image
-                      src={p.imageUrl || "/products/_placeholder.svg"}
-                      alt={p.name}
-                      fill
-                      sizes="64px"
-                      className="object-cover mix-blend-darken"
-                    />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-display text-[15px] font-medium tracking-tight text-primary-deep">
-                      {p.name}
-                    </p>
-                    <p className="font-sans text-[11px] text-ink-mute mt-0.5">
-                      {p.sku} · {p.categories[0]?.name ?? "Okategoriserad"} ·{" "}
-                      {p.totalSales.toLocaleString("sv-SE")} sålda
-                    </p>
-                  </div>
+                <span>{f.label}</span>
+                {count > 0 && (
                   <span
                     className={
-                      p.status === "PUBLISHED"
-                        ? "font-sans text-[10px] uppercase tracking-[0.18em] font-bold px-2.5 py-1 rounded-full bg-accent/15 text-accent-deep"
-                        : "font-sans text-[10px] uppercase tracking-[0.18em] font-bold px-2.5 py-1 rounded-full bg-surface-warm text-ink-mute"
+                      isActive
+                        ? "inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 rounded-full bg-surface/25 text-surface font-sans text-[11.5px] font-bold tabular-nums"
+                        : "inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 rounded-full bg-ink-mute/15 text-ink-mute font-sans text-[11.5px] font-bold tabular-nums"
                     }
                   >
-                    {p.status === "PUBLISHED" ? "Publicerad" : p.status}
+                    {count}
                   </span>
-                  <span
-                    className={
-                      oos
-                        ? "font-sans text-[12px] font-semibold text-[#B5523B] whitespace-nowrap"
-                        : lowStock
-                          ? "font-sans text-[12px] font-semibold text-accent-deep whitespace-nowrap"
-                          : "font-sans text-[12px] text-ink-mute whitespace-nowrap"
-                    }
-                  >
-                    {!p.manageStock ? "Obegränsat" : `${p.stock} st`}
-                  </span>
-                  <span className="font-display text-[14px] font-medium text-primary-deep tracking-tight whitespace-nowrap min-w-[70px] text-right">
-                    {formatPriceSEK(p.price.toString())}
-                  </span>
-                </Link>
-              </li>
+                )}
+              </Link>
             );
           })}
-        </ul>
+        </nav>
+
+        <div className="flex flex-col md:flex-row gap-3 md:items-center">
+          <nav
+            aria-label="SEO-hälsa"
+            className="flex flex-wrap gap-2"
+          >
+            {HEALTH_FILTERS.map((f) => {
+              const isActive = f.slug === activeHealth.slug;
+              const count = countForHealth(f);
+              return (
+                <Link
+                  key={f.slug}
+                  href={buildHref({ health: f.slug })}
+                  className={
+                    isActive
+                      ? "inline-flex items-center gap-2 px-3 min-h-9 rounded-full border border-border bg-surface-warm text-ink-body font-sans text-[12.5px] font-semibold"
+                      : "inline-flex items-center gap-2 px-3 min-h-9 rounded-full border border-border bg-surface-alt text-ink-mute font-sans text-[12.5px] font-semibold hover:text-ink-body hover:border-primary/30"
+                  }
+                >
+                  <span
+                    aria-hidden
+                    className={`inline-block w-2 h-2 rounded-full ${f.color}`}
+                  />
+                  <span>{f.label}</span>
+                  <span className="font-sans text-[11.5px] font-bold tabular-nums text-ink-soft">
+                    {count}
+                  </span>
+                </Link>
+              );
+            })}
+          </nav>
+          <form action="/admin/produkter" method="get" className="md:ml-auto">
+            {activeStatus.slug !== "published" && (
+              <input type="hidden" name="status" value={activeStatus.slug} />
+            )}
+            {activeHealth.slug !== "all" && (
+              <input type="hidden" name="health" value={activeHealth.slug} />
+            )}
+            <input
+              type="search"
+              name="q"
+              defaultValue={q ?? ""}
+              placeholder="Sök namn eller SKU"
+              className="h-11 px-4 rounded-lg border-2 border-border bg-surface-alt font-sans text-[14.5px] text-ink placeholder:text-ink-soft outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 min-w-[260px]"
+            />
+          </form>
+        </div>
+      </div>
+
+      <div className="bg-surface-alt border border-border rounded-xl overflow-hidden">
+        {products.length === 0 ? (
+          <p className="px-5 py-12 text-center font-sans text-[14.5px] text-ink-mute">
+            Inga produkter matchar filtret.
+          </p>
+        ) : (
+          <ul>
+            {products.map((p, i) => {
+              const threshold = p.lowStockThreshold ?? lowStockDefault;
+              const lowStock = p.manageStock && p.stock <= threshold;
+              const oos = p.manageStock && p.stock === 0;
+              const level: UiLevel = p.seoHealthLevel
+                ? PRISMA_TO_LEVEL[p.seoHealthLevel]
+                : "needs-work";
+              return (
+                <li
+                  key={p.id}
+                  className={i > 0 ? "border-t border-border-soft" : ""}
+                >
+                  <Link
+                    href={`/admin/produkter/${p.slug}`}
+                    className="grid grid-cols-[auto_36px_1fr_auto_auto_auto] items-center gap-4 px-5 py-2 hover:bg-surface-warm transition-colors min-h-[52px]"
+                  >
+                    <SeoHealthDot level={level} />
+                    <div className="relative w-9 h-9 rounded-md overflow-hidden bg-surface-warm flex-shrink-0">
+                      <Image
+                        src={p.imageUrl || "/products/_placeholder.svg"}
+                        alt=""
+                        fill
+                        sizes="36px"
+                        className="object-cover mix-blend-darken"
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-sans text-[14px] font-semibold tracking-tight text-primary-deep">
+                        {p.name}
+                      </p>
+                      <p className="font-sans text-[13px] text-ink-mute mt-1">
+                        {p.sku} · {p.categories[0]?.name ?? "Okategoriserad"} ·{" "}
+                        {p.totalSales.toLocaleString("sv-SE")} sålda
+                      </p>
+                    </div>
+                    <AdminStatusPill
+                      kind={p.status === "PUBLISHED" ? "ok" : "muted"}
+                      icon={p.status === "PUBLISHED" ? "✓" : "◌"}
+                    >
+                      {p.status === "PUBLISHED" ? "Publicerad" : "Utkast"}
+                    </AdminStatusPill>
+                    <span
+                      className={
+                        oos
+                          ? "font-sans text-[14px] font-semibold text-status-error whitespace-nowrap tabular-nums"
+                          : lowStock
+                            ? "font-sans text-[14px] font-semibold text-status-low whitespace-nowrap tabular-nums"
+                            : "font-sans text-[14px] text-ink-mute whitespace-nowrap tabular-nums"
+                      }
+                    >
+                      {!p.manageStock ? "∞" : `${p.stock} st`}
+                    </span>
+                    <span className="font-sans text-[14px] font-semibold text-primary-deep tracking-tight whitespace-nowrap min-w-[80px] text-right tabular-nums">
+                      {formatPriceSEK(p.price.toString())}
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
     </>
-  );
-}
-
-function HealthChip({
-  color,
-  label,
-  count,
-}: {
-  color: string;
-  label: string;
-  count: number;
-}) {
-  return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-alt px-3 py-1.5">
-      <span aria-hidden className={`inline-block w-2 h-2 rounded-full ${color}`} />
-      <span className="font-sans font-semibold text-ink-body">{count}</span>
-      <span className="font-sans text-ink-mute">{label}</span>
-    </span>
   );
 }
