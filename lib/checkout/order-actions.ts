@@ -10,6 +10,10 @@ import { isKustomOrderComplete } from "@/lib/klarna/types";
 import type { KlarnaOrder } from "@/lib/klarna/types";
 import { fetchOrderLabel } from "@/lib/postnord/booking";
 import {
+  generateOrderNumber,
+  isOrderNumberCollision,
+} from "@/lib/orders/order-number";
+import {
   shippingForSubtotal,
   CURRENT_VAT_BP,
 } from "@/lib/klarna/cart-to-order";
@@ -95,16 +99,6 @@ export type CartLineInput = PlaceOrderInput["cart"][number];
 export type PlaceOrderResult =
   | { ok: true; orderNumber: string; isStub: boolean }
   | { ok: false; error: string };
-
-function generateOrderNumber(): string {
-  const now = new Date();
-  const yyyymmdd =
-    now.getFullYear().toString() +
-    (now.getMonth() + 1).toString().padStart(2, "0") +
-    now.getDate().toString().padStart(2, "0");
-  const rand = Math.floor(1000 + Math.random() * 9000);
-  return `BMX-${yyyymmdd}-${rand}`;
-}
 
 export async function placeOrder(
   raw: unknown
@@ -368,7 +362,7 @@ export async function placeOrder(
     ) / 100;
 
   // ─── 6. Create order + items + address atomically ──────
-  const orderNumber = generateOrderNumber();
+  let orderNumber = generateOrderNumber();
   const isStub = !isKlarnaConfigured();
   const fullName =
     `${input.customer.firstName} ${input.customer.lastName}`.trim();
@@ -376,6 +370,10 @@ export async function placeOrder(
   // /spara/[token] page so guests can view their order without auth.
   const trackingToken = crypto.randomBytes(24).toString("base64url");
 
+  // `orderNumber` has a DB unique constraint; its 4-digit suffix can
+  // rarely collide. Regenerate and retry rather than fail a buyer who
+  // did nothing wrong.
+  for (let attempt = 1; ; attempt++) {
   try {
     await prisma.$transaction(async (tx) => {
       const address = await tx.address.create({
@@ -460,12 +458,18 @@ export async function placeOrder(
       });
       await reserveStock(tx, reservations);
     });
+    break;
   } catch (err) {
+    if (isOrderNumberCollision(err) && attempt < 5) {
+      orderNumber = generateOrderNumber();
+      continue;
+    }
     if (err instanceof InsufficientStockError) {
       return { ok: false, error: err.message };
     }
     console.error("placeOrder transaction failed:", err);
     return { ok: false, error: "Kunde inte skapa ordern. Försök igen." };
+  }
   }
 
   // Post-create loyalty bookkeeping. Both calls are idempotent so a

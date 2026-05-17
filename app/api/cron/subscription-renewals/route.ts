@@ -23,6 +23,10 @@ import { sendTransactional } from "@/lib/email/client";
 import { orderConfirmationEmail } from "@/lib/email/templates";
 import { cronAuthorized } from "@/lib/api/cron-auth";
 import { shippingForSubtotal, CURRENT_VAT_BP } from "@/lib/klarna/cart-to-order";
+import {
+  generateOrderNumber,
+  isOrderNumberCollision,
+} from "@/lib/orders/order-number";
 
 /** Thrown inside the renewal txn when a concurrent cron run already
  *  advanced this subscription. Caught + skipped (not an error). */
@@ -31,16 +35,6 @@ class AlreadyRenewedError extends Error {}
 export const runtime = "nodejs";
 
 const BATCH_LIMIT = 100;
-
-function generateOrderNumber(): string {
-  const now = new Date();
-  const yyyymmdd =
-    now.getFullYear().toString() +
-    (now.getMonth() + 1).toString().padStart(2, "0") +
-    now.getDate().toString().padStart(2, "0");
-  const rand = Math.floor(1000 + Math.random() * 9000);
-  return `BMX-SUB-${yyyymmdd}-${rand}`;
-}
 
 export async function GET(req: Request) {
   if (!cronAuthorized(req)) {
@@ -163,11 +157,16 @@ export async function GET(req: Request) {
         ((totalAmount * CURRENT_VAT_BP) / (10000 + CURRENT_VAT_BP)) * 100
       ) / 100;
 
-    const orderNumber = generateOrderNumber();
+    let orderNumber = generateOrderNumber("BMX-SUB");
     const nextNext = new Date(now);
     nextNext.setUTCDate(nextNext.getUTCDate() + sub.intervalDays);
 
     try {
+      // `orderNumber` is DB-unique; on the rare suffix collision,
+      // regenerate and retry. Non-collision errors (incl. the
+      // idempotency AlreadyRenewedError) propagate unchanged.
+      for (let attempt = 1; ; attempt++) {
+        try {
       await prisma.$transaction(async (tx) => {
         // Idempotency guard: claim this renewal by advancing nextOrderAt
         // conditionally. If a concurrent / retried cron run already
@@ -224,6 +223,15 @@ export async function GET(req: Request) {
           },
         });
       });
+          break;
+        } catch (txErr) {
+          if (isOrderNumberCollision(txErr) && attempt < 5) {
+            orderNumber = generateOrderNumber("BMX-SUB");
+            continue;
+          }
+          throw txErr;
+        }
+      }
       renewed++;
 
       // Fire-and-forget renewal notification. Best-effort; cron's job

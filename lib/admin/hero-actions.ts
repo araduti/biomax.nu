@@ -3,6 +3,8 @@
 import { writeFile, unlink, mkdir, readdir, stat } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { lookup } from "node:dns/promises";
+import { isIP } from "node:net";
 import sharp from "sharp";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
@@ -110,8 +112,84 @@ export async function uploadHeroPhoto(
   return { ok: true, photoUrl: `/uploads/hero/${filename}` };
 }
 
+// ── SSRF guard for the remote-mirror fetch ─────────────────────────
+//
+// The mirror fetch reaches an arbitrary editor-supplied URL from the
+// server, so it is an SSRF sink. Defenses, in order:
+//   1. https only, and hostname must be on an explicit allow-list.
+//   2. Every DNS-resolved address must be a public unicast address
+//      (blocks DNS-rebinding to loopback/RFC1918/link-local/cloud
+//      metadata 169.254.169.254 / fd00::/8 / etc.).
+//   3. `redirect: "manual"` — a redirect is rejected, not followed,
+//      so a public host can't bounce us to an internal one.
+//   4. Streamed read with a hard byte budget (no buffering attacker
+//      response into memory before the size check).
+const ALLOWED_MIRROR_HOSTS = new Set(["images.unsplash.com"]);
+
+function isPrivateAddress(ip: string): boolean {
+  const v = isIP(ip);
+  if (v === 4) {
+    const o = ip.split(".").map(Number);
+    if (o.length !== 4 || o.some((n) => Number.isNaN(n) || n < 0 || n > 255))
+      return true; // malformed → treat as unsafe
+    const [a, b] = o;
+    return (
+      a === 0 || // "this" network
+      a === 10 || // 10.0.0.0/8
+      a === 127 || // loopback
+      (a === 169 && b === 254) || // link-local incl. 169.254.169.254
+      (a === 172 && b >= 16 && b <= 31) || // 172.16.0.0/12
+      (a === 192 && b === 168) || // 192.168.0.0/16
+      (a === 100 && b >= 64 && b <= 127) || // CGNAT 100.64.0.0/10
+      a >= 224 // multicast / reserved
+    );
+  }
+  if (v === 6) {
+    const ip6 = ip.toLowerCase().split("%")[0];
+    if (ip6 === "::1" || ip6 === "::" ) return true; // loopback / unspecified
+    if (ip6.startsWith("fe80")) return true; // link-local
+    if (ip6.startsWith("fc") || ip6.startsWith("fd")) return true; // ULA fc00::/7
+    if (ip6.startsWith("ff")) return true; // multicast
+    // IPv4-mapped (::ffff:a.b.c.d) — re-check the embedded v4 address.
+    const m = ip6.match(/::ffff:(\d+\.\d+\.\d+\.\d+)$/);
+    if (m) return isPrivateAddress(m[1]);
+    return false;
+  }
+  return true; // not a valid IP literal → unsafe
+}
+
 /**
- * Mirror a remote photo (any http(s) URL) into `/uploads/hero/`.
+ * Validate that `url` is an https URL on an allow-listed host whose
+ * every DNS answer is a public address. Returns the parsed URL, or
+ * null (caller treats as a mirror failure and keeps the original URL).
+ */
+async function assertSafeMirrorUrl(url: string): Promise<URL | null> {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return null;
+  }
+  if (parsed.protocol !== "https:") return null;
+  if (!ALLOWED_MIRROR_HOSTS.has(parsed.hostname.toLowerCase())) {
+    console.warn(`[admin hero] mirror host not allow-listed: ${parsed.hostname}`);
+    return null;
+  }
+  try {
+    const addrs = await lookup(parsed.hostname, { all: true });
+    if (addrs.length === 0) return null;
+    if (addrs.some((a) => isPrivateAddress(a.address))) {
+      console.warn(`[admin hero] mirror host resolves to private IP: ${parsed.hostname}`);
+      return null;
+    }
+  } catch {
+    return null;
+  }
+  return parsed;
+}
+
+/**
+ * Mirror a remote photo (allow-listed https URL) into `/uploads/hero/`.
  *
  * Why we do this on save: external URLs can disappear (Unsplash photos
  * get deleted, hotlinks rot). Mirroring once on save makes the brand-
@@ -127,21 +205,29 @@ export async function uploadHeroPhoto(
  * wrong instead of silently losing data.
  */
 async function mirrorRemotePhoto(url: string): Promise<string | null> {
-  if (!/^https?:\/\//i.test(url)) return null;
+  const safe = await assertSafeMirrorUrl(url);
+  if (!safe) return null;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REMOTE_FETCH_TIMEOUT_MS);
   let buf: Buffer;
   try {
-    const res = await fetch(url, {
+    const res = await fetch(safe, {
       signal: controller.signal,
+      // Don't follow redirects: a public allow-listed host could 30x
+      // us to an internal address, bypassing the IP check above.
+      redirect: "manual",
       // Some CDNs (Unsplash, Cloudflare) gate without a UA — set a
       // friendly one so we're not blocked.
       headers: { "User-Agent": "biomax.nu/admin (image mirror)" },
     });
+    if (res.status >= 300 && res.status < 400) {
+      console.warn(`[admin hero] mirror refused redirect (${res.status})`);
+      return null;
+    }
     if (!res.ok) {
       console.warn(
-        `[admin hero] mirror fetch failed: ${res.status} for ${url}`
+        `[admin hero] mirror fetch failed: ${res.status} for ${safe.hostname}`
       );
       return null;
     }
@@ -152,14 +238,24 @@ async function mirrorRemotePhoto(url: string): Promise<string | null> {
       );
       return null;
     }
-    const ab = await res.arrayBuffer();
-    if (ab.byteLength > MAX_BYTES) {
-      console.warn(
-        `[admin hero] mirror payload too large: ${ab.byteLength} bytes`
-      );
-      return null;
+    // Stream with a hard byte budget so an oversized (or chunked,
+    // Content-Length-omitting) response can't be buffered into memory
+    // before the size check.
+    if (!res.body) return null;
+    const chunks: Buffer[] = [];
+    let total = 0;
+    for await (const chunk of res.body as unknown as AsyncIterable<Uint8Array>) {
+      total += chunk.byteLength;
+      if (total > MAX_BYTES) {
+        controller.abort();
+        console.warn(
+          `[admin hero] mirror payload exceeded ${MAX_BYTES} bytes`
+        );
+        return null;
+      }
+      chunks.push(Buffer.from(chunk));
     }
-    buf = Buffer.from(ab);
+    buf = Buffer.concat(chunks);
   } catch (err) {
     console.warn("[admin hero] mirror fetch errored:", err);
     return null;

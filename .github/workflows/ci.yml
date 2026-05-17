@@ -1,0 +1,77 @@
+# CI gate — typecheck, lint, and the test suites.
+#
+# The unit suite (`npm test`) needs no database and guards the pure
+# money-path logic (order state machine, stock math, etc.). The
+# integration suite needs Postgres and proves the concurrency /
+# idempotency invariants (oversell, double-refund, webhook dedupe).
+#
+# Runs on every PR and on push to main. A red gate blocks merge.
+
+name: ci
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  quality:
+    name: typecheck · unit · lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Unit tests
+        run: npm test
+      # Lint is reported but non-blocking: there is pre-existing lint
+      # debt (tracked separately). Surfacing drift without a red gate
+      # keeps the merge-blocking signal limited to types + tests.
+      - name: Lint (non-blocking)
+        run: npm run lint
+        continue-on-error: true
+
+  integration:
+    name: integration (postgres)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: biomax
+          POSTGRES_PASSWORD: biomax
+          POSTGRES_DB: biomax_dev
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql://biomax:biomax@localhost:5433/biomax_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - name: Create + migrate test database
+        run: |
+          PGPASSWORD=biomax psql -h localhost -p 5433 -U biomax -d biomax_dev \
+            -c 'CREATE DATABASE biomax_test;'
+          DATABASE_URL="$TEST_DATABASE_URL" npx prisma migrate deploy
+      - name: Integration tests
+        run: npm run test:integration

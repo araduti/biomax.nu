@@ -1,47 +1,60 @@
 /**
- * Sanitization helpers for WordPress-imported content.
+ * Sanitization helpers for product/editorial content.
  *
  * Two flavors:
  *  - stripHtml(): plain text only — for cards, meta tags, og:description.
- *  - sanitizeRichText(): keeps safe semantic markup (p, ul, ol, li, a, em,
- *    strong, br) — for long-form product detail pages.
+ *  - sanitizeRichText(): keeps safe semantic markup — for long-form
+ *    product detail pages, rendered via dangerouslySetInnerHTML.
  *
- * Source content is from biomax.nu's WordPress, which we control, so we don't
- * need a full parser like sanitize-html. Regex cleanup is sufficient.
+ * `sanitizeRichText` uses `sanitize-html` (a real HTML parser) rather
+ * than regex: the content is editable through the admin CMS, so a
+ * compromised/expanded author must not be able to land stored XSS on
+ * every shopper. Regex "sanitizers" are bypassable (unquoted attrs,
+ * `javascript:`/`data:` URIs, SVG/mutation-XSS); a parser is not.
  */
+import sanitizeHtml from "sanitize-html";
+
+const RICH_TEXT_OPTIONS: sanitizeHtml.IOptions = {
+  // Editorial structure we actually author: headings, paragraphs,
+  // lists, inline emphasis, links, line breaks.
+  allowedTags: [
+    "h2", "h3", "h4",
+    "p", "br", "hr",
+    "ul", "ol", "li",
+    "strong", "b", "em", "i", "sup", "sub",
+    "a", "blockquote",
+  ],
+  allowedAttributes: {
+    a: ["href", "target", "rel"],
+  },
+  // Only safe link schemes — blocks javascript:/data:/vbscript: etc.
+  allowedSchemes: ["http", "https", "mailto"],
+  allowedSchemesAppliedToAttributes: ["href"],
+  disallowedTagsMode: "discard",
+  // Drop the contents of script/style entirely (default keeps text).
+  nonTextTags: ["style", "script", "textarea", "option", "noscript"],
+  transformTags: {
+    // Every link opens safely regardless of authored attributes.
+    a: (tagName, attribs) => ({
+      tagName: "a",
+      attribs: {
+        ...attribs,
+        rel: "noopener noreferrer",
+        ...(attribs.target ? { target: attribs.target } : {}),
+      },
+    }),
+  },
+};
+
 /**
- * Allow-list-based cleanup for product long descriptions. Strips inline
- * styles, classes, event handlers, empty wrappers, and font tags. Forces
- * external links to open safely. Does NOT remove p/ul/li/a/em/strong/br —
- * the editorial structure stays intact.
+ * Sanitize product long-description HTML for safe rendering. Parser-
+ * based allow-list: anything outside the tag/attribute/scheme allow-
+ * list is discarded, including all event handlers, inline styles, and
+ * dangerous URL schemes.
  */
 export function sanitizeRichText(html: string | null | undefined): string {
   if (!html) return "";
-  return (
-    html
-      // Drop style/script blocks entirely
-      .replace(/<style[\s\S]*?<\/style>/gi, "")
-      .replace(/<script[\s\S]*?<\/script>/gi, "")
-      // Strip inline style/class/id/event-handler attributes
-      .replace(/\s*style="[^"]*"/gi, "")
-      .replace(/\s*style='[^']*'/gi, "")
-      .replace(/\s*class="[^"]*"/gi, "")
-      .replace(/\s*id="[^"]*"/gi, "")
-      .replace(/\s*on\w+="[^"]*"/gi, "")
-      // Strip wrapping span/font tags that lost their attrs
-      .replace(/<span\s*>([\s\S]*?)<\/span>/gi, "$1")
-      .replace(/<font[^>]*>([\s\S]*?)<\/font>/gi, "$1")
-      // Strip unwanted block tags (keep their content)
-      .replace(/<\/?(div|section|article|header|footer|nav|aside|figure|figcaption)\b[^>]*>/gi, "")
-      // Force noopener noreferrer on outbound links
-      .replace(/<a\b([^>]*)>/gi, (match, attrs) => {
-        if (/rel=/i.test(attrs)) return match;
-        return `<a${attrs} rel="noopener noreferrer">`;
-      })
-      // Collapse multiple consecutive blank paragraphs
-      .replace(/(<p[^>]*>\s*<\/p>\s*){2,}/gi, "<p></p>")
-      .trim()
-  );
+  return sanitizeHtml(html, RICH_TEXT_OPTIONS).trim();
 }
 
 export function stripHtml(html: string | null | undefined, maxLength?: number): string {
