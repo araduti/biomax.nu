@@ -740,6 +740,8 @@ model StockNotificationRequest {
 
   @@unique([productId, email])
   @@index([productId, fulfilledAt])
+  // Retention purge (ADR 0024) range-scans on age.
+  @@index([createdAt])
 }
 
 /// Uptime probe — one row per check per monitored URL. The cron pinger
@@ -936,6 +938,37 @@ model RateLimitBucket {
 
   @@id([scope, identifier])
   @@index([windowStart])
+}
+
+/// Append-only proof of cookie/tracking consent (ADR 0023). One row per
+/// banner save (grant OR withdrawal — never updated in place, so the
+/// full history is reconstructable). Functional/strictly-necessary
+/// cookies are exempt under ePrivacy Art. 5(3)(b) and are NOT logged.
+/// Pruned after CONSENT_RETENTION_DAYS by the data-retention cron
+/// (ADR 0024).
+model ConsentEvent {
+  id           String   @id @default(cuid())
+  /// Stable random id minted client-side (localStorage) so repeat
+  /// visits by the same anonymous visitor correlate into one history.
+  subjectKey   String
+  /// Set when the visitor is logged in at consent time; lets us tie a
+  /// consent chain to a natural person. Null for anonymous visitors.
+  userId       String?
+  analytics    Boolean
+  marketing    Boolean
+  /// Privacy-policy / banner-copy version the visitor agreed to. Lets
+  /// us prove *which* disclosure was shown.
+  policyVersion String
+  /// Where the event came from ("banner-accept-all",
+  /// "banner-necessary-only", "banner-custom").
+  source       String
+  ip           String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+
+  @@index([subjectKey, createdAt])
+  @@index([userId, createdAt])
+  @@index([createdAt])
 }
 
 /// Recurring-order subscriptions ("prenumeration"). Each Subscription

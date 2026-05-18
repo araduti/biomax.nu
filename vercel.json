@@ -23,6 +23,10 @@
     {
       "path": "/api/cron/telemetry-cleanup",
       "schedule": "30 3 * * 0"
+    },
+    {
+      "path": "/api/cron/data-retention",
+      "schedule": "0 4 * * 0"
     }
   ]
 }
