@@ -120,6 +120,19 @@ export function CookieConsent() {
     // before localStorage is checked.
     const existing = readConsent();
     if (!existing) setVisible(true);
+
+    // Re-open on demand (footer "Cookie-inställningar") so withdrawing
+    // consent is as easy as giving it — GDPR Art. 7(3). Pre-fill the
+    // toggles from the stored choice so the panel reflects current state.
+    function reopen() {
+      const current = readConsent();
+      setAnalytics(current?.analytics ?? true);
+      setMarketing(current?.marketing ?? false);
+      setShowDetail(true);
+      setVisible(true);
+    }
+    window.addEventListener("biomax:open-consent", reopen);
+    return () => window.removeEventListener("biomax:open-consent", reopen);
   }, []);
 
   if (!visible) return null;

@@ -65,6 +65,15 @@ export default function GdprPage() {
         kontakta oss.
       </p>
       <p>
+        <strong>Rättelse</strong> sköter du själv: namn, e-post och telefon
+        ändrar du under{" "}
+        <Link href="/konto/profil">Mitt konto → Profil</Link> och dina
+        adresser under{" "}
+        <Link href="/konto/adresser">Mitt konto → Adresser</Link>. Behöver
+        något annat korrigeras – t.ex. en uppgift i en tidigare
+        beställning – mejlar du oss enligt nedan så rättar vi det.
+      </p>
+      <p>
         Annars: skicka ett mejl till{" "}
         <a href="mailto:kontakt@biomax.nu">kontakt@biomax.nu</a> från den
         e-postadress som är registrerad hos oss. Skriv vilken rättighet du vill

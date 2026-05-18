@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BiomaxLogo } from "@/components/brand/BiomaxLogo";
+import { CookieSettingsLink } from "@/components/site/cookie-settings-link";
 
 const COLS = [
   {
@@ -82,6 +83,11 @@ export function Footer() {
                     </Link>
                   </li>
                 ))}
+                {c.title === "Hjälp" && (
+                  <li>
+                    <CookieSettingsLink />
+                  </li>
+                )}
               </ul>
             </div>
           ))}
