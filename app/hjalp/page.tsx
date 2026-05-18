@@ -48,7 +48,7 @@ export default function HjalpIndexPage() {
               av, tillsammans med en kort översikt över de örter, aminosyror
               och näringsämnen som traditionellt använts inom det området.
             </p>
-            <p className="mt-4 font-sans text-[14px] text-ink-soft max-w-[640px]">
+            <p className="mt-4 font-sans text-body text-ink-soft max-w-[640px]">
               Det här är ingen ersättning för sjukvård. Vid ihållande eller
               akuta besvär — kontakta läkare.
             </p>
@@ -67,10 +67,10 @@ export default function HjalpIndexPage() {
                   <h2 className="font-display text-xl md:text-2xl font-medium tracking-tight text-primary-deep mb-3 group-hover:text-primary-deep/80 transition-colors">
                     {s.title}
                   </h2>
-                  <p className="font-sans text-[14px] text-ink-mute leading-relaxed">
+                  <p className="font-sans text-body text-ink-mute leading-relaxed">
                     {s.summary}
                   </p>
-                  <p className="mt-4 font-sans text-[13px] font-semibold text-accent-deep underline decoration-accent/40 underline-offset-[3px] group-hover:decoration-accent">
+                  <p className="mt-4 font-sans text-small font-semibold text-accent-deep underline decoration-accent/40 underline-offset-[3px] group-hover:decoration-accent">
                     Läs vidare →
                   </p>
                 </Link>

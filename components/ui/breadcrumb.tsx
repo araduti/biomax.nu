@@ -11,7 +11,7 @@ export function Breadcrumb({
   return (
     <nav
       aria-label="Brödsmulor"
-      className={`font-sans text-[12px] tracking-wide ${className}`}
+      className={`font-sans text-caption tracking-wide ${className}`}
     >
       <ol className="flex flex-wrap items-center gap-2 text-ink-mute">
         {crumbs.map((c, i) => {

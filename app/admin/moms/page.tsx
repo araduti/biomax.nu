@@ -59,19 +59,19 @@ export default function MomsReportPage() {
       <div className="mb-8 flex flex-wrap gap-3">
         <a
           href={`/api/admin/moms-export?from=${thisMonthFrom}&to=${`${now.getUTCFullYear()}-${pad(now.getUTCMonth() + 1)}-${pad(now.getUTCDate())}`}`}
-          className="px-4 py-2 rounded-md border border-border bg-surface font-sans text-[13px] font-semibold text-ink-body hover:bg-surface-warm transition-colors"
+          className="px-4 py-2 rounded-md border border-border bg-surface font-sans text-small font-semibold text-ink-body hover:bg-surface-warm transition-colors"
         >
           Innevarande månad
         </a>
         <a
           href={`/api/admin/moms-export?from=${lastMonthFrom}&to=${lastMonthToStr}`}
-          className="px-4 py-2 rounded-md border border-border bg-surface font-sans text-[13px] font-semibold text-ink-body hover:bg-surface-warm transition-colors"
+          className="px-4 py-2 rounded-md border border-border bg-surface font-sans text-small font-semibold text-ink-body hover:bg-surface-warm transition-colors"
         >
           {MONTH_NAMES[lastMonthDate.getUTCMonth()]} {lastMonthDate.getUTCFullYear()}
         </a>
         <a
           href={`/api/admin/moms-export?from=${lastQuarterFrom}&to=${`${now.getUTCFullYear()}-${pad(now.getUTCMonth() + 1)}-${pad(now.getUTCDate())}`}`}
-          className="px-4 py-2 rounded-md border border-border bg-surface font-sans text-[13px] font-semibold text-ink-body hover:bg-surface-warm transition-colors"
+          className="px-4 py-2 rounded-md border border-border bg-surface font-sans text-small font-semibold text-ink-body hover:bg-surface-warm transition-colors"
         >
           Senaste kvartalet
         </a>
@@ -82,36 +82,36 @@ export default function MomsReportPage() {
         action="/api/admin/moms-export"
         className="bg-surface-alt border border-border rounded-xl p-5 max-w-[640px]"
       >
-        <p className="font-sans text-[14.5px] font-semibold text-primary-deep mb-3">
+        <p className="font-sans text-body font-semibold text-primary-deep mb-3">
           Anpassad period
         </p>
         <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 items-end">
-          <label className="font-sans text-[12.5px] text-ink-mute">
+          <label className="font-sans text-caption text-ink-mute">
             Från
             <input
               type="date"
               name="from"
               required
-              className="mt-1 w-full px-3 py-2 rounded-md border border-border bg-surface font-sans text-[14px]"
+              className="mt-1 w-full px-3 py-2 rounded-md border border-border bg-surface font-sans text-body"
             />
           </label>
-          <label className="font-sans text-[12.5px] text-ink-mute">
+          <label className="font-sans text-caption text-ink-mute">
             Till
             <input
               type="date"
               name="to"
               required
-              className="mt-1 w-full px-3 py-2 rounded-md border border-border bg-surface font-sans text-[14px]"
+              className="mt-1 w-full px-3 py-2 rounded-md border border-border bg-surface font-sans text-body"
             />
           </label>
           <button
             type="submit"
-            className="px-4 py-2 rounded-md bg-primary-deep text-surface font-sans text-[13px] font-semibold hover:bg-primary-deep/90 transition-colors"
+            className="px-4 py-2 rounded-md bg-primary-deep text-surface font-sans text-small font-semibold hover:bg-primary-deep/90 transition-colors"
           >
             Exportera CSV
           </button>
         </div>
-        <p className="mt-3 font-sans text-[12px] text-ink-soft leading-relaxed">
+        <p className="mt-3 font-sans text-caption text-ink-soft leading-relaxed">
           CSV innehåller en rad per order plus en summablock per momssats.
           Endast PAID + FULFILLED-ordrar tas med.
         </p>

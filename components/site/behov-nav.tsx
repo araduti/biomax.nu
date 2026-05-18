@@ -150,7 +150,7 @@ export function BehovNav({ items }: { items: Item[] }) {
             href="/hjalp"
             onClick={() => setOpen(false)}
             role="menuitem"
-            className={`block px-4 py-2.5 rounded-lg hover:bg-surface-warm transition-colors font-sans text-[13.5px] font-semibold text-primary-deep ${focusRing}`}
+            className={`block px-4 py-2.5 rounded-lg hover:bg-surface-warm transition-colors font-sans text-small font-semibold text-primary-deep ${focusRing}`}
           >
             Alla behovsområden →
           </Link>
@@ -165,7 +165,7 @@ export function BehovNav({ items }: { items: Item[] }) {
                   href={`/hjalp/${it.slug}`}
                   onClick={() => setOpen(false)}
                   role="menuitem"
-                  className={`block px-4 py-2 rounded-lg hover:bg-surface-warm transition-colors font-sans text-[14px] text-ink-body hover:text-primary-deep ${focusRing}`}
+                  className={`block px-4 py-2 rounded-lg hover:bg-surface-warm transition-colors font-sans text-body text-ink-body hover:text-primary-deep ${focusRing}`}
                 >
                   {it.label}
                 </Link>

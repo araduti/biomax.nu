@@ -107,7 +107,7 @@ export function RegisterForm() {
       {accountExists && (
         <div
           role="alert"
-          className="font-sans text-[13px] text-primary-deep bg-surface-warm border border-border px-4 py-3 rounded-md leading-relaxed"
+          className="font-sans text-small text-primary-deep bg-surface-warm border border-border px-4 py-3 rounded-md leading-relaxed"
         >
           <strong className="font-semibold">Ett konto finns redan.</strong>{" "}
           Är detta ditt gamla Biomax-konto? Sätt ett nytt lösenord via{" "}
@@ -130,7 +130,7 @@ export function RegisterForm() {
       {error && (
         <p
           role="alert"
-          className="font-sans text-[13px] text-status-error bg-status-error/10 px-3 py-2 rounded-md"
+          className="font-sans text-small text-status-error bg-status-error/10 px-3 py-2 rounded-md"
         >
           {error}
         </p>
@@ -138,7 +138,7 @@ export function RegisterForm() {
       <Button type="submit" disabled={pending} className="mt-2 w-full">
         {pending ? "Skapar konto…" : "Skapa konto"}
       </Button>
-      <p className="text-center font-sans text-[12px] text-ink-soft mt-1 leading-relaxed">
+      <p className="text-center font-sans text-caption text-ink-soft mt-1 leading-relaxed">
         Genom att skapa ett konto godkänner du våra{" "}
         <a href="/villkor" className="underline hover:text-primary">
           köpvillkor

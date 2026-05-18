@@ -116,14 +116,14 @@ export function AdminTopbar() {
           >
             <Link
               href="/admin"
-              className="font-sans text-[13.5px] text-[var(--d-ink-2)] hover:text-[var(--d-ink)] transition-colors truncate"
+              className="font-sans text-small text-[var(--d-ink-2)] hover:text-[var(--d-ink)] transition-colors truncate"
             >
               {crumb}
             </Link>
-            <span aria-hidden className="text-[var(--d-muted)] text-[13px]">
+            <span aria-hidden className="text-[var(--d-muted)] text-small">
               /
             </span>
-            <span className="font-sans text-[13.5px] text-[var(--d-ink-3)] truncate">
+            <span className="font-sans text-small text-[var(--d-ink-3)] truncate">
               {today}
             </span>
           </nav>
@@ -135,7 +135,7 @@ export function AdminTopbar() {
               type="button"
               onClick={() => setCmdkOpen(true)}
               data-admin-compact
-              className="hidden sm:inline-flex items-center gap-1.5 h-7 px-2.5 rounded-[6px] font-sans text-[13px] font-medium text-[var(--d-ink-2)] hover:bg-[var(--d-surface)] hover:text-[var(--d-ink)] transition-colors"
+              className="hidden sm:inline-flex items-center gap-1.5 h-7 px-2.5 rounded-[6px] font-sans text-small font-medium text-[var(--d-ink-2)] hover:bg-[var(--d-surface)] hover:text-[var(--d-ink)] transition-colors"
             >
               <SlidersHorizontal size={13} strokeWidth={1.75} aria-hidden />
               Filter
@@ -145,7 +145,7 @@ export function AdminTopbar() {
                 context chip, not a dropdown, until a real period
                 switcher is wired. */}
             <span
-              className="hidden md:inline-flex items-center gap-1.5 h-7 px-2.5 rounded-[6px] border border-[var(--d-line)] bg-[var(--d-surface)] font-sans text-[13px] font-medium text-[var(--d-ink-2)]"
+              className="hidden md:inline-flex items-center gap-1.5 h-7 px-2.5 rounded-[6px] border border-[var(--d-line)] bg-[var(--d-surface)] font-sans text-small font-medium text-[var(--d-ink-2)]"
               title="Översikten visar rullande 30 dagar"
             >
               <Calendar size={13} strokeWidth={1.75} aria-hidden />
@@ -162,7 +162,7 @@ export function AdminTopbar() {
             <Link
               href="/admin/moms"
               data-admin-compact
-              className="hidden sm:inline-flex items-center gap-1.5 h-7 px-2.5 rounded-[6px] font-sans text-[13px] font-medium text-[var(--d-ink-2)] hover:bg-[var(--d-surface)] hover:text-[var(--d-ink)] transition-colors"
+              className="hidden sm:inline-flex items-center gap-1.5 h-7 px-2.5 rounded-[6px] font-sans text-small font-medium text-[var(--d-ink-2)] hover:bg-[var(--d-surface)] hover:text-[var(--d-ink)] transition-colors"
             >
               <Download size={13} strokeWidth={1.75} aria-hidden />
               Exportera
@@ -171,11 +171,11 @@ export function AdminTopbar() {
               type="button"
               onClick={() => setCmdkOpen(true)}
               data-admin-compact
-              className="inline-flex items-center gap-1.5 h-7 pl-2 pr-1.5 rounded-[6px] bg-[var(--d-ink)] text-[var(--d-bg)] font-sans text-[13px] font-semibold hover:bg-[var(--d-ink-2)] transition-colors"
+              className="inline-flex items-center gap-1.5 h-7 pl-2 pr-1.5 rounded-[6px] bg-[var(--d-ink)] text-[var(--d-bg)] font-sans text-small font-semibold hover:bg-[var(--d-ink-2)] transition-colors"
             >
               <Plus size={13} strokeWidth={2.25} aria-hidden />
               Skapa
-              <span className="ml-0.5 inline-flex items-center justify-center w-[15px] h-[15px] rounded-[3px] bg-[var(--d-bg)]/15 font-mono text-[10px] font-semibold">
+              <span className="ml-0.5 inline-flex items-center justify-center w-[15px] h-[15px] rounded-[3px] bg-[var(--d-bg)]/15 font-mono text-micro font-semibold">
                 C
               </span>
             </button>

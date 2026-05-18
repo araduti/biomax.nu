@@ -119,7 +119,7 @@ export default async function AdminOverview() {
             {firstName}
           </span>
         </h1>
-        <p className="mt-2.5 font-sans text-[14px] text-[var(--d-ink-2)]">
+        <p className="mt-2.5 font-sans text-body text-[var(--d-ink-2)]">
           {summary}
         </p>
       </header>
@@ -144,7 +144,7 @@ export default async function AdminOverview() {
                 {todayDeltaPct >= 0 ? "↑" : "↓"} {Math.abs(todayDeltaPct)}%
               </span>
             )}
-            <span className="font-mono text-[12px] text-[var(--d-ink-3)] tabular-nums">
+            <span className="font-mono text-caption text-[var(--d-ink-3)] tabular-nums">
               {todayDeltaAbs >= 0 ? "+" : "−"}
               {formatPriceSEK(Math.abs(todayDeltaAbs))} vs samma dag förra
               veckan
@@ -157,7 +157,7 @@ export default async function AdminOverview() {
             height={96}
             ariaLabel="Intäkter senaste 30 dagarna"
           />
-          <div className="mt-1.5 flex justify-between font-mono text-[10px] tracking-[0.12em] uppercase text-[var(--d-muted)]">
+          <div className="mt-1.5 flex justify-between font-mono text-micro tracking-[0.12em] uppercase text-[var(--d-muted)]">
             <span>30d</span>
             <span>23d</span>
             <span>16d</span>
@@ -257,10 +257,10 @@ export default async function AdminOverview() {
                       }`}
                     />
                     <span className="min-w-0 flex-1">
-                      <span className="block font-sans text-[13.5px] text-[var(--d-ink)] truncate">
+                      <span className="block font-sans text-small text-[var(--d-ink)] truncate">
                         {p.name}
                       </span>
-                      <span className="block font-mono text-[11px] text-[var(--d-ink-3)] tabular-nums">
+                      <span className="block font-mono text-micro text-[var(--d-ink-3)] tabular-nums">
                         {p.sku}
                       </span>
                     </span>
@@ -298,7 +298,7 @@ export default async function AdminOverview() {
                     href={b.slug ? `/admin/produkter/${b.slug}` : "/admin/produkter"}
                     className="flex items-center gap-3 h-9 hover:bg-[var(--d-surface)] -mx-1 px-1 rounded-[4px] transition-colors"
                   >
-                    <span className="font-mono text-[11px] text-[var(--d-muted)] tabular-nums w-[18px] flex-shrink-0">
+                    <span className="font-mono text-micro text-[var(--d-muted)] tabular-nums w-[18px] flex-shrink-0">
                       {String(i + 1).padStart(2, "0")}
                     </span>
                     <span
@@ -306,11 +306,11 @@ export default async function AdminOverview() {
                       className="w-2.5 h-2.5 rounded-full bg-[var(--d-accent-soft)] border border-[var(--d-accent)]/30 flex-shrink-0"
                     />
                     <span className="min-w-0 flex-1">
-                      <span className="block font-sans text-[13.5px] text-[var(--d-ink)] truncate">
+                      <span className="block font-sans text-small text-[var(--d-ink)] truncate">
                         {b.name}
                       </span>
                       {b.category && (
-                        <span className="block font-mono text-[11px] text-[var(--d-ink-3)] truncate">
+                        <span className="block font-mono text-micro text-[var(--d-ink-3)] truncate">
                           {b.category}
                         </span>
                       )}
@@ -325,11 +325,11 @@ export default async function AdminOverview() {
                         style={{ width: `${(b.units / maxUnits) * 100}%` }}
                       />
                     </span>
-                    <span className="font-sans text-[13.5px] font-medium text-[var(--d-ink)] tabular-nums w-[36px] text-right flex-shrink-0">
+                    <span className="font-sans text-small font-medium text-[var(--d-ink)] tabular-nums w-[36px] text-right flex-shrink-0">
                       {b.units}
                     </span>
                     <span
-                      className={`font-mono text-[11px] tabular-nums w-[44px] text-right flex-shrink-0 ${
+                      className={`font-mono text-micro tabular-nums w-[44px] text-right flex-shrink-0 ${
                         b.deltaPct === null
                           ? "text-[var(--d-muted)]"
                           : b.deltaPct >= 0
@@ -398,7 +398,7 @@ function Kpi({
         </span>
         {delta !== null && (
           <span
-            className={`font-mono text-[11px] font-semibold tabular-nums ${
+            className={`font-mono text-micro font-semibold tabular-nums ${
               delta >= 0
                 ? "text-[var(--d-success)]"
                 : "text-[var(--d-danger)]"
@@ -409,7 +409,7 @@ function Kpi({
           </span>
         )}
       </div>
-      <p className="mt-1 font-mono text-[11px] text-[var(--d-ink-3)]">{sub}</p>
+      <p className="mt-1 font-mono text-micro text-[var(--d-ink-3)]">{sub}</p>
     </div>
   );
 }
@@ -438,7 +438,7 @@ function DSection({
         {cta && (
           <Link
             href={cta.href}
-            className="font-sans text-[13px] font-medium text-[var(--d-ink-2)] hover:text-[var(--d-accent)] transition-colors whitespace-nowrap"
+            className="font-sans text-small font-medium text-[var(--d-ink-2)] hover:text-[var(--d-accent)] transition-colors whitespace-nowrap"
           >
             {cta.label} →
           </Link>

@@ -49,7 +49,7 @@ export function Footer() {
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex flex-col gap-1" aria-label="Biomax">
               <BiomaxLogo height={32} className="text-surface" />
-              <span className="font-sans text-[9px] uppercase tracking-[0.24em] text-surface/55 font-medium pl-0.5">
+              <span className="font-sans text-micro uppercase tracking-[0.24em] text-surface/55 font-medium pl-0.5">
                 Sedan 2001 · Kållered
               </span>
             </Link>
@@ -68,7 +68,7 @@ export function Footer() {
           </div>
           {COLS.map((c) => (
             <div key={c.title}>
-              <p className="font-sans text-[11px] uppercase tracking-[0.22em] text-accent-on-dark font-semibold mb-4">
+              <p className="font-sans text-micro uppercase tracking-[0.22em] text-accent-on-dark font-semibold mb-4">
                 {c.title}
               </p>
               <ul className="flex flex-col gap-2.5">

@@ -46,7 +46,7 @@ export default function ErrorBoundary({
           .
         </p>
         {error.digest && (
-          <p className="font-sans text-[11.5px] text-ink-soft mb-6">
+          <p className="font-sans text-micro text-ink-soft mb-6">
             Referenskod: <code>{error.digest}</code>
           </p>
         )}
@@ -56,7 +56,7 @@ export default function ErrorBoundary({
           </Button>
           <Link
             href="/"
-            className="inline-flex items-center px-4 py-2 rounded-md border border-border bg-surface hover:bg-surface-warm font-sans text-[13.5px] font-semibold text-ink-body transition-colors"
+            className="inline-flex items-center px-4 py-2 rounded-md border border-border bg-surface hover:bg-surface-warm font-sans text-small font-semibold text-ink-body transition-colors"
           >
             Till startsidan
           </Link>

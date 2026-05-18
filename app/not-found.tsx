@@ -47,7 +47,7 @@ export default function NotFound() {
                 <p className="font-display text-xl font-medium text-primary-deep tracking-tight">
                   Alla produkter →
                 </p>
-                <p className="mt-2 font-sans text-[13.5px] text-ink-mute leading-relaxed">
+                <p className="mt-2 font-sans text-small text-ink-mute leading-relaxed">
                   Hela sortimentet, sorterat efter mest sålda.
                 </p>
               </Link>
@@ -60,7 +60,7 @@ export default function NotFound() {
                 <p className="font-display text-xl font-medium text-primary-deep tracking-tight">
                   Efter behov →
                 </p>
-                <p className="mt-2 font-sans text-[13.5px] text-ink-mute leading-relaxed">
+                <p className="mt-2 font-sans text-small text-ink-mute leading-relaxed">
                   Sömn, stress, urinvägar, mage, immunförsvar, energi.
                 </p>
               </Link>
@@ -73,7 +73,7 @@ export default function NotFound() {
                 <p className="font-display text-xl font-medium text-primary-deep tracking-tight">
                   Hör av dig →
                 </p>
-                <p className="mt-2 font-sans text-[13.5px] text-ink-mute leading-relaxed">
+                <p className="mt-2 font-sans text-small text-ink-mute leading-relaxed">
                   Du hittar inte vad du letar efter? Mejla oss på
                   kontakt@biomax.nu.
                 </p>

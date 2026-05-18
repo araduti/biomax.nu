@@ -148,7 +148,7 @@ export default async function SymptomLandingPage({
               {sym.intro.map((p, i) => (
                 <p
                   key={i}
-                  className="font-sans text-[16px] md:text-[17px] leading-relaxed text-ink-body"
+                  className="font-sans text-lead md:text-lead leading-relaxed text-ink-body"
                 >
                   {p}
                 </p>
@@ -166,7 +166,7 @@ export default async function SymptomLandingPage({
             {sym.approach.map((p, i) => (
               <p
                 key={i}
-                className="font-sans text-[15.5px] md:text-[16.5px] leading-relaxed text-ink-body"
+                className="font-sans text-body-lg md:text-lead leading-relaxed text-ink-body"
               >
                 {p}
               </p>
@@ -181,7 +181,7 @@ export default async function SymptomLandingPage({
               <h2 className="font-display text-2xl md:text-3xl font-medium tracking-tight text-primary-deep mb-2">
                 Produkter som ofta används
               </h2>
-              <p className="font-sans text-[14px] text-ink-mute mb-10 max-w-[640px] leading-relaxed">
+              <p className="font-sans text-body text-ink-mute mb-10 max-w-[640px] leading-relaxed">
                 Ett urval ur sortimentet som ligger nära det här området.
                 Det är inget medicinskt påstående — det är helt enkelt
                 produkter som innehåller de ingredienser sidan beskriver.
@@ -202,13 +202,13 @@ export default async function SymptomLandingPage({
         {goalReviews.length > 0 && (
           <section className="max-w-[1240px] mx-auto px-6 md:px-8 py-14 md:py-20">
             <div className="max-w-[820px] mb-10">
-              <p className="font-sans text-[11px] uppercase tracking-[0.22em] font-semibold text-ink-soft mb-3">
+              <p className="font-sans text-micro uppercase tracking-[0.22em] font-semibold text-ink-soft mb-3">
                 Andra med samma besvär
               </p>
               <h2 className="font-display text-2xl md:text-3xl font-medium tracking-tight text-primary-deep mb-3">
                 Vad <Accent>kunder</Accent> berättar
               </h2>
-              <p className="font-sans text-[14.5px] text-ink-mute leading-relaxed max-w-[640px]">
+              <p className="font-sans text-body text-ink-mute leading-relaxed max-w-[640px]">
                 Recensioner från kunder som köpt produkterna för just{" "}
                 {sym.shortTitle.toLowerCase()}. Vi visar bara godkända recensioner
                 — och svarar inte själva på vad som har hjälpt vem.
@@ -223,7 +223,7 @@ export default async function SymptomLandingPage({
                   <div className="flex items-center gap-3 mb-3">
                     <span
                       aria-label={`${r.rating} av 5 stjärnor`}
-                      className="font-sans text-[13.5px] font-semibold text-accent-deep tabular-nums"
+                      className="font-sans text-small font-semibold text-accent-deep tabular-nums"
                     >
                       {"★".repeat(r.rating)}
                       <span className="text-ink-soft">
@@ -231,26 +231,26 @@ export default async function SymptomLandingPage({
                       </span>
                     </span>
                     {r.verified && (
-                      <span className="font-sans text-[11px] uppercase tracking-[0.18em] font-semibold text-accent-deep">
+                      <span className="font-sans text-micro uppercase tracking-[0.18em] font-semibold text-accent-deep">
                         ✓ Verifierat köp
                       </span>
                     )}
                   </div>
                   {r.title && (
-                    <p className="font-display text-[17px] font-medium tracking-tight text-primary-deep mb-2">
+                    <p className="font-display text-lead font-medium tracking-tight text-primary-deep mb-2">
                       {r.title}
                     </p>
                   )}
-                  <p className="font-sans text-[15px] text-ink-body leading-relaxed line-clamp-6 mb-4">
+                  <p className="font-sans text-body-lg text-ink-body leading-relaxed line-clamp-6 mb-4">
                     {r.body}
                   </p>
                   <div className="mt-auto pt-4 border-t border-border-soft flex items-baseline justify-between gap-3 flex-wrap">
-                    <p className="font-sans text-[12.5px] text-ink-mute">
+                    <p className="font-sans text-caption text-ink-mute">
                       {r.authorDisplay} · {dateFmt.format(r.createdAt)}
                     </p>
                     <Link
                       href={`/produkter/${r.productSlug}#recensioner`}
-                      className="font-sans text-[13px] font-semibold text-primary-deep underline decoration-accent/40 underline-offset-[3px] hover:decoration-accent"
+                      className="font-sans text-small font-semibold text-primary-deep underline decoration-accent/40 underline-offset-[3px] hover:decoration-accent"
                     >
                       {r.productName} →
                     </Link>
@@ -269,13 +269,13 @@ export default async function SymptomLandingPage({
           <section className="bg-surface-warm py-14 md:py-20 px-6 md:px-8">
             <div className="max-w-[820px] mx-auto">
               <div className="bg-surface-alt border border-border rounded-2xl p-7 md:p-10">
-                <p className="font-sans text-[11px] uppercase tracking-[0.22em] font-semibold text-accent-deep mb-3">
+                <p className="font-sans text-micro uppercase tracking-[0.22em] font-semibold text-accent-deep mb-3">
                   Återkommande besvär?
                 </p>
                 <h2 className="font-display text-2xl md:text-[28px] font-medium tracking-tight text-primary-deep mb-4">
                   Ha alltid {subscriptionProduct.name} hemma
                 </h2>
-                <p className="font-sans text-[15.5px] md:text-[16px] text-ink-body leading-relaxed mb-6 max-w-[620px]">
+                <p className="font-sans text-body-lg md:text-lead text-ink-body leading-relaxed mb-6 max-w-[620px]">
                   Med prenumeration får du{" "}
                   <strong className="font-semibold text-primary-deep">
                     {DEFAULT_SUBSCRIPTION_DISCOUNT_PERCENT} % rabatt
@@ -284,7 +284,7 @@ export default async function SymptomLandingPage({
                   månad, varannan månad, var tredje. Pausa eller avsluta när
                   du vill, utan bindningstid.
                 </p>
-                <ul className="font-sans text-[14.5px] text-ink-body leading-relaxed space-y-2 mb-7">
+                <ul className="font-sans text-body text-ink-body leading-relaxed space-y-2 mb-7">
                   <li className="flex items-start gap-2.5">
                     <span aria-hidden className="text-accent-deep mt-0.5">
                       ✓
@@ -308,13 +308,13 @@ export default async function SymptomLandingPage({
                 <div className="flex flex-wrap gap-3">
                   <Link
                     href={`/produkter/${subscriptionProduct.slug}#buy-panel`}
-                    className="inline-flex items-center justify-center h-12 px-6 rounded-lg bg-primary-deep text-surface font-sans text-[15px] font-semibold hover:bg-primary transition-colors"
+                    className="inline-flex items-center justify-center h-12 px-6 rounded-lg bg-primary-deep text-surface font-sans text-body-lg font-semibold hover:bg-primary transition-colors"
                   >
                     Starta prenumeration →
                   </Link>
                   <Link
                     href={`/produkter/${subscriptionProduct.slug}`}
-                    className="inline-flex items-center justify-center h-12 px-6 rounded-lg border border-border bg-surface font-sans text-[15px] font-semibold text-primary-deep hover:bg-surface-warm transition-colors"
+                    className="inline-flex items-center justify-center h-12 px-6 rounded-lg border border-border bg-surface font-sans text-body-lg font-semibold text-primary-deep hover:bg-surface-warm transition-colors"
                   >
                     Läs om produkten
                   </Link>
@@ -337,10 +337,10 @@ export default async function SymptomLandingPage({
                     href={`/kunskap/ingredienser/${ing.slug}`}
                     className="block bg-surface-alt border border-border rounded-xl p-5 hover:border-border-soft transition-colors group"
                   >
-                    <p className="font-display text-[17px] font-medium text-primary-deep tracking-tight mb-1 group-hover:text-primary-deep/80">
+                    <p className="font-display text-lead font-medium text-primary-deep tracking-tight mb-1 group-hover:text-primary-deep/80">
                       {ing.name}
                     </p>
-                    <p className="font-sans text-[13px] text-ink-mute leading-relaxed line-clamp-3">
+                    <p className="font-sans text-small text-ink-mute leading-relaxed line-clamp-3">
                       {ing.summary}
                     </p>
                   </Link>
@@ -366,7 +366,7 @@ export default async function SymptomLandingPage({
                     <h3 className="font-display text-[18px] font-medium tracking-tight text-primary-deep mb-2">
                       {f.question}
                     </h3>
-                    <p className="font-sans text-[15px] text-ink-body leading-relaxed">
+                    <p className="font-sans text-body-lg text-ink-body leading-relaxed">
                       {f.answer}
                     </p>
                   </li>
@@ -378,7 +378,7 @@ export default async function SymptomLandingPage({
 
         {/* CTA back to /hjalp */}
         <section className="max-w-[820px] mx-auto px-6 md:px-8 py-14 md:py-20 text-center">
-          <p className="font-sans text-[13px] uppercase tracking-[0.22em] font-semibold text-ink-soft mb-3">
+          <p className="font-sans text-small uppercase tracking-[0.22em] font-semibold text-ink-soft mb-3">
             Andra områden
           </p>
           <Link

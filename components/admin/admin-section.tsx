@@ -66,15 +66,15 @@ export function AdminSection({
   return (
     <section id={id} className="h-fit scroll-mt-24">
       {eyebrow && (
-        <p className="font-sans text-[10.5px] uppercase tracking-[0.16em] font-semibold text-accent-deep mb-1">
+        <p className="font-sans text-micro uppercase tracking-[0.16em] font-semibold text-accent-deep mb-1">
           {eyebrow}
         </p>
       )}
       <div className="flex items-baseline justify-between gap-3 mb-2 flex-wrap">
-        <h2 className="font-sans text-[15px] md:text-[16px] font-semibold tracking-tight text-primary-deep flex items-baseline gap-3">
+        <h2 className="font-sans text-body-lg md:text-lead font-semibold tracking-tight text-primary-deep flex items-baseline gap-3">
           {title}
           {count !== undefined && (
-            <span className="font-sans text-[13px] tabular-nums text-ink-mute font-semibold">
+            <span className="font-sans text-small tabular-nums text-ink-mute font-semibold">
               {count}
             </span>
           )}
@@ -82,12 +82,12 @@ export function AdminSection({
         {rightAction && <div className="ml-auto">{rightAction}</div>}
       </div>
       {description && (
-        <p className="font-sans text-[13.5px] text-ink-mute leading-relaxed mb-4 max-w-[640px]">
+        <p className="font-sans text-small text-ink-mute leading-relaxed mb-4 max-w-[640px]">
           {description}
         </p>
       )}
       {isEmpty ? (
-        <p className="font-sans text-[14px] text-accent-deep italic flex items-center gap-2">
+        <p className="font-sans text-body text-accent-deep italic flex items-center gap-2">
           <span aria-hidden>✓</span>
           {empty}
         </p>

@@ -42,7 +42,7 @@ function Row({
   return (
     <div className="p-5">
       <div className="flex items-baseline justify-between gap-2 mb-2">
-        <h3 className="font-sans text-[11px] uppercase tracking-[0.16em] text-ink-mute font-semibold">
+        <h3 className="font-sans text-micro uppercase tracking-[0.16em] text-ink-mute font-semibold">
           {label}
         </h3>
         {action}

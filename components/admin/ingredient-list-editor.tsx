@@ -49,7 +49,7 @@ export function IngredientListEditor({
       <div className="flex flex-wrap items-center gap-3">
         <label
           htmlFor={`${tableId}-perUnit`}
-          className="font-sans text-[12px] uppercase tracking-[0.16em] font-semibold text-ink-mute"
+          className="font-sans text-caption uppercase tracking-[0.16em] font-semibold text-ink-mute"
         >
           Mängd per
         </label>
@@ -59,27 +59,27 @@ export function IngredientListEditor({
           value={value.perUnit}
           onChange={(e) => onChange({ ...value, perUnit: e.target.value })}
           placeholder="kapsel"
-          className="h-10 px-3 rounded-md border border-border bg-surface-alt font-sans text-[14px] text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 min-w-[160px]"
+          className="h-10 px-3 rounded-md border border-border bg-surface-alt font-sans text-body text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 min-w-[160px]"
         />
         <datalist id={`${tableId}-perUnit-presets`}>
           {PER_UNIT_PRESETS.map((p) => (
             <option key={p} value={p} />
           ))}
         </datalist>
-        <p className="font-sans text-[12px] text-ink-soft">
+        <p className="font-sans text-caption text-ink-soft">
           Rubriken på tabellens andra kolumn — t.ex. {`"`}Mängd per kapsel{`"`}.
         </p>
       </div>
 
       {/* Table */}
       <div className="border border-border rounded-lg overflow-hidden">
-        <div className="grid grid-cols-[1fr_180px_auto] gap-2 px-3 py-2 bg-surface-warm border-b border-border-soft font-sans text-[10px] uppercase tracking-[0.16em] font-semibold text-ink-mute">
+        <div className="grid grid-cols-[1fr_180px_auto] gap-2 px-3 py-2 bg-surface-warm border-b border-border-soft font-sans text-micro uppercase tracking-[0.16em] font-semibold text-ink-mute">
           <span>Ingrediens</span>
           <span>Mängd per {value.perUnit || "enhet"}</span>
           <span aria-hidden className="w-[88px]" />
         </div>
         {value.rows.length === 0 ? (
-          <div className="px-3 py-8 text-center font-sans text-[13px] text-ink-mute italic">
+          <div className="px-3 py-8 text-center font-sans text-small text-ink-mute italic">
             Inga rader ännu — klicka {`"`}Lägg till rad{`"`} nedan.
           </div>
         ) : (
@@ -94,14 +94,14 @@ export function IngredientListEditor({
                   value={row.name}
                   onChange={(e) => updateRow(i, { name: e.target.value })}
                   placeholder="t.ex. Koenzym Q10"
-                  className="h-10 px-3 rounded-md border border-border bg-surface-alt font-sans text-[14px] text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+                  className="h-10 px-3 rounded-md border border-border bg-surface-alt font-sans text-body text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
                 />
                 <input
                   type="text"
                   value={row.amount}
                   onChange={(e) => updateRow(i, { amount: e.target.value })}
                   placeholder="100 mg"
-                  className="h-10 px-3 rounded-md border border-border bg-surface-alt font-sans text-[14px] text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+                  className="h-10 px-3 rounded-md border border-border bg-surface-alt font-sans text-body text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
                 />
                 <div className="flex items-center gap-1">
                   <button
@@ -139,7 +139,7 @@ export function IngredientListEditor({
           <button
             type="button"
             onClick={addRow}
-            className="font-sans text-[13px] font-semibold text-primary hover:text-primary-deep transition-colors px-3 py-2"
+            className="font-sans text-small font-semibold text-primary hover:text-primary-deep transition-colors px-3 py-2"
           >
             + Lägg till rad
           </button>
@@ -150,7 +150,7 @@ export function IngredientListEditor({
       <div className="flex flex-col gap-1.5">
         <label
           htmlFor={`${tableId}-footnote`}
-          className="font-sans text-[12px] uppercase tracking-[0.16em] font-semibold text-ink-mute"
+          className="font-sans text-caption uppercase tracking-[0.16em] font-semibold text-ink-mute"
         >
           Fotnot
         </label>
@@ -160,9 +160,9 @@ export function IngredientListEditor({
           onChange={(e) => onChange({ ...value, footnote: e.target.value })}
           rows={3}
           placeholder="* Rismjöl, gelatin kapsel, Glycerin, Järnoxid (färg)&#10;* Dagsintag har inte fastställts."
-          className="px-4 py-3 rounded-md border border-border bg-surface-alt font-sans text-[14px] text-ink leading-relaxed outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 resize-y"
+          className="px-4 py-3 rounded-md border border-border bg-surface-alt font-sans text-body text-ink leading-relaxed outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 resize-y"
         />
-        <p className="font-sans text-[12px] text-ink-soft">
+        <p className="font-sans text-caption text-ink-soft">
           Övriga ingredienser, RDI-disclaimer eller andra kommentarer som
           visas under tabellen. Använd radbrytning för flera punkter.
         </p>

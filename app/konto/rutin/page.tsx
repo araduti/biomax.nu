@@ -45,7 +45,7 @@ export default async function RoutinePage() {
       <Display as="h1" size="lg" className="mt-2">
         Min rutin
       </Display>
-      <p className="mt-3 font-sans text-[14.5px] text-ink-mute max-w-[620px] leading-relaxed">
+      <p className="mt-3 font-sans text-body text-ink-mute max-w-[620px] leading-relaxed">
         Produkter du tar — eller funderar på att lägga till. Spara dem här så
         hittar du tillbaka utan att börja om från sökrutan varje gång.
       </p>
@@ -55,13 +55,13 @@ export default async function RoutinePage() {
           <p className="font-display text-xl text-primary-deep">
             Din rutin är tom
           </p>
-          <p className="mt-2 font-sans text-[14px] text-ink-mute max-w-[440px] mx-auto leading-relaxed">
+          <p className="mt-2 font-sans text-body text-ink-mute max-w-[440px] mx-auto leading-relaxed">
             Tryck på &quot;Spara i min rutin&quot; på en produktsida för att lägga
             till den här.
           </p>
           <Link
             href="/produkter"
-            className="mt-5 inline-flex items-center px-5 py-2.5 rounded-md bg-primary-deep text-surface font-sans text-[13.5px] font-semibold hover:bg-primary-deep/90 transition-colors"
+            className="mt-5 inline-flex items-center px-5 py-2.5 rounded-md bg-primary-deep text-surface font-sans text-small font-semibold hover:bg-primary-deep/90 transition-colors"
           >
             Utforska produkter
           </Link>
@@ -88,11 +88,11 @@ export default async function RoutinePage() {
               <div className="flex-1 min-w-0">
                 <Link
                   href={`/produkter/${it.product.slug}`}
-                  className="font-display text-[15px] md:text-base font-medium text-primary-deep hover:text-primary transition-colors line-clamp-2"
+                  className="font-display text-body-lg md:text-base font-medium text-primary-deep hover:text-primary transition-colors line-clamp-2"
                 >
                   {it.product.name}
                 </Link>
-                <p className="mt-1 font-sans text-[13px] text-ink-mute">
+                <p className="mt-1 font-sans text-small text-ink-mute">
                   {formatPriceSEK(it.product.price.toString())}
                 </p>
                 <RoutineLineRemove productId={it.product.id} />

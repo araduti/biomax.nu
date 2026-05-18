@@ -48,7 +48,7 @@ export function VariantSelector({
     <div>
       {/* Variant radios — pill toggles */}
       <div className="mt-6 mb-2">
-        <p className="font-sans text-[11px] uppercase tracking-[0.2em] font-semibold text-ink-soft mb-2.5">
+        <p className="font-sans text-micro uppercase tracking-[0.2em] font-semibold text-ink-soft mb-2.5">
           Storlek
         </p>
         <div
@@ -67,7 +67,7 @@ export function VariantSelector({
                 aria-checked={active}
                 onClick={() => setSelectedId(v.id)}
                 className={
-                  "px-4 py-2 rounded-full border font-sans text-[13.5px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 " +
+                  "px-4 py-2 rounded-full border font-sans text-small font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 " +
                   (active
                     ? "bg-primary-deep text-surface border-primary-deep"
                     : "bg-surface text-ink-body border-border hover:border-border-soft hover:bg-surface-warm") +
@@ -76,7 +76,7 @@ export function VariantSelector({
               >
                 {v.label}
                 {oos && (
-                  <span className="ml-1.5 text-[10.5px] uppercase tracking-[0.14em]">
+                  <span className="ml-1.5 text-micro uppercase tracking-[0.14em]">
                     · slut
                   </span>
                 )}
@@ -97,7 +97,7 @@ export function VariantSelector({
           </span>
         )}
       </div>
-      <p className="mt-2 font-sans text-[13px] text-ink-mute">
+      <p className="mt-2 font-sans text-small text-ink-mute">
         Inkl. moms{freeShipLabel ? ` · ${freeShipLabel}` : ""}
       </p>
 
@@ -105,7 +105,7 @@ export function VariantSelector({
 
       {/* Stock signal */}
       <p
-        className={`mt-3 font-sans text-[13px] flex items-center gap-2 ${
+        className={`mt-3 font-sans text-small flex items-center gap-2 ${
           selected.inStock ? "text-accent-deep" : "text-ink-soft"
         }`}
       >
@@ -140,7 +140,7 @@ export function VariantSelector({
              rendering path. The parent hero renders this entire selector
              only when at least one variant is in stock; when the selected
              variant is OOS, show inline text. */
-          <p className="font-sans text-[14px] text-ink-mute italic">
+          <p className="font-sans text-body text-ink-mute italic">
             Den här storleken är slut just nu — välj en annan eller bevaka
             i listan ovan.
           </p>

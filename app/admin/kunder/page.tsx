@@ -87,7 +87,7 @@ export default async function AdminCustomersPage({
           name="q"
           defaultValue={q ?? ""}
           placeholder="Sök på namn eller e-post"
-          className="h-12 px-4 rounded-lg border-2 border-border bg-surface-alt font-sans text-[15px] text-ink placeholder:text-ink-soft outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 min-w-[320px] w-full md:w-auto"
+          className="h-12 px-4 rounded-lg border-2 border-border bg-surface-alt font-sans text-body-lg text-ink placeholder:text-ink-soft outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 min-w-[320px] w-full md:w-auto"
         />
       </form>
 
@@ -109,21 +109,21 @@ export default async function AdminCustomersPage({
                   className="grid grid-cols-[1.4fr_2fr_auto_auto_auto] items-center gap-4 px-5 py-2.5 hover:bg-surface-warm transition-colors min-h-[44px]"
                 >
                   <div className="min-w-0">
-                    <p className="font-sans text-[13.5px] font-semibold tracking-tight text-primary-deep truncate">
+                    <p className="font-sans text-small font-semibold tracking-tight text-primary-deep truncate">
                       {fullName ?? "—"}
                     </p>
-                    <p className="font-sans text-[12.5px] text-ink-mute mt-1">
+                    <p className="font-sans text-caption text-ink-mute mt-1">
                       Skapad {dateFmt.format(c.createdAt)}
                       {c.legacyWpId ? " · arkiverad" : ""}
                     </p>
                   </div>
-                  <p className="font-sans text-[14px] text-ink-body truncate">
+                  <p className="font-sans text-body text-ink-body truncate">
                     {c.email}
                   </p>
-                  <p className="font-sans text-[13px] text-ink-mute whitespace-nowrap tabular-nums">
+                  <p className="font-sans text-small text-ink-mute whitespace-nowrap tabular-nums">
                     {c._count.orders} ordrar
                   </p>
-                  <p className="font-sans text-[13.5px] font-semibold text-primary-deep tabular-nums whitespace-nowrap min-w-[88px] text-right">
+                  <p className="font-sans text-small font-semibold text-primary-deep tabular-nums whitespace-nowrap min-w-[88px] text-right">
                     {formatPriceSEK(lifetime)}
                   </p>
                   <span aria-hidden className="text-primary text-lg">
@@ -135,7 +135,7 @@ export default async function AdminCustomersPage({
           })}
         </ul>
         {total > customers.length && (
-          <p className="px-5 py-3 border-t border-border-soft font-sans text-[12px] text-ink-mute text-center">
+          <p className="px-5 py-3 border-t border-border-soft font-sans text-caption text-ink-mute text-center">
             Visar {customers.length} av {total.toLocaleString("sv-SE")}. Sök
             för att hitta en specifik kund.
           </p>

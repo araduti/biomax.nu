@@ -45,13 +45,13 @@ export function SearchInput({ initialQuery = "" }: { initialQuery?: string }) {
         onChange={(e) => setQ(e.target.value)}
         placeholder="Sök produkter, ingredienser, behov…"
         autoFocus={initialQuery.length === 0}
-        className="flex-1 bg-transparent border-none outline-none font-sans text-[15px] text-ink-body placeholder:text-ink-soft"
+        className="flex-1 bg-transparent border-none outline-none font-sans text-body-lg text-ink-body placeholder:text-ink-soft"
         autoComplete="off"
       />
       <button
         type="submit"
         disabled={q.trim().length < 2}
-        className="px-4 py-1.5 rounded-full bg-primary-deep text-surface font-sans text-[13px] font-semibold hover:bg-primary-deep/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        className="px-4 py-1.5 rounded-full bg-primary-deep text-surface font-sans text-small font-semibold hover:bg-primary-deep/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
       >
         Sök
       </button>

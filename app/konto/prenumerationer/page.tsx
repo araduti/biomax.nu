@@ -34,7 +34,7 @@ export default async function SubscriptionsPage() {
       <Display as="h1" size="lg" className="mt-2">
         Mina prenumerationer
       </Display>
-      <p className="mt-3 font-sans text-[14.5px] text-ink-mute max-w-[620px] leading-relaxed">
+      <p className="mt-3 font-sans text-body text-ink-mute max-w-[620px] leading-relaxed">
         Få dina favoriter automatiskt — du sparar 10 % på varje leverans och
         kan pausa eller avsluta när du vill, utan kostnad.
       </p>
@@ -44,13 +44,13 @@ export default async function SubscriptionsPage() {
           <p className="font-display text-xl text-primary-deep">
             Du har inga prenumerationer än
           </p>
-          <p className="mt-2 font-sans text-[14px] text-ink-mute max-w-[440px] mx-auto leading-relaxed">
+          <p className="mt-2 font-sans text-body text-ink-mute max-w-[440px] mx-auto leading-relaxed">
             Slå på &quot;Prenumerera&quot; på en produktsida för att lägga upp en
             återkommande leverans.
           </p>
           <Link
             href="/produkter"
-            className="mt-5 inline-flex items-center px-5 py-2.5 rounded-md bg-primary-deep text-surface font-sans text-[13.5px] font-semibold hover:bg-primary-deep/90 transition-colors"
+            className="mt-5 inline-flex items-center px-5 py-2.5 rounded-md bg-primary-deep text-surface font-sans text-small font-semibold hover:bg-primary-deep/90 transition-colors"
           >
             Utforska produkter
           </Link>
@@ -94,7 +94,7 @@ export default async function SubscriptionsPage() {
       )}
 
       {subs.length > 0 && (
-        <p className="mt-8 font-sans text-[12px] text-ink-soft leading-relaxed max-w-[520px]">
+        <p className="mt-8 font-sans text-caption text-ink-soft leading-relaxed max-w-[520px]">
           Prenumerationer förnyas automatiskt enligt valt intervall. Vi
           mejlar inför varje leverans så du kan ändra eller pausa innan den
           packas. Priser räknas om från aktuella produktpriser vid varje

@@ -124,7 +124,7 @@ export function InfoBox({
       </div>
       <div className="px-6 md:px-7 pb-6 md:pb-7 flex-1">
         {accessory}
-        <p className="font-sans text-[14.5px] text-ink-body leading-[1.7] whitespace-pre-line">
+        <p className="font-sans text-body text-ink-body leading-[1.7] whitespace-pre-line">
           {text}
         </p>
       </div>

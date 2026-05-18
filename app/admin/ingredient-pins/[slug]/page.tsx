@@ -66,7 +66,7 @@ export default async function AdminIngredientPinPage({
       />
 
       <div className="bg-surface-alt border border-border rounded-xl p-6 md:p-8 max-w-[720px]">
-        <p className="font-sans text-[13.5px] text-ink-mute mb-5 leading-relaxed">
+        <p className="font-sans text-small text-ink-mute mb-5 leading-relaxed">
           Pinnade produkter visas i den ordning de listas. Lämnas listan tom
           faller sidan tillbaka på den automatiska matchningen — alla
           produkter vars ingredienstabell innehåller{" "}

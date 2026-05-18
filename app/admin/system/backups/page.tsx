@@ -84,16 +84,16 @@ export default function BackupsPage() {
           body={
             <>
               Kör{" "}
-              <code className="px-1 rounded bg-surface-warm font-mono text-[12px]">
+              <code className="px-1 rounded bg-surface-warm font-mono text-caption">
                 scripts/backup-postgres.sh
               </code>{" "}
               en gång manuellt för att skapa katalogstrukturen, och lägg sedan
               in kronan från ADR 0013 (daglig 03:00). Sätt valfri{" "}
-              <code className="px-1 rounded bg-surface-warm font-mono text-[12px]">
+              <code className="px-1 rounded bg-surface-warm font-mono text-caption">
                 BACKUP_DIR
               </code>{" "}
               om du vill skriva någon annanstans än{" "}
-              <code className="px-1 rounded bg-surface-warm font-mono text-[12px]">
+              <code className="px-1 rounded bg-surface-warm font-mono text-caption">
                 ./backups
               </code>
               .
@@ -135,17 +135,17 @@ export default function BackupsPage() {
             : "border-accent/30 bg-accent/[0.05]"
         }`}
       >
-        <p className="font-sans text-[10.5px] uppercase tracking-[0.16em] font-semibold text-ink-soft mb-1">
+        <p className="font-sans text-micro uppercase tracking-[0.16em] font-semibold text-ink-soft mb-1">
           {newestStale ? "Backup verkar inaktuell" : "Backup är färsk"}
         </p>
-        <p className="font-sans text-[14.5px] font-semibold text-primary-deep">
+        <p className="font-sans text-body font-semibold text-primary-deep">
           {newest > 0
             ? `Senaste dump skapad ${hoursAgo(newest)} (${dateTimeFmt.format(new Date(newest))})`
             : "Ingen dump hittad i någon tier."}
         </p>
-        <p className="mt-1.5 font-sans text-[13px] text-ink-mute">
+        <p className="mt-1.5 font-sans text-small text-ink-mute">
           Källkatalog:{" "}
-          <code className="px-1 rounded bg-surface-warm font-mono text-[12px]">
+          <code className="px-1 rounded bg-surface-warm font-mono text-caption">
             {root}
           </code>
         </p>
@@ -163,7 +163,7 @@ export default function BackupsPage() {
       />
 
       <aside className="mt-10 pt-6 border-t border-border-soft">
-        <p className="font-sans text-[13px] text-ink-mute leading-relaxed max-w-[720px]">
+        <p className="font-sans text-small text-ink-mute leading-relaxed max-w-[720px]">
           Kvartalsvis restore-drill (ADR 0013): återställ den senaste dumpen
           till en throw-away databas och verifiera radantal på Order, Product
           och User. Backups som aldrig återställs är teater.

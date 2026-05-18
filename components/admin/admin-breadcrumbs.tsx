@@ -84,7 +84,7 @@ export function AdminBreadcrumbs() {
   return (
     <nav
       aria-label="Brödsmulor"
-      className="px-5 md:px-10 pt-4 max-w-[1400px] flex flex-wrap items-baseline gap-x-1.5 font-sans text-[12px] text-ink-mute"
+      className="px-5 md:px-10 pt-4 max-w-[1400px] flex flex-wrap items-baseline gap-x-1.5 font-sans text-caption text-ink-mute"
     >
       {crumbs.map((c, i) => (
         <span key={i} className="inline-flex items-baseline gap-1.5">

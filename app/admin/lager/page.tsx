@@ -87,8 +87,8 @@ export default async function AdminInventoryPage({
               href={href}
               className={
                 isActive
-                  ? "inline-flex items-center gap-2 px-4 min-h-11 rounded-full bg-primary-deep text-surface font-sans text-[13.5px] font-semibold"
-                  : "inline-flex items-center gap-2 px-4 min-h-11 rounded-full bg-surface-alt border-2 border-border text-ink-body font-sans text-[13.5px] font-semibold hover:border-primary/40"
+                  ? "inline-flex items-center gap-2 px-4 min-h-11 rounded-full bg-primary-deep text-surface font-sans text-small font-semibold"
+                  : "inline-flex items-center gap-2 px-4 min-h-11 rounded-full bg-surface-alt border-2 border-border text-ink-body font-sans text-small font-semibold hover:border-primary/40"
               }
             >
               <span>{t.label}</span>
@@ -96,8 +96,8 @@ export default async function AdminInventoryPage({
                 <span
                   className={
                     isActive
-                      ? "inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 rounded-full bg-surface/25 text-surface font-sans text-[11.5px] font-bold tabular-nums"
-                      : "inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 rounded-full bg-ink-mute/15 text-ink-mute font-sans text-[11.5px] font-bold tabular-nums"
+                      ? "inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 rounded-full bg-surface/25 text-surface font-sans text-micro font-bold tabular-nums"
+                      : "inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 rounded-full bg-ink-mute/15 text-ink-mute font-sans text-micro font-bold tabular-nums"
                   }
                 >
                   {t.count}
@@ -109,7 +109,7 @@ export default async function AdminInventoryPage({
       </nav>
 
       {visible.length === 0 ? (
-        <p className="font-sans text-[14.5px] text-ink-mute italic">
+        <p className="font-sans text-body text-ink-mute italic">
           Inga rader att visa.
         </p>
       ) : (

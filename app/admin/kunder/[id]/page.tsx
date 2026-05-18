@@ -64,31 +64,31 @@ export default async function AdminCustomerDetail({
     <>
       <Link
         href="/admin/kunder"
-        className="inline-flex items-center gap-1 font-sans text-[13.5px] text-primary hover:text-primary-deep transition-colors mb-4"
+        className="inline-flex items-center gap-1 font-sans text-small text-primary hover:text-primary-deep transition-colors mb-4"
       >
         ← Alla kunder
       </Link>
 
-      <p className="font-sans text-[11px] uppercase tracking-[0.16em] text-ink-mute font-semibold mb-2">
+      <p className="font-sans text-micro uppercase tracking-[0.16em] text-ink-mute font-semibold mb-2">
         Kund
       </p>
       <h1 className="font-sans text-[22px] md:text-[26px] font-semibold tracking-tight text-primary-deep leading-tight mb-2">
         {fullName}
       </h1>
       <div className="flex flex-wrap items-center gap-3 mb-7">
-        <span className="font-sans text-[14px] text-ink-body">{user.email}</span>
+        <span className="font-sans text-body text-ink-body">{user.email}</span>
         <CopyButton value={user.email} label="Kopiera e-post" />
         {user.phone && (
           <>
             <span aria-hidden className="text-ink-soft">·</span>
-            <span className="font-sans text-[14px] text-ink-body">
+            <span className="font-sans text-body text-ink-body">
               {user.phone}
             </span>
             <CopyButton value={user.phone} label="Kopiera tel" />
           </>
         )}
         {user.legacyWpId && (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-ink-mute/12 text-ink-mute font-sans text-[12.5px] font-semibold">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-ink-mute/12 text-ink-mute font-sans text-caption font-semibold">
             <span aria-hidden>◌</span>
             Arkiverad från gamla biomax.nu
           </span>
@@ -117,16 +117,16 @@ export default async function AdminCustomerDetail({
 
       {loyalty && (
         <section className="mb-8 pb-5 border-b border-border-soft">
-          <p className="font-sans text-[10.5px] uppercase tracking-[0.16em] font-semibold text-accent-deep">
+          <p className="font-sans text-micro uppercase tracking-[0.16em] font-semibold text-accent-deep">
             {LOYALTY_PROGRAM_NAME}
           </p>
           <p className="mt-1.5 font-sans text-[22px] font-semibold tracking-tight text-primary-deep tabular-nums leading-none">
             {loyalty.balance.toLocaleString("sv-SE")}
-            <span className="font-sans text-[13px] text-ink-mute font-normal ml-2">
+            <span className="font-sans text-small text-ink-mute font-normal ml-2">
               poäng · {formatPriceSEK(pointsToKr(loyalty.balance))} värde
             </span>
           </p>
-          <p className="mt-1.5 font-sans text-[12px] text-ink-mute">
+          <p className="mt-1.5 font-sans text-caption text-ink-mute">
             Totalt tjänat {loyalty.lifetimeEarned.toLocaleString("sv-SE")}{" "}
             sedan {dateFmt.format(loyalty.enrolledAt)}
           </p>
@@ -139,7 +139,7 @@ export default async function AdminCustomerDetail({
           orders. Stacking removes the imbalance. */}
       <div className="flex flex-col gap-10 max-w-[920px]">
         <section>
-          <h2 className="font-sans text-[15px] md:text-[16px] font-semibold tracking-tight text-primary-deep mb-3">
+          <h2 className="font-sans text-body-lg md:text-lead font-semibold tracking-tight text-primary-deep mb-3">
             Orderhistorik
           </h2>
           <ul className="border-y border-border-soft divide-y divide-border-soft">
@@ -150,23 +150,23 @@ export default async function AdminCustomerDetail({
                   className="grid grid-cols-[1fr_auto_auto] items-center gap-4 px-1 py-3.5 hover:bg-surface-warm/60 transition-colors"
                 >
                   <div className="min-w-0">
-                    <p className="font-sans text-[13.5px] font-semibold tracking-tight text-primary-deep">
+                    <p className="font-sans text-small font-semibold tracking-tight text-primary-deep">
                       {o.orderNumber}
                     </p>
-                    <p className="font-sans text-[12px] text-ink-mute mt-0.5">
+                    <p className="font-sans text-caption text-ink-mute mt-0.5">
                       {dateFmt.format(o.createdAt)} · {o._count.items} st
                       {o.legacySource ? " · arkiverad" : ""}
                     </p>
                   </div>
                   <OrderStatusBadge status={o.status} />
-                  <span className="font-sans text-[13.5px] font-semibold text-primary-deep tabular-nums whitespace-nowrap min-w-[80px] text-right">
+                  <span className="font-sans text-small font-semibold text-primary-deep tabular-nums whitespace-nowrap min-w-[80px] text-right">
                     {formatPriceSEK(o.totalAmount.toString())}
                   </span>
                 </Link>
               </li>
             ))}
             {orders.length === 0 && (
-              <li className="px-1 py-6 text-center font-sans text-[13px] text-ink-mute italic">
+              <li className="px-1 py-6 text-center font-sans text-small text-ink-mute italic">
                 Inga ordrar.
               </li>
             )}
@@ -174,11 +174,11 @@ export default async function AdminCustomerDetail({
         </section>
 
         <section>
-          <h2 className="font-sans text-[15px] md:text-[16px] font-semibold tracking-tight text-primary-deep mb-3">
+          <h2 className="font-sans text-body-lg md:text-lead font-semibold tracking-tight text-primary-deep mb-3">
             Adresser
           </h2>
           {user.addresses.length === 0 ? (
-            <p className="font-sans text-[13px] text-ink-mute italic">
+            <p className="font-sans text-small text-ink-mute italic">
               Inga sparade adresser.
             </p>
           ) : (
@@ -186,9 +186,9 @@ export default async function AdminCustomerDetail({
               {user.addresses.map((a) => (
                 <li
                   key={a.id}
-                  className="px-1 py-3.5 font-sans text-[13px] text-ink-body leading-relaxed"
+                  className="px-1 py-3.5 font-sans text-small text-ink-body leading-relaxed"
                 >
-                  <strong className="font-sans text-[13.5px] font-semibold text-primary-deep">
+                  <strong className="font-sans text-small font-semibold text-primary-deep">
                     {a.fullName}
                   </strong>
                   <br />
@@ -203,7 +203,7 @@ export default async function AdminCustomerDetail({
       </div>
 
       <section className="mt-12 pt-8 border-t border-border">
-        <p className="font-sans text-[11px] uppercase tracking-[0.16em] font-semibold text-ink-soft mb-3">
+        <p className="font-sans text-micro uppercase tracking-[0.16em] font-semibold text-ink-soft mb-3">
           GDPR
         </p>
         <GdprActions userId={user.id} />

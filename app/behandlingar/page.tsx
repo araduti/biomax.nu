@@ -56,7 +56,7 @@ export default function BehandlingarPage() {
             <h2 className="font-display text-2xl md:text-[26px] font-medium tracking-tight text-primary-deep mb-3">
               {t.title}
             </h2>
-            <p className="font-sans text-[15.5px] text-ink-body leading-[1.7]">
+            <p className="font-sans text-body-lg text-ink-body leading-[1.7]">
               {t.summary}
             </p>
           </li>
@@ -68,7 +68,7 @@ export default function BehandlingarPage() {
         <h2 className="mt-2 font-display text-xl md:text-[22px] font-medium tracking-tight text-primary-deep mb-3">
           Mejla för aktuella tider och pris
         </h2>
-        <p className="font-sans text-[15px] text-ink-body leading-relaxed">
+        <p className="font-sans text-body-lg text-ink-body leading-relaxed">
           Tider och prislistor uppdateras löpande. Hör av dig till{" "}
           <a
             href="mailto:kontakt@biomax.nu"
@@ -88,7 +88,7 @@ export default function BehandlingarPage() {
       </div>
 
       <aside className="mt-12 pt-8 border-t border-border-soft">
-        <p className="font-sans text-[13px] text-ink-mute italic leading-relaxed">
+        <p className="font-sans text-small text-ink-mute italic leading-relaxed">
           Vi ger inga medicinska diagnoser eller råd som ersätter läkarbesök.
           För medicinska frågor — kontakta din vårdcentral eller{" "}
           <a

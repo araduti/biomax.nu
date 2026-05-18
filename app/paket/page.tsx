@@ -51,7 +51,7 @@ export default async function BundlesIndexPage() {
 
         <section className="max-w-[1240px] mx-auto px-6 md:px-8 py-14 md:py-20">
           {bundles.length === 0 ? (
-            <p className="font-sans text-[15px] text-ink-mute italic text-center">
+            <p className="font-sans text-body-lg text-ink-mute italic text-center">
               Inga aktiva paket just nu — kom tillbaka snart.
             </p>
           ) : (
@@ -84,11 +84,11 @@ export default async function BundlesIndexPage() {
                         {b.name}
                       </h2>
                       {b.description && (
-                        <p className="mt-3 font-sans text-[14.5px] text-ink-mute leading-relaxed">
+                        <p className="mt-3 font-sans text-body text-ink-mute leading-relaxed">
                           {b.description}
                         </p>
                       )}
-                      <ul className="mt-5 space-y-1.5 font-sans text-[13.5px] text-ink-body">
+                      <ul className="mt-5 space-y-1.5 font-sans text-small text-ink-body">
                         {b.items.map((it) => (
                           <li key={it.slug} className="flex items-baseline justify-between gap-3">
                             <Link
@@ -109,13 +109,13 @@ export default async function BundlesIndexPage() {
                             {formatPriceSEK(b.bundlePriceSek.toString())}
                           </span>
                           {b.savingsSek > 0 && (
-                            <span className="font-sans text-[14px] text-ink-soft line-through tabular-nums">
+                            <span className="font-sans text-body text-ink-soft line-through tabular-nums">
                               {formatPriceSEK(b.listTotalSek.toString())}
                             </span>
                           )}
                         </div>
                         {b.savingsSek > 0 && (
-                          <p className="mt-1 font-sans text-[12.5px] text-accent-deep font-semibold">
+                          <p className="mt-1 font-sans text-caption text-accent-deep font-semibold">
                             Du sparar {formatPriceSEK(b.savingsSek.toString())} jämfört med att köpa dem var för sig ({b.discountPercent} % rabatt)
                           </p>
                         )}

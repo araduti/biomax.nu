@@ -42,7 +42,7 @@ const THUMB_CSS = `
 
 function Badge() {
   return (
-    <span className="w-[22px] h-[22px] rounded-full bg-accent text-white grid place-items-center font-display text-[12px] font-bold">
+    <span className="w-[22px] h-[22px] rounded-full bg-accent text-white grid place-items-center font-display text-caption font-bold">
       B
     </span>
   );
@@ -65,7 +65,7 @@ function Shell({
         <div>
           <div className="flex items-center gap-2">
             <Badge />
-            <span className="font-sans text-[11px] uppercase tracking-[0.16em] font-semibold text-accent-deep">
+            <span className="font-sans text-micro uppercase tracking-[0.16em] font-semibold text-accent-deep">
               {LOYALTY_PROGRAM_NAME}
             </span>
           </div>
@@ -74,16 +74,16 @@ function Shell({
           </p>
         </div>
         <div className="text-right flex-shrink-0 whitespace-nowrap">
-          <div className="font-sans text-[11px] uppercase tracking-[0.04em] text-ink-mute">
+          <div className="font-sans text-micro uppercase tracking-[0.04em] text-ink-mute">
             Saldo
           </div>
-          <div className="mt-0.5 font-sans text-[17px] font-semibold tabular-nums text-ink-body">
+          <div className="mt-0.5 font-sans text-lead font-semibold tabular-nums text-ink-body">
             {balance.toLocaleString("sv-SE")}{" "}
             <span className="text-ink-mute font-normal text-[0.7em]">
               poäng
             </span>
           </div>
-          <div className="mt-0.5 font-sans text-[11px] text-ink-mute tabular-nums">
+          <div className="mt-0.5 font-sans text-micro text-ink-mute tabular-nums">
             ≈ {formatPriceSEK(pointsToKr(balance))} i rabatt
           </div>
         </div>
@@ -92,7 +92,7 @@ function Shell({
       <div className="mt-4">{children}</div>
 
       {applied > 0 && (
-        <div className="mt-3.5 px-3 py-2.5 rounded-[8px] bg-primary-deep text-surface flex items-center justify-between text-[13px] whitespace-nowrap">
+        <div className="mt-3.5 px-3 py-2.5 rounded-[8px] bg-primary-deep text-surface flex items-center justify-between text-small whitespace-nowrap">
           <span className="flex items-center gap-2">
             <span aria-hidden>✓</span>
             <span>
@@ -142,14 +142,14 @@ export function LoyaltyRedeem({ subtotalKr, value, onChange }: Props) {
       <section className="rounded-[14px] bg-surface-warm border border-border px-[18px] py-4">
         <div className="flex items-center gap-2">
           <Badge />
-          <span className="font-sans text-[11px] uppercase tracking-[0.16em] font-semibold text-accent-deep">
+          <span className="font-sans text-micro uppercase tracking-[0.16em] font-semibold text-accent-deep">
             {LOYALTY_PROGRAM_NAME}
           </span>
         </div>
         <p className="mt-2 font-display text-[18px] font-medium tracking-tight text-primary-deep leading-tight">
           Du börjar samla poäng på det här köpet
         </p>
-        <p className="mt-2 font-sans text-[13px] text-ink-mute leading-relaxed">
+        <p className="mt-2 font-sans text-small text-ink-mute leading-relaxed">
           Du får{" "}
           <b className="text-ink-body">
             cirka {earn.toLocaleString("sv-SE")} poäng
@@ -184,7 +184,7 @@ export function LoyaltyRedeem({ subtotalKr, value, onChange }: Props) {
       balance={balance}
       applied={value}
       footer={
-        <p className="mt-2.5 font-sans text-[12px] text-ink-mute">
+        <p className="mt-2.5 font-sans text-caption text-ink-mute">
           Dra för att välja. {MIN_REDEMPTION_POINTS} poäng ={" "}
           {formatPriceSEK((MIN_REDEMPTION_POINTS * ORE_PER_POINT) / 100)}{" "}
           rabatt.
@@ -197,9 +197,9 @@ export function LoyaltyRedeem({ subtotalKr, value, onChange }: Props) {
           <span className="font-display text-[32px] font-medium tracking-tight tabular-nums text-primary-deep">
             {value.toLocaleString("sv-SE")}
           </span>
-          <span className="font-sans text-[13px] text-ink-mute">poäng</span>
+          <span className="font-sans text-small text-ink-mute">poäng</span>
         </div>
-        <span className="font-sans text-[16px] font-semibold tabular-nums text-primary-deep">
+        <span className="font-sans text-lead font-semibold tabular-nums text-primary-deep">
           −{formatPriceSEK(pointsToKr(value))}
         </span>
       </div>
@@ -223,7 +223,7 @@ export function LoyaltyRedeem({ subtotalKr, value, onChange }: Props) {
         />
       </div>
 
-      <div className="flex justify-between font-sans text-[11px] text-ink-mute mt-0.5">
+      <div className="flex justify-between font-sans text-micro text-ink-mute mt-0.5">
         <span>0</span>
         <span className="tabular-nums">
           Max {cap.toLocaleString("sv-SE")}

@@ -113,7 +113,7 @@ export default async function IngredientPage({
             </p>
           </header>
 
-          <div className="prose-biomax font-sans text-[16.5px] md:text-[17px] leading-[1.75] text-ink-body space-y-5">
+          <div className="prose-biomax font-sans text-lead md:text-lead leading-[1.75] text-ink-body space-y-5">
             {ing.body.map((p, i) => (
               <p key={i}>{p}</p>
             ))}
@@ -126,7 +126,7 @@ export default async function IngredientPage({
               </h2>
               <ul className="space-y-2">
                 {ing.benefits.map((b, i) => (
-                  <li key={i} className="flex gap-3 items-baseline font-sans text-[15.5px] text-ink-body">
+                  <li key={i} className="flex gap-3 items-baseline font-sans text-body-lg text-ink-body">
                     <span aria-hidden className="text-accent-deep flex-shrink-0">
                       ▸
                     </span>
@@ -148,7 +148,7 @@ export default async function IngredientPage({
                 </div>
                 <Link
                   href={`/kop/${ing.slug}`}
-                  className="hidden sm:inline-flex items-center gap-1.5 font-sans text-[13px] font-semibold text-accent-deep hover:text-primary-deep transition-colors whitespace-nowrap"
+                  className="hidden sm:inline-flex items-center gap-1.5 font-sans text-small font-semibold text-accent-deep hover:text-primary-deep transition-colors whitespace-nowrap"
                 >
                   Köp {ing.name} <span aria-hidden>→</span>
                 </Link>
@@ -163,7 +163,7 @@ export default async function IngredientPage({
                       <span className="font-display text-lg font-medium text-primary-deep block">
                         {p.name}
                       </span>
-                      <span className="mt-1 font-sans text-[12.5px] text-accent-deep uppercase tracking-[0.18em] font-semibold">
+                      <span className="mt-1 font-sans text-caption text-accent-deep uppercase tracking-[0.18em] font-semibold">
                         Visa produkt →
                       </span>
                     </Link>
@@ -183,7 +183,7 @@ export default async function IngredientPage({
                 {ing.references.map((r, i) => (
                   <li
                     key={i}
-                    className="flex gap-4 items-baseline font-sans text-[14.5px] text-ink-body leading-[1.6]"
+                    className="flex gap-4 items-baseline font-sans text-body text-ink-body leading-[1.6]"
                   >
                     <ReferenceBadge kind={r.kind} />
                     <span className="flex-1 min-w-0">
@@ -196,7 +196,7 @@ export default async function IngredientPage({
                         {r.title}
                       </a>
                       {r.cite && (
-                        <span className="block mt-0.5 font-sans text-[13px] text-ink-mute italic">
+                        <span className="block mt-0.5 font-sans text-small text-ink-mute italic">
                           {r.cite}
                         </span>
                       )}
@@ -223,10 +223,10 @@ export default async function IngredientPage({
                         href={`/kunskap/ingredienser/${r.slug}`}
                         className="block h-full bg-surface-alt border border-border rounded-xl px-5 py-4 hover:border-accent hover:bg-surface transition-colors"
                       >
-                        <span className="font-display text-[17px] font-medium text-primary-deep block leading-tight">
+                        <span className="font-display text-lead font-medium text-primary-deep block leading-tight">
                           {r.name}
                         </span>
-                        <span className="mt-1.5 block font-sans text-[13px] text-ink-mute leading-snug line-clamp-2">
+                        <span className="mt-1.5 block font-sans text-small text-ink-mute leading-snug line-clamp-2">
                           {r.summary}
                         </span>
                       </Link>
@@ -237,7 +237,7 @@ export default async function IngredientPage({
             );
           })()}
 
-          <p className="mt-14 font-sans text-[12.5px] text-ink-soft italic max-w-[560px]">
+          <p className="mt-14 font-sans text-caption text-ink-soft italic max-w-[560px]">
             Innehållet är allmän information och inte avsett att ersätta medicinsk
             rådgivning. Rådgör alltid med läkare vid medicinering eller sjukdom.
           </p>
@@ -257,7 +257,7 @@ const KIND_LABEL: Record<ReferenceKind, string> = {
 
 function ReferenceBadge({ kind }: { kind: ReferenceKind }) {
   return (
-    <span className="inline-flex items-center justify-center min-w-[68px] flex-shrink-0 rounded-full border border-accent/30 bg-accent/10 text-accent-deep font-sans text-[10.5px] uppercase tracking-[0.16em] font-semibold px-2.5 py-1">
+    <span className="inline-flex items-center justify-center min-w-[68px] flex-shrink-0 rounded-full border border-accent/30 bg-accent/10 text-accent-deep font-sans text-micro uppercase tracking-[0.16em] font-semibold px-2.5 py-1">
       {KIND_LABEL[kind]}
     </span>
   );

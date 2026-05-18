@@ -58,7 +58,7 @@ export function Newsletter() {
                 ? "Tack — du är redan med på listan."
                 : "Tack — vi hörs snart."}
             </p>
-            <p className="mt-2 font-sans text-[13.5px] text-ink-mute">
+            <p className="mt-2 font-sans text-small text-ink-mute">
               {status.alreadySubscribed
                 ? "Inga dubbletter — vi hör av oss i nästa utskick."
                 : "Inom någon timme får du ditt välkomstbrev med rabattkoden. Kolla skräpposten om det dröjer."}
@@ -83,7 +83,7 @@ export function Newsletter() {
                 placeholder="din@email.se"
                 required
                 disabled={pending}
-                className="flex-1 bg-transparent border-0 outline-0 px-4 py-2 font-sans text-[15px] text-ink placeholder:text-ink-soft"
+                className="flex-1 bg-transparent border-0 outline-0 px-4 py-2 font-sans text-body-lg text-ink placeholder:text-ink-soft"
               />
               <Button
                 type="submit"
@@ -102,7 +102,7 @@ export function Newsletter() {
                 disabled={pending}
                 className="mt-0.5 w-4 h-4"
               />
-              <span className="font-sans text-[12.5px] text-ink-mute leading-relaxed">
+              <span className="font-sans text-caption text-ink-mute leading-relaxed">
                 Jag vill få brev från Biomax. Avregistrera när som helst med
                 länken i varje brev.
               </span>
@@ -111,7 +111,7 @@ export function Newsletter() {
             {status.kind === "error" && (
               <p
                 role="alert"
-                className="mt-4 font-sans text-[12.5px] text-status-error bg-status-error/10 px-3 py-2 rounded-md max-w-[420px] mx-auto"
+                className="mt-4 font-sans text-caption text-status-error bg-status-error/10 px-3 py-2 rounded-md max-w-[420px] mx-auto"
               >
                 {status.message}
               </p>

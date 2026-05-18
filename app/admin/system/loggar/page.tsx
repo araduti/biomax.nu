@@ -38,20 +38,20 @@ export default function LoggarPage() {
           body={
             <>
               Sätt{" "}
-              <code className="px-1 rounded bg-surface-warm font-mono text-[12px]">
+              <code className="px-1 rounded bg-surface-warm font-mono text-caption">
                 SENTRY_DSN
               </code>{" "}
               och{" "}
-              <code className="px-1 rounded bg-surface-warm font-mono text-[12px]">
+              <code className="px-1 rounded bg-surface-warm font-mono text-caption">
                 NEXT_PUBLIC_SENTRY_DSN
               </code>{" "}
               i produktionsmiljön. Server- och klientfel skickas då automatiskt
               till Sentry via{" "}
-              <code className="px-1 rounded bg-surface-warm font-mono text-[12px]">
+              <code className="px-1 rounded bg-surface-warm font-mono text-caption">
                 instrumentation.ts
               </code>{" "}
               och{" "}
-              <code className="px-1 rounded bg-surface-warm font-mono text-[12px]">
+              <code className="px-1 rounded bg-surface-warm font-mono text-caption">
                 instrumentation-client.ts
               </code>
               . Full uppstart i ADR 0013.

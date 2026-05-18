@@ -229,10 +229,10 @@ export function KustomCheckout({
           className="rounded-xl border-2 border-dashed border-accent bg-surface-warm p-6"
           role="alert"
         >
-          <p className="font-sans text-[10px] uppercase tracking-[0.22em] font-bold text-primary mb-2">
+          <p className="font-sans text-micro uppercase tracking-[0.22em] font-bold text-primary mb-2">
             Kustom-kassan kunde inte laddas
           </p>
-          <p className="font-sans text-[14px] text-ink-mute leading-relaxed">
+          <p className="font-sans text-body text-ink-mute leading-relaxed">
             {error}
           </p>
         </div>
@@ -240,7 +240,7 @@ export function KustomCheckout({
       {syncError && !error && (
         <p
           role="alert"
-          className="mb-3 font-sans text-[12.5px] text-status-error"
+          className="mb-3 font-sans text-caption text-status-error"
         >
           {syncError} Rabatten visas korrekt när du laddar om sidan.
         </p>

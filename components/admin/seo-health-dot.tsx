@@ -36,9 +36,9 @@ export function SeoHealthDot({ level }: { level: SeoHealthLevel }) {
   const s = PALETTE[level];
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-sans text-[12.5px] font-semibold whitespace-nowrap ${s.bg} ${s.fg}`}
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-sans text-caption font-semibold whitespace-nowrap ${s.bg} ${s.fg}`}
     >
-      <span aria-hidden className="text-[13px] leading-none">
+      <span aria-hidden className="text-small leading-none">
         {s.icon}
       </span>
       <span>{s.label}</span>

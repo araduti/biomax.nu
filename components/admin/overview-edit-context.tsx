@@ -70,7 +70,7 @@ export function OverviewEditToggle() {
       <button
         type="button"
         onClick={() => setEditing(true)}
-        className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md border border-border-soft bg-surface-alt font-sans text-[13px] font-semibold text-ink-body hover:bg-surface-warm hover:border-border transition-colors"
+        className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md border border-border-soft bg-surface-alt font-sans text-small font-semibold text-ink-body hover:bg-surface-warm hover:border-border transition-colors"
         data-admin-compact
       >
         <Pencil size={13} strokeWidth={1.75} aria-hidden />
@@ -84,7 +84,7 @@ export function OverviewEditToggle() {
         type="button"
         onClick={requestReset}
         title="Återställ widgetordning och bredder till standardvärden"
-        className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md font-sans text-[12.5px] font-semibold text-ink-mute hover:text-primary-deep hover:bg-surface-warm transition-colors"
+        className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md font-sans text-caption font-semibold text-ink-mute hover:text-primary-deep hover:bg-surface-warm transition-colors"
         data-admin-compact
       >
         <RotateCcw size={13} strokeWidth={1.75} aria-hidden />
@@ -93,7 +93,7 @@ export function OverviewEditToggle() {
       <button
         type="button"
         onClick={() => setEditing(false)}
-        className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md bg-primary-deep text-surface font-sans text-[13px] font-semibold hover:bg-primary transition-colors"
+        className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-md bg-primary-deep text-surface font-sans text-small font-semibold hover:bg-primary transition-colors"
         data-admin-compact
       >
         <Check size={14} strokeWidth={2} aria-hidden />

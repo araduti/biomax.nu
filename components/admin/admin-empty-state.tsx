@@ -32,10 +32,10 @@ export function AdminEmptyState({
   if (variant === "inline") {
     return (
       <div className="rounded-xl border border-dashed border-border bg-surface-warm/40 px-4 py-3">
-        <p className="font-sans text-[10.5px] uppercase tracking-[0.16em] font-semibold text-ink-soft mb-1">
+        <p className="font-sans text-micro uppercase tracking-[0.16em] font-semibold text-ink-soft mb-1">
           {eyebrow}
         </p>
-        <p className="font-sans text-[13px] text-ink-body leading-relaxed">
+        <p className="font-sans text-small text-ink-body leading-relaxed">
           <strong className="font-semibold">{title}.</strong>{" "}
           <span className="text-ink-mute">{body}</span>
         </p>
@@ -46,13 +46,13 @@ export function AdminEmptyState({
 
   return (
     <div className="rounded-xl border border-dashed border-border bg-surface-alt/60 px-5 py-6 md:px-6">
-      <p className="font-sans text-[10.5px] uppercase tracking-[0.16em] font-semibold text-accent-deep mb-1">
+      <p className="font-sans text-micro uppercase tracking-[0.16em] font-semibold text-accent-deep mb-1">
         {eyebrow}
       </p>
       <h3 className="font-display text-xl font-medium tracking-tight text-primary-deep mb-2">
         {title}
       </h3>
-      <div className="font-sans text-[13.5px] text-ink-mute leading-relaxed">
+      <div className="font-sans text-small text-ink-mute leading-relaxed">
         {body}
       </div>
       {cta && <div className="mt-4">{cta}</div>}

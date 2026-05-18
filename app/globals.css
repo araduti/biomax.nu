@@ -69,6 +69,19 @@
   --font-display: var(--font-playfair);
   --font-sans: var(--font-inter);
 
+  /* Closed body-type scale (ADR 0007 extension). Replaces the ad-hoc
+     `text-[Npx]` ladder (~20 distinct values 9–17px, most differing
+     <1px and visually indistinguishable). Names are deliberately
+     distinct from Tailwind's own text-xs/sm/base so they don't
+     clobber the default scale. Heading sizes stay with the Display
+     component / font-display and are out of this scale. */
+  --text-micro: 11px;   /* eyebrows, badges, fine print (was 9–11.5) */
+  --text-caption: 12px; /* captions, meta labels (was 12 / 12.5) */
+  --text-small: 13px;   /* dense UI, secondary copy (was 13 / 13.5) */
+  --text-body: 14px;    /* default body / UI text (was 14 / 14.5) */
+  --text-body-lg: 15px; /* emphasised body (was 15 / 15.5) */
+  --text-lead: 16px;    /* lead paragraphs (was 16 / 16.5 / 17) */
+
   /* Editorial italic accent — lets us write `text-accent-deep italic font-display` */
 }
 

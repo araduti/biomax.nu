@@ -67,7 +67,7 @@ export function CustomerRoleControl({
         </Button>
       )}
       {error && (
-        <span role="alert" className="font-sans text-[13px] text-status-error">
+        <span role="alert" className="font-sans text-small text-status-error">
           {error}
         </span>
       )}

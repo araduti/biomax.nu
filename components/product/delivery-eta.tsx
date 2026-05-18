@@ -28,7 +28,7 @@ export function DeliveryEtaChip() {
     // Pre-hydration placeholder — keeps layout stable. Reads as a
     // generic "fast delivery"-line that survives if JS doesn't run.
     return (
-      <p className="mt-3 font-sans text-[13px] text-ink-mute flex items-center gap-2">
+      <p className="mt-3 font-sans text-small text-ink-mute flex items-center gap-2">
         <DotIndicator />
         Leverans inom 1–3 arbetsdagar
       </p>
@@ -38,7 +38,7 @@ export function DeliveryEtaChip() {
   const arrivalLabel = formatEta(eta);
 
   return (
-    <p className="mt-3 font-sans text-[13px] text-ink-body leading-relaxed flex items-start gap-2">
+    <p className="mt-3 font-sans text-small text-ink-body leading-relaxed flex items-start gap-2">
       <DotIndicator />
       <span>
         {eta.shipsToday && eta.minutesToCutoff !== null && eta.minutesToCutoff > 0 ? (

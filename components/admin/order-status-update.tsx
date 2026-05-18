@@ -38,7 +38,7 @@ export function OrderStatusUpdate({
 
   if (transitions.length === 0) {
     return (
-      <p className="font-sans text-[13px] text-ink-mute italic">
+      <p className="font-sans text-small text-ink-mute italic">
         Inga ytterligare statusändringar tillgängliga.
       </p>
     );
@@ -83,7 +83,7 @@ export function OrderStatusUpdate({
       {error && (
         <p
           role="alert"
-          className="mt-3 font-sans text-[13px] text-status-error bg-status-error/10 px-3 py-2 rounded-md"
+          className="mt-3 font-sans text-small text-status-error bg-status-error/10 px-3 py-2 rounded-md"
         >
           {error}
         </p>

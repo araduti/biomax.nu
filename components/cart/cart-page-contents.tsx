@@ -99,7 +99,7 @@ export function CartPageContents() {
         {/* Summary sidebar */}
         <aside className="bg-surface-alt border border-border rounded-2xl p-6 md:p-7 lg:sticky lg:top-8">
           <Eyebrow className="mb-4">Sammanfattning</Eyebrow>
-          <dl className="space-y-3 font-sans text-[14px]">
+          <dl className="space-y-3 font-sans text-body">
             <div className="flex justify-between text-ink-body">
               <dt>Delsumma</dt>
               <dd className="font-semibold">{formatPriceSEK(subtotal)}</dd>
@@ -126,7 +126,7 @@ export function CartPageContents() {
 
           {freeThresholdSek !== null && remainingForFreeShip > 0 && subtotal > 0 && (
             <div className="mt-5 p-3 rounded-lg bg-surface-warm">
-              <p className="font-sans text-[12px] text-ink-body leading-relaxed">
+              <p className="font-sans text-caption text-ink-body leading-relaxed">
                 <strong className="font-semibold">
                   {formatPriceSEK(remainingForFreeShip)}
                 </strong>{" "}
@@ -147,7 +147,7 @@ export function CartPageContents() {
               {formatPriceSEK(subtotal)}
             </Display>
           </div>
-          <p className="mt-1 font-sans text-[11px] text-ink-soft">
+          <p className="mt-1 font-sans text-micro text-ink-soft">
             Inkl. moms · Klarna · Faktura 30 dagar
           </p>
 
@@ -161,7 +161,7 @@ export function CartPageContents() {
           </ButtonLink>
           <Link
             href="/produkter"
-            className="block text-center mt-3 font-sans text-[13px] text-primary hover:text-primary-deep transition-colors"
+            className="block text-center mt-3 font-sans text-small text-primary hover:text-primary-deep transition-colors"
           >
             Fortsätt handla
           </Link>

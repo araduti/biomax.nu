@@ -213,10 +213,10 @@ export function OverviewWidgetGrid({
             className="md:col-span-2 border-2 border-dashed border-border-soft rounded-xl py-10 flex flex-col items-center justify-center gap-2 text-ink-mute hover:border-primary-deep/60 hover:text-primary-deep hover:bg-surface-warm transition-colors"
           >
             <Plus size={20} strokeWidth={1.75} aria-hidden />
-            <span className="font-sans text-[13px] font-semibold">
+            <span className="font-sans text-small font-semibold">
               Lägg till widget
             </span>
-            <span className="font-sans text-[11.5px] text-ink-soft">
+            <span className="font-sans text-micro text-ink-soft">
               {hiddenIds.length}{" "}
               {hiddenIds.length === 1 ? "tillgänglig" : "tillgängliga"}
             </span>
@@ -271,7 +271,7 @@ function WidgetPicker({
       />
       <div className="relative w-full max-w-[480px] bg-surface-alt border border-border-soft rounded-xl shadow-2xl">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border-soft">
-          <h2 className="font-sans text-[15px] font-semibold text-primary-deep">
+          <h2 className="font-sans text-body-lg font-semibold text-primary-deep">
             Lägg till widget
           </h2>
           <button
@@ -296,7 +296,7 @@ function WidgetPicker({
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-surface-warm transition-colors text-left"
                 >
                   <Plus size={14} strokeWidth={1.75} className="text-ink-mute flex-shrink-0" aria-hidden />
-                  <span className="font-sans text-[13.5px] font-medium text-ink-body">
+                  <span className="font-sans text-small font-medium text-ink-body">
                     {def.label}
                   </span>
                 </button>
@@ -304,7 +304,7 @@ function WidgetPicker({
             );
           })}
           {hiddenIds.length === 0 && (
-            <li className="px-3 py-6 text-center font-sans text-[13px] text-ink-mute italic">
+            <li className="px-3 py-6 text-center font-sans text-small text-ink-mute italic">
               Inga gömda widgets — alla visas redan.
             </li>
           )}

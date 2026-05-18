@@ -26,7 +26,7 @@ export function BundleRail({ bundles }: { bundles: BundleSummary[] }) {
           </div>
           <Link
             href="/paket"
-            className="font-sans text-[14px] font-semibold text-primary-deep underline decoration-accent/40 underline-offset-[4px] hover:decoration-accent transition-colors"
+            className="font-sans text-body font-semibold text-primary-deep underline decoration-accent/40 underline-offset-[4px] hover:decoration-accent transition-colors"
           >
             Visa alla paket →
           </Link>
@@ -67,7 +67,7 @@ export function BundleRail({ bundles }: { bundles: BundleSummary[] }) {
                 >
                   {b.name}
                 </Link>
-                <p className="mt-2 font-sans text-[12.5px] text-ink-mute">
+                <p className="mt-2 font-sans text-caption text-ink-mute">
                   {b.items.length} produkter · {b.discountPercent} % rabatt
                 </p>
                 <div className="mt-auto pt-5 flex items-baseline gap-3">
@@ -75,7 +75,7 @@ export function BundleRail({ bundles }: { bundles: BundleSummary[] }) {
                     {formatPriceSEK(b.bundlePriceSek.toString())}
                   </span>
                   {b.savingsSek > 0 && (
-                    <span className="font-sans text-[13px] text-ink-soft line-through tabular-nums">
+                    <span className="font-sans text-small text-ink-soft line-through tabular-nums">
                       {formatPriceSEK(b.listTotalSek.toString())}
                     </span>
                   )}

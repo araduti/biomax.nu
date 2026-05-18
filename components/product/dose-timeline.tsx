@@ -39,7 +39,7 @@ export function DoseTimeline({ dose }: { dose: Dose }) {
                 {on ? <Dot /> : <Hollow />}
               </span>
               <span
-                className={`mt-2 font-sans text-[10.5px] uppercase tracking-[0.14em] font-semibold ${
+                className={`mt-2 font-sans text-micro uppercase tracking-[0.14em] font-semibold ${
                   on ? "text-accent-deep" : "text-ink-soft"
                 }`}
               >

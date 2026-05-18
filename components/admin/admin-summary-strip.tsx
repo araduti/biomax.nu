@@ -63,7 +63,7 @@ export function AdminSummaryStrip({
         const accent = s.accent ?? "muted";
         return (
           <div key={s.label} className="px-1 py-4 md:px-5">
-            <dt className="font-sans text-[10.5px] uppercase tracking-[0.16em] text-ink-mute font-semibold">
+            <dt className="font-sans text-micro uppercase tracking-[0.16em] text-ink-mute font-semibold">
               {s.label}
             </dt>
             <dd
@@ -72,7 +72,7 @@ export function AdminSummaryStrip({
               {s.value}
             </dd>
             {s.subtle && (
-              <dd className="mt-1.5 font-sans text-[12px] text-ink-mute">
+              <dd className="mt-1.5 font-sans text-caption text-ink-mute">
                 {s.subtle}
               </dd>
             )}

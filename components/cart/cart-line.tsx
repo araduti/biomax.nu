@@ -59,11 +59,11 @@ export function CartLine({
           {item.name}
         </Link>
         {item.variantLabel && (
-          <p className="font-sans text-[11.5px] uppercase tracking-[0.14em] font-semibold text-ink-soft mt-0.5">
+          <p className="font-sans text-micro uppercase tracking-[0.14em] font-semibold text-ink-soft mt-0.5">
             {item.variantLabel}
           </p>
         )}
-        <p className="font-sans text-[12px] text-ink-mute mt-1">
+        <p className="font-sans text-caption text-ink-mute mt-1">
           {formatPriceSEK(item.price)} per st
         </p>
 
@@ -86,7 +86,7 @@ export function CartLine({
             </button>
             <span
               aria-live="polite"
-              className="min-w-[28px] text-center font-sans text-[14px] font-semibold text-ink-body"
+              className="min-w-[28px] text-center font-sans text-body font-semibold text-ink-body"
             >
               {item.quantity}
             </span>
@@ -114,7 +114,7 @@ export function CartLine({
         <button
           type="button"
           onClick={() => remove(item.productId, item.variantId, item.bundleId)}
-          className="self-start mt-2 font-sans text-[12px] text-ink-soft hover:text-status-error transition-colors"
+          className="self-start mt-2 font-sans text-caption text-ink-soft hover:text-status-error transition-colors"
         >
           Ta bort
         </button>

@@ -65,7 +65,7 @@ export function Categories({ categories }: { categories: CategoryWithCount[] }) 
                   </h3>
                   <div className="flex justify-between items-baseline gap-2 font-sans text-xs text-ink-mute">
                     {meta && (
-                      <span className="font-display italic text-[13px] text-ink-body truncate">
+                      <span className="font-display italic text-small text-ink-body truncate">
                         {meta.signature}
                       </span>
                     )}

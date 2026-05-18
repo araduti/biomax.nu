@@ -88,7 +88,7 @@ export function CategoryEditForm({
       <div>
         <label
           htmlFor="cat-name"
-          className="block font-sans text-[12px] font-semibold text-ink-soft mb-1.5"
+          className="block font-sans text-caption font-semibold text-ink-soft mb-1.5"
         >
           Namn
         </label>
@@ -103,12 +103,12 @@ export function CategoryEditForm({
       <div>
         <label
           htmlFor="cat-slug"
-          className="block font-sans text-[12px] font-semibold text-ink-soft mb-1.5"
+          className="block font-sans text-caption font-semibold text-ink-soft mb-1.5"
         >
           Slug
         </label>
         <div className="flex items-center gap-2">
-          <span className="font-mono text-[12.5px] text-ink-soft">
+          <span className="font-mono text-caption text-ink-soft">
             /kategorier/
           </span>
           <Input
@@ -122,7 +122,7 @@ export function CategoryEditForm({
           />
         </div>
         {slug !== initial.slug && (
-          <p className="mt-1.5 font-sans text-[11.5px] text-ink-soft">
+          <p className="mt-1.5 font-sans text-micro text-ink-soft">
             Den gamla URL:en omdirigeras automatiskt (301).
           </p>
         )}
@@ -131,7 +131,7 @@ export function CategoryEditForm({
       <div>
         <label
           htmlFor="cat-desc"
-          className="block font-sans text-[12px] font-semibold text-ink-soft mb-1.5"
+          className="block font-sans text-caption font-semibold text-ink-soft mb-1.5"
         >
           Beskrivning
         </label>
@@ -141,9 +141,9 @@ export function CategoryEditForm({
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           disabled={pending}
-          className="w-full px-3 py-2 bg-surface border border-border rounded-md font-sans text-[13.5px] text-ink-body placeholder:text-ink-soft focus:outline-none focus:border-accent disabled:opacity-50"
+          className="w-full px-3 py-2 bg-surface border border-border rounded-md font-sans text-small text-ink-body placeholder:text-ink-soft focus:outline-none focus:border-accent disabled:opacity-50"
         />
-        <p className="mt-1.5 font-sans text-[11.5px] text-ink-soft">
+        <p className="mt-1.5 font-sans text-micro text-ink-soft">
           Visas som inledning på kategorisidan.
         </p>
       </div>
@@ -170,14 +170,14 @@ export function CategoryEditForm({
           </Button>
         )}
         {productCount > 0 && (
-          <p className="font-sans text-[11.5px] text-ink-soft">
+          <p className="font-sans text-micro text-ink-soft">
             Kan inte tas bort medan {productCount} produkter använder den.
           </p>
         )}
         {saved && (
           <span
             role="status"
-            className="font-sans text-[12.5px] text-accent-deep font-semibold"
+            className="font-sans text-caption text-accent-deep font-semibold"
           >
             ✓ Sparat
           </span>
@@ -187,7 +187,7 @@ export function CategoryEditForm({
       {error && (
         <p
           role="alert"
-          className="font-sans text-[12.5px] text-status-error bg-status-error/10 px-3 py-2 rounded-md"
+          className="font-sans text-caption text-status-error bg-status-error/10 px-3 py-2 rounded-md"
         >
           {error}
         </p>

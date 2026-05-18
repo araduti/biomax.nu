@@ -38,11 +38,11 @@ export function MemberGreeting({
   return (
     <div className="mb-8 rounded-2xl bg-surface-warm border border-accent/20 px-6 py-5 flex items-center justify-between gap-4 flex-wrap">
       <div className="flex items-center gap-3.5">
-        <span className="w-9 h-9 rounded-full bg-accent text-white grid place-items-center font-display text-[15px] font-bold flex-shrink-0">
+        <span className="w-9 h-9 rounded-full bg-accent text-white grid place-items-center font-display text-body-lg font-bold flex-shrink-0">
           B
         </span>
         <div>
-          <p className="font-sans text-[11px] uppercase tracking-[0.16em] font-semibold text-accent-deep">
+          <p className="font-sans text-micro uppercase tracking-[0.16em] font-semibold text-accent-deep">
             {LOYALTY_PROGRAM_NAME}
           </p>
           <p className="mt-1 font-display text-[20px] md:text-[22px] font-medium tracking-tight text-primary-deep leading-tight">
@@ -56,7 +56,7 @@ export function MemberGreeting({
       </div>
       <a
         href="#loyalty-redeem"
-        className="font-sans text-[13px] font-semibold text-primary-deep border border-border rounded-full px-4 py-2 hover:bg-surface-alt transition-colors whitespace-nowrap"
+        className="font-sans text-small font-semibold text-primary-deep border border-border rounded-full px-4 py-2 hover:bg-surface-alt transition-colors whitespace-nowrap"
       >
         Använd poäng nedan ↓
       </a>

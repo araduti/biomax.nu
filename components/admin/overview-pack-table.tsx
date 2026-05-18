@@ -97,7 +97,7 @@ export function OverviewPackTable({ rows }: { rows: PackQueueRow[] }) {
         <div
           role="status"
           aria-live="polite"
-          className="fixed top-[60px] right-7 z-30 px-3 py-1.5 rounded-[5px] bg-[var(--d-ink)] text-[var(--d-bg)] font-mono text-[12px] font-medium shadow-sm"
+          className="fixed top-[60px] right-7 z-30 px-3 py-1.5 rounded-[5px] bg-[var(--d-ink)] text-[var(--d-bg)] font-mono text-caption font-medium shadow-sm"
         >
           {flash}
         </div>
@@ -150,24 +150,24 @@ export function OverviewPackTable({ rows }: { rows: PackQueueRow[] }) {
                   <td className="py-0">
                     <Link
                       href={`/admin/ordrar/${o.orderNumber}`}
-                      className="flex items-center h-9 font-mono text-[12px] font-medium text-[var(--d-ink)] hover:text-[var(--d-accent)] transition-colors"
+                      className="flex items-center h-9 font-mono text-caption font-medium text-[var(--d-ink)] hover:text-[var(--d-accent)] transition-colors"
                     >
                       {o.orderNumber}
                     </Link>
                   </td>
                   <td className="py-0">
-                    <span className="font-sans text-[13.5px] text-[var(--d-ink)] truncate inline-block max-w-[220px] align-middle">
+                    <span className="font-sans text-small text-[var(--d-ink)] truncate inline-block max-w-[220px] align-middle">
                       {o.customerName}
                     </span>
                     {/* Email truncated as serif-italic metadata in
                         ink-3 (Direction D pitfall guidance: "truncate
                         emails with serif italic + …"). */}
-                    <span className="ml-1.5 font-display italic text-[13px] text-[var(--d-ink-3)]">
+                    <span className="ml-1.5 font-display italic text-small text-[var(--d-ink-3)]">
                       · {shortEmail(o.email)}
                     </span>
                   </td>
                   <td className="py-0">
-                    <span className="font-mono text-[12px] text-[var(--d-ink-3)] tabular-nums whitespace-nowrap">
+                    <span className="font-mono text-caption text-[var(--d-ink-3)] tabular-nums whitespace-nowrap">
                       {dateFmt.format(o.createdAt)}
                     </span>
                   </td>
@@ -175,7 +175,7 @@ export function OverviewPackTable({ rows }: { rows: PackQueueRow[] }) {
                     <span className="d-pill d-pill-warn">Att packa</span>
                   </td>
                   <td className="py-0">
-                    <span className="inline-flex items-center gap-1.5 font-sans text-[13px] text-[var(--d-ink-2)]">
+                    <span className="inline-flex items-center gap-1.5 font-sans text-small text-[var(--d-ink-2)]">
                       <span
                         aria-hidden
                         className="w-[6px] h-[6px] rounded-full flex-shrink-0"
@@ -185,7 +185,7 @@ export function OverviewPackTable({ rows }: { rows: PackQueueRow[] }) {
                     </span>
                   </td>
                   <td className="py-0 pr-1 text-right">
-                    <span className="font-sans text-[13.5px] font-medium text-[var(--d-ink)] tabular-nums whitespace-nowrap">
+                    <span className="font-sans text-small font-medium text-[var(--d-ink)] tabular-nums whitespace-nowrap">
                       {formatPriceSEK(o.totalAmount)}
                     </span>
                   </td>
@@ -202,7 +202,7 @@ export function OverviewPackTable({ rows }: { rows: PackQueueRow[] }) {
           aria-label="Markerade ordrar"
           className="fixed bottom-0 left-0 lg:left-[224px] right-0 z-30 bg-[var(--d-ink)] text-[var(--d-bg)] px-5 md:px-7 py-2.5 flex items-center gap-4"
         >
-          <span className="font-mono text-[12px] font-medium tabular-nums">
+          <span className="font-mono text-caption font-medium tabular-nums">
             {selected.size} valda
           </span>
           <button
@@ -210,7 +210,7 @@ export function OverviewPackTable({ rows }: { rows: PackQueueRow[] }) {
             onClick={bulkFulfill}
             disabled={pending}
             data-admin-compact
-            className="inline-flex items-center gap-1.5 h-7 px-3 rounded-[5px] bg-[var(--d-bg)] text-[var(--d-ink)] font-sans text-[13px] font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 h-7 px-3 rounded-[5px] bg-[var(--d-bg)] text-[var(--d-ink)] font-sans text-small font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             <Check size={13} strokeWidth={2.25} aria-hidden />
             Markera som skickade
@@ -220,7 +220,7 @@ export function OverviewPackTable({ rows }: { rows: PackQueueRow[] }) {
             onClick={() => setSelected(new Set())}
             disabled={pending}
             data-admin-compact
-            className="ml-auto font-sans text-[13px] text-[var(--d-bg)]/70 hover:text-[var(--d-bg)] transition-colors"
+            className="ml-auto font-sans text-small text-[var(--d-bg)]/70 hover:text-[var(--d-bg)] transition-colors"
           >
             Avbryt
           </button>

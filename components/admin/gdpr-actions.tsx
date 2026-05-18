@@ -64,7 +64,7 @@ export function GdprActions({ userId }: { userId: string }) {
         <p className="font-display text-base font-medium text-primary-deep mb-1">
           Exportera all data
         </p>
-        <p className="font-sans text-[12.5px] text-ink-mute mb-4 leading-relaxed">
+        <p className="font-sans text-caption text-ink-mute mb-4 leading-relaxed">
           Skickar tillbaka en JSON-fil med konto, beställningar, recensioner,
           prenumerationer, adresser och samtycken. Uppfyller artikel 15.
         </p>
@@ -84,7 +84,7 @@ export function GdprActions({ userId }: { userId: string }) {
         <p className="font-display text-base font-medium text-primary-deep mb-1">
           Anonymisera kund
         </p>
-        <p className="font-sans text-[12.5px] text-ink-mute mb-4 leading-relaxed">
+        <p className="font-sans text-caption text-ink-mute mb-4 leading-relaxed">
           Tar bort all personlig data. Beställningar bevaras (bokföringslagen)
           men knyts till en anonym sentinel. Detta går inte att ångra.
         </p>
@@ -99,14 +99,14 @@ export function GdprActions({ userId }: { userId: string }) {
           </Button>
         ) : (
           <div>
-            <p className="font-sans text-[12.5px] text-ink-body mb-2">
+            <p className="font-sans text-caption text-ink-body mb-2">
               Skriv <strong>ANONYMISERA</strong> för att bekräfta:
             </p>
             <input
               type="text"
               value={confirmText}
               onChange={(e) => setConfirmText(e.target.value)}
-              className="w-full px-3 py-2 mb-3 bg-surface border border-border rounded-md font-sans text-[14px] text-ink-body focus:outline-none focus:border-accent"
+              className="w-full px-3 py-2 mb-3 bg-surface border border-border rounded-md font-sans text-body text-ink-body focus:outline-none focus:border-accent"
               autoFocus
               disabled={pending}
             />
@@ -115,7 +115,7 @@ export function GdprActions({ userId }: { userId: string }) {
                 type="button"
                 onClick={doAnonymize}
                 disabled={pending || confirmText !== "ANONYMISERA"}
-                className="px-3 py-1.5 rounded-md bg-status-error text-surface hover:bg-[#9F4630] disabled:opacity-40 disabled:cursor-not-allowed font-sans text-[13px] font-semibold transition-colors"
+                className="px-3 py-1.5 rounded-md bg-status-error text-surface hover:bg-[#9F4630] disabled:opacity-40 disabled:cursor-not-allowed font-sans text-small font-semibold transition-colors"
               >
                 {pending ? "Anonymiserar…" : "Anonymisera"}
               </button>
@@ -127,7 +127,7 @@ export function GdprActions({ userId }: { userId: string }) {
                   setError(null);
                 }}
                 disabled={pending}
-                className="font-sans text-[13px] text-ink-soft hover:text-ink-body"
+                className="font-sans text-small text-ink-soft hover:text-ink-body"
               >
                 Avbryt
               </button>
@@ -139,7 +139,7 @@ export function GdprActions({ userId }: { userId: string }) {
       {error && (
         <p
           role="alert"
-          className="md:col-span-2 font-sans text-[12.5px] text-status-error"
+          className="md:col-span-2 font-sans text-caption text-status-error"
         >
           {error}
         </p>

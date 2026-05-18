@@ -45,7 +45,7 @@ function Chip({
       : "bg-accent/12 text-accent-deep border-accent/25";
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-sans text-[12.5px] font-medium tracking-tight ${palette}`}
+      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-sans text-caption font-medium tracking-tight ${palette}`}
     >
       <span aria-hidden className="flex-shrink-0">
         {icon}

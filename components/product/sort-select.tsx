@@ -48,7 +48,7 @@ export function SortSelect({
   }
 
   return (
-    <label className="inline-flex items-center gap-2 font-sans text-[12.5px] text-ink-mute whitespace-nowrap">
+    <label className="inline-flex items-center gap-2 font-sans text-caption text-ink-mute whitespace-nowrap">
       <span className="hidden sm:inline">Sortera efter</span>
       <span className="sm:hidden">Sortera</span>
       <span className="relative">
@@ -56,7 +56,7 @@ export function SortSelect({
           value={current}
           onChange={onChange}
           aria-label="Sortera produkter"
-          className="appearance-none pr-7 pl-3 py-1.5 rounded-full border border-border bg-surface-alt font-sans text-[13px] font-semibold text-ink-body cursor-pointer hover:border-accent transition-colors focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+          className="appearance-none pr-7 pl-3 py-1.5 rounded-full border border-border bg-surface-alt font-sans text-small font-semibold text-ink-body cursor-pointer hover:border-accent transition-colors focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
         >
           {options.map((o) => (
             <option key={o.value} value={o.value}>
@@ -66,7 +66,7 @@ export function SortSelect({
         </select>
         <span
           aria-hidden
-          className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-soft text-[10px]"
+          className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-soft text-micro"
         >
           ▾
         </span>

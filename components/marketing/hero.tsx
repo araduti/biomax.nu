@@ -104,7 +104,7 @@ export function Hero({ season, meta, featured }: Props) {
               />
             </Link>
             <div className="flex-1 min-w-0">
-              <span className="font-sans text-[9px] font-bold uppercase tracking-[0.22em] text-accent-deep flex items-center gap-1.5">
+              <span className="font-sans text-micro font-bold uppercase tracking-[0.22em] text-accent-deep flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-accent" />
                 Säsongens favorit
               </span>
@@ -162,7 +162,7 @@ export function Hero({ season, meta, featured }: Props) {
               />
             </Link>
             <div className="flex-1 min-w-0">
-              <span className="font-sans text-[9px] font-bold uppercase tracking-[0.22em] text-accent-deep flex items-center gap-1.5">
+              <span className="font-sans text-micro font-bold uppercase tracking-[0.22em] text-accent-deep flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-accent" />
                 Säsongens favorit
               </span>

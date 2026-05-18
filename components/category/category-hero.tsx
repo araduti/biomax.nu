@@ -39,7 +39,7 @@ export function CategoryHero({
           <p className="mt-3 font-sans text-base md:text-lg leading-relaxed text-ink-body max-w-[600px]">
             {meta.description}
           </p>
-          <p className="mt-6 font-sans italic text-[15px] text-ink-mute">
+          <p className="mt-6 font-sans italic text-body-lg text-ink-mute">
             Signaturväxt: <Accent>{meta.signature}</Accent>
           </p>
         </div>

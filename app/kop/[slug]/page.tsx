@@ -157,14 +157,14 @@ export default async function IngredientBuyPage({
                       <h3 className="font-display text-xl md:text-[22px] font-medium tracking-tight text-primary-deep group-hover:text-accent-deep transition-colors">
                         {p.name}
                       </h3>
-                      <p className="mt-2 font-sans text-[14px] text-ink-mute leading-snug line-clamp-2">
+                      <p className="mt-2 font-sans text-body text-ink-mute leading-snug line-clamp-2">
                         {stripHtml(p.shortDescription, 120) || ""}
                       </p>
                       <div className="mt-4 flex items-baseline justify-between gap-3">
                         <span className="font-display text-xl text-primary-deep">
                           {formatPriceSEK(p.price)}
                         </span>
-                        <span className="font-sans text-[12px] text-accent-deep uppercase tracking-[0.18em] font-semibold">
+                        <span className="font-sans text-caption text-accent-deep uppercase tracking-[0.18em] font-semibold">
                           {p.inStock ? "Visa →" : "Slut →"}
                         </span>
                       </div>
@@ -181,14 +181,14 @@ export default async function IngredientBuyPage({
               <h2 className="mt-2 mb-5 font-display text-2xl md:text-[28px] font-medium tracking-tight text-primary-deep">
                 Kort om ämnet
               </h2>
-              <div className="font-sans text-[16px] md:text-[16.5px] leading-[1.7] text-ink-body space-y-4">
+              <div className="font-sans text-lead md:text-lead leading-[1.7] text-ink-body space-y-4">
                 {ing.body.slice(0, 2).map((p, i) => (
                   <p key={i}>{p}</p>
                 ))}
               </div>
               <Link
                 href={`/kunskap/ingredienser/${ing.slug}`}
-                className="mt-5 inline-flex items-center gap-2 font-sans text-[13px] font-semibold text-accent-deep hover:text-primary-deep transition-colors"
+                className="mt-5 inline-flex items-center gap-2 font-sans text-small font-semibold text-accent-deep hover:text-primary-deep transition-colors"
               >
                 <span aria-hidden>◇</span>
                 Hela monografin om {ing.name}
@@ -200,7 +200,7 @@ export default async function IngredientBuyPage({
               <p className="mt-3 font-display text-[20px] leading-snug text-primary-deep">
                 Familjeföretag sedan 2001.
               </p>
-              <ul className="mt-4 space-y-2 font-sans text-[14px] text-ink-body leading-[1.6]">
+              <ul className="mt-4 space-y-2 font-sans text-body text-ink-body leading-[1.6]">
                 <li>· Receptfritt — köp direkt online</li>
                 <li>· Fri frakt över 499 kr i Sverige</li>
                 <li>· 30 dagars öppet köp</li>
@@ -222,10 +222,10 @@ export default async function IngredientBuyPage({
                       href={`/kunskap/ingredienser/${r.slug}`}
                       className="block h-full bg-surface-alt border border-border rounded-xl px-5 py-4 hover:border-accent hover:bg-surface transition-colors"
                     >
-                      <span className="font-display text-[17px] font-medium text-primary-deep block leading-tight">
+                      <span className="font-display text-lead font-medium text-primary-deep block leading-tight">
                         {r.name}
                       </span>
-                      <span className="mt-1.5 block font-sans text-[13px] text-ink-mute leading-snug line-clamp-2">
+                      <span className="mt-1.5 block font-sans text-small text-ink-mute leading-snug line-clamp-2">
                         {r.summary}
                       </span>
                     </Link>

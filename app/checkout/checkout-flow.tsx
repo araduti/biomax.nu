@@ -192,7 +192,7 @@ export function CheckoutFlow({
       {/* Breadcrumb (prototype parity) */}
       <nav
         aria-label="Brödsmulor"
-        className="mb-6 font-sans text-[13px] text-ink-mute"
+        className="mb-6 font-sans text-small text-ink-mute"
       >
         <Link href="/varukorg" className="hover:text-ink-body">
           Varukorg
@@ -210,7 +210,7 @@ export function CheckoutFlow({
             Slutför ditt köp
           </Display>
         </div>
-        <p className="font-sans text-[13px] text-ink-mute flex items-center gap-1.5 pb-1">
+        <p className="font-sans text-small text-ink-mute flex items-center gap-1.5 pb-1">
           <svg
             aria-hidden
             width="13"
@@ -247,10 +247,10 @@ export function CheckoutFlow({
         {klarnaConfigured ? (
           <div className="min-w-0">
             <fieldset className="bg-surface-alt border border-border rounded-2xl p-6 md:p-8">
-              <legend className="px-2 -ml-2 font-sans text-[11px] uppercase tracking-[0.22em] font-semibold text-ink-mute">
+              <legend className="px-2 -ml-2 font-sans text-micro uppercase tracking-[0.22em] font-semibold text-ink-mute">
                 Kassa
               </legend>
-              <p className="mt-3 font-sans text-[13px] text-ink-mute leading-relaxed">
+              <p className="mt-3 font-sans text-small text-ink-mute leading-relaxed">
                 Fyll i dina uppgifter, välj leveranssätt och betala i
                 kassan nedan.
               </p>
@@ -270,7 +270,7 @@ export function CheckoutFlow({
                       Hoppa över formuläret
                     </p>
                   </div>
-                  <p className="font-sans text-[12px] text-ink-mute text-right leading-snug">
+                  <p className="font-sans text-caption text-ink-mute text-right leading-snug">
                     90% slutför snabbare
                     <br />
                     med förifyllda uppgifter
@@ -287,14 +287,14 @@ export function CheckoutFlow({
                       <button
                         type="button"
                         disabled
-                        className="h-12 rounded-lg bg-ink text-surface font-sans text-[15px] font-semibold inline-flex items-center justify-center opacity-60 cursor-not-allowed"
+                        className="h-12 rounded-lg bg-ink text-surface font-sans text-body-lg font-semibold inline-flex items-center justify-center opacity-60 cursor-not-allowed"
                       >
                         Apple&nbsp;Pay
                       </button>
                       <button
                         type="button"
                         disabled
-                        className="h-12 rounded-lg bg-surface-alt border border-border text-ink-body font-sans text-[15px] font-semibold inline-flex items-center justify-center gap-1.5 opacity-60 cursor-not-allowed"
+                        className="h-12 rounded-lg bg-surface-alt border border-border text-ink-body font-sans text-body-lg font-semibold inline-flex items-center justify-center gap-1.5 opacity-60 cursor-not-allowed"
                       >
                         <span aria-hidden className="font-bold">
                           G
@@ -304,13 +304,13 @@ export function CheckoutFlow({
                       <button
                         type="button"
                         disabled
-                        className="h-12 rounded-lg font-sans text-[14px] font-semibold text-ink opacity-60 cursor-not-allowed"
+                        className="h-12 rounded-lg font-sans text-body font-semibold text-ink opacity-60 cursor-not-allowed"
                         style={{ background: "#FFA8CD" }}
                       >
                         Klarna Express
                       </button>
                     </div>
-                    <p className="mt-2 font-sans text-[11px] text-ink-soft">
+                    <p className="mt-2 font-sans text-micro text-ink-soft">
                       Snabb-betala aktiveras snart.
                     </p>
                   </>
@@ -318,7 +318,7 @@ export function CheckoutFlow({
 
                 <div className="mt-5 flex items-center gap-3 text-ink-mute">
                   <span className="flex-1 h-px bg-border" />
-                  <span className="font-sans text-[12px]">
+                  <span className="font-sans text-caption">
                     eller fyll i nedan
                   </span>
                   <span className="flex-1 h-px bg-border" />
@@ -340,7 +340,7 @@ export function CheckoutFlow({
         <form onSubmit={handleSubmit} method="post" action="#" noValidate>
           {/* Customer info */}
           <fieldset className="bg-surface-alt border border-border rounded-2xl p-6 md:p-8 mb-6">
-            <legend className="px-2 -ml-2 font-sans text-[11px] uppercase tracking-[0.22em] font-semibold text-ink-mute">
+            <legend className="px-2 -ml-2 font-sans text-micro uppercase tracking-[0.22em] font-semibold text-ink-mute">
               Dina uppgifter
             </legend>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
@@ -404,7 +404,7 @@ export function CheckoutFlow({
 
           {/* Shipping */}
           <fieldset className="bg-surface-alt border border-border rounded-2xl p-6 md:p-8 mb-6">
-            <legend className="px-2 -ml-2 font-sans text-[11px] uppercase tracking-[0.22em] font-semibold text-ink-mute">
+            <legend className="px-2 -ml-2 font-sans text-micro uppercase tracking-[0.22em] font-semibold text-ink-mute">
               Leveransadress
             </legend>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
@@ -435,14 +435,14 @@ export function CheckoutFlow({
                 className="md:col-span-2"
               />
             </div>
-            <p className="mt-3 font-sans text-[12px] text-ink-soft">
+            <p className="mt-3 font-sans text-caption text-ink-soft">
               Vi levererar endast inom Sverige.
             </p>
           </fieldset>
 
           {/* Delivery method — PostNord */}
           <fieldset className="bg-surface-alt border border-border rounded-2xl p-6 md:p-8 mb-6">
-            <legend className="px-2 -ml-2 font-sans text-[11px] uppercase tracking-[0.22em] font-semibold text-ink-mute">
+            <legend className="px-2 -ml-2 font-sans text-micro uppercase tracking-[0.22em] font-semibold text-ink-mute">
               Leveranssätt
             </legend>
             <div className="space-y-3 mt-4">
@@ -462,10 +462,10 @@ export function CheckoutFlow({
                   className="mt-1 w-4 h-4"
                 />
                 <span>
-                  <span className="block font-sans text-[14px] font-semibold text-primary-deep">
+                  <span className="block font-sans text-body font-semibold text-primary-deep">
                     Hämta hos PostNord-ombud
                   </span>
-                  <span className="block mt-0.5 font-sans text-[12.5px] text-ink-mute">
+                  <span className="block mt-0.5 font-sans text-caption text-ink-mute">
                     Du får ett sms när paketet finns att hämta. Hämtas inom 14 dagar.
                   </span>
                 </span>
@@ -489,10 +489,10 @@ export function CheckoutFlow({
                   className="mt-1 w-4 h-4"
                 />
                 <span>
-                  <span className="block font-sans text-[14px] font-semibold text-primary-deep">
+                  <span className="block font-sans text-body font-semibold text-primary-deep">
                     Hem till dörren
                   </span>
-                  <span className="block mt-0.5 font-sans text-[12.5px] text-ink-mute">
+                  <span className="block mt-0.5 font-sans text-caption text-ink-mute">
                     PostNord MyPack Home — levereras till adressen ovan.
                   </span>
                 </span>
@@ -501,7 +501,7 @@ export function CheckoutFlow({
 
             {deliveryMethod === "pickup" && (
               <div className="mt-6 pt-6 border-t border-border-soft">
-                <p className="font-sans text-[12px] uppercase tracking-[0.18em] font-semibold text-ink-soft mb-3">
+                <p className="font-sans text-caption uppercase tracking-[0.18em] font-semibold text-ink-soft mb-3">
                   Välj ombud
                 </p>
                 <ServicePointPicker
@@ -515,7 +515,7 @@ export function CheckoutFlow({
 
           {/* Payment */}
           <fieldset className="bg-surface-alt border border-border rounded-2xl p-6 md:p-8 mb-6">
-            <legend className="px-2 -ml-2 font-sans text-[11px] uppercase tracking-[0.22em] font-semibold text-ink-mute">
+            <legend className="px-2 -ml-2 font-sans text-micro uppercase tracking-[0.22em] font-semibold text-ink-mute">
               Betalning
             </legend>
 
@@ -525,13 +525,13 @@ export function CheckoutFlow({
                   className="rounded-xl border-2 border-dashed border-accent bg-surface-warm p-6 mb-5"
                   role="status"
                 >
-                  <p className="font-sans text-[10px] uppercase tracking-[0.22em] font-bold text-primary mb-2">
+                  <p className="font-sans text-micro uppercase tracking-[0.22em] font-bold text-primary mb-2">
                     Klarna sandbox — ej konfigurerad
                   </p>
-                  <p className="font-sans text-[14px] text-ink-mute leading-relaxed">
+                  <p className="font-sans text-body text-ink-mute leading-relaxed">
                     Klarnas riktiga betalningsfönster visas här när
                     KLARNA_USERNAME och KLARNA_PASSWORD är satta i
-                    <code className="font-mono text-[12px] mx-1 px-1.5 py-0.5 bg-surface-alt rounded">
+                    <code className="font-mono text-caption mx-1 px-1.5 py-0.5 bg-surface-alt rounded">
                       .env.local
                     </code>
                     . Knappen nedan skapar en testorder i databasen så att
@@ -546,7 +546,7 @@ export function CheckoutFlow({
                     onChange={(e) => setMarketingConsent(e.target.checked)}
                     className="mt-1 w-4 h-4"
                   />
-                  <span className="font-sans text-[13px] text-ink-body leading-relaxed">
+                  <span className="font-sans text-small text-ink-body leading-relaxed">
                     Jag vill få nyhetsbrev från Biomax — forskning, urval och
                     erbjudanden. Avregistrera när som helst.
                   </span>
@@ -561,7 +561,7 @@ export function CheckoutFlow({
                     aria-required="true"
                     className="mt-1 w-4 h-4"
                   />
-                  <span className="font-sans text-[13px] text-ink-body leading-relaxed">
+                  <span className="font-sans text-small text-ink-body leading-relaxed">
                     Jag har läst och godkänner{" "}
                     <Link
                       href="/villkor"
@@ -586,7 +586,7 @@ export function CheckoutFlow({
                 {error && (
                   <p
                     role="alert"
-                    className="font-sans text-[13px] text-status-error bg-status-error/10 px-3 py-2 rounded-md mb-4"
+                    className="font-sans text-small text-status-error bg-status-error/10 px-3 py-2 rounded-md mb-4"
                   >
                     {error}
                   </p>
@@ -612,7 +612,7 @@ export function CheckoutFlow({
                     the submit point. We never list a badge we can't back
                     up; "Trygg E-handel" lands here once the application
                     is approved. */}
-                <ul className="mt-5 grid grid-cols-2 gap-3 font-sans text-[12px] text-ink-mute leading-snug">
+                <ul className="mt-5 grid grid-cols-2 gap-3 font-sans text-caption text-ink-mute leading-snug">
                   <li className="flex gap-2">
                     <span aria-hidden className="text-accent-deep mt-0.5">✓</span>
                     <span>Familjeägt sedan 2001, Kållered</span>
@@ -649,7 +649,7 @@ export function CheckoutFlow({
             </div>
             <Link
               href="/varukorg"
-              className="font-sans text-[12px] text-ink-mute underline decoration-ink-mute/40 underline-offset-[3px] hover:text-ink-body"
+              className="font-sans text-caption text-ink-mute underline decoration-ink-mute/40 underline-offset-[3px] hover:text-ink-body"
             >
               Redigera kundvagn
             </Link>
@@ -667,10 +667,10 @@ export function CheckoutFlow({
                   />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-display text-[15px] font-medium tracking-tight text-primary-deep leading-tight line-clamp-2">
+                  <p className="font-display text-body-lg font-medium tracking-tight text-primary-deep leading-tight line-clamp-2">
                     {i.name}
                   </p>
-                  <p className="font-sans text-[12px] text-ink-mute mt-0.5">
+                  <p className="font-sans text-caption text-ink-mute mt-0.5">
                     {formatPriceSEK(i.price)} / st
                   </p>
                   <div className="mt-1.5 inline-flex items-center rounded-full border border-border">
@@ -686,11 +686,11 @@ export function CheckoutFlow({
                           i.bundleId ?? null
                         )
                       }
-                      className="w-7 h-7 grid place-items-center text-ink-body text-[15px] disabled:opacity-30 disabled:cursor-not-allowed hover:text-primary-deep"
+                      className="w-7 h-7 grid place-items-center text-ink-body text-body-lg disabled:opacity-30 disabled:cursor-not-allowed hover:text-primary-deep"
                     >
                       −
                     </button>
-                    <span className="px-2 font-sans text-[13px] font-medium tabular-nums min-w-[1.5rem] text-center">
+                    <span className="px-2 font-sans text-small font-medium tabular-nums min-w-[1.5rem] text-center">
                       {i.quantity}
                     </span>
                     <button
@@ -705,13 +705,13 @@ export function CheckoutFlow({
                           i.bundleId ?? null
                         )
                       }
-                      className="w-7 h-7 grid place-items-center text-ink-body text-[15px] disabled:opacity-30 disabled:cursor-not-allowed hover:text-primary-deep"
+                      className="w-7 h-7 grid place-items-center text-ink-body text-body-lg disabled:opacity-30 disabled:cursor-not-allowed hover:text-primary-deep"
                     >
                       +
                     </button>
                   </div>
                 </div>
-                <span className="font-sans text-[14px] font-semibold text-ink-body whitespace-nowrap self-start">
+                <span className="font-sans text-body font-semibold text-ink-body whitespace-nowrap self-start">
                   {formatPriceSEK(parseFloat(i.price) * i.quantity)}
                 </span>
               </li>
@@ -731,7 +731,7 @@ export function CheckoutFlow({
                 value={loyaltyPoints}
                 onChange={setLoyaltyPoints}
               />
-              <p className="mt-2 font-sans text-[12px] text-ink-soft">
+              <p className="mt-2 font-sans text-caption text-ink-soft">
                 Rabatten uppdateras automatiskt i kassan en liten stund
                 efter att du ändrat poängen.
               </p>
@@ -756,7 +756,7 @@ export function CheckoutFlow({
                   : null;
                 return (
                   <>
-                    <div className="pt-5 border-t border-border-soft font-sans text-[14px] text-ink-body">
+                    <div className="pt-5 border-t border-border-soft font-sans text-body text-ink-body">
                       <div className="flex justify-between py-1">
                         <span>Delsumma</span>
                         <span className="tabular-nums">
@@ -799,12 +799,12 @@ export function CheckoutFlow({
                           {formatPriceSEK(totalKr as number)}
                         </span>
                       ) : (
-                        <span className="font-display text-[16px] text-ink-mute">
+                        <span className="font-display text-lead text-ink-mute">
                           räknas i kassan
                         </span>
                       )}
                     </div>
-                    <p className="mt-1 font-sans text-[11px] text-ink-soft text-right">
+                    <p className="mt-1 font-sans text-micro text-ink-soft text-right">
                       {known
                         ? "Inkl. frakt & moms · säker betalning via Kustom"
                         : "Frakt och slutsumma visas i kassan · säker betalning via Kustom"}
@@ -816,10 +816,10 @@ export function CheckoutFlow({
 
               {/* Earn-back hint — cream pill (mockup parity) */}
               <div className="mt-5 flex items-center gap-2.5 rounded-xl bg-surface-warm border border-accent/20 px-4 py-3">
-                <span aria-hidden className="text-accent-deep text-[15px]">
+                <span aria-hidden className="text-accent-deep text-body-lg">
                   ✦
                 </span>
-                <span className="font-sans text-[12.5px] text-ink-body leading-snug">
+                <span className="font-sans text-caption text-ink-body leading-snug">
                   Du samlar ca{" "}
                   <strong className="text-primary-deep tabular-nums">
                     {pointsFromKr(
@@ -838,7 +838,7 @@ export function CheckoutFlow({
                 onChange={setLoyaltyPoints}
               />
 
-              <dl className="space-y-2.5 font-sans text-[14px] pt-5 border-t border-border-soft">
+              <dl className="space-y-2.5 font-sans text-body pt-5 border-t border-border-soft">
                 <div className="flex justify-between text-ink-body">
                   <dt>Delsumma</dt>
                   <dd className="font-semibold">
@@ -882,7 +882,7 @@ export function CheckoutFlow({
                   {formatPriceSEK(total)}
                 </Display>
               </div>
-              <p className="mt-1 font-sans text-[11px] text-ink-soft">
+              <p className="mt-1 font-sans text-micro text-ink-soft">
                 Priser inkl. moms · faktura skickas efter köp
               </p>
             </>
@@ -924,15 +924,15 @@ export function CheckoutFlow({
                 <li key={it.t} className="flex gap-2.5 items-start">
                   <span
                     aria-hidden
-                    className="mt-0.5 w-7 h-7 rounded-full bg-surface-warm text-accent-deep grid place-items-center flex-shrink-0 text-[13px] font-semibold"
+                    className="mt-0.5 w-7 h-7 rounded-full bg-surface-warm text-accent-deep grid place-items-center flex-shrink-0 text-small font-semibold"
                   >
                     ✓
                   </span>
                   <div>
-                    <p className="font-sans text-[13px] font-medium text-primary-deep leading-tight">
+                    <p className="font-sans text-small font-medium text-primary-deep leading-tight">
                       {it.t}
                     </p>
-                    <p className="font-sans text-[11.5px] text-ink-mute mt-0.5 leading-snug">
+                    <p className="font-sans text-micro text-ink-mute mt-0.5 leading-snug">
                       {it.s}
                     </p>
                   </div>
@@ -961,17 +961,17 @@ export function CheckoutFlow({
                   >
                     <div
                       aria-hidden
-                      className="text-accent-deep text-[12px] tracking-[0.15em]"
+                      className="text-accent-deep text-caption tracking-[0.15em]"
                     >
                       {"★".repeat(Math.round(r.stars))}
                     </div>
-                    <p className="mt-1 font-sans text-[13px] font-semibold text-primary-deep leading-snug">
+                    <p className="mt-1 font-sans text-small font-semibold text-primary-deep leading-snug">
                       {r.title}
                     </p>
-                    <p className="mt-1 font-sans text-[12.5px] text-ink-mute leading-relaxed line-clamp-3">
+                    <p className="mt-1 font-sans text-caption text-ink-mute leading-relaxed line-clamp-3">
                       {r.text}
                     </p>
-                    <p className="mt-1.5 font-sans text-[11.5px] text-ink-soft">
+                    <p className="mt-1.5 font-sans text-micro text-ink-soft">
                       {r.name}
                     </p>
                   </li>
@@ -985,13 +985,13 @@ export function CheckoutFlow({
               <div className="flex items-baseline justify-between mb-3">
                 <div>
                   <Eyebrow className="text-accent-deep">Lägg till</Eyebrow>
-                  <p className="mt-1.5 font-display text-[17px] font-medium tracking-tight text-primary-deep">
+                  <p className="mt-1.5 font-display text-lead font-medium tracking-tight text-primary-deep">
                     Andra köper också
                   </p>
                 </div>
                 <Link
                   href="/produkter"
-                  className="font-sans text-[12px] text-ink-mute hover:text-ink-body"
+                  className="font-sans text-caption text-ink-mute hover:text-ink-body"
                 >
                   Visa alla
                 </Link>
@@ -1012,20 +1012,20 @@ export function CheckoutFlow({
                       />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-sans text-[13px] font-medium text-primary-deep leading-tight truncate">
+                      <p className="font-sans text-small font-medium text-primary-deep leading-tight truncate">
                         {p.name}
                       </p>
-                      <p className="font-sans text-[11.5px] text-ink-mute mt-0.5 truncate">
+                      <p className="font-sans text-micro text-ink-mute mt-0.5 truncate">
                         {p.sub}
                       </p>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <div className="font-sans text-[13px] font-semibold tabular-nums text-ink-body">
+                      <div className="font-sans text-small font-semibold tabular-nums text-ink-body">
                         {formatPriceSEK(p.priceKr)}
                       </div>
                       <Link
                         href={`/produkter/${p.slug}`}
-                        className="font-sans text-[12px] font-semibold text-primary-deep underline decoration-accent/40 underline-offset-[3px] hover:decoration-accent"
+                        className="font-sans text-caption font-semibold text-primary-deep underline decoration-accent/40 underline-offset-[3px] hover:decoration-accent"
                       >
                         Visa
                       </Link>
@@ -1065,7 +1065,7 @@ export function CheckoutFlow({
               },
             ].map((f) => (
               <details key={f.q} className="group py-4">
-                <summary className="flex items-center justify-between cursor-pointer list-none font-sans text-[15px] font-medium text-primary-deep">
+                <summary className="flex items-center justify-between cursor-pointer list-none font-sans text-body-lg font-medium text-primary-deep">
                   {f.q}
                   <span
                     aria-hidden
@@ -1074,7 +1074,7 @@ export function CheckoutFlow({
                     +
                   </span>
                 </summary>
-                <p className="mt-2 font-sans text-[14px] text-ink-mute leading-relaxed">
+                <p className="mt-2 font-sans text-body text-ink-mute leading-relaxed">
                   {f.a}
                 </p>
               </details>

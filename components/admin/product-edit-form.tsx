@@ -83,7 +83,7 @@ function FormSection({
           {title}
         </h2>
         {description && (
-          <p className="mt-2 font-sans text-[14.5px] text-ink-mute leading-relaxed max-w-[640px]">
+          <p className="mt-2 font-sans text-body text-ink-mute leading-relaxed max-w-[640px]">
             {description}
           </p>
         )}
@@ -421,16 +421,16 @@ export function ProductEditForm({ initial }: { initial: Initial }) {
                 hint="Visas på produktsidan. Använd verktygsraden för rubriker, fet/kursiv, listor och länkar."
               />
               <div>
-                <p className="font-sans text-[11px] uppercase tracking-[0.2em] font-semibold text-ink-soft mb-2">
+                <p className="font-sans text-micro uppercase tracking-[0.2em] font-semibold text-ink-soft mb-2">
                   Märken på kortet
                 </p>
                 <BadgesEditor values={badges} onChange={setBadges} />
               </div>
               <div className="md:col-span-2">
-                <p className="font-sans text-[11px] uppercase tracking-[0.2em] font-semibold text-ink-soft mb-1.5">
+                <p className="font-sans text-micro uppercase tracking-[0.2em] font-semibold text-ink-soft mb-1.5">
                   Allergener (EU 1169/2011)
                 </p>
-                <p className="font-sans text-[12px] text-ink-mute mb-2.5 leading-snug">
+                <p className="font-sans text-caption text-ink-mute mb-2.5 leading-snug">
                   Markera alla allergener i produkten. Visas som en framhävd
                   &quot;Innehåller:&quot;-ruta på produktsidan — krävs enligt EU-lag.
                 </p>
@@ -446,7 +446,7 @@ export function ProductEditForm({ initial }: { initial: Initial }) {
             description="Lågnivå-tröskel, logistikmått och interna anteckningar. Pris, lagersaldo och publiceringsstatus styrs i högerpanelen."
           >
             <div>
-              <p className="font-sans text-[11px] uppercase tracking-[0.2em] font-semibold text-ink-soft mb-3">
+              <p className="font-sans text-micro uppercase tracking-[0.2em] font-semibold text-ink-soft mb-3">
                 Lågnivå-tröskel
               </p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
@@ -466,7 +466,7 @@ export function ProductEditForm({ initial }: { initial: Initial }) {
             </div>
 
             <div className="mt-6 pt-6 border-t border-border-soft">
-              <p className="font-sans text-[11px] uppercase tracking-[0.2em] font-semibold text-ink-soft mb-3">
+              <p className="font-sans text-micro uppercase tracking-[0.2em] font-semibold text-ink-soft mb-3">
                 Logistik (för frakt)
               </p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -506,7 +506,7 @@ export function ProductEditForm({ initial }: { initial: Initial }) {
             </div>
 
             <div className="mt-6 pt-6 border-t border-border-soft">
-              <p className="font-sans text-[11px] uppercase tracking-[0.2em] font-semibold text-ink-soft mb-2">
+              <p className="font-sans text-micro uppercase tracking-[0.2em] font-semibold text-ink-soft mb-2">
                 Interna anteckningar
               </p>
               <textarea
@@ -514,9 +514,9 @@ export function ProductEditForm({ initial }: { initial: Initial }) {
                 value={internalNote}
                 onChange={(e) => setInternalNote(e.target.value)}
                 placeholder="t.ex. nästa batch v.24, leverantörsbyte Q3, varningar för support…"
-                className="w-full px-3 py-2 bg-surface border border-border rounded-md font-sans text-[13.5px] text-ink-body placeholder:text-ink-soft focus:outline-none focus:border-accent"
+                className="w-full px-3 py-2 bg-surface border border-border rounded-md font-sans text-small text-ink-body placeholder:text-ink-soft focus:outline-none focus:border-accent"
               />
-              <p className="mt-1.5 font-sans text-[11.5px] text-ink-soft">
+              <p className="mt-1.5 font-sans text-micro text-ink-soft">
                 Visas bara i admin — aldrig publikt.
               </p>
             </div>
@@ -530,7 +530,7 @@ export function ProductEditForm({ initial }: { initial: Initial }) {
           >
             <div className="space-y-6">
               <div>
-                <p className="font-sans text-[11px] uppercase tracking-[0.16em] font-semibold text-ink-soft mb-2">
+                <p className="font-sans text-micro uppercase tracking-[0.16em] font-semibold text-ink-soft mb-2">
                   Strukturerad tabell
                 </p>
                 <IngredientListEditor
@@ -539,7 +539,7 @@ export function ProductEditForm({ initial }: { initial: Initial }) {
                 />
               </div>
               <div>
-                <p className="font-sans text-[11px] uppercase tracking-[0.16em] font-semibold text-ink-soft mb-2">
+                <p className="font-sans text-micro uppercase tracking-[0.16em] font-semibold text-ink-soft mb-2">
                   Fritext (fallback)
                 </p>
                 <TextArea
@@ -568,7 +568,7 @@ export function ProductEditForm({ initial }: { initial: Initial }) {
                 hint='Visas i Dosering-rutan. Ex.: "1 kapsel dagligen i samband med måltid."'
               />
               <div>
-                <p className="font-sans text-[11px] uppercase tracking-[0.2em] font-semibold text-ink-soft mb-2">
+                <p className="font-sans text-micro uppercase tracking-[0.2em] font-semibold text-ink-soft mb-2">
                   Chips &amp; tidsaxel
                 </p>
                 <DosingEditor
@@ -616,8 +616,8 @@ export function ProductEditForm({ initial }: { initial: Initial }) {
                     onClick={() => setSeoTab(t.id)}
                     className={
                       isActive
-                        ? "px-3 py-2 -mb-px border-b-2 border-primary font-sans text-[13px] font-semibold text-primary-deep"
-                        : "px-3 py-2 -mb-px border-b-2 border-transparent font-sans text-[13px] font-medium text-ink-mute hover:text-ink-body transition-colors"
+                        ? "px-3 py-2 -mb-px border-b-2 border-primary font-sans text-small font-semibold text-primary-deep"
+                        : "px-3 py-2 -mb-px border-b-2 border-transparent font-sans text-small font-medium text-ink-mute hover:text-ink-body transition-colors"
                     }
                   >
                     {t.label}
@@ -672,7 +672,7 @@ export function ProductEditForm({ initial }: { initial: Initial }) {
 
             {seoTab === "social" && (
               <div className="space-y-5">
-                <p className="font-sans text-[13px] text-ink-mute leading-relaxed">
+                <p className="font-sans text-small text-ink-mute leading-relaxed">
                   Visas när någon delar produktlänken på Facebook, Slack,
                   LinkedIn, WhatsApp eller iMessage. Lämna tomma för att falla
                   tillbaka på SEO-fälten + produktbilden — eller skriv punchigare
@@ -716,7 +716,7 @@ export function ProductEditForm({ initial }: { initial: Initial }) {
 
             {seoTab === "ai" && (
               <div className="space-y-4">
-                <p className="font-sans text-[13px] text-ink-mute leading-relaxed">
+                <p className="font-sans text-small text-ink-mute leading-relaxed">
                   Intent-kluster för AI-sök (ChatGPT, Claude, Perplexity, Google
                   AI Overviews). Komplement till fokusnyckelordet — här listar
                   du frågor och avsikter som leder en användare till produkten.
@@ -734,7 +734,7 @@ export function ProductEditForm({ initial }: { initial: Initial }) {
 
             {seoTab === "faq" && (
               <div className="space-y-4">
-                <p className="font-sans text-[13px] text-ink-mute leading-relaxed">
+                <p className="font-sans text-small text-ink-mute leading-relaxed">
                   Anpassade FAQ-poster ersätter de automatiskt genererade
                   frågorna i FAQPage-strukturerad data. Skriv som om en kund
                   frågat dig direkt.
@@ -772,7 +772,7 @@ export function ProductEditForm({ initial }: { initial: Initial }) {
         role="region"
         aria-label="Spara ändringar"
       >
-        <div className="font-sans text-[15px] min-w-0 flex-1">
+        <div className="font-sans text-body-lg min-w-0 flex-1">
           {error ? (
             <span role="alert" className="text-status-error font-semibold">
               ⚠ {error}
@@ -816,17 +816,17 @@ function TextArea({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="font-sans text-[12px] uppercase tracking-[0.16em] font-semibold text-ink-mute">
+      <label className="font-sans text-caption uppercase tracking-[0.16em] font-semibold text-ink-mute">
         {label}
       </label>
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
         rows={rows}
-        className="px-4 py-3 rounded-lg border border-border bg-surface-alt font-sans text-[14px] text-ink leading-relaxed outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 resize-y"
+        className="px-4 py-3 rounded-lg border border-border bg-surface-alt font-sans text-body text-ink leading-relaxed outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 resize-y"
       />
       {hint && (
-        <p className="font-sans text-[12px] text-ink-soft">{hint}</p>
+        <p className="font-sans text-caption text-ink-soft">{hint}</p>
       )}
     </div>
   );
@@ -919,10 +919,10 @@ function PublishRail({
                   className="w-4 h-4 mt-0.5 flex-shrink-0"
                 />
                 <span className="min-w-0">
-                  <span className="block font-sans text-[13.5px] font-semibold text-ink-body leading-tight">
+                  <span className="block font-sans text-small font-semibold text-ink-body leading-tight">
                     {opt.label}
                   </span>
-                  <span className="block font-sans text-[11.5px] text-ink-soft mt-0.5 leading-snug">
+                  <span className="block font-sans text-micro text-ink-soft mt-0.5 leading-snug">
                     {opt.hint}
                   </span>
                 </span>
@@ -944,7 +944,7 @@ function PublishRail({
               required
               value={price}
               onChange={(e) => setPrice(e.target.value)}
-              className="w-full h-11 px-3 rounded-md border border-border bg-surface font-sans text-[14.5px] tabular-nums text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+              className="w-full h-11 px-3 rounded-md border border-border bg-surface font-sans text-body tabular-nums text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
             />
           </RailField>
           <RailField label="Jämförpris" htmlFor="rail-compare">
@@ -956,7 +956,7 @@ function PublishRail({
               value={compareAtPrice}
               onChange={(e) => setCompareAtPrice(e.target.value)}
               placeholder="Lämna tom om ej rea"
-              className="w-full h-11 px-3 rounded-md border border-border bg-surface font-sans text-[14.5px] tabular-nums text-ink placeholder:text-ink-soft outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+              className="w-full h-11 px-3 rounded-md border border-border bg-surface font-sans text-body tabular-nums text-ink placeholder:text-ink-soft outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
             />
           </RailField>
         </div>
@@ -973,7 +973,7 @@ function PublishRail({
               value={stock}
               onChange={(e) => setStock(e.target.value)}
               disabled={!manageStock}
-              className="w-full h-11 px-3 rounded-md border border-border bg-surface font-sans text-[14.5px] tabular-nums text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:bg-surface-warm disabled:text-ink-soft"
+              className="w-full h-11 px-3 rounded-md border border-border bg-surface font-sans text-body tabular-nums text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:bg-surface-warm disabled:text-ink-soft"
             />
           </RailField>
           <label className="flex items-center gap-2 cursor-pointer">
@@ -983,7 +983,7 @@ function PublishRail({
               onChange={(e) => setManageStock(e.target.checked)}
               className="w-4 h-4"
             />
-            <span className="font-sans text-[12.5px] text-ink-body">
+            <span className="font-sans text-caption text-ink-body">
               Hantera lager
             </span>
           </label>
@@ -1008,7 +1008,7 @@ function PublishRail({
               type="datetime-local"
               value={availableFrom}
               onChange={(e) => setAvailableFrom(e.target.value)}
-              className="w-full h-11 px-3 rounded-md border border-border bg-surface font-sans text-[13.5px] text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+              className="w-full h-11 px-3 rounded-md border border-border bg-surface font-sans text-small text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
             />
           </RailField>
           <RailField label="Tillgänglig till" htmlFor="rail-until">
@@ -1017,7 +1017,7 @@ function PublishRail({
               type="datetime-local"
               value={availableUntil}
               onChange={(e) => setAvailableUntil(e.target.value)}
-              className="w-full h-11 px-3 rounded-md border border-border bg-surface font-sans text-[13.5px] text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+              className="w-full h-11 px-3 rounded-md border border-border bg-surface font-sans text-small text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
             />
           </RailField>
           <label className="flex items-start gap-2 cursor-pointer pt-1">
@@ -1028,10 +1028,10 @@ function PublishRail({
               className="w-4 h-4 mt-0.5 flex-shrink-0"
             />
             <span className="min-w-0">
-              <span className="block font-sans text-[12.5px] font-semibold text-ink-body leading-tight">
+              <span className="block font-sans text-caption font-semibold text-ink-body leading-tight">
                 Säsongsval
               </span>
-              <span className="block font-sans text-[11px] text-ink-soft mt-0.5 leading-snug">
+              <span className="block font-sans text-micro text-ink-soft mt-0.5 leading-snug">
                 Lyfts på startsidan när säsongen matchar.
               </span>
             </span>
@@ -1051,7 +1051,7 @@ function RailSection({
 }) {
   return (
     <div className="px-4 py-4">
-      <p className="font-sans text-[10.5px] uppercase tracking-[0.16em] font-semibold text-ink-soft mb-3">
+      <p className="font-sans text-micro uppercase tracking-[0.16em] font-semibold text-ink-soft mb-3">
         {label}
       </p>
       {children}
@@ -1072,7 +1072,7 @@ function RailField({
     <div className="flex flex-col gap-1.5">
       <label
         htmlFor={htmlFor}
-        className="font-sans text-[11.5px] font-semibold text-ink-soft"
+        className="font-sans text-micro font-semibold text-ink-soft"
       >
         {label}
       </label>

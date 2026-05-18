@@ -128,20 +128,20 @@ function SectionCard({
   return (
     <>
       <div className="flex items-baseline justify-between gap-4 mb-3">
-        <p className="font-sans text-[11px] uppercase tracking-[0.22em] font-semibold text-accent-deep">
+        <p className="font-sans text-micro uppercase tracking-[0.22em] font-semibold text-accent-deep">
           {eyebrow}
         </p>
-        <p className="font-sans text-[11px] uppercase tracking-[0.18em] font-medium text-ink-soft">
+        <p className="font-sans text-micro uppercase tracking-[0.18em] font-medium text-ink-soft">
           {meta}
         </p>
       </div>
       <h2 className="font-display text-3xl md:text-[34px] font-medium tracking-tight text-primary-deep mb-3 group-hover:text-accent-deep transition-colors">
         {title}
       </h2>
-      <p className="font-sans text-[15.5px] text-ink-body leading-[1.65] max-w-[480px]">
+      <p className="font-sans text-body-lg text-ink-body leading-[1.65] max-w-[480px]">
         {blurb}
       </p>
-      <p className="mt-5 font-sans text-[12.5px] uppercase tracking-[0.2em] font-semibold text-accent-deep">
+      <p className="mt-5 font-sans text-caption uppercase tracking-[0.2em] font-semibold text-accent-deep">
         {cta} →
       </p>
     </>

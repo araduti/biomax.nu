@@ -79,11 +79,11 @@ export default async function AccountOverview() {
               </Eyebrow>
               <p className="mt-3 font-display text-[34px] md:text-[40px] font-medium tracking-tight text-primary-deep leading-none">
                 {loyalty.balance.toLocaleString("sv-SE")}{" "}
-                <span className="font-sans text-[15px] text-ink-mute font-normal align-middle">
+                <span className="font-sans text-body-lg text-ink-mute font-normal align-middle">
                   poäng
                 </span>
               </p>
-              <p className="mt-2 font-sans text-[13.5px] text-ink-mute">
+              <p className="mt-2 font-sans text-small text-ink-mute">
                 Värde just nu:{" "}
                 <span className="text-primary-deep font-semibold">
                   {formatPriceSEK(pointsToKr(loyalty.balance))}
@@ -98,7 +98,7 @@ export default async function AccountOverview() {
             </div>
             <Link
               href="/konto/familjen"
-              className="font-sans text-[13px] font-semibold text-primary-deep underline decoration-accent/40 underline-offset-[3px] hover:decoration-accent whitespace-nowrap"
+              className="font-sans text-small font-semibold text-primary-deep underline decoration-accent/40 underline-offset-[3px] hover:decoration-accent whitespace-nowrap"
             >
               Visa historik →
             </Link>
@@ -115,7 +115,7 @@ export default async function AccountOverview() {
           {orders.length > 4 && (
             <Link
               href="/konto/ordrar"
-              className="font-sans text-[13px] font-semibold text-primary border-b border-primary/40 pb-0.5 hover:border-primary"
+              className="font-sans text-small font-semibold text-primary border-b border-primary/40 pb-0.5 hover:border-primary"
             >
               Visa alla ({orders.length}) →
             </Link>
@@ -127,7 +127,7 @@ export default async function AccountOverview() {
             <p className="font-display italic text-xl text-primary-deep mb-3">
               Inga ordrar ännu
             </p>
-            <p className="font-sans text-[14px] text-ink-mute mb-6 max-w-[420px] mx-auto leading-relaxed">
+            <p className="font-sans text-body text-ink-mute mb-6 max-w-[420px] mx-auto leading-relaxed">
               När du gör din första beställning hos Biomax dyker den upp här.
             </p>
             <ButtonLink href="/produkter" variant="primary" size="md">
@@ -148,21 +148,21 @@ export default async function AccountOverview() {
                     className="flex flex-wrap items-center justify-between gap-4 px-5 md:px-6 py-4 hover:bg-surface-warm transition-colors"
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="font-display text-[15px] font-medium tracking-tight text-primary-deep">
+                      <p className="font-display text-body-lg font-medium tracking-tight text-primary-deep">
                         {o.orderNumber}
                       </p>
-                      <p className="font-sans text-[12px] text-ink-mute mt-0.5">
+                      <p className="font-sans text-caption text-ink-mute mt-0.5">
                         {dateFmt.format(o.createdAt)} · {o._count.items}{" "}
                         {o._count.items === 1 ? "produkt" : "produkter"}
                         {o.legacySource ? " · arkiverad" : ""}
                       </p>
                     </div>
                     <span
-                      className={`font-sans text-[12px] font-semibold uppercase tracking-[0.18em] ${status.tone}`}
+                      className={`font-sans text-caption font-semibold uppercase tracking-[0.18em] ${status.tone}`}
                     >
                       {status.label}
                     </span>
-                    <span className="font-display text-[16px] font-medium text-primary-deep tracking-tight whitespace-nowrap min-w-[80px] text-right">
+                    <span className="font-display text-lead font-medium text-primary-deep tracking-tight whitespace-nowrap min-w-[80px] text-right">
                       {formatPriceSEK(o.totalAmount.toString())}
                     </span>
                   </Link>
@@ -177,7 +177,7 @@ export default async function AccountOverview() {
       {orders.some((o) => o.legacySource) && (
         <section className="mt-10 bg-surface-warm border border-border rounded-2xl p-6">
           <Eyebrow className="text-accent-deep">Välkommen tillbaka</Eyebrow>
-          <p className="mt-3 font-sans text-[14px] text-ink-body leading-relaxed max-w-[600px]">
+          <p className="mt-3 font-sans text-body text-ink-body leading-relaxed max-w-[600px]">
             Vi ser att du har handlat hos oss tidigare — ditt orderhistorik
             från gamla biomax.nu finns kvar och visas ovan. Tack för att du
             stannar med oss.
@@ -199,13 +199,13 @@ function Stat({
 }) {
   return (
     <div className="bg-surface-alt border border-border rounded-xl p-4">
-      <p className="font-sans text-[10px] uppercase tracking-[0.22em] text-ink-mute font-semibold">
+      <p className="font-sans text-micro uppercase tracking-[0.22em] text-ink-mute font-semibold">
         {label}
       </p>
       <p
         className={
           smallValue
-            ? "mt-1.5 font-sans text-[14px] text-primary-deep break-all"
+            ? "mt-1.5 font-sans text-body text-primary-deep break-all"
             : "mt-1.5 font-display text-2xl font-medium tracking-tight text-primary-deep"
         }
       >

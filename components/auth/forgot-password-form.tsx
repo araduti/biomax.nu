@@ -33,7 +33,7 @@ export function ForgotPasswordForm() {
         <p className="font-display italic text-xl text-primary-deep mb-3">
           Brevet är skickat.
         </p>
-        <p className="font-sans text-[14px] text-ink-mute leading-relaxed">
+        <p className="font-sans text-body text-ink-mute leading-relaxed">
           Vi har skickat en länk till <strong>{email}</strong> där du kan välja ett
           nytt lösenord. Kolla även skräpkorgen om brevet inte syns inom några minuter.
         </p>
@@ -62,7 +62,7 @@ export function ForgotPasswordForm() {
       {error && (
         <p
           role="alert"
-          className="font-sans text-[13px] text-status-error bg-status-error/10 px-3 py-2 rounded-md"
+          className="font-sans text-small text-status-error bg-status-error/10 px-3 py-2 rounded-md"
         >
           {error}
         </p>

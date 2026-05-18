@@ -55,7 +55,7 @@ export function FaqEditor({
   return (
     <div className="space-y-3">
       {items.length === 0 && (
-        <p className="font-sans text-[13.5px] text-ink-mute italic">
+        <p className="font-sans text-small text-ink-mute italic">
           Inga manuella FAQ-poster — sajten genererar automatiskt 2–3 frågor från
           fälten Dosering / Innehåll / Observera.
         </p>
@@ -67,7 +67,7 @@ export function FaqEditor({
           className="rounded-xl border border-border bg-surface px-4 py-4 space-y-3"
         >
           <div className="flex items-center justify-between gap-2">
-            <span className="font-sans text-[11px] uppercase tracking-[0.2em] font-semibold text-ink-soft">
+            <span className="font-sans text-micro uppercase tracking-[0.2em] font-semibold text-ink-soft">
               Fråga {i + 1}
             </span>
             <div className="flex items-center gap-1.5">
@@ -104,14 +104,14 @@ export function FaqEditor({
             value={it.question}
             onChange={(e) => update(i, { question: e.target.value })}
             placeholder="Fråga, t.ex. Är produkten säker under graviditet?"
-            className="w-full px-3 py-2 rounded-lg border border-border bg-surface-alt font-sans text-[14px] text-ink-body outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-colors"
+            className="w-full px-3 py-2 rounded-lg border border-border bg-surface-alt font-sans text-body text-ink-body outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-colors"
           />
           <textarea
             value={it.answer}
             onChange={(e) => update(i, { answer: e.target.value })}
             placeholder="Svar i löpande text — håll det kort, en LLM kan citera detta direkt."
             rows={3}
-            className="w-full px-3 py-2 rounded-lg border border-border bg-surface-alt font-sans text-[14px] text-ink-body leading-relaxed outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-colors resize-y"
+            className="w-full px-3 py-2 rounded-lg border border-border bg-surface-alt font-sans text-body text-ink-body leading-relaxed outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-colors resize-y"
           />
         </div>
       ))}
@@ -124,14 +124,14 @@ export function FaqEditor({
           <button
             type="button"
             onClick={loadSuggestions}
-            className="font-sans text-[12.5px] font-semibold text-accent-deep hover:text-primary-deep border-b border-accent/40 pb-px transition-colors"
+            className="font-sans text-caption font-semibold text-accent-deep hover:text-primary-deep border-b border-accent/40 pb-px transition-colors"
           >
             Ladda {suggestions.length} autoförslag →
           </button>
         )}
       </div>
 
-      <p className="font-sans text-[11.5px] text-ink-mute italic">
+      <p className="font-sans text-micro text-ink-mute italic">
         Dessa frågor publiceras som FAQPage-strukturerad data — Google kan visa
         dem som rich-result, och LLMs kan citera dem direkt. Skriv som om en
         kund frågat dig direkt i butiken.

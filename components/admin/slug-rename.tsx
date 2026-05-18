@@ -45,7 +45,7 @@ export function SlugRename({ currentSlug }: { currentSlug: string }) {
   if (!open) {
     return (
       <div className="flex items-center gap-3">
-        <code className="font-mono text-[12.5px] text-ink-soft bg-surface-warm px-2 py-1 rounded">
+        <code className="font-mono text-caption text-ink-soft bg-surface-warm px-2 py-1 rounded">
           /produkter/{currentSlug}
         </code>
         <button
@@ -54,7 +54,7 @@ export function SlugRename({ currentSlug }: { currentSlug: string }) {
             setNext(currentSlug);
             setOpen(true);
           }}
-          className="font-sans text-[12px] text-primary-deep underline decoration-accent/40 underline-offset-[3px] hover:decoration-accent"
+          className="font-sans text-caption text-primary-deep underline decoration-accent/40 underline-offset-[3px] hover:decoration-accent"
         >
           Byt slug
         </button>
@@ -65,7 +65,7 @@ export function SlugRename({ currentSlug }: { currentSlug: string }) {
   return (
     <div>
       <div className="flex items-center gap-2">
-        <span className="font-mono text-[12.5px] text-ink-soft">/produkter/</span>
+        <span className="font-mono text-caption text-ink-soft">/produkter/</span>
         <Input
           value={next}
           onChange={(e) =>
@@ -96,14 +96,14 @@ export function SlugRename({ currentSlug }: { currentSlug: string }) {
           Avbryt
         </Button>
       </div>
-      <p className="mt-2 font-sans text-[11.5px] text-ink-soft leading-snug">
+      <p className="mt-2 font-sans text-micro text-ink-soft leading-snug">
         En 301-omdirigering läggs till så att den gamla URL:en fortsätter
         fungera. Använd bara a–z, 0–9 och bindestreck.
       </p>
       {error && (
         <p
           role="alert"
-          className="mt-2 font-sans text-[12px] text-status-error bg-status-error/10 px-3 py-1.5 rounded-md"
+          className="mt-2 font-sans text-caption text-status-error bg-status-error/10 px-3 py-1.5 rounded-md"
         >
           {error}
         </p>

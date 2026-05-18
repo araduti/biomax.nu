@@ -69,7 +69,7 @@ export default async function TrackOrderPage({ params }: RouteParams) {
 
           <div className="flex flex-wrap items-baseline gap-4 mb-8">
             <OrderStatusBadge status={order.status} />
-            <p className="font-sans text-[13.5px] text-ink-mute">
+            <p className="font-sans text-small text-ink-mute">
               Beställd {dateFmt.format(order.createdAt)}
             </p>
           </div>
@@ -77,7 +77,7 @@ export default async function TrackOrderPage({ params }: RouteParams) {
           {/* Tracking link — only when shipment is booked. */}
           {trackingHref ? (
             <div className="bg-surface-alt border border-border rounded-2xl p-5 md:p-6 mb-8">
-              <p className="font-sans text-[11px] uppercase tracking-[0.18em] font-semibold text-ink-soft mb-1">
+              <p className="font-sans text-micro uppercase tracking-[0.18em] font-semibold text-ink-soft mb-1">
                 {order.carrier === "POSTNORD" ? "PostNord" : (order.carrier ?? "Frakt")}
               </p>
               <p className="font-display text-xl font-medium text-primary-deep mb-2">
@@ -88,20 +88,20 @@ export default async function TrackOrderPage({ params }: RouteParams) {
                 href={trackingHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center px-4 py-2 rounded-md bg-primary-deep text-surface font-sans text-[13.5px] font-semibold hover:bg-primary-deep/90 transition-colors"
+                className="inline-flex items-center px-4 py-2 rounded-md bg-primary-deep text-surface font-sans text-small font-semibold hover:bg-primary-deep/90 transition-colors"
               >
                 Spåra hos PostNord →
               </Link>
             </div>
           ) : (
             <div className="bg-surface-warm border border-border rounded-2xl p-5 md:p-6 mb-8">
-              <p className="font-sans text-[14px] text-ink-body leading-relaxed">
+              <p className="font-sans text-body text-ink-body leading-relaxed">
                 {fulfilled
                   ? "Vi har packat och skickat din beställning — så snart PostNord scannat in paketet får du en spårningslänk här."
                   : "Vi packar din beställning så snart vi kan. Du får ett spårningsnummer här när paketet skickas, samt ett mejl när det är inscannat hos PostNord."}
               </p>
               {order.servicePointName && (
-                <p className="mt-3 font-sans text-[13px] text-ink-mute">
+                <p className="mt-3 font-sans text-small text-ink-mute">
                   Leverans till ombud:{" "}
                   <strong className="text-primary-deep">
                     {order.servicePointName}
@@ -114,10 +114,10 @@ export default async function TrackOrderPage({ params }: RouteParams) {
           {/* Address + items */}
           {order.shippingAddress && (
             <section className="mb-8">
-              <p className="font-sans text-[11px] uppercase tracking-[0.18em] font-semibold text-ink-soft mb-2">
+              <p className="font-sans text-micro uppercase tracking-[0.18em] font-semibold text-ink-soft mb-2">
                 Levereras till
               </p>
-              <p className="font-sans text-[14.5px] text-ink-body leading-relaxed">
+              <p className="font-sans text-body text-ink-body leading-relaxed">
                 {order.shippingAddress.fullName}
                 <br />
                 {order.shippingAddress.street}
@@ -129,7 +129,7 @@ export default async function TrackOrderPage({ params }: RouteParams) {
           )}
 
           <section className="mb-8">
-            <p className="font-sans text-[11px] uppercase tracking-[0.18em] font-semibold text-ink-soft mb-3">
+            <p className="font-sans text-micro uppercase tracking-[0.18em] font-semibold text-ink-soft mb-3">
               Innehåll
             </p>
             <ul className="bg-surface-alt border border-border rounded-2xl divide-y divide-border-soft">
@@ -145,10 +145,10 @@ export default async function TrackOrderPage({ params }: RouteParams) {
                     />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-display text-[15px] font-medium text-primary-deep leading-tight">
+                    <p className="font-display text-body-lg font-medium text-primary-deep leading-tight">
                       {it.productName}
                     </p>
-                    <p className="font-sans text-[12.5px] text-ink-mute mt-0.5">
+                    <p className="font-sans text-caption text-ink-mute mt-0.5">
                       {it.quantity} st · {formatPriceSEK(it.unitPrice.toString())}/st
                     </p>
                   </div>
@@ -158,7 +158,7 @@ export default async function TrackOrderPage({ params }: RouteParams) {
                 </li>
               ))}
             </ul>
-            <p className="mt-4 text-right font-sans text-[14px] text-ink-body">
+            <p className="mt-4 text-right font-sans text-body text-ink-body">
               Totalt:{" "}
               <strong className="font-display text-lg text-primary-deep tabular-nums ml-2">
                 {formatPriceSEK(order.totalAmount.toString())}
@@ -166,7 +166,7 @@ export default async function TrackOrderPage({ params }: RouteParams) {
             </p>
           </section>
 
-          <div className="border-t border-border pt-6 font-sans text-[13px] text-ink-mute leading-relaxed">
+          <div className="border-t border-border pt-6 font-sans text-small text-ink-mute leading-relaxed">
             <p>
               Har du frågor om din beställning? Mejla{" "}
               <a

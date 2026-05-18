@@ -41,11 +41,11 @@ export function CopyButton({
       onClick={onClick}
       aria-label={`${label}: ${value}`}
       className={
-        "inline-flex items-center gap-1.5 px-2.5 h-7 rounded-md border border-border bg-surface font-sans text-[12px] font-semibold text-ink-mute hover:text-ink-body hover:border-border-soft transition-colors " +
+        "inline-flex items-center gap-1.5 px-2.5 h-7 rounded-md border border-border bg-surface font-sans text-caption font-semibold text-ink-mute hover:text-ink-body hover:border-border-soft transition-colors " +
         className
       }
     >
-      <span aria-hidden className="text-[13px] leading-none">
+      <span aria-hidden className="text-small leading-none">
         {copied ? "✓" : "⧉"}
       </span>
       <span>{copied ? "Kopierat" : label}</span>

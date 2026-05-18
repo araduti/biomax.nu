@@ -32,7 +32,7 @@ export default async function AdminBundlesPage() {
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 items-start">
         <div className="bg-surface-alt border border-border rounded-xl overflow-hidden">
           {bundles.length === 0 ? (
-            <p className="p-6 font-sans text-[14px] text-ink-mute italic">
+            <p className="p-6 font-sans text-body text-ink-mute italic">
               Inga paket än — skapa det första till höger.
             </p>
           ) : (
@@ -50,17 +50,17 @@ export default async function AdminBundlesPage() {
                     }
                   >
                     <div className="min-w-0">
-                      <p className="font-sans text-[14.5px] font-semibold text-primary-deep truncate">
+                      <p className="font-sans text-body font-semibold text-primary-deep truncate">
                         {b.name}
                       </p>
-                      <p className="mt-0.5 font-mono text-[11.5px] text-ink-soft truncate">
+                      <p className="mt-0.5 font-mono text-micro text-ink-soft truncate">
                         /paket/{b.slug} · {b.discountPercent} % rabatt
                       </p>
                     </div>
-                    <span className="font-sans text-[12px] text-ink-soft tabular-nums">
+                    <span className="font-sans text-caption text-ink-soft tabular-nums">
                       {b._count.items} produkter
                       {!b.active && (
-                        <span className="ml-2 text-status-error uppercase tracking-[0.14em] text-[10.5px] font-semibold">
+                        <span className="ml-2 text-status-error uppercase tracking-[0.14em] text-micro font-semibold">
                           inaktiv
                         </span>
                       )}
@@ -73,10 +73,10 @@ export default async function AdminBundlesPage() {
         </div>
 
         <aside>
-          <h2 className="font-sans text-[15px] font-semibold tracking-tight text-primary-deep">
+          <h2 className="font-sans text-body-lg font-semibold tracking-tight text-primary-deep">
             Nytt paket
           </h2>
-          <p className="mt-1 mb-3 font-sans text-[12.5px] text-ink-mute leading-relaxed">
+          <p className="mt-1 mb-3 font-sans text-caption text-ink-mute leading-relaxed">
             Minst 2 produkter. Rabatten räknas mot summan av priserna.
           </p>
           <div className="border border-border-soft rounded-xl p-5">

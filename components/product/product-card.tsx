@@ -51,7 +51,7 @@ export function ProductCard({ product }: { product: ProductCardProduct }) {
         </div>
       </div>
 
-      <div className="mt-4 font-sans text-[10px] uppercase tracking-[0.22em] text-ink-mute font-semibold leading-snug">
+      <div className="mt-4 font-sans text-micro uppercase tracking-[0.22em] text-ink-mute font-semibold leading-snug">
         {category && <span>{category}</span>}
         {category && tag && (
           <span aria-hidden className="mx-2 inline-block w-1 h-1 rounded-full bg-accent align-middle" />
@@ -64,7 +64,7 @@ export function ProductCard({ product }: { product: ProductCardProduct }) {
       </h3>
 
       {description && (
-        <p className="mt-2 font-sans text-[13px] text-ink-mute leading-relaxed line-clamp-2">
+        <p className="mt-2 font-sans text-small text-ink-mute leading-relaxed line-clamp-2">
           {description}
         </p>
       )}
@@ -72,14 +72,14 @@ export function ProductCard({ product }: { product: ProductCardProduct }) {
       {product.rating && product.rating.count > 0 && (
         <div className="mt-2 flex items-center gap-1.5 text-accent-deep">
           <StarRating value={product.rating.average} size={13} />
-          <span className="font-sans text-[12px] text-ink-mute tabular-nums">
+          <span className="font-sans text-caption text-ink-mute tabular-nums">
             {product.rating.average.toFixed(1)}
             <span className="text-ink-soft"> ({product.rating.count})</span>
           </span>
         </div>
       )}
 
-      <div className="mt-3 font-display text-[15px] font-medium text-primary-deep tracking-tight">
+      <div className="mt-3 font-display text-body-lg font-medium text-primary-deep tracking-tight">
         {formatPriceSEK(product.price.toString())}
       </div>
     </Link>

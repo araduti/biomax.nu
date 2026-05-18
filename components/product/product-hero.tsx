@@ -107,7 +107,7 @@ export async function ProductHero({
               aria-label={`${rating.average} av 5 stjärnor baserat på ${rating.count} recensioner — läs recensionerna`}
             >
               <StarRating value={rating.average} size={16} />
-              <span className="font-sans text-[13px] text-ink-mute">
+              <span className="font-sans text-small text-ink-mute">
                 {rating.average.toFixed(1)} ·{" "}
                 <span className="underline decoration-accent/30 underline-offset-2">
                   {rating.count}{" "}
@@ -151,7 +151,7 @@ export async function ProductHero({
                   </span>
                 )}
               </div>
-              <p className="mt-2 font-sans text-[13px] text-ink-mute">
+              <p className="mt-2 font-sans text-small text-ink-mute">
                 Inkl. moms{freeShipLabel ? ` · ${freeShipLabel}` : ""}
               </p>
 
@@ -160,7 +160,7 @@ export async function ProductHero({
               />
 
               <p
-                className={`mt-3 font-sans text-[13px] flex items-center gap-2 ${
+                className={`mt-3 font-sans text-small flex items-center gap-2 ${
                   inStock ? "text-accent-deep" : "text-ink-soft"
                 }`}
               >
@@ -198,7 +198,7 @@ export async function ProductHero({
           )}
 
           {/* Trust strip — small */}
-          <ul className="mt-9 grid grid-cols-2 gap-x-6 gap-y-3 font-sans text-[13px] text-ink-mute">
+          <ul className="mt-9 grid grid-cols-2 gap-x-6 gap-y-3 font-sans text-small text-ink-mute">
             {freeShipLabel && (
               <li className="flex items-start gap-2">
                 <span aria-hidden className="text-accent-deep mt-0.5">
@@ -227,7 +227,7 @@ export async function ProductHero({
             </li>
           </ul>
 
-          <p className="mt-8 font-sans text-[12px] text-ink-soft">
+          <p className="mt-8 font-sans text-caption text-ink-soft">
             Art.nr: {product.sku}
           </p>
         </div>

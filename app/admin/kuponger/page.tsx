@@ -53,7 +53,7 @@ export default async function AdminCouponsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 items-start">
         <div className="bg-surface-alt border border-border rounded-xl overflow-hidden">
           {coupons.length === 0 ? (
-            <p className="p-6 font-sans text-[14px] text-ink-mute italic">
+            <p className="p-6 font-sans text-body text-ink-mute italic">
               Inga rabattkoder än — skapa den första till höger.
             </p>
           ) : (
@@ -76,39 +76,39 @@ export default async function AdminCouponsPage() {
                     >
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <code className="font-mono text-[13px] font-semibold text-primary-deep">
+                          <code className="font-mono text-small font-semibold text-primary-deep">
                             {c.code}
                           </code>
-                          <span className="font-sans text-[11px] text-ink-soft">
+                          <span className="font-sans text-micro text-ink-soft">
                             {describeDiscount(c)}
                           </span>
                           {!c.active && (
-                            <span className="font-sans text-[10px] uppercase tracking-[0.14em] text-status-error font-semibold">
+                            <span className="font-sans text-micro uppercase tracking-[0.14em] text-status-error font-semibold">
                               inaktiv
                             </span>
                           )}
                           {expired && c.active && (
-                            <span className="font-sans text-[10px] uppercase tracking-[0.14em] text-status-warn-text font-semibold">
+                            <span className="font-sans text-micro uppercase tracking-[0.14em] text-status-warn-text font-semibold">
                               utgången
                             </span>
                           )}
                           {exhausted && (
-                            <span className="font-sans text-[10px] uppercase tracking-[0.14em] text-status-warn-text font-semibold">
+                            <span className="font-sans text-micro uppercase tracking-[0.14em] text-status-warn-text font-semibold">
                               uttömd
                             </span>
                           )}
                         </div>
                         {c.description && (
-                          <p className="mt-1 font-sans text-[12px] text-ink-mute truncate">
+                          <p className="mt-1 font-sans text-caption text-ink-mute truncate">
                             {c.description}
                           </p>
                         )}
                       </div>
-                      <span className="font-sans text-[11.5px] text-ink-soft tabular-nums whitespace-nowrap">
+                      <span className="font-sans text-micro text-ink-soft tabular-nums whitespace-nowrap">
                         {c.usedCount}
                         {c.maxUses != null ? ` / ${c.maxUses}` : ""} använd
                       </span>
-                      <span className="font-sans text-[11.5px] text-ink-soft tabular-nums whitespace-nowrap">
+                      <span className="font-sans text-micro text-ink-soft tabular-nums whitespace-nowrap">
                         {formatDate(c.startsAt)} – {formatDate(c.expiresAt)}
                       </span>
                     </Link>
@@ -120,10 +120,10 @@ export default async function AdminCouponsPage() {
         </div>
 
         <aside>
-          <h2 className="font-sans text-[15px] font-semibold tracking-tight text-primary-deep">
+          <h2 className="font-sans text-body-lg font-semibold tracking-tight text-primary-deep">
             Ny rabattkod
           </h2>
-          <p className="mt-1 mb-3 font-sans text-[12.5px] text-ink-mute leading-relaxed">
+          <p className="mt-1 mb-3 font-sans text-caption text-ink-mute leading-relaxed">
             Antingen procent eller fast belopp — inte båda.
           </p>
           <div className="border border-border-soft rounded-xl p-5">

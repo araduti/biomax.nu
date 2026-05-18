@@ -58,7 +58,14 @@ export default function GdprPage() {
 
       <h3>1. Registerutdrag, rättelse, radering eller portabilitet</h3>
       <p>
-        Skicka ett mejl till{" "}
+        Är du inloggad kan du sköta registerutdrag och radering direkt
+        under{" "}
+        <Link href="/konto/dataskydd">Mitt konto → Dataskydd</Link> — du
+        laddar ner all din data eller raderar kontot på en gång, utan att
+        kontakta oss.
+      </p>
+      <p>
+        Annars: skicka ett mejl till{" "}
         <a href="mailto:kontakt@biomax.nu">kontakt@biomax.nu</a> från den
         e-postadress som är registrerad hos oss. Skriv vilken rättighet du vill
         utöva. Vi svarar utan onödigt dröjsmål och senast inom en månad. Är

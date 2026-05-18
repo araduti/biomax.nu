@@ -146,7 +146,7 @@ export function TwoFactorPanel({
         <h3 className="font-display text-xl font-medium text-primary-deep mb-2">
           Skanna in i din app
         </h3>
-        <p className="font-sans text-[13.5px] text-ink-mute mb-4 leading-relaxed">
+        <p className="font-sans text-small text-ink-mute mb-4 leading-relaxed">
           Skanna QR-koden med din authenticator-app (Google Authenticator,
           1Password, Authy m.fl.). Kan du inte skanna? Lägg till manuellt
           med nyckeln nedan. Spara backup-koderna — du behöver dem om du
@@ -163,35 +163,35 @@ export function TwoFactorPanel({
             className="mb-4 rounded-md border border-border bg-white p-2"
           />
         ) : (
-          <p className="font-sans text-[13px] text-ink-mute mb-4">
+          <p className="font-sans text-small text-ink-mute mb-4">
             Kunde inte rita QR-koden — använd den manuella nyckeln nedan.
           </p>
         )}
 
         {manualSecret && (
           <>
-            <p className="font-sans text-[12px] uppercase tracking-[0.16em] font-semibold text-ink-soft mb-2">
+            <p className="font-sans text-caption uppercase tracking-[0.16em] font-semibold text-ink-soft mb-2">
               Manuell nyckel
             </p>
-            <pre className="block w-full overflow-x-auto bg-surface border border-border rounded-md px-3 py-2 font-mono text-[13px] tracking-wider text-ink-body mb-4 break-all">
+            <pre className="block w-full overflow-x-auto bg-surface border border-border rounded-md px-3 py-2 font-mono text-small tracking-wider text-ink-body mb-4 break-all">
               {manualSecret}
             </pre>
           </>
         )}
 
         <details className="mb-4">
-          <summary className="font-sans text-[13px] text-ink-soft cursor-pointer hover:text-ink-body">
+          <summary className="font-sans text-small text-ink-soft cursor-pointer hover:text-ink-body">
             Visa hela otpauth-URL:en
           </summary>
-          <pre className="mt-2 block w-full overflow-x-auto bg-surface border border-border rounded-md px-3 py-2 font-mono text-[12px] text-ink-body whitespace-pre-wrap break-all">
+          <pre className="mt-2 block w-full overflow-x-auto bg-surface border border-border rounded-md px-3 py-2 font-mono text-caption text-ink-body whitespace-pre-wrap break-all">
             {enrolment.totpURI}
           </pre>
         </details>
 
-        <p className="font-sans text-[12px] uppercase tracking-[0.16em] font-semibold text-ink-soft mb-2">
+        <p className="font-sans text-caption uppercase tracking-[0.16em] font-semibold text-ink-soft mb-2">
           Backup-koder · spara säkert
         </p>
-        <div className="grid grid-cols-2 gap-1 font-mono text-[13px] text-ink-body bg-surface border border-border rounded-md p-3 mb-5">
+        <div className="grid grid-cols-2 gap-1 font-mono text-small text-ink-body bg-surface border border-border rounded-md p-3 mb-5">
           {enrolment.backupCodes.map((c) => (
             <code key={c}>{c}</code>
           ))}
@@ -209,7 +209,7 @@ export function TwoFactorPanel({
           {error && (
             <p
               role="alert"
-              className="mt-2 font-sans text-[12.5px] text-status-error"
+              className="mt-2 font-sans text-caption text-status-error"
             >
               {error}
             </p>
@@ -228,7 +228,7 @@ export function TwoFactorPanel({
                 setMode("off");
                 reset();
               }}
-              className="font-sans text-[13px] text-ink-soft hover:text-ink-body"
+              className="font-sans text-small text-ink-soft hover:text-ink-body"
             >
               Avbryt
             </button>
@@ -256,7 +256,7 @@ export function TwoFactorPanel({
           autoComplete="current-password"
         />
         {error && (
-          <p role="alert" className="mt-2 font-sans text-[12.5px] text-status-error">
+          <p role="alert" className="mt-2 font-sans text-caption text-status-error">
             {error}
           </p>
         )}
@@ -274,7 +274,7 @@ export function TwoFactorPanel({
               setMode(initiallyEnabled ? "on" : "off");
               reset();
             }}
-            className="font-sans text-[13px] text-ink-soft hover:text-ink-body"
+            className="font-sans text-small text-ink-soft hover:text-ink-body"
           >
             Avbryt
           </button>
@@ -286,7 +286,7 @@ export function TwoFactorPanel({
   // Steady states
   return (
     <div className="bg-surface-alt border border-border rounded-2xl p-5 max-w-[480px]">
-      <p className="font-sans text-[14px] mb-4">
+      <p className="font-sans text-body mb-4">
         Status:{" "}
         <strong className={mode === "on" ? "text-accent-deep" : "text-ink-soft"}>
           {mode === "on" ? "Aktiverad" : "Inte aktiverad"}

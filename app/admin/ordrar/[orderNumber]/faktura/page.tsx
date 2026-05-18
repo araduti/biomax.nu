@@ -79,7 +79,7 @@ export default async function AdminOrderInvoice({
       <div className="print:hidden flex flex-wrap items-center justify-between gap-3 mb-6">
         <Link
           href={`/admin/ordrar/${order.orderNumber}`}
-          className="inline-flex items-center gap-1 font-sans text-[14px] text-primary hover:text-primary-deep transition-colors"
+          className="inline-flex items-center gap-1 font-sans text-body text-primary hover:text-primary-deep transition-colors"
         >
           ← Tillbaka till order
         </Link>
@@ -94,7 +94,7 @@ export default async function AdminOrderInvoice({
             <p className="font-display text-[28px] font-medium tracking-tight text-[#111]">
               Biomax
             </p>
-            <p className="text-[12px] leading-relaxed mt-1 text-[#333]">
+            <p className="text-caption leading-relaxed mt-1 text-[#333]">
               Biomax Handelsbolag · Eken Hälsobutik
               <br />
               Ekenleden 15A, 428 36 Kållered
@@ -108,7 +108,7 @@ export default async function AdminOrderInvoice({
             <p className="font-display text-[22px] font-medium tracking-tight text-[#111]">
               Faktura
             </p>
-            <dl className="mt-2 text-[12.5px] grid grid-cols-[auto_auto] gap-x-3 gap-y-1 text-[#333] text-right">
+            <dl className="mt-2 text-caption grid grid-cols-[auto_auto] gap-x-3 gap-y-1 text-[#333] text-right">
               <dt className="text-[#666]">Fakturanr</dt>
               <dd className="tabular-nums font-semibold">
                 {order.orderNumber}
@@ -120,7 +120,7 @@ export default async function AdminOrderInvoice({
               {order.paymentReference && (
                 <>
                   <dt className="text-[#666]">Betalref</dt>
-                  <dd className="font-mono text-[11px] break-all max-w-[180px]">
+                  <dd className="font-mono text-micro break-all max-w-[180px]">
                     {order.paymentReference}
                   </dd>
                 </>
@@ -134,11 +134,11 @@ export default async function AdminOrderInvoice({
         {/* Parties */}
         <section className="grid grid-cols-2 gap-8 py-6 border-b border-[#111]/15">
           <div>
-            <p className="text-[10.5px] uppercase tracking-[0.16em] font-semibold text-[#666] mb-2">
+            <p className="text-micro uppercase tracking-[0.16em] font-semibold text-[#666] mb-2">
               Fakturaadress
             </p>
             {billing ? (
-              <p className="text-[13px] leading-relaxed text-[#111]">
+              <p className="text-small leading-relaxed text-[#111]">
                 <strong className="font-semibold">{billing.fullName}</strong>
                 <br />
                 {billing.street}
@@ -148,17 +148,17 @@ export default async function AdminOrderInvoice({
                 {order.email}
               </p>
             ) : (
-              <p className="text-[13px] leading-relaxed text-[#111]">
+              <p className="text-small leading-relaxed text-[#111]">
                 <strong className="font-semibold">{order.email}</strong>
               </p>
             )}
           </div>
           {order.shippingAddress && (
             <div>
-              <p className="text-[10.5px] uppercase tracking-[0.16em] font-semibold text-[#666] mb-2">
+              <p className="text-micro uppercase tracking-[0.16em] font-semibold text-[#666] mb-2">
                 Leveransadress
               </p>
-              <p className="text-[13px] leading-relaxed text-[#111]">
+              <p className="text-small leading-relaxed text-[#111]">
                 <strong className="font-semibold">
                   {order.shippingAddress.fullName}
                 </strong>
@@ -180,9 +180,9 @@ export default async function AdminOrderInvoice({
 
         {/* Line items */}
         <section className="py-6">
-          <table className="w-full text-[12.5px] border-collapse">
+          <table className="w-full text-caption border-collapse">
             <thead>
-              <tr className="text-left text-[#666] uppercase tracking-[0.12em] text-[10.5px] font-semibold border-b border-[#111]/15">
+              <tr className="text-left text-[#666] uppercase tracking-[0.12em] text-micro font-semibold border-b border-[#111]/15">
                 <th className="py-2 pr-3 font-semibold">Produkt</th>
                 <th className="py-2 px-3 font-semibold w-[80px] text-right">
                   Antal
@@ -206,7 +206,7 @@ export default async function AdminOrderInvoice({
                       <p className="font-semibold text-[#111]">
                         {item.productName}
                       </p>
-                      <p className="text-[11px] text-[#666] mt-0.5">
+                      <p className="text-micro text-[#666] mt-0.5">
                         {item.variantLabel && <>{item.variantLabel} · </>}
                         {item.productSku && <>SKU: {item.productSku}</>}
                       </p>
@@ -238,7 +238,7 @@ export default async function AdminOrderInvoice({
 
         {/* Totals */}
         <section className="flex justify-end pb-6">
-          <dl className="w-[280px] text-[13px]">
+          <dl className="w-[280px] text-small">
             <Row label="Delsumma (ex moms)" value={formatPriceSEK(subtotalExVat)} />
             {discount > 0 && (
               <Row
@@ -252,7 +252,7 @@ export default async function AdminOrderInvoice({
             )}
             <Row label="Frakt" value={formatPriceSEK(shipping)} />
             <Row label={`Moms (${vatRatePct} %)`} value={formatPriceSEK(vat)} />
-            <div className="flex justify-between mt-3 pt-3 border-t-2 border-[#111] text-[16px] font-semibold text-[#111]">
+            <div className="flex justify-between mt-3 pt-3 border-t-2 border-[#111] text-lead font-semibold text-[#111]">
               <dt>Att betala</dt>
               <dd className="tabular-nums">{formatPriceSEK(total)}</dd>
             </div>
@@ -260,7 +260,7 @@ export default async function AdminOrderInvoice({
         </section>
 
         {/* Footer note */}
-        <footer className="pt-6 border-t border-[#111]/15 text-[10.5px] leading-relaxed text-[#666]">
+        <footer className="pt-6 border-t border-[#111]/15 text-micro leading-relaxed text-[#666]">
           <p>
             Tack för din beställning. Vid frågor om denna faktura, kontakta oss
             på kontakt@biomax.nu och uppge fakturanr {order.orderNumber}.

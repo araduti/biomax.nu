@@ -89,7 +89,7 @@ export function PasswordChangeForm() {
       {error && (
         <p
           role="alert"
-          className="mt-5 font-sans text-[13px] text-status-error bg-status-error/10 px-3 py-2 rounded-md"
+          className="mt-5 font-sans text-small text-status-error bg-status-error/10 px-3 py-2 rounded-md"
         >
           {error}
         </p>
@@ -97,7 +97,7 @@ export function PasswordChangeForm() {
       {saved && (
         <p
           role="status"
-          className="mt-5 font-sans text-[13px] text-accent-deep bg-accent/15 px-3 py-2 rounded-md"
+          className="mt-5 font-sans text-small text-accent-deep bg-accent/15 px-3 py-2 rounded-md"
         >
           Lösenord uppdaterat ✓ Andra sessioner är utloggade.
         </p>

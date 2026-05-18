@@ -34,7 +34,7 @@ export default async function PacklistaPage({ searchParams }: RouteParams) {
     const day = new Date(`${dateStr}T00:00:00Z`);
     if (Number.isNaN(day.getTime())) {
       return (
-        <p className="font-sans text-[14px] text-status-error">
+        <p className="font-sans text-body text-status-error">
           Ogiltigt datum. Använd ?date=YYYY-MM-DD.
         </p>
       );
@@ -98,7 +98,7 @@ export default async function PacklistaPage({ searchParams }: RouteParams) {
       />
 
       {orders.length === 0 ? (
-        <p className="font-sans text-[14.5px] text-ink-mute italic">
+        <p className="font-sans text-body text-ink-mute italic">
           {dayLabel
             ? `Inga betalda ordrar för ${dayLabel}.`
             : "Inga betalda ordrar väntar på packning."}

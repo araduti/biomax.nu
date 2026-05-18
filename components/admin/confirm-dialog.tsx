@@ -118,7 +118,7 @@ export function ConfirmDialogHost() {
         <div className="px-5 pt-4 pb-2 flex items-start justify-between gap-3">
           <h2
             id="confirm-dialog-title"
-            className="font-sans text-[15px] font-semibold text-primary-deep leading-snug"
+            className="font-sans text-body-lg font-semibold text-primary-deep leading-snug"
           >
             {options.title}
           </h2>
@@ -133,7 +133,7 @@ export function ConfirmDialogHost() {
           </button>
         </div>
         {options.body && (
-          <div className="px-5 pb-4 font-sans text-[13.5px] text-ink-body leading-relaxed">
+          <div className="px-5 pb-4 font-sans text-small text-ink-body leading-relaxed">
             {options.body}
           </div>
         )}
@@ -142,7 +142,7 @@ export function ConfirmDialogHost() {
             ref={cancelRef}
             type="button"
             onClick={() => resolve(false)}
-            className="h-9 px-4 rounded-md font-sans text-[13px] font-semibold text-ink-body hover:bg-surface-warm transition-colors"
+            className="h-9 px-4 rounded-md font-sans text-small font-semibold text-ink-body hover:bg-surface-warm transition-colors"
           >
             {options.cancelLabel ?? "Avbryt"}
           </button>
@@ -151,8 +151,8 @@ export function ConfirmDialogHost() {
             onClick={() => resolve(true)}
             className={
               intent === "destructive"
-                ? "h-9 px-4 rounded-md bg-status-error text-surface font-sans text-[13px] font-semibold hover:bg-[#9a4632] transition-colors"
-                : "h-9 px-4 rounded-md bg-primary-deep text-surface font-sans text-[13px] font-semibold hover:bg-primary transition-colors"
+                ? "h-9 px-4 rounded-md bg-status-error text-surface font-sans text-small font-semibold hover:bg-[#9a4632] transition-colors"
+                : "h-9 px-4 rounded-md bg-primary-deep text-surface font-sans text-small font-semibold hover:bg-primary transition-colors"
             }
           >
             {options.confirmLabel ?? "Bekräfta"}

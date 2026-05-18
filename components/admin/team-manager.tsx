@@ -65,18 +65,18 @@ export function TeamManager({ admins }: { admins: AdminRow[] }) {
                     </span>
                   )}
                 </p>
-                <p className="font-sans text-[13px] text-ink-mute truncate">
+                <p className="font-sans text-small text-ink-mute truncate">
                   {a.email}
                 </p>
               </div>
               <div className="flex items-center gap-3 shrink-0">
                 {a.twoFactorEnabled ? (
-                  <span className="font-sans text-[12px] font-semibold text-status-ok">
+                  <span className="font-sans text-caption font-semibold text-status-ok">
                     2FA på
                   </span>
                 ) : (
                   <span
-                    className="font-sans text-[12px] font-semibold text-status-warn-text"
+                    className="font-sans text-caption font-semibold text-status-warn-text"
                     title="Får inte åtkomst till panelen förrän 2FA är aktiverat"
                   >
                     2FA saknas
@@ -109,7 +109,7 @@ export function TeamManager({ admins }: { admins: AdminRow[] }) {
             </li>
           ))}
         </ul>
-        <p className="mt-2 font-sans text-[12px] text-ink-mute">
+        <p className="mt-2 font-sans text-caption text-ink-mute">
           &ldquo;2FA saknas&rdquo; betyder att personen blir ombedd att
           aktivera tvåfaktorsinloggning innan adminpanelen öppnas.
         </p>
@@ -120,7 +120,7 @@ export function TeamManager({ admins }: { admins: AdminRow[] }) {
         <h2 className="font-display text-lg font-medium text-ink mb-1">
           Gör en användare till admin
         </h2>
-        <p className="font-sans text-[13px] text-ink-mute mb-3">
+        <p className="font-sans text-small text-ink-mute mb-3">
           Personen måste redan ha ett konto. Hen behöver aktivera
           tvåfaktorsinloggning vid första inloggningen till panelen.
         </p>

@@ -21,7 +21,7 @@ export function Sparkline({
   height?: number;
 }) {
   if (history.length === 0) {
-    return <span className="inline-block w-[56px] text-ink-soft text-[10px] tabular-nums">—</span>;
+    return <span className="inline-block w-[56px] text-ink-soft text-micro tabular-nums">—</span>;
   }
 
   const values = history.map((h) => h[metric]);

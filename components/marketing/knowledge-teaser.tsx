@@ -77,10 +77,10 @@ export function KnowledgeTeaser() {
               <Display size="sm" className="mt-2.5">
                 {a.title}
               </Display>
-              <p className="font-sans text-[14px] text-ink-mute leading-relaxed mt-3 line-clamp-3">
+              <p className="font-sans text-body text-ink-mute leading-relaxed mt-3 line-clamp-3">
                 {a.summary}
               </p>
-              <p className="font-sans text-[12.5px] text-ink-soft mt-3 tracking-wide">
+              <p className="font-sans text-caption text-ink-soft mt-3 tracking-wide">
                 {a.readingTime}
               </p>
             </Link>

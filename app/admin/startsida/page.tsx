@@ -26,17 +26,17 @@ export default async function AdminHomepagePage() {
 
       <div className="mb-8 bg-surface-warm border border-accent/30 rounded-xl p-5 flex flex-wrap items-center gap-4">
         <div className="flex-1 min-w-[280px]">
-          <p className="font-sans text-[15px] font-semibold tracking-tight text-primary-deep">
+          <p className="font-sans text-body-lg font-semibold tracking-tight text-primary-deep">
             Hero-bilder
           </p>
-          <p className="font-sans text-[13.5px] text-ink-mute mt-1 leading-relaxed">
+          <p className="font-sans text-small text-ink-mute mt-1 leading-relaxed">
             Bilden överst på startsidan. Hanteras separat med säsonger och
             kampanjdatum — t.ex. en bild för midsommar eller jul.
           </p>
         </div>
         <Link
           href="/admin/startsida/hero"
-          className="inline-flex items-center gap-2 h-12 px-5 rounded-lg bg-primary-deep text-surface font-sans text-[15px] font-semibold hover:bg-primary transition-colors"
+          className="inline-flex items-center gap-2 h-12 px-5 rounded-lg bg-primary-deep text-surface font-sans text-body-lg font-semibold hover:bg-primary transition-colors"
         >
           Hantera hero-bilder →
         </Link>

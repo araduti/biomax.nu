@@ -91,7 +91,7 @@ export default async function BundleDetailPage({
                 </p>
               )}
 
-              <ul className="mt-8 space-y-3 font-sans text-[14.5px] text-ink-body border-y border-border py-5">
+              <ul className="mt-8 space-y-3 font-sans text-body text-ink-body border-y border-border py-5">
                 {bundle.items.map((it) => (
                   <li
                     key={it.slug}
@@ -121,7 +121,7 @@ export default async function BundleDetailPage({
                 )}
               </div>
               {bundle.savingsSek > 0 && (
-                <p className="mt-2 font-sans text-[14px] text-accent-deep font-semibold">
+                <p className="mt-2 font-sans text-body text-accent-deep font-semibold">
                   Du sparar <Accent>{formatPriceSEK(bundle.savingsSek.toString())}</Accent>{" "}
                   jämfört med att köpa dem var för sig ({bundle.discountPercent} % rabatt).
                 </p>

@@ -42,15 +42,15 @@ export function IndexStatusBadge({
         : badge.tone === "error" ? "bg-status-error"
         : "bg-ink-soft"
       }`} />
-      <span className="font-sans text-[12px] font-semibold">
+      <span className="font-sans text-caption font-semibold">
         {badge.label}
       </span>
       {check.coverageState && (
-        <span className="font-sans text-[11.5px] text-ink-mute">
+        <span className="font-sans text-micro text-ink-mute">
           · {check.coverageState}
         </span>
       )}
-      <span className="font-sans text-[11px] text-ink-soft tabular-nums whitespace-nowrap">
+      <span className="font-sans text-micro text-ink-soft tabular-nums whitespace-nowrap">
         {check.lastCrawlTime
           ? `senast crawl ${dateFmt.format(check.lastCrawlTime)}`
           : `kollat ${dateFmt.format(check.checkedAt)}`}

@@ -47,13 +47,13 @@ export function DeliveryReminder() {
   if (delivery.method === "home") {
     return (
       <div className="rounded-2xl border border-border bg-surface-warm/60 p-5">
-        <p className="font-sans text-[11px] uppercase tracking-[0.18em] font-semibold text-ink-soft">
+        <p className="font-sans text-micro uppercase tracking-[0.18em] font-semibold text-ink-soft">
           Leverans
         </p>
-        <p className="mt-2 font-display text-[17px] text-primary-deep tracking-tight">
+        <p className="mt-2 font-display text-lead text-primary-deep tracking-tight">
           Hem till dörren
         </p>
-        <p className="mt-1 font-sans text-[13.5px] text-ink-mute leading-relaxed">
+        <p className="mt-1 font-sans text-small text-ink-mute leading-relaxed">
           PostNord MyPack Home — paketet lämnas i din brevlåda eller på
           överenskommen plats.
         </p>
@@ -66,16 +66,16 @@ export function DeliveryReminder() {
 
   return (
     <div className="rounded-2xl border border-border bg-surface-warm/60 p-5">
-      <p className="font-sans text-[11px] uppercase tracking-[0.18em] font-semibold text-ink-soft">
+      <p className="font-sans text-micro uppercase tracking-[0.18em] font-semibold text-ink-soft">
         Hämtas hos
       </p>
-      <p className="mt-2 font-display text-[17px] text-primary-deep tracking-tight">
+      <p className="mt-2 font-display text-lead text-primary-deep tracking-tight">
         {sp.name}
       </p>
-      <p className="mt-1 font-sans text-[13.5px] text-ink-mute leading-relaxed">
+      <p className="mt-1 font-sans text-small text-ink-mute leading-relaxed">
         {sp.street}, {sp.postalCode} {sp.city}
       </p>
-      <p className="mt-3 font-sans text-[12px] text-ink-soft leading-relaxed">
+      <p className="mt-3 font-sans text-caption text-ink-soft leading-relaxed">
         Du får ett sms från PostNord när paketet finns att hämta. Hämtas inom
         14 dagar — efter det skickas det i retur.
       </p>

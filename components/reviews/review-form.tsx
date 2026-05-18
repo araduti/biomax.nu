@@ -49,7 +49,7 @@ export function ReviewForm({
   if (!loggedIn) {
     return (
       <div className="rounded-2xl border border-border bg-surface-warm/60 p-6">
-        <p className="font-sans text-[14px] text-ink-body leading-relaxed">
+        <p className="font-sans text-body text-ink-body leading-relaxed">
           Logga in för att lämna en recension. Endast inloggade kunder kan
           recensera, så att vi kan visa &quot;Verifierat köp&quot;-markeringen
           där det passar.
@@ -57,7 +57,7 @@ export function ReviewForm({
         <div className="mt-4">
           <Link
             href={`/logga-in?next=/produkter/${productSlug}`}
-            className="inline-flex items-center justify-center px-4 py-2 rounded-md bg-primary-deep text-surface font-sans text-[13.5px] font-semibold hover:bg-primary-deep/90"
+            className="inline-flex items-center justify-center px-4 py-2 rounded-md bg-primary-deep text-surface font-sans text-small font-semibold hover:bg-primary-deep/90"
           >
             Logga in
           </Link>
@@ -85,7 +85,7 @@ export function ReviewForm({
         <h3 className="font-display text-lg font-medium tracking-tight text-primary-deep">
           Tack — vi har din recension
         </h3>
-        <p className="mt-2 font-sans text-[14px] text-ink-body leading-relaxed">
+        <p className="mt-2 font-sans text-body text-ink-body leading-relaxed">
           {pending
             ? "Den väntar på att granskas och publiceras inom någon dag. Vill du komplettera eller ändra något? Hör av dig på kontakt@biomax.nu så hjälper vi till."
             : "Den är publicerad nedan. Vill du komplettera eller ändra den? Hör av dig på kontakt@biomax.nu så hjälper vi till."}
@@ -100,7 +100,7 @@ export function ReviewForm({
         role="status"
         className="rounded-2xl border border-accent-deep/40 bg-accent/8 p-6"
       >
-        <p className="font-sans text-[14.5px] text-ink-body leading-relaxed">
+        <p className="font-sans text-body text-ink-body leading-relaxed">
           Tack — din recension är inskickad och hamnar publikt så snart vi
           granskat den. Vi läser alla nya recensioner inom någon dag.
         </p>
@@ -134,14 +134,14 @@ export function ReviewForm({
       <h3 className="font-display text-xl font-medium tracking-tight text-primary-deep mb-1">
         Lämna en recension
       </h3>
-      <p className="font-sans text-[13px] text-ink-mute mb-5 leading-relaxed">
+      <p className="font-sans text-small text-ink-mute mb-5 leading-relaxed">
         Dela din egen erfarenhet. Var ärlig — beskriv vad du tycker, hur du
         använt produkten och vad andra kunder bör veta.
       </p>
 
       {/* Star picker */}
       <div className="mb-5">
-        <label className="block font-sans text-[12px] font-semibold text-ink-soft mb-2">
+        <label className="block font-sans text-caption font-semibold text-ink-soft mb-2">
           Betyg
         </label>
         <div
@@ -176,10 +176,10 @@ export function ReviewForm({
 
       <div className="space-y-4">
         <div>
-          <label className="block font-sans text-[12px] font-semibold text-ink-soft mb-1.5">
+          <label className="block font-sans text-caption font-semibold text-ink-soft mb-1.5">
             Vad köpte du produkten för? (valfritt)
           </label>
-          <p className="font-sans text-[11.5px] text-ink-soft mb-2.5 leading-snug">
+          <p className="font-sans text-micro text-ink-soft mb-2.5 leading-snug">
             Hjälper andra kunder hitta recensioner från dem som köpt av samma anledning.
           </p>
           <div className="flex flex-wrap gap-1.5">
@@ -192,7 +192,7 @@ export function ReviewForm({
                   onClick={() =>
                     setReviewerGoal(active ? "" : b.slug)
                   }
-                  className={`px-3 py-1.5 rounded-full border font-sans text-[12px] font-semibold transition-colors ${
+                  className={`px-3 py-1.5 rounded-full border font-sans text-caption font-semibold transition-colors ${
                     active
                       ? "bg-primary-deep text-surface border-primary-deep"
                       : "bg-surface text-ink-body border-border hover:border-border-soft hover:bg-surface-warm"
@@ -216,7 +216,7 @@ export function ReviewForm({
         <div>
           <label
             htmlFor="review-body"
-            className="block font-sans text-[12px] font-semibold text-ink-soft mb-1.5"
+            className="block font-sans text-caption font-semibold text-ink-soft mb-1.5"
           >
             Din erfarenhet *
           </label>
@@ -227,12 +227,12 @@ export function ReviewForm({
             onChange={(e) => setBody(e.target.value)}
             disabled={pending}
             placeholder="Hur har du använt produkten? Vad har du märkt? Något andra bör veta?"
-            className="w-full px-3 py-2 bg-surface border border-border rounded-md font-sans text-[14px] text-ink-body placeholder:text-ink-soft focus:outline-none focus:border-accent disabled:opacity-50"
+            className="w-full px-3 py-2 bg-surface border border-border rounded-md font-sans text-body text-ink-body placeholder:text-ink-soft focus:outline-none focus:border-accent disabled:opacity-50"
             required
             minLength={10}
             maxLength={2000}
           />
-          <p className="mt-1 font-sans text-[11.5px] text-ink-soft">
+          <p className="mt-1 font-sans text-micro text-ink-soft">
             Minst 10 tecken, högst 2000.
           </p>
         </div>
@@ -250,7 +250,7 @@ export function ReviewForm({
       {status.kind === "error" && (
         <p
           role="alert"
-          className="mt-4 font-sans text-[12.5px] text-status-error bg-status-error/10 px-3 py-2 rounded-md"
+          className="mt-4 font-sans text-caption text-status-error bg-status-error/10 px-3 py-2 rounded-md"
         >
           {status.message}
         </p>
@@ -265,7 +265,7 @@ export function ReviewForm({
         >
           {pending ? "Skickar…" : "Skicka recension"}
         </Button>
-        <p className="mt-3 font-sans text-[11.5px] text-ink-soft leading-relaxed">
+        <p className="mt-3 font-sans text-micro text-ink-soft leading-relaxed">
           Recensioner granskas innan publicering. Vi publicerar både positiva
           och kritiska recensioner — det viktigaste är att de är ärliga.
         </p>

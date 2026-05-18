@@ -42,7 +42,7 @@ export function OrderSelfServicePanel({
 
   if (!editable) {
     return (
-      <div className="mt-8 pt-6 border-t border-border-soft font-sans text-[13px] text-ink-mute leading-relaxed">
+      <div className="mt-8 pt-6 border-t border-border-soft font-sans text-small text-ink-mute leading-relaxed">
         {status === "PENDING"
           ? "Vi väntar fortfarande på betalningsbekräftelse. När den kommit kan du justera leveransadress eller avbryta innan paketet packas."
           : status === "FULFILLED"
@@ -54,7 +54,7 @@ export function OrderSelfServicePanel({
 
   return (
     <div className="mt-10 pt-6 border-t border-border">
-      <p className="font-sans text-[11px] uppercase tracking-[0.22em] text-ink-soft font-semibold mb-4">
+      <p className="font-sans text-micro uppercase tracking-[0.22em] text-ink-soft font-semibold mb-4">
         Hantera ordern
       </p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -109,7 +109,7 @@ function AddressEditor({
       <p className="font-display text-base font-medium text-primary-deep mb-1">
         Ändra leveransadress
       </p>
-      <p className="font-sans text-[12.5px] text-ink-mute mb-4 leading-relaxed">
+      <p className="font-sans text-caption text-ink-mute mb-4 leading-relaxed">
         Möjligt innan paketet är packat. Efter det — mejla oss.
       </p>
       {!open ? (
@@ -158,7 +158,7 @@ function AddressEditor({
           {error && (
             <p
               role="alert"
-              className="font-sans text-[12.5px] text-status-error"
+              className="font-sans text-caption text-status-error"
             >
               {error}
             </p>
@@ -174,7 +174,7 @@ function AddressEditor({
                 setError(null);
               }}
               disabled={pending}
-              className="font-sans text-[13px] text-ink-soft hover:text-ink-body"
+              className="font-sans text-small text-ink-soft hover:text-ink-body"
             >
               Avbryt
             </button>
@@ -218,7 +218,7 @@ function CancelOrderControl({
       <p className="font-display text-base font-medium text-primary-deep mb-1">
         Avbryt köpet
       </p>
-      <p className="font-sans text-[12.5px] text-ink-mute mb-4 leading-relaxed">
+      <p className="font-sans text-caption text-ink-mute mb-4 leading-relaxed">
         Vi frigör lagret. Återbetalning av betalningen sker via support
         (mejla efter att du avbrutit).
       </p>
@@ -226,13 +226,13 @@ function CancelOrderControl({
         <button
           type="button"
           onClick={() => setConfirming(true)}
-          className="font-sans text-[13px] text-status-error underline decoration-status-error/40 underline-offset-[3px] hover:decoration-status-error"
+          className="font-sans text-small text-status-error underline decoration-status-error/40 underline-offset-[3px] hover:decoration-status-error"
         >
           Avbryt ordern
         </button>
       ) : (
         <div className="space-y-3">
-          <p className="font-sans text-[13px] text-ink-body">
+          <p className="font-sans text-small text-ink-body">
             Bekräfta att du vill avbryta order {orderNumber}.
           </p>
           <textarea
@@ -241,12 +241,12 @@ function CancelOrderControl({
             placeholder="Valfritt — berätta varför, det hjälper oss bli bättre."
             rows={2}
             maxLength={240}
-            className="w-full px-3 py-2 bg-surface border border-border rounded-md font-sans text-[13.5px]"
+            className="w-full px-3 py-2 bg-surface border border-border rounded-md font-sans text-small"
           />
           {error && (
             <p
               role="alert"
-              className="font-sans text-[12.5px] text-status-error"
+              className="font-sans text-caption text-status-error"
             >
               {error}
             </p>
@@ -256,7 +256,7 @@ function CancelOrderControl({
               type="button"
               onClick={submit}
               disabled={pending}
-              className="px-4 py-1.5 rounded-md bg-status-error text-surface hover:bg-[#9F4630] font-sans text-[13px] font-semibold transition-colors"
+              className="px-4 py-1.5 rounded-md bg-status-error text-surface hover:bg-[#9F4630] font-sans text-small font-semibold transition-colors"
             >
               {pending ? "Avbryter…" : "Ja, avbryt"}
             </button>
@@ -268,7 +268,7 @@ function CancelOrderControl({
                 setError(null);
               }}
               disabled={pending}
-              className="font-sans text-[13px] text-ink-soft hover:text-ink-body"
+              className="font-sans text-small text-ink-soft hover:text-ink-body"
             >
               Nej, behåll
             </button>

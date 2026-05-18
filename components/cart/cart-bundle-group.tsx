@@ -39,17 +39,17 @@ export function CartBundleGroup({
     <li className="py-3 my-3 first:mt-0 -mx-2 px-2 rounded-xl bg-accent/[0.06] border border-accent/15">
       <header className="flex items-baseline justify-between gap-3 mb-1 px-1">
         <div className="min-w-0">
-          <p className="font-sans text-[10.5px] uppercase tracking-[0.18em] font-semibold text-accent-deep">
+          <p className="font-sans text-micro uppercase tracking-[0.18em] font-semibold text-accent-deep">
             Paket · {discountPct} % rabatt
           </p>
-          <p className="font-display text-[15px] md:text-base font-medium text-primary-deep mt-0.5 leading-tight truncate">
+          <p className="font-display text-body-lg md:text-base font-medium text-primary-deep mt-0.5 leading-tight truncate">
             {first.bundleName}
           </p>
         </div>
         <button
           type="button"
           onClick={() => removeBundle(bundleId)}
-          className="font-sans text-[11.5px] text-ink-soft hover:text-status-error transition-colors flex-shrink-0"
+          className="font-sans text-micro text-ink-soft hover:text-status-error transition-colors flex-shrink-0"
         >
           Ta bort paket
         </button>
@@ -65,7 +65,7 @@ export function CartBundleGroup({
         ))}
       </ul>
       {savings > 0 && (
-        <p className="px-1 pt-2 font-sans text-[12px] text-accent-deep font-semibold">
+        <p className="px-1 pt-2 font-sans text-caption text-accent-deep font-semibold">
           Du sparar {formatPriceSEK(savings)} på paketet
         </p>
       )}

@@ -109,10 +109,10 @@ export default function IngredientIndexPage() {
                         <h3 className="font-display text-xl font-medium tracking-tight text-primary-deep mb-2">
                           {ing.name}
                         </h3>
-                        <p className="font-sans text-[14px] text-ink-body leading-[1.6] line-clamp-3">
+                        <p className="font-sans text-body text-ink-body leading-[1.6] line-clamp-3">
                           {ing.summary}
                         </p>
-                        <span className="mt-3 inline-block font-sans text-[11.5px] text-accent-deep uppercase tracking-[0.2em] font-semibold">
+                        <span className="mt-3 inline-block font-sans text-micro text-accent-deep uppercase tracking-[0.2em] font-semibold">
                           Läs mer →
                         </span>
                       </Link>

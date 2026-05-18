@@ -41,7 +41,7 @@ export default function KontaktPage() {
           >
             kontakt@biomax.nu
           </a>
-          <p className="mt-3 font-sans text-[14px] text-ink-mute leading-relaxed">
+          <p className="mt-3 font-sans text-body text-ink-mute leading-relaxed">
             Vi svarar inom <strong>48 timmar</strong> (oftast samma arbetsdag)
             på alla typer av frågor — beställning, leverans, reklamation,
             ångerrätt och personuppgifter (GDPR). Bifoga gärna ordernummer.
@@ -59,7 +59,7 @@ export default function KontaktPage() {
           <p className="font-display text-xl text-primary-deep">
             Eken Hälsobutik
           </p>
-          <p className="mt-2 font-sans text-[14px] text-ink-mute leading-relaxed">
+          <p className="mt-2 font-sans text-body text-ink-mute leading-relaxed">
             Tis–Fre 10:00–18:00 · Lör 10:00–15:00. Personlig rådgivning,
             konsultation och hela sortimentet i butik.
           </p>
@@ -71,14 +71,14 @@ export default function KontaktPage() {
         <h2 className="mt-2 font-display text-xl md:text-[22px] font-medium tracking-tight text-primary-deep mb-3">
           Biomax HB · Eken Hälsobutik
         </h2>
-        <address className="not-italic font-sans text-[15.5px] text-ink-body leading-relaxed">
+        <address className="not-italic font-sans text-body-lg text-ink-body leading-relaxed">
           Ekenleden 15A
           <br />
           428 36 Kållered
           <br />
           Västra Götaland · Sverige
         </address>
-        <p className="mt-4 font-sans text-[14px] text-ink-mute leading-relaxed">
+        <p className="mt-4 font-sans text-body text-ink-mute leading-relaxed">
           <Link
             href="/butik"
             className="text-primary-deep underline decoration-accent/40 underline-offset-[3px] hover:decoration-accent transition-colors"
@@ -89,7 +89,7 @@ export default function KontaktPage() {
       </div>
 
       <aside className="mt-12 pt-10 border-t border-border-soft">
-        <p className="font-sans text-[14px] text-ink-mute italic leading-relaxed">
+        <p className="font-sans text-body text-ink-mute italic leading-relaxed">
           För frågor om dina personuppgifter, se vår{" "}
           <Link
             href="/integritet"
@@ -122,7 +122,7 @@ function Card({
 }) {
   return (
     <div className="bg-surface-alt border border-border rounded-2xl p-6 md:p-7 h-full flex flex-col">
-      <p className="font-sans text-[10.5px] uppercase tracking-[0.22em] font-semibold text-accent-deep mb-1">
+      <p className="font-sans text-micro uppercase tracking-[0.22em] font-semibold text-accent-deep mb-1">
         {eyebrow}
       </p>
       <h2 className="font-display text-2xl font-medium tracking-tight text-primary-deep mb-3">

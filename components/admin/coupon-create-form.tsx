@@ -44,7 +44,7 @@ export function CouponCreateForm() {
       <div>
         <label
           htmlFor="coupon-code"
-          className="block font-sans text-[12px] font-semibold text-ink-soft mb-1.5"
+          className="block font-sans text-caption font-semibold text-ink-soft mb-1.5"
         >
           Kod
         </label>
@@ -60,7 +60,7 @@ export function CouponCreateForm() {
       </div>
 
       <div>
-        <label className="block font-sans text-[12px] font-semibold text-ink-soft mb-1.5">
+        <label className="block font-sans text-caption font-semibold text-ink-soft mb-1.5">
           Rabattyp
         </label>
         <div className="flex gap-3">
@@ -71,7 +71,7 @@ export function CouponCreateForm() {
               onChange={() => setDiscountType("percent")}
               disabled={pending}
             />
-            <span className="font-sans text-[13px]">Procent</span>
+            <span className="font-sans text-small">Procent</span>
           </label>
           <label className="flex items-center gap-1.5 cursor-pointer">
             <input
@@ -80,7 +80,7 @@ export function CouponCreateForm() {
               onChange={() => setDiscountType("amount")}
               disabled={pending}
             />
-            <span className="font-sans text-[13px]">Fast belopp</span>
+            <span className="font-sans text-small">Fast belopp</span>
           </label>
         </div>
       </div>
@@ -112,7 +112,7 @@ export function CouponCreateForm() {
       <div>
         <label
           htmlFor="coupon-desc"
-          className="block font-sans text-[12px] font-semibold text-ink-soft mb-1.5"
+          className="block font-sans text-caption font-semibold text-ink-soft mb-1.5"
         >
           Intern beskrivning <span className="text-ink-soft font-normal">(valfritt)</span>
         </label>
@@ -123,7 +123,7 @@ export function CouponCreateForm() {
           onChange={(e) => setDescription(e.target.value)}
           disabled={pending}
           placeholder="t.ex. vårkampanj v.18"
-          className="w-full px-3 py-2 bg-surface border border-border rounded-md font-sans text-[13.5px] text-ink-body placeholder:text-ink-soft focus:outline-none focus:border-accent disabled:opacity-50"
+          className="w-full px-3 py-2 bg-surface border border-border rounded-md font-sans text-small text-ink-body placeholder:text-ink-soft focus:outline-none focus:border-accent disabled:opacity-50"
         />
       </div>
 
@@ -140,7 +140,7 @@ export function CouponCreateForm() {
       {error && (
         <p
           role="alert"
-          className="font-sans text-[12px] text-status-error bg-status-error/10 px-3 py-2 rounded-md"
+          className="font-sans text-caption text-status-error bg-status-error/10 px-3 py-2 rounded-md"
         >
           {error}
         </p>

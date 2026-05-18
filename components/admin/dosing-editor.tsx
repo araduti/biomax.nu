@@ -82,7 +82,7 @@ export function DosingEditor({
             : "rounded-xl border border-dashed border-border bg-surface-warm/40 px-4 py-3 flex items-baseline justify-between gap-3 flex-wrap"
         }
       >
-        <p className="font-sans text-[13px] text-ink-body leading-relaxed">
+        <p className="font-sans text-small text-ink-body leading-relaxed">
           {isManual ? (
             <>
               <strong className="font-semibold text-accent-deep">
@@ -101,7 +101,7 @@ export function DosingEditor({
         <button
           type="button"
           onClick={isManual ? clearManual : activateManual}
-          className="font-sans text-[12.5px] font-semibold text-accent-deep hover:text-primary-deep border-b border-accent/40 pb-px transition-colors"
+          className="font-sans text-caption font-semibold text-accent-deep hover:text-primary-deep border-b border-accent/40 pb-px transition-colors"
         >
           {isManual ? "Återgå till autotolkning" : "Ta manuell kontroll →"}
         </button>
@@ -116,7 +116,7 @@ export function DosingEditor({
               value={effective.amount ?? ""}
               onChange={(e) => setField("amount", e.target.value || null)}
               placeholder="t.ex. 1 kapsel"
-              className="w-full px-3 py-2 rounded-lg border border-border bg-surface-alt font-sans text-[13.5px] text-ink-body outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-surface-alt font-sans text-small text-ink-body outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
             />
           </Field>
           <Field label="Frekvens">
@@ -125,7 +125,7 @@ export function DosingEditor({
               value={effective.frequency ?? ""}
               onChange={(e) => setField("frequency", e.target.value || null)}
               placeholder="t.ex. 1×/dag eller 1-2×/dag"
-              className="w-full px-3 py-2 rounded-lg border border-border bg-surface-alt font-sans text-[13.5px] text-ink-body outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-surface-alt font-sans text-small text-ink-body outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
             />
           </Field>
           <Field label="Tidssignal">
@@ -141,7 +141,7 @@ export function DosingEditor({
                   tone: tone as DoseTimingTone,
                 });
               }}
-              className="w-full px-3 py-2 rounded-lg border border-border bg-surface-alt font-sans text-[13.5px] text-ink-body outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+              className="w-full px-3 py-2 rounded-lg border border-border bg-surface-alt font-sans text-small text-ink-body outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
             >
               {TIMING_OPTIONS.map((o) => (
                 <option key={o.value || "none"} value={o.value}>
@@ -155,7 +155,7 @@ export function DosingEditor({
 
       {isManual && (
         <div>
-          <p className="font-sans text-[11px] uppercase tracking-[0.2em] font-semibold text-ink-mute mb-2">
+          <p className="font-sans text-micro uppercase tracking-[0.2em] font-semibold text-ink-mute mb-2">
             Tidsaxel — när doseras
           </p>
           <div className="grid grid-cols-4 gap-2">
@@ -187,8 +187,8 @@ export function DosingEditor({
                   <span
                     className={
                       checked
-                        ? "block font-sans text-[11px] uppercase tracking-[0.14em] font-semibold text-accent-deep"
-                        : "block font-sans text-[11px] uppercase tracking-[0.14em] font-semibold text-ink-soft"
+                        ? "block font-sans text-micro uppercase tracking-[0.14em] font-semibold text-accent-deep"
+                        : "block font-sans text-micro uppercase tracking-[0.14em] font-semibold text-ink-soft"
                     }
                   >
                     {PHASE_LABEL[p]}
@@ -202,12 +202,12 @@ export function DosingEditor({
 
       {/* Preview — always visible. Shows exactly what the public card will render. */}
       <div>
-        <p className="font-sans text-[10.5px] uppercase tracking-[0.2em] font-semibold text-ink-soft mb-2">
+        <p className="font-sans text-micro uppercase tracking-[0.2em] font-semibold text-ink-soft mb-2">
           Förhandsvisning
         </p>
         <PreviewCard dose={effective} />
         {!isManual && !doseHasSignal(autoEffective) && (
-          <p className="mt-2 font-sans text-[12px] text-ink-mute italic">
+          <p className="mt-2 font-sans text-caption text-ink-mute italic">
             Autotolkningen kunde inte hitta tillräcklig signal i fritexten —
             chip- och tidsaxelblocket visas inte publikt. Ta manuell kontroll
             för att fylla i.
@@ -227,7 +227,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="block font-sans text-[11px] uppercase tracking-[0.2em] font-semibold text-ink-mute mb-1.5">
+      <span className="block font-sans text-micro uppercase tracking-[0.2em] font-semibold text-ink-mute mb-1.5">
         {label}
       </span>
       {children}
@@ -278,8 +278,8 @@ function PreviewCard({ dose }: { dose: Dose }) {
                     <span
                       className={
                         on
-                          ? "mt-1.5 font-sans text-[10px] uppercase tracking-[0.14em] font-semibold text-accent-deep"
-                          : "mt-1.5 font-sans text-[10px] uppercase tracking-[0.14em] font-semibold text-ink-soft"
+                          ? "mt-1.5 font-sans text-micro uppercase tracking-[0.14em] font-semibold text-accent-deep"
+                          : "mt-1.5 font-sans text-micro uppercase tracking-[0.14em] font-semibold text-ink-soft"
                       }
                     >
                       {PHASE_LABEL[p]}
@@ -291,7 +291,7 @@ function PreviewCard({ dose }: { dose: Dose }) {
           )}
         </>
       ) : (
-        <p className="font-sans text-[13px] text-ink-mute italic">
+        <p className="font-sans text-small text-ink-mute italic">
           Inget innehåll att visa.
         </p>
       )}
@@ -312,7 +312,7 @@ function PreviewChip({
       : "bg-accent/12 text-accent-deep border-accent/25";
   return (
     <span
-      className={`inline-flex items-center rounded-full border px-3 py-1 font-sans text-[12px] font-medium tracking-tight ${palette}`}
+      className={`inline-flex items-center rounded-full border px-3 py-1 font-sans text-caption font-medium tracking-tight ${palette}`}
     >
       {children}
     </span>

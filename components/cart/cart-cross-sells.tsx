@@ -68,7 +68,7 @@ export function CartCrossSells({
           : "mt-12 pt-10 border-t border-border"
       }
     >
-      <p className="font-sans text-[11px] uppercase tracking-[0.18em] font-semibold text-ink-soft mb-3">
+      <p className="font-sans text-micro uppercase tracking-[0.18em] font-semibold text-ink-soft mb-3">
         Komplettera din rutin
       </p>
       <ul
@@ -100,11 +100,11 @@ export function CartCrossSells({
               <Link
                 href={`/produkter/${p.slug}`}
                 onClick={onNavigate}
-                className="font-display text-[12.5px] font-medium text-primary-deep leading-tight line-clamp-2 hover:text-primary transition-colors"
+                className="font-display text-caption font-medium text-primary-deep leading-tight line-clamp-2 hover:text-primary transition-colors"
               >
                 {p.name}
               </Link>
-              <p className="mt-auto pt-1.5 font-sans text-[12px] text-ink-mute tabular-nums">
+              <p className="mt-auto pt-1.5 font-sans text-caption text-ink-mute tabular-nums">
                 {formatPriceSEK(p.price)}
               </p>
               <button
@@ -121,7 +121,7 @@ export function CartCrossSells({
                     1
                   )
                 }
-                className="mt-2 px-3 py-1.5 rounded-full bg-surface border border-border font-sans text-[11.5px] font-semibold text-primary-deep hover:bg-surface-warm transition-colors"
+                className="mt-2 px-3 py-1.5 rounded-full bg-surface border border-border font-sans text-micro font-semibold text-primary-deep hover:bg-surface-warm transition-colors"
               >
                 + Lägg till
               </button>

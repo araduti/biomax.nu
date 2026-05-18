@@ -225,7 +225,7 @@ export function AdminSidebar({
         onClick={() => setMobileOpen(true)}
         aria-label="Öppna admin-meny"
         data-admin-compact
-        className="lg:hidden fixed top-3 left-3 z-30 inline-flex items-center gap-2 h-9 px-3 rounded-[5px] bg-[var(--d-ink)] text-[var(--d-bg)] font-sans text-[13px] font-semibold shadow-sm"
+        className="lg:hidden fixed top-3 left-3 z-30 inline-flex items-center gap-2 h-9 px-3 rounded-[5px] bg-[var(--d-ink)] text-[var(--d-bg)] font-sans text-small font-semibold shadow-sm"
       >
         <span aria-hidden>☰</span>
         Meny
@@ -257,11 +257,11 @@ export function AdminSidebar({
           >
             <span
               aria-hidden
-              className="w-[22px] h-[22px] rounded-[4px] bg-[var(--d-accent)] text-[var(--d-accent-ink)] inline-flex items-center justify-center font-mono text-[11px] font-bold flex-shrink-0"
+              className="w-[22px] h-[22px] rounded-[4px] bg-[var(--d-accent)] text-[var(--d-accent-ink)] inline-flex items-center justify-center font-mono text-micro font-bold flex-shrink-0"
             >
               bm
             </span>
-            <span className="font-sans text-[14px] font-semibold text-[var(--d-ink)] truncate">
+            <span className="font-sans text-body font-semibold text-[var(--d-ink)] truncate">
               biomax
             </span>
           </Link>
@@ -291,7 +291,7 @@ export function AdminSidebar({
             className="w-full h-8 px-2.5 inline-flex items-center gap-2 rounded-[5px] bg-[var(--d-surface)] border border-[var(--d-line)] text-[var(--d-ink-3)] hover:border-[var(--d-line-strong)] transition-colors"
           >
             <Search size={13} strokeWidth={1.75} aria-hidden />
-            <span className="font-sans text-[13px] flex-1 text-left">Sök</span>
+            <span className="font-sans text-small flex-1 text-left">Sök</span>
             <span className="d-kbd">⌘K</span>
           </button>
         </div>
@@ -357,15 +357,15 @@ export function AdminSidebar({
             <summary className="flex items-center gap-2 px-2 h-[38px] rounded-[5px] cursor-pointer hover:bg-[var(--d-surface)] transition-colors list-none">
               <span
                 aria-hidden
-                className="w-[26px] h-[26px] rounded-[5px] bg-[var(--d-accent-soft)] text-[var(--d-accent-2)] inline-flex items-center justify-center font-mono text-[11px] font-bold flex-shrink-0"
+                className="w-[26px] h-[26px] rounded-[5px] bg-[var(--d-accent-soft)] text-[var(--d-accent-2)] inline-flex items-center justify-center font-mono text-micro font-bold flex-shrink-0"
               >
                 {initials}
               </span>
               <span className="min-w-0 flex-1 leading-tight">
-                <span className="block font-sans text-[13px] font-medium text-[var(--d-ink)] truncate">
+                <span className="block font-sans text-small font-medium text-[var(--d-ink)] truncate">
                   {adminName ?? "Biomax"}
                 </span>
-                <span className="block font-mono text-[11px] text-[var(--d-ink-3)] truncate">
+                <span className="block font-mono text-micro text-[var(--d-ink-3)] truncate">
                   biomax.se
                 </span>
               </span>
@@ -379,14 +379,14 @@ export function AdminSidebar({
             <div className="mt-1 pl-1 pr-1 pb-1 flex flex-col gap-px">
               <Link
                 href="/"
-                className="px-2 h-[26px] inline-flex items-center font-sans text-[13px] text-[var(--d-ink-2)] hover:bg-[var(--d-surface)] rounded-[4px] transition-colors"
+                className="px-2 h-[26px] inline-flex items-center font-sans text-small text-[var(--d-ink-2)] hover:bg-[var(--d-surface)] rounded-[4px] transition-colors"
               >
                 ← Till butiken
               </Link>
               <div className="px-1">
                 <SignOutButton
                   variant="ghost"
-                  className="w-full !justify-start !h-[26px] !px-2 !text-[13px] !font-normal"
+                  className="w-full !justify-start !h-[26px] !px-2 !text-small !font-normal"
                 />
               </div>
             </div>
@@ -420,7 +420,7 @@ function SidebarLink({
       aria-current={active ? "page" : undefined}
       aria-disabled={pending ? "true" : undefined}
       className={cn(
-        "relative group flex items-center gap-2.5 h-[26px] px-2 rounded-[5px] font-sans text-[13.5px] transition-colors",
+        "relative group flex items-center gap-2.5 h-[26px] px-2 rounded-[5px] font-sans text-small transition-colors",
         active
           ? "bg-[var(--d-surface)] text-[var(--d-ink)] font-medium shadow-[0_1px_0_var(--d-line)] before:content-[''] before:absolute before:-left-[3px] before:top-[5px] before:bottom-[5px] before:w-[2px] before:bg-[var(--d-accent)] before:rounded-[2px]"
           : pending
@@ -447,7 +447,7 @@ function SidebarLink({
       ) : count && count > 0 ? (
         <span
           aria-label={`${count} att hantera`}
-          className="inline-flex items-center justify-center min-w-[16px] h-[15px] px-1 rounded-[3px] bg-[var(--d-surface-2)] border border-[var(--d-line)] font-mono text-[10px] font-semibold text-[var(--d-ink-2)] tabular-nums"
+          className="inline-flex items-center justify-center min-w-[16px] h-[15px] px-1 rounded-[3px] bg-[var(--d-surface-2)] border border-[var(--d-line)] font-mono text-micro font-semibold text-[var(--d-ink-2)] tabular-nums"
         >
           {count}
         </span>

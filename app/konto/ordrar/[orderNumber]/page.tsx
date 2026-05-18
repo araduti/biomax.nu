@@ -43,7 +43,7 @@ export default async function OrderDetailPage({
     <>
       <Link
         href="/konto/ordrar"
-        className="inline-flex items-center gap-1 font-sans text-[13px] text-primary hover:text-primary-deep transition-colors mb-4"
+        className="inline-flex items-center gap-1 font-sans text-small text-primary hover:text-primary-deep transition-colors mb-4"
       >
         ← Alla ordrar
       </Link>
@@ -60,7 +60,7 @@ export default async function OrderDetailPage({
           </p>
         </div>
         <span
-          className={`font-sans text-[12px] font-semibold uppercase tracking-[0.18em] ${status.tone}`}
+          className={`font-sans text-caption font-semibold uppercase tracking-[0.18em] ${status.tone}`}
         >
           {status.label}
         </span>
@@ -68,7 +68,7 @@ export default async function OrderDetailPage({
 
       {/* Items */}
       <section className="mt-10 bg-surface-alt border border-border rounded-2xl overflow-hidden">
-        <h2 className="px-6 md:px-8 py-4 border-b border-border-soft font-sans text-[10px] uppercase tracking-[0.22em] text-ink-mute font-semibold">
+        <h2 className="px-6 md:px-8 py-4 border-b border-border-soft font-sans text-micro uppercase tracking-[0.22em] text-ink-mute font-semibold">
           Innehåll
         </h2>
 
@@ -99,21 +99,21 @@ export default async function OrderDetailPage({
                   {item.product ? (
                     <Link
                       href={`/produkter/${item.product.slug}`}
-                      className="font-display text-[15px] font-medium tracking-tight text-primary-deep hover:text-primary transition-colors line-clamp-2"
+                      className="font-display text-body-lg font-medium tracking-tight text-primary-deep hover:text-primary transition-colors line-clamp-2"
                     >
                       {item.productName}
                     </Link>
                   ) : (
-                    <p className="font-display text-[15px] font-medium tracking-tight text-primary-deep line-clamp-2">
+                    <p className="font-display text-body-lg font-medium tracking-tight text-primary-deep line-clamp-2">
                       {item.productName}
                     </p>
                   )}
-                  <p className="font-sans text-[12px] text-ink-mute mt-0.5">
+                  <p className="font-sans text-caption text-ink-mute mt-0.5">
                     {item.quantity} ×{" "}
                     {formatPriceSEK(item.unitPrice.toString())}
                   </p>
                 </div>
-                <span className="font-sans text-[14px] font-semibold text-ink-body whitespace-nowrap">
+                <span className="font-sans text-body font-semibold text-ink-body whitespace-nowrap">
                   {formatPriceSEK(item.totalPrice.toString())}
                 </span>
               </li>
@@ -121,7 +121,7 @@ export default async function OrderDetailPage({
           </ul>
         ) : (
           <div className="px-6 md:px-8 py-8 text-center">
-            <p className="font-sans text-[14px] text-ink-mute italic leading-relaxed max-w-[480px] mx-auto">
+            <p className="font-sans text-body text-ink-mute italic leading-relaxed max-w-[480px] mx-auto">
               Innehållet för denna order finns inte tillgängligt i det nya
               systemet (importerad från gamla biomax.nu — bara totalbelopp och
               datum bevarades). Kontakta oss om du behöver detaljer.
@@ -130,7 +130,7 @@ export default async function OrderDetailPage({
         )}
 
         {/* Totals */}
-        <dl className="px-6 md:px-8 py-5 border-t border-border space-y-2 font-sans text-[14px]">
+        <dl className="px-6 md:px-8 py-5 border-t border-border space-y-2 font-sans text-body">
           <div className="flex justify-between text-ink-body">
             <dt>Delsumma</dt>
             <dd className="font-semibold">
@@ -172,7 +172,7 @@ export default async function OrderDetailPage({
             </dd>
           </div>
           {order.loyaltyPointsAwarded && order.loyaltyPointsAwarded > 0 && (
-            <p className="pt-3 font-sans text-[12.5px] text-accent-deep">
+            <p className="pt-3 font-sans text-caption text-accent-deep">
               ✓ Du tjänade {order.loyaltyPointsAwarded.toLocaleString("sv-SE")}{" "}
               poäng på den här ordern.
             </p>
@@ -185,10 +185,10 @@ export default async function OrderDetailPage({
         <section className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
           {order.shippingAddress && (
             <div className="bg-surface-alt border border-border rounded-2xl p-6">
-              <p className="font-sans text-[10px] uppercase tracking-[0.22em] text-ink-mute font-semibold mb-3">
+              <p className="font-sans text-micro uppercase tracking-[0.22em] text-ink-mute font-semibold mb-3">
                 Levereras till
               </p>
-              <p className="font-sans text-[14px] text-ink-body leading-relaxed">
+              <p className="font-sans text-body text-ink-body leading-relaxed">
                 {order.shippingAddress.fullName}
                 <br />
                 {order.shippingAddress.street}
@@ -198,17 +198,17 @@ export default async function OrderDetailPage({
             </div>
           )}
           <div className="bg-surface-alt border border-border rounded-2xl p-6">
-            <p className="font-sans text-[10px] uppercase tracking-[0.22em] text-ink-mute font-semibold mb-3">
+            <p className="font-sans text-micro uppercase tracking-[0.22em] text-ink-mute font-semibold mb-3">
               Betalning
             </p>
-            <p className="font-sans text-[14px] text-ink-body leading-relaxed">
+            <p className="font-sans text-body text-ink-body leading-relaxed">
               {order.paymentProvider === "KLARNA"
                 ? "Klarna"
                 : order.paymentProvider === "STRIPE"
                   ? "Stripe"
                   : "Manuell"}
               <br />
-              <span className="text-ink-mute text-[12px]">
+              <span className="text-ink-mute text-caption">
                 {order.paymentReference || "—"}
               </span>
             </p>
@@ -220,7 +220,7 @@ export default async function OrderDetailPage({
           by the 14-day window. Server-side validation re-checks. */}
       {order.status === "FULFILLED" && order.items.length > 0 && (
         <div className="mt-10 pt-6 border-t border-border">
-          <p className="font-sans text-[11px] uppercase tracking-[0.22em] text-ink-soft font-semibold mb-4">
+          <p className="font-sans text-micro uppercase tracking-[0.22em] text-ink-soft font-semibold mb-4">
             Returer
           </p>
           <ReturnRequestForm

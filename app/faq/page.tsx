@@ -186,7 +186,7 @@ export default function FaqPage() {
                   <h3 className="font-display text-[19px] md:text-xl font-medium text-primary-deep mb-2 leading-snug">
                     {it.question}
                   </h3>
-                  <p className="font-sans text-[15.5px] text-ink-body leading-[1.7]">
+                  <p className="font-sans text-body-lg text-ink-body leading-[1.7]">
                     {it.answer}
                   </p>
                 </li>

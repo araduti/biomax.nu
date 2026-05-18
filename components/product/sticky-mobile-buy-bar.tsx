@@ -74,17 +74,17 @@ export function StickyMobileBuyBar({
           />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-display text-[13.5px] font-medium text-primary-deep tracking-tight leading-tight line-clamp-1">
+          <p className="font-display text-small font-medium text-primary-deep tracking-tight leading-tight line-clamp-1">
             {productName}
           </p>
-          <p className="font-sans text-[12px] text-ink-mute tabular-nums">
+          <p className="font-sans text-caption text-ink-mute tabular-nums">
             från {formatPriceSEK(fromPriceSek)}
           </p>
         </div>
         <button
           type="button"
           onClick={scrollToBuyPanel}
-          className="flex-shrink-0 px-4 py-2 rounded-full bg-primary-deep text-surface font-sans text-[13px] font-semibold hover:bg-primary-deep/90 transition-colors"
+          className="flex-shrink-0 px-4 py-2 rounded-full bg-primary-deep text-surface font-sans text-small font-semibold hover:bg-primary-deep/90 transition-colors"
         >
           Köp
         </button>

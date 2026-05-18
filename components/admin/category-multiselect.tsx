@@ -38,7 +38,7 @@ export function CategoryMultiselect({
 
   if (options.length === 0) {
     return (
-      <p className="font-sans text-[13px] text-ink-mute italic">
+      <p className="font-sans text-small text-ink-mute italic">
         Inga kategorier definierade än. Skapa en kategori innan du tilldelar
         produkten.
       </p>
@@ -58,8 +58,8 @@ export function CategoryMultiselect({
               aria-pressed={on}
               className={
                 on
-                  ? "inline-flex items-center gap-1.5 rounded-full bg-primary text-surface px-3 py-1 font-sans text-[12.5px] font-semibold transition-colors"
-                  : "inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-alt text-ink-body px-3 py-1 font-sans text-[12.5px] font-medium hover:border-primary/40 hover:text-primary-deep transition-colors"
+                  ? "inline-flex items-center gap-1.5 rounded-full bg-primary text-surface px-3 py-1 font-sans text-caption font-semibold transition-colors"
+                  : "inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-alt text-ink-body px-3 py-1 font-sans text-caption font-medium hover:border-primary/40 hover:text-primary-deep transition-colors"
               }
             >
               <span
@@ -74,7 +74,7 @@ export function CategoryMultiselect({
         })}
       </div>
       {value.length === 0 && (
-        <p className="font-sans text-[11.5px] text-status-warn-text italic">
+        <p className="font-sans text-micro text-status-warn-text italic">
           Utan kategori dyker produkten inte upp på{" "}
           <code className="font-mono">/kategorier</code>-sidorna.
         </p>

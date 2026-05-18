@@ -82,7 +82,7 @@ export function ServicePointPicker({
         <div className="flex-1">
           <label
             htmlFor="postal-code"
-            className="block font-sans text-[12px] font-semibold text-ink-soft mb-1.5"
+            className="block font-sans text-caption font-semibold text-ink-soft mb-1.5"
           >
             Postnummer
           </label>
@@ -110,14 +110,14 @@ export function ServicePointPicker({
           type="button"
           onClick={submitPostal}
           disabled={pending || !postalCode}
-          className="inline-flex items-center justify-center px-4 py-2 rounded-md bg-primary-deep text-surface font-sans text-[13.5px] font-semibold hover:bg-primary-deep/90 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="inline-flex items-center justify-center px-4 py-2 rounded-md bg-primary-deep text-surface font-sans text-small font-semibold hover:bg-primary-deep/90 disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {pending ? "Söker…" : "Hitta ombud"}
         </button>
       </div>
 
       {mode === "stub" && (
-        <p className="mt-2 font-sans text-[11.5px] text-status-warn-text italic">
+        <p className="mt-2 font-sans text-micro text-status-warn-text italic">
           Visar exempeldata — riktiga ombud kopplas på när PostNord-nyckeln är
           aktiverad.
         </p>
@@ -126,7 +126,7 @@ export function ServicePointPicker({
       {error && (
         <p
           role="alert"
-          className="mt-3 font-sans text-[12.5px] text-status-error bg-status-error/10 px-3 py-2 rounded-md"
+          className="mt-3 font-sans text-caption text-status-error bg-status-error/10 px-3 py-2 rounded-md"
         >
           {error}
         </p>
@@ -155,17 +155,17 @@ export function ServicePointPicker({
                   />
                   <span className="flex-1 min-w-0">
                     <span className="flex items-baseline justify-between gap-3">
-                      <span className="font-sans text-[14px] font-semibold text-primary-deep truncate">
+                      <span className="font-sans text-body font-semibold text-primary-deep truncate">
                         {p.name}
                       </span>
-                      <span className="font-sans text-[11.5px] text-ink-soft whitespace-nowrap tabular-nums">
+                      <span className="font-sans text-micro text-ink-soft whitespace-nowrap tabular-nums">
                         {formatDistance(p.distanceM)}
                       </span>
                     </span>
-                    <span className="block mt-0.5 font-sans text-[12.5px] text-ink-mute">
+                    <span className="block mt-0.5 font-sans text-caption text-ink-mute">
                       {p.street}, {p.postalCode} {p.city}
                     </span>
-                    <span className="block mt-1 font-sans text-[11.5px] text-ink-soft">
+                    <span className="block mt-1 font-sans text-micro text-ink-soft">
                       Idag {p.openTodayLabel}
                     </span>
                   </span>

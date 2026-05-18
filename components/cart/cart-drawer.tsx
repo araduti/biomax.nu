@@ -101,7 +101,7 @@ export function CartDrawer() {
             <p className="font-display italic text-2xl text-primary-deep mb-3">
               Tom varukorg
             </p>
-            <p className="font-sans text-[14px] text-ink-mute max-w-[280px] mb-6 leading-relaxed">
+            <p className="font-sans text-body text-ink-mute max-w-[280px] mb-6 leading-relaxed">
               Lägg till en produkt så ser du den här. Snabb leverans och
               Klarna-betalning vid kassan.
             </p>
@@ -118,7 +118,7 @@ export function CartDrawer() {
           <>
             {showFreeShipMeter && (
               <div className="px-6 py-3 bg-surface-warm border-b border-border-soft">
-                <p className="font-sans text-[12px] text-ink-body">
+                <p className="font-sans text-caption text-ink-body">
                   <strong className="font-semibold">
                     {formatPriceSEK(remainingForFreeShip)}
                   </strong>{" "}
@@ -138,7 +138,7 @@ export function CartDrawer() {
               freeThresholdSek !== null &&
               subtotal >= freeThresholdSek && (
               <div className="px-6 py-3 bg-accent/15 border-b border-border-soft">
-                <p className="font-sans text-[13px] text-accent-deep font-semibold">
+                <p className="font-sans text-small text-accent-deep font-semibold">
                   ✓ Du har fri frakt
                 </p>
               </div>
@@ -168,7 +168,7 @@ export function CartDrawer() {
             {/* Footer */}
             <div className="border-t border-border px-6 py-5 bg-surface">
               <div className="flex items-baseline justify-between mb-1">
-                <span className="font-sans text-[13px] uppercase tracking-[0.2em] text-ink-mute font-semibold">
+                <span className="font-sans text-small uppercase tracking-[0.2em] text-ink-mute font-semibold">
                   Delsumma
                 </span>
                 <Display size="sm" as="span">
@@ -176,12 +176,12 @@ export function CartDrawer() {
                 </Display>
               </div>
               {bundleSavings > 0 && (
-                <p className="font-sans text-[12px] text-accent-deep font-semibold mb-1">
+                <p className="font-sans text-caption text-accent-deep font-semibold mb-1">
                   Inkluderar paketrabatt {formatPriceSEK(bundleSavings)}
                 </p>
               )}
               <LoyaltyEarnPreview subtotalKr={subtotal} variant="drawer" />
-              <p className="font-sans text-[12px] text-ink-soft mb-5">
+              <p className="font-sans text-caption text-ink-soft mb-5">
                 Frakt och eventuella rabatter beräknas i kassan.
               </p>
               <ButtonLink
@@ -196,7 +196,7 @@ export function CartDrawer() {
               <Link
                 href="/varukorg"
                 onClick={close}
-                className="block text-center mt-3 font-sans text-[13px] text-primary hover:text-primary-deep transition-colors"
+                className="block text-center mt-3 font-sans text-small text-primary hover:text-primary-deep transition-colors"
               >
                 Visa hela varukorgen
               </Link>

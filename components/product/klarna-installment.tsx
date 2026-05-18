@@ -45,7 +45,7 @@ export function KlarnaInstallment({ priceSek }: { priceSek: number }) {
   return (
     <div className="mt-3 flex items-start gap-2.5 text-ink-mute">
       <KlarnaMark />
-      <div className="font-sans text-[12.5px] leading-snug">
+      <div className="font-sans text-caption leading-snug">
         {showInstallments ? (
           <p className="text-ink-body">
             Eller från{" "}

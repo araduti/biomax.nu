@@ -209,10 +209,10 @@ export default async function AdminProductEditPage({
       </section>
 
       <section className="pb-8 mb-8 border-b border-border-soft">
-        <h2 className="font-sans text-[15px] md:text-[16px] font-semibold tracking-tight text-primary-deep">
+        <h2 className="font-sans text-body-lg md:text-lead font-semibold tracking-tight text-primary-deep">
           Galleri
         </h2>
-        <p className="mt-1.5 mb-4 font-sans text-[13px] text-ink-mute leading-relaxed max-w-[640px]">
+        <p className="mt-1.5 mb-4 font-sans text-small text-ink-mute leading-relaxed max-w-[640px]">
           Extra produktbilder som visas under huvudbilden — t.ex. baksidans
           innehållsdeklaration, en livsstilsbild, eller en närbild på kapslarna.
         </p>
@@ -223,10 +223,10 @@ export default async function AdminProductEditPage({
       </section>
 
       <section className="pb-8 mb-8 border-b border-border-soft">
-        <h2 className="font-sans text-[15px] md:text-[16px] font-semibold tracking-tight text-primary-deep">
+        <h2 className="font-sans text-body-lg md:text-lead font-semibold tracking-tight text-primary-deep">
           Varianter
         </h2>
-        <p className="mt-1.5 mb-4 font-sans text-[13px] text-ink-mute leading-relaxed max-w-[640px]">
+        <p className="mt-1.5 mb-4 font-sans text-small text-ink-mute leading-relaxed max-w-[640px]">
           Storlekar, smaker eller styrkor av samma produkt. När minst två
           varianter finns visar produktsidan en väljare i kassan.
         </p>
@@ -247,10 +247,10 @@ export default async function AdminProductEditPage({
       </section>
 
       <section className="pb-8 mb-8 border-b border-border-soft">
-        <h2 className="font-sans text-[15px] md:text-[16px] font-semibold tracking-tight text-primary-deep">
+        <h2 className="font-sans text-body-lg md:text-lead font-semibold tracking-tight text-primary-deep">
           Relaterade produkter
         </h2>
-        <p className="mt-1.5 mb-4 font-sans text-[13px] text-ink-mute leading-relaxed max-w-[640px]">
+        <p className="mt-1.5 mb-4 font-sans text-small text-ink-mute leading-relaxed max-w-[640px]">
           Manuellt valda kompletterar produktsidan i den ordning de listas.
           Lämnas listan tom väljs 3 ur samma kategori (mest sålda först).
         </p>

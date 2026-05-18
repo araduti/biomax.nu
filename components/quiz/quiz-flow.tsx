@@ -78,7 +78,7 @@ export function QuizFlow({ bundles = [] }: { bundles?: BundleSummary[] }) {
         {q.prompt}
       </Display>
       {q.description && (
-        <p className="font-sans text-[14px] text-ink-mute mb-6 leading-relaxed">
+        <p className="font-sans text-body text-ink-mute mb-6 leading-relaxed">
           {q.description}
         </p>
       )}
@@ -91,7 +91,7 @@ export function QuizFlow({ bundles = [] }: { bundles?: BundleSummary[] }) {
               onClick={() => answer(o.id)}
               className="w-full text-left rounded-xl border border-border bg-surface px-5 py-4 hover:border-accent-deep hover:bg-surface-warm transition-colors"
             >
-              <span className="font-display text-[17px] text-primary-deep tracking-tight">
+              <span className="font-display text-lead text-primary-deep tracking-tight">
                 {o.label}
               </span>
             </button>
@@ -103,7 +103,7 @@ export function QuizFlow({ bundles = [] }: { bundles?: BundleSummary[] }) {
         <button
           type="button"
           onClick={() => setStep((s) => Math.max(0, s - 1))}
-          className="mt-8 font-sans text-[13px] text-ink-soft underline decoration-accent/30 underline-offset-[3px] hover:text-primary-deep"
+          className="mt-8 font-sans text-small text-ink-soft underline decoration-accent/30 underline-offset-[3px] hover:text-primary-deep"
         >
           ← Föregående fråga
         </button>
@@ -142,7 +142,7 @@ function Result({
         <button
           type="button"
           onClick={onRestart}
-          className="font-sans text-[13px] text-primary-deep underline decoration-accent/30 underline-offset-[3px] hover:decoration-accent"
+          className="font-sans text-small text-primary-deep underline decoration-accent/30 underline-offset-[3px] hover:decoration-accent"
         >
           Börja om quizen
         </button>
@@ -166,7 +166,7 @@ function Result({
 
       {result.onMedication && (
         <div className="mb-8 rounded-xl border border-status-warn/40 bg-status-warn/8 px-5 py-4">
-          <p className="font-sans text-[13.5px] text-ink-body leading-relaxed">
+          <p className="font-sans text-small text-ink-body leading-relaxed">
             <strong className="font-semibold">Viktigt:</strong> du angav att
             du tar receptbelagda läkemedel. Vissa kosttillskott kan
             interagera — prata med läkare eller apotekspersonal innan du
@@ -177,7 +177,7 @@ function Result({
 
       {matchedBundle && (
         <div className="mb-8 rounded-2xl bg-accent/[0.08] border border-accent/25 p-5 md:p-6">
-          <p className="font-sans text-[11px] uppercase tracking-[0.18em] font-semibold text-accent-deep mb-2">
+          <p className="font-sans text-micro uppercase tracking-[0.18em] font-semibold text-accent-deep mb-2">
             Vår rekommendation
           </p>
           <div className="flex items-start gap-5 flex-wrap md:flex-nowrap">
@@ -202,7 +202,7 @@ function Result({
                 {matchedBundle.name}
               </p>
               {matchedBundle.description && (
-                <p className="mt-1.5 font-sans text-[13.5px] text-ink-mute leading-relaxed">
+                <p className="mt-1.5 font-sans text-small text-ink-mute leading-relaxed">
                   {matchedBundle.description}
                 </p>
               )}
@@ -211,13 +211,13 @@ function Result({
                   {formatPriceSEK(matchedBundle.bundlePriceSek.toString())}
                 </span>
                 {matchedBundle.savingsSek > 0 && (
-                  <span className="font-sans text-[13px] text-ink-soft line-through tabular-nums">
+                  <span className="font-sans text-small text-ink-soft line-through tabular-nums">
                     {formatPriceSEK(matchedBundle.listTotalSek.toString())}
                   </span>
                 )}
               </div>
               {matchedBundle.savingsSek > 0 && (
-                <p className="mt-1 font-sans text-[12px] text-accent-deep font-semibold">
+                <p className="mt-1 font-sans text-caption text-accent-deep font-semibold">
                   Du sparar {formatPriceSEK(matchedBundle.savingsSek.toString())}
                 </p>
               )}
@@ -239,7 +239,7 @@ function Result({
                 />
                 <Link
                   href={`/paket/${matchedBundle.slug}`}
-                  className="self-center font-sans text-[13px] text-primary-deep underline decoration-accent/40 underline-offset-[3px] hover:decoration-accent"
+                  className="self-center font-sans text-small text-primary-deep underline decoration-accent/40 underline-offset-[3px] hover:decoration-accent"
                 >
                   Mer om paketet →
                 </Link>
@@ -264,7 +264,7 @@ function Result({
 
       {secondary.length > 0 && (
         <div className="mt-12 pt-8 border-t border-border-soft">
-          <p className="font-sans text-[11px] uppercase tracking-[0.22em] font-semibold text-ink-soft mb-4">
+          <p className="font-sans text-micro uppercase tracking-[0.22em] font-semibold text-ink-soft mb-4">
             Också relevant
           </p>
           <ul className="space-y-2">
@@ -285,7 +285,7 @@ function Result({
       <button
         type="button"
         onClick={onRestart}
-        className="mt-10 font-sans text-[13px] text-ink-soft underline decoration-accent/30 underline-offset-[3px] hover:text-primary-deep"
+        className="mt-10 font-sans text-small text-ink-soft underline decoration-accent/30 underline-offset-[3px] hover:text-primary-deep"
       >
         Gör om quizen
       </button>

@@ -91,7 +91,7 @@ export default async function AdminReviewsPage({
                   : `/admin/recensioner?tab=${t.id}`
               }
               className={
-                "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border font-sans text-[13px] transition-colors " +
+                "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border font-sans text-small transition-colors " +
                 (active
                   ? "bg-primary-deep text-surface border-primary-deep"
                   : "bg-surface text-ink-body border-border hover:border-border-soft hover:bg-surface-warm")
@@ -100,7 +100,7 @@ export default async function AdminReviewsPage({
               <span>{t.label}</span>
               <span
                 className={
-                  "tabular-nums text-[11.5px] " +
+                  "tabular-nums text-micro " +
                   (active ? "opacity-80" : "text-ink-soft")
                 }
               >
@@ -112,7 +112,7 @@ export default async function AdminReviewsPage({
       </div>
 
       {reviews.length === 0 ? (
-        <p className="font-sans text-[14px] text-ink-mute italic">
+        <p className="font-sans text-body text-ink-mute italic">
           Inga recensioner i denna kategori.
         </p>
       ) : (

@@ -32,7 +32,7 @@ export default async function AdminCategoriesPage() {
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 items-start">
         <div className="bg-surface-alt border border-border rounded-xl overflow-hidden">
           {categories.length === 0 ? (
-            <p className="p-6 font-sans text-[14px] text-ink-mute italic">
+            <p className="p-6 font-sans text-body text-ink-mute italic">
               Inga kategorier än — skapa den första till höger.
             </p>
           ) : (
@@ -47,14 +47,14 @@ export default async function AdminCategoriesPage() {
                     className="grid grid-cols-[1fr_auto] items-center gap-4 px-5 py-4 hover:bg-surface-warm transition-colors"
                   >
                     <div className="min-w-0">
-                      <p className="font-sans text-[14.5px] font-semibold text-primary-deep truncate">
+                      <p className="font-sans text-body font-semibold text-primary-deep truncate">
                         {c.name}
                       </p>
-                      <p className="mt-0.5 font-mono text-[11.5px] text-ink-soft truncate">
+                      <p className="mt-0.5 font-mono text-micro text-ink-soft truncate">
                         /kategorier/{c.slug}
                       </p>
                     </div>
-                    <span className="font-sans text-[12px] text-ink-soft tabular-nums">
+                    <span className="font-sans text-caption text-ink-soft tabular-nums">
                       {c._count.products}{" "}
                       {c._count.products === 1 ? "produkt" : "produkter"}
                     </span>
@@ -66,10 +66,10 @@ export default async function AdminCategoriesPage() {
         </div>
 
         <aside>
-          <h2 className="font-sans text-[15px] font-semibold tracking-tight text-primary-deep">
+          <h2 className="font-sans text-body-lg font-semibold tracking-tight text-primary-deep">
             Ny kategori
           </h2>
-          <p className="mt-1 mb-3 font-sans text-[12.5px] text-ink-mute leading-relaxed">
+          <p className="mt-1 mb-3 font-sans text-caption text-ink-mute leading-relaxed">
             Slug genereras från namnet om du lämnar det tomt.
           </p>
           <div className="border border-border-soft rounded-xl p-5">

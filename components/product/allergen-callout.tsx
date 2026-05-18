@@ -16,10 +16,10 @@ export function AllergenCallout({ allergens }: { allergens: string[] }) {
       aria-label="Allergeninformation"
       className="bg-status-warn/8 border border-status-warn/40 rounded-2xl p-5 my-6"
     >
-      <p className="font-sans text-[11px] uppercase tracking-[0.18em] font-semibold text-status-low mb-2">
+      <p className="font-sans text-micro uppercase tracking-[0.18em] font-semibold text-status-low mb-2">
         Innehåller
       </p>
-      <p className="font-sans text-[14.5px] text-ink-body leading-relaxed">
+      <p className="font-sans text-body text-ink-body leading-relaxed">
         {resolved.map((a, i) => (
           <span key={a.slug}>
             <strong className="font-semibold text-primary-deep">
@@ -33,7 +33,7 @@ export function AllergenCallout({ allergens }: { allergens: string[] }) {
         ))}
         .
       </p>
-      <p className="mt-2 font-sans text-[11.5px] text-ink-soft leading-relaxed">
+      <p className="mt-2 font-sans text-micro text-ink-soft leading-relaxed">
         Allergener deklarerade enligt EU 1169/2011 bilaga II. Kontrollera
         alltid den fullständiga innehållsförteckningen om du har en känd
         allergi eller intolerans.

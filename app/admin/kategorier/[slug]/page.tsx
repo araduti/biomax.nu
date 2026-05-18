@@ -64,11 +64,11 @@ export default async function AdminCategoryEditPage({
         </div>
 
         <aside className="bg-surface-alt border border-border rounded-xl p-5">
-          <h2 className="font-sans text-[15px] font-semibold tracking-tight text-primary-deep mb-3">
+          <h2 className="font-sans text-body-lg font-semibold tracking-tight text-primary-deep mb-3">
             Produkter ({products.length})
           </h2>
           {products.length === 0 ? (
-            <p className="font-sans text-[12.5px] text-ink-mute italic">
+            <p className="font-sans text-caption text-ink-mute italic">
               Inga produkter i kategorin än.
             </p>
           ) : (
@@ -77,11 +77,11 @@ export default async function AdminCategoryEditPage({
                 <li key={p.slug}>
                   <Link
                     href={`/admin/produkter/${p.slug}`}
-                    className="flex items-center justify-between gap-3 px-2 py-1.5 rounded-md hover:bg-surface-warm font-sans text-[12.5px]"
+                    className="flex items-center justify-between gap-3 px-2 py-1.5 rounded-md hover:bg-surface-warm font-sans text-caption"
                   >
                     <span className="text-primary-deep truncate">{p.name}</span>
                     {p.status !== "PUBLISHED" && (
-                      <span className="text-ink-soft text-[10.5px] uppercase tracking-[0.14em]">
+                      <span className="text-ink-soft text-micro uppercase tracking-[0.14em]">
                         {p.status === "DRAFT" ? "utkast" : "arkiv"}
                       </span>
                     )}

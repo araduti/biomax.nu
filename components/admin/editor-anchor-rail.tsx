@@ -48,7 +48,7 @@ export function EditorAnchorRail({
       aria-label="Avsnitt"
       className="hidden lg:block sticky top-6 self-start"
     >
-      <p className="font-sans text-[10px] uppercase tracking-[0.16em] font-semibold text-ink-soft mb-3 px-3">
+      <p className="font-sans text-micro uppercase tracking-[0.16em] font-semibold text-ink-soft mb-3 px-3">
         Avsnitt
       </p>
       <ul className="flex flex-col">
@@ -60,7 +60,7 @@ export function EditorAnchorRail({
                 href={`#${s.id}`}
                 aria-current={isActive ? "true" : undefined}
                 className={cn(
-                  "block py-2 pl-4 pr-3 -ml-px border-l-2 font-sans text-[13.5px] leading-snug transition-colors",
+                  "block py-2 pl-4 pr-3 -ml-px border-l-2 font-sans text-small leading-snug transition-colors",
                   isActive
                     ? "text-primary-deep border-primary font-semibold"
                     : "text-ink-mute border-transparent hover:text-primary-deep hover:border-border"

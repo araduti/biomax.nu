@@ -28,10 +28,10 @@ export default function LabelPreviewPage() {
 
       <div className="space-y-12">
         <section>
-          <h2 className="font-sans text-[16px] font-semibold text-primary-deep mb-1">
+          <h2 className="font-sans text-lead font-semibold text-primary-deep mb-1">
             Variant A — &quot;Stamped&quot;
           </h2>
-          <p className="font-sans text-[13.5px] text-ink-mute mb-6 max-w-[640px] leading-relaxed">
+          <p className="font-sans text-small text-ink-mute mb-6 max-w-[640px] leading-relaxed">
             Playfair Display <strong>Bold</strong>, versalt namn, tightare tracking. Behåller
             den stämplade, äldre apotekskänslan från dagens Balans-etikett men i
             modern utförande. Mer karaktär, mer värme, något mer kommersiellt.
@@ -43,10 +43,10 @@ export default function LabelPreviewPage() {
         </section>
 
         <section>
-          <h2 className="font-sans text-[16px] font-semibold text-primary-deep mb-1">
+          <h2 className="font-sans text-lead font-semibold text-primary-deep mb-1">
             Variant B — &quot;Editorial&quot;
           </h2>
-          <p className="font-sans text-[13.5px] text-ink-mute mb-6 max-w-[640px] leading-relaxed">
+          <p className="font-sans text-small text-ink-mute mb-6 max-w-[640px] leading-relaxed">
             Playfair Display <strong>Medium</strong>, gemen namn, loose tracking. Matchar
             sajtens rubriker exakt. Lugnare, mer redaktionellt, mer dyrt. Tappar
             något av apotekssvalet men vinner i konsekvens mot biomax.nu.
@@ -58,10 +58,10 @@ export default function LabelPreviewPage() {
         </section>
 
         <section className="border-t border-border-soft pt-10">
-          <h2 className="font-sans text-[14.5px] font-semibold text-primary-deep mb-3">
+          <h2 className="font-sans text-body font-semibold text-primary-deep mb-3">
             Noter
           </h2>
-          <ul className="font-sans text-[13px] text-ink-mute leading-relaxed list-disc pl-5 space-y-1.5 max-w-[680px]">
+          <ul className="font-sans text-small text-ink-mute leading-relaxed list-disc pl-5 space-y-1.5 max-w-[680px]">
             <li>
               Allt utöver heroteckenformen är identiskt: panelstruktur, färger,
               ingredienstabell, regulatoriska block, kategoristrip-färg.
@@ -72,7 +72,7 @@ export default function LabelPreviewPage() {
             </li>
             <li>
               Innehållet är platshållartext baserad på Colon Aid-spec i
-              <code className="font-mono text-[11.5px] mx-1">docs/label-system-brief.md</code>.
+              <code className="font-mono text-micro mx-1">docs/label-system-brief.md</code>.
               mg-värden ska bekräftas av Rockland-deklaration innan tryck.
             </li>
             <li>

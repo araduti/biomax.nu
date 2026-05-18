@@ -75,7 +75,7 @@ export function BundleCreateForm({
         disabled={pending}
       />
       <div>
-        <label className="block font-sans text-[12px] font-semibold text-ink-soft mb-1.5">
+        <label className="block font-sans text-caption font-semibold text-ink-soft mb-1.5">
           Produkter ({selected.length} valda, minst 2)
         </label>
         <ul className="max-h-[200px] overflow-auto bg-surface border border-border rounded-md p-1">
@@ -88,7 +88,7 @@ export function BundleCreateForm({
                   onChange={() => toggle(p.slug)}
                   disabled={pending}
                 />
-                <span className="font-sans text-[13px] text-ink-body truncate">
+                <span className="font-sans text-small text-ink-body truncate">
                   {p.name}
                 </span>
               </label>
@@ -97,7 +97,7 @@ export function BundleCreateForm({
         </ul>
       </div>
       <div>
-        <label className="block font-sans text-[12px] font-semibold text-ink-soft mb-1.5">
+        <label className="block font-sans text-caption font-semibold text-ink-soft mb-1.5">
           Beskrivning (valfritt)
         </label>
         <textarea
@@ -105,7 +105,7 @@ export function BundleCreateForm({
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           disabled={pending}
-          className="w-full px-3 py-2 bg-surface border border-border rounded-md font-sans text-[13.5px]"
+          className="w-full px-3 py-2 bg-surface border border-border rounded-md font-sans text-small"
         />
       </div>
       <Button
@@ -120,7 +120,7 @@ export function BundleCreateForm({
       {error && (
         <p
           role="alert"
-          className="font-sans text-[12px] text-status-error bg-status-error/10 px-3 py-2 rounded-md"
+          className="font-sans text-caption text-status-error bg-status-error/10 px-3 py-2 rounded-md"
         >
           {error}
         </p>

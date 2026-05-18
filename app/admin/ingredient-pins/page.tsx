@@ -42,16 +42,16 @@ export default async function AdminIngredientPinsIndexPage() {
                   className="flex items-center justify-between gap-4 px-5 py-3.5 hover:bg-surface-warm transition-colors"
                 >
                   <div>
-                    <p className="font-sans text-[14.5px] font-semibold text-primary-deep">
+                    <p className="font-sans text-body font-semibold text-primary-deep">
                       {ing.name}
                     </p>
-                    <p className="mt-0.5 font-mono text-[11.5px] text-ink-soft">
+                    <p className="mt-0.5 font-mono text-micro text-ink-soft">
                       /kop/{ing.slug}
                     </p>
                   </div>
                   <span
                     className={
-                      "font-sans text-[12px] tabular-nums " +
+                      "font-sans text-caption tabular-nums " +
                       (count > 0
                         ? "text-accent-deep font-semibold"
                         : "text-ink-soft italic")

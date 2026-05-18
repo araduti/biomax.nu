@@ -76,7 +76,7 @@ export function ProductContent({ product, reviews }: Props) {
       label: "Beskrivning",
       content: (
         <article
-          className="prose-biomax font-sans text-base md:text-[17px] leading-[1.75] text-ink-body max-w-[760px]"
+          className="prose-biomax font-sans text-base md:text-lead leading-[1.75] text-ink-body max-w-[760px]"
           dangerouslySetInnerHTML={{ __html: html }}
         />
       ),
@@ -100,7 +100,7 @@ export function ProductContent({ product, reviews }: Props) {
                     ? `Innehåll per ${list.perUnit || "enhet"}`
                     : "Ingredienser"}
                 </h3>
-                <p className="font-sans text-[11px] uppercase tracking-[0.22em] font-semibold text-ink-soft hidden sm:block">
+                <p className="font-sans text-micro uppercase tracking-[0.22em] font-semibold text-ink-soft hidden sm:block">
                   Innehållsförteckning
                 </p>
               </header>
@@ -108,7 +108,7 @@ export function ProductContent({ product, reviews }: Props) {
                 <IngredientTable list={list} />
               ) : product.ingredients?.trim() ? (
                 <div className="bg-surface border border-border rounded-2xl px-6 md:px-8 py-6">
-                  <p className="font-sans text-[15px] text-ink-body leading-relaxed whitespace-pre-line">
+                  <p className="font-sans text-body-lg text-ink-body leading-relaxed whitespace-pre-line">
                     {product.ingredients}
                   </p>
                 </div>
@@ -116,7 +116,7 @@ export function ProductContent({ product, reviews }: Props) {
               {list && list.rows.some((r) => findIngredient(r.name)) && (
                 <Link
                   href="/kunskap/ingredienser"
-                  className="mt-5 inline-flex items-center gap-2 font-sans text-[13px] font-semibold text-accent-deep hover:text-primary-deep transition-colors"
+                  className="mt-5 inline-flex items-center gap-2 font-sans text-small font-semibold text-accent-deep hover:text-primary-deep transition-colors"
                 >
                   <span aria-hidden className="text-base leading-none">
                     ◇
@@ -134,7 +134,7 @@ export function ProductContent({ product, reviews }: Props) {
                 <h3 className="font-display text-2xl md:text-[28px] font-medium tracking-tight text-primary-deep">
                   Användning
                 </h3>
-                <p className="font-sans text-[11px] uppercase tracking-[0.22em] font-semibold text-ink-soft hidden sm:block">
+                <p className="font-sans text-micro uppercase tracking-[0.22em] font-semibold text-ink-soft hidden sm:block">
                   Hur produkten används
                 </p>
               </header>
@@ -171,10 +171,10 @@ export function ProductContent({ product, reviews }: Props) {
                     </svg>
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="font-sans text-[10.5px] uppercase tracking-[0.22em] font-semibold text-status-error mb-1">
+                    <p className="font-sans text-micro uppercase tracking-[0.22em] font-semibold text-status-error mb-1">
                       Observera
                     </p>
-                    <p className="font-sans text-[14px] text-ink-body leading-[1.65] whitespace-pre-line">
+                    <p className="font-sans text-body text-ink-body leading-[1.65] whitespace-pre-line">
                       {product.warnings}
                     </p>
                   </div>

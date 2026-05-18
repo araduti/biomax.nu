@@ -33,7 +33,7 @@ export default async function AddressesPage() {
           <p className="font-display italic text-xl text-primary-deep mb-3">
             Inga adresser ännu
           </p>
-          <p className="font-sans text-[14px] text-ink-mute mb-6 max-w-[420px] mx-auto leading-relaxed">
+          <p className="font-sans text-body text-ink-mute mb-6 max-w-[420px] mx-auto leading-relaxed">
             När du genomför din första beställning sparas leveransadressen här.
           </p>
           <ButtonLink href="/produkter" variant="primary" size="md">
@@ -47,10 +47,10 @@ export default async function AddressesPage() {
               key={a.id}
               className="bg-surface-alt border border-border rounded-2xl p-6"
             >
-              <p className="font-display text-[16px] font-medium tracking-tight text-primary-deep mb-2">
+              <p className="font-display text-lead font-medium tracking-tight text-primary-deep mb-2">
                 {a.fullName}
               </p>
-              <p className="font-sans text-[14px] text-ink-body leading-relaxed">
+              <p className="font-sans text-body text-ink-body leading-relaxed">
                 {a.street}
                 <br />
                 {a.postalCode} {a.city}

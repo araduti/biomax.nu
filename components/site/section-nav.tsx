@@ -18,7 +18,7 @@ export function SectionNav({ section }: { section: Section }) {
       aria-label={section.eyebrow}
       className="md:sticky md:top-24 md:self-start"
     >
-      <p className="font-sans text-[10.5px] uppercase tracking-[0.22em] font-semibold text-accent-deep mb-3 px-1">
+      <p className="font-sans text-micro uppercase tracking-[0.22em] font-semibold text-accent-deep mb-3 px-1">
         {section.eyebrow}
       </p>
       {/* Mobile: horizontal scroll pill list */}
@@ -31,7 +31,7 @@ export function SectionNav({ section }: { section: Section }) {
                 href={item.href}
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
-                  "inline-flex items-center rounded-full border px-4 py-2 font-sans text-[13px] font-medium whitespace-nowrap transition-colors",
+                  "inline-flex items-center rounded-full border px-4 py-2 font-sans text-small font-medium whitespace-nowrap transition-colors",
                   isActive
                     ? "bg-primary-deep text-surface border-primary-deep"
                     : "bg-surface-alt text-ink-body border-border hover:border-accent"
@@ -53,7 +53,7 @@ export function SectionNav({ section }: { section: Section }) {
                 href={item.href}
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
-                  "block font-sans text-[14.5px] py-2.5 pl-4 pr-3 -ml-px border-l-2 transition-colors leading-snug",
+                  "block font-sans text-body py-2.5 pl-4 pr-3 -ml-px border-l-2 transition-colors leading-snug",
                   isActive
                     ? "text-primary-deep border-primary font-semibold"
                     : "text-ink-mute border-transparent hover:text-primary-deep hover:border-border"

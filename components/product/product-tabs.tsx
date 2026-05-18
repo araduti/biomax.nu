@@ -74,7 +74,7 @@ export function ProductTabs({ tabs }: { tabs: ProductTab[] }) {
             >
               {t.label}
               {t.count !== undefined && (
-                <span className="ml-1.5 font-sans text-[14px] font-normal text-ink-soft">
+                <span className="ml-1.5 font-sans text-body font-normal text-ink-soft">
                   ({t.count})
                 </span>
               )}

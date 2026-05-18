@@ -40,7 +40,7 @@ export function HomepageBlocksEditor({ blocks }: { blocks: Row[] }) {
         <h2 className="font-display text-xl font-medium tracking-tight text-primary-deep mb-2">
           Tom tabell
         </h2>
-        <p className="font-sans text-[14px] text-ink-mute leading-relaxed mb-5">
+        <p className="font-sans text-body text-ink-mute leading-relaxed mb-5">
           Startsidan renderas just nu från kodens defaults. Klicka nedan för
           att seedea tabellen med samma blockordning — sedan kan du redigera.
         </p>
@@ -55,7 +55,7 @@ export function HomepageBlocksEditor({ blocks }: { blocks: Row[] }) {
         {error && (
           <p
             role="alert"
-            className="mt-4 font-sans text-[12.5px] text-status-error bg-status-error/10 px-3 py-2 rounded-md"
+            className="mt-4 font-sans text-caption text-status-error bg-status-error/10 px-3 py-2 rounded-md"
           >
             {error}
           </p>
@@ -86,9 +86,9 @@ export function HomepageBlocksEditor({ blocks }: { blocks: Row[] }) {
                 )
               }
               disabled={pending}
-              className="w-14 px-2 py-1 bg-surface border border-border rounded font-mono text-[13px] tabular-nums text-center"
+              className="w-14 px-2 py-1 bg-surface border border-border rounded font-mono text-small tabular-nums text-center"
             />
-            <span className="font-sans text-[14.5px] text-primary-deep font-medium">
+            <span className="font-sans text-body text-primary-deep font-medium">
               {KIND_LABELS[b.kind] ?? b.kind}
             </span>
             <label className="flex items-center gap-2 cursor-pointer">
@@ -101,7 +101,7 @@ export function HomepageBlocksEditor({ blocks }: { blocks: Row[] }) {
                 disabled={pending}
                 className="w-4 h-4"
               />
-              <span className="font-sans text-[12.5px] text-ink-mute">
+              <span className="font-sans text-caption text-ink-mute">
                 Aktiv
               </span>
             </label>
@@ -123,14 +123,14 @@ export function HomepageBlocksEditor({ blocks }: { blocks: Row[] }) {
 
       <div className="bg-surface-alt border border-border rounded-xl p-4 flex items-end gap-3 max-w-[560px]">
         <div className="flex-1">
-          <label className="block font-sans text-[12px] font-semibold text-ink-soft mb-1.5">
+          <label className="block font-sans text-caption font-semibold text-ink-soft mb-1.5">
             Lägg till block
           </label>
           <select
             value={newKind}
             onChange={(e) => setNewKind(e.target.value as BlockKind)}
             disabled={pending}
-            className="w-full px-3 py-2 bg-surface border border-border rounded-md font-sans text-[13.5px]"
+            className="w-full px-3 py-2 bg-surface border border-border rounded-md font-sans text-small"
           >
             {Object.entries(KIND_LABELS).map(([k, label]) => (
               <option key={k} value={k}>
@@ -155,13 +155,13 @@ export function HomepageBlocksEditor({ blocks }: { blocks: Row[] }) {
       {error && (
         <p
           role="alert"
-          className="mt-4 font-sans text-[12.5px] text-status-error bg-status-error/10 px-3 py-2 rounded-md max-w-[560px]"
+          className="mt-4 font-sans text-caption text-status-error bg-status-error/10 px-3 py-2 rounded-md max-w-[560px]"
         >
           {error}
         </p>
       )}
 
-      <p className="mt-6 font-sans text-[12px] text-ink-soft leading-relaxed max-w-[560px]">
+      <p className="mt-6 font-sans text-caption text-ink-soft leading-relaxed max-w-[560px]">
         Positionen är ett heltal — lägre tal renderas tidigare på sidan.
         Förändringar slår igenom inom någon minut tack vare ISR.
       </p>

@@ -38,7 +38,7 @@ export default async function PrestandaPage() {
               Web Vitals samlas in automatiskt när användare besöker sajten —
               ingen extern tjänst behövs. Det första värdena dyker upp inom
               ett par minuter efter en sidvisning. Säkerställ att{" "}
-              <code className="px-1 rounded bg-surface-warm font-mono text-[12px]">
+              <code className="px-1 rounded bg-surface-warm font-mono text-caption">
                 /api/web-vitals
               </code>{" "}
               är åtkomligt och inte blockerat av WAF eller robots.txt.
@@ -47,7 +47,7 @@ export default async function PrestandaPage() {
         />
       ) : (
         <>
-          <p className="font-sans text-[12.5px] uppercase tracking-[0.16em] font-semibold text-ink-soft mb-4">
+          <p className="font-sans text-caption uppercase tracking-[0.16em] font-semibold text-ink-soft mb-4">
             {snapshot.totalSamples.toLocaleString("sv-SE")} sampel · senaste{" "}
             {snapshot.windowDays} dagar
           </p>
@@ -81,7 +81,7 @@ export default async function PrestandaPage() {
           <h2 className="font-sans text-[18px] md:text-[22px] font-semibold tracking-tight text-primary-deep mb-2">
             Per route (p75)
           </h2>
-          <p className="font-sans text-[13px] text-ink-mute leading-relaxed mb-5 max-w-[720px]">
+          <p className="font-sans text-small text-ink-mute leading-relaxed mb-5 max-w-[720px]">
             Routen-grupp samlas där det är meningsfullt — alla
             produktsidor visas som <code>/produkter/[slug]</code>, alla
             monografier som <code>/kunskap/ingredienser/[slug]</code>. P75 är
@@ -89,7 +89,7 @@ export default async function PrestandaPage() {
           </p>
 
           <div className="bg-surface-alt border border-border rounded-xl overflow-hidden">
-            <div className="grid grid-cols-[1fr_repeat(5,minmax(80px,1fr))_auto] gap-3 px-5 py-3 bg-surface-warm font-sans text-[10.5px] uppercase tracking-[0.16em] font-semibold text-ink-mute">
+            <div className="grid grid-cols-[1fr_repeat(5,minmax(80px,1fr))_auto] gap-3 px-5 py-3 bg-surface-warm font-sans text-micro uppercase tracking-[0.16em] font-semibold text-ink-mute">
               <span>Route</span>
               {CORE_METRICS.map((m) => (
                 <span key={m} className="text-right tabular-nums">
@@ -108,7 +108,7 @@ export default async function PrestandaPage() {
                       : "grid grid-cols-[1fr_repeat(5,minmax(80px,1fr))_auto] gap-3 px-5 py-3 items-baseline"
                   }
                 >
-                  <span className="font-sans text-[13px] font-medium text-primary-deep truncate">
+                  <span className="font-sans text-small font-medium text-primary-deep truncate">
                     {r.route}
                   </span>
                   {CORE_METRICS.map((m) => {
@@ -116,7 +116,7 @@ export default async function PrestandaPage() {
                     return (
                       <span
                         key={m}
-                        className={`font-sans text-[12.5px] tabular-nums text-right ${
+                        className={`font-sans text-caption tabular-nums text-right ${
                           ms ? verdictColor(ms.verdict) : "text-ink-soft"
                         }`}
                       >
@@ -124,7 +124,7 @@ export default async function PrestandaPage() {
                       </span>
                     );
                   })}
-                  <span className="font-sans text-[12px] tabular-nums text-ink-mute text-right min-w-[44px]">
+                  <span className="font-sans text-caption tabular-nums text-ink-mute text-right min-w-[44px]">
                     {r.count}
                   </span>
                 </li>

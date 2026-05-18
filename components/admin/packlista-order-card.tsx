@@ -93,14 +93,14 @@ export function PacklistaOrderCard({ order }: { order: OrderInput }) {
     >
       <header className="flex flex-wrap items-baseline justify-between gap-3 mb-4">
         <div className="flex items-baseline gap-3">
-          <p className="font-mono text-[13px] font-medium text-[var(--d-ink)] tabular-nums">
+          <p className="font-mono text-small font-medium text-[var(--d-ink)] tabular-nums">
             {order.orderNumber}
           </p>
           {allChecked && (
             <AdminStatusPill kind="ok">Packad</AdminStatusPill>
           )}
         </div>
-        <p className="font-sans text-[13.5px] text-[var(--d-ink-2)]">
+        <p className="font-sans text-small text-[var(--d-ink-2)]">
           {order.email}
           {order.isSubscription && (
             <span className="ml-2 text-[var(--d-accent-2)] font-medium">
@@ -142,17 +142,17 @@ export function PacklistaOrderCard({ order }: { order: OrderInput }) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p
-                      className={`font-sans text-[14px] font-medium text-[var(--d-ink)] truncate ${
+                      className={`font-sans text-body font-medium text-[var(--d-ink)] truncate ${
                         isChecked ? "line-through decoration-1" : ""
                       }`}
                     >
                       {it.productName}
                     </p>
-                    <p className="font-mono text-[11px] text-[var(--d-ink-3)]">
+                    <p className="font-mono text-micro text-[var(--d-ink-3)]">
                       {it.productSku || "—"}
                     </p>
                   </div>
-                  <p className="font-sans text-[15px] font-semibold text-[var(--d-ink)] tabular-nums">
+                  <p className="font-sans text-body-lg font-semibold text-[var(--d-ink)] tabular-nums">
                     ×{it.quantity}
                   </p>
                 </label>
@@ -162,7 +162,7 @@ export function PacklistaOrderCard({ order }: { order: OrderInput }) {
         </ul>
 
         {order.shippingAddress && (
-          <aside className="md:min-w-[220px] md:text-right font-sans text-[13.5px] text-[var(--d-ink-2)] leading-relaxed border-t md:border-t-0 md:border-l border-[var(--d-line-soft)] md:pl-6 pt-4 md:pt-0">
+          <aside className="md:min-w-[220px] md:text-right font-sans text-small text-[var(--d-ink-2)] leading-relaxed border-t md:border-t-0 md:border-l border-[var(--d-line-soft)] md:pl-6 pt-4 md:pt-0">
             <p className="d-eyebrow mb-1.5">Skicka till</p>
             <p>
               <strong className="font-medium text-[var(--d-ink)]">
@@ -179,7 +179,7 @@ export function PacklistaOrderCard({ order }: { order: OrderInput }) {
       </div>
 
       {order.items.length > 1 && (
-        <p className="mt-3 pt-3 border-t border-[var(--d-line-soft)] font-mono text-[12px] text-[var(--d-ink-3)] text-right tabular-nums">
+        <p className="mt-3 pt-3 border-t border-[var(--d-line-soft)] font-mono text-caption text-[var(--d-ink-3)] text-right tabular-nums">
           Total: {order.items.reduce((s, it) => s + it.quantity, 0)} st{" "}
           {someChecked && !allChecked && (
             <span className="text-[var(--d-accent-2)] font-semibold ml-2">

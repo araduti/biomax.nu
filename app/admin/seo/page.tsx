@@ -127,8 +127,8 @@ export default async function AdminSeoPage({
               aria-selected={isActive}
               className={
                 isActive
-                  ? "px-4 py-2.5 -mb-px border-b-2 border-primary font-sans text-[13.5px] font-semibold text-primary-deep"
-                  : "px-4 py-2.5 -mb-px border-b-2 border-transparent font-sans text-[13.5px] font-medium text-ink-mute hover:text-ink-body transition-colors"
+                  ? "px-4 py-2.5 -mb-px border-b-2 border-primary font-sans text-small font-semibold text-primary-deep"
+                  : "px-4 py-2.5 -mb-px border-b-2 border-transparent font-sans text-small font-medium text-ink-mute hover:text-ink-body transition-colors"
               }
             >
               {t.label}
@@ -243,28 +243,28 @@ function GscQueriesCard({
 }) {
   return (
     <AdminSection title="Sökord (28 dagar)" eyebrow="Google Search Console">
-      <p className="font-sans text-[13px] text-ink-mute leading-relaxed mb-4">
+      <p className="font-sans text-small text-ink-mute leading-relaxed mb-4">
         Faktiska söktermer som visat oss på Google. Här hittar du intent du
         kanske inte täcker än — lägg till som AI-nyckelord på relevant produkt.
       </p>
       {rows.length === 0 ? (
-        <p className="font-sans text-[13.5px] text-ink-mute italic">
+        <p className="font-sans text-small text-ink-mute italic">
           Ingen data ännu — kan ta upp till 48 h efter anslutning.
         </p>
       ) : (
         <ul className="divide-y divide-border-soft -mx-1">
           {rows.map((r, i) => (
             <li key={i} className="px-1 py-2 grid grid-cols-[1fr_auto_auto_auto] items-baseline gap-3">
-              <span className="font-sans text-[13.5px] text-ink-body truncate">
+              <span className="font-sans text-small text-ink-body truncate">
                 {r.query ?? "—"}
               </span>
-              <span className="font-sans text-[12px] tabular-nums text-ink-mute whitespace-nowrap min-w-[44px] text-right">
+              <span className="font-sans text-caption tabular-nums text-ink-mute whitespace-nowrap min-w-[44px] text-right">
                 {r.clicks} klick
               </span>
-              <span className="font-sans text-[12px] tabular-nums text-ink-mute whitespace-nowrap min-w-[60px] text-right">
+              <span className="font-sans text-caption tabular-nums text-ink-mute whitespace-nowrap min-w-[60px] text-right">
                 {r.impressions.toLocaleString("sv-SE")} v
               </span>
-              <span className="font-sans text-[12px] tabular-nums font-semibold text-primary-deep whitespace-nowrap min-w-[48px] text-right">
+              <span className="font-sans text-caption tabular-nums font-semibold text-primary-deep whitespace-nowrap min-w-[48px] text-right">
                 pos {fmtPosition(r.position)}
               </span>
             </li>
@@ -282,13 +282,13 @@ function GscPagesCard({
 }) {
   return (
     <AdminSection title="Toppsidor (28 dagar)" eyebrow="Google Search Console">
-      <p className="font-sans text-[13px] text-ink-mute leading-relaxed mb-4">
+      <p className="font-sans text-small text-ink-mute leading-relaxed mb-4">
         Sidor som drar mest organisk trafik. Sortera mentalt på &quot;hög
         impressions, låg CTR&quot; — det är där meta-titel/beskrivning kan
         lyfta klickfrekvensen.
       </p>
       {rows.length === 0 ? (
-        <p className="font-sans text-[13.5px] text-ink-mute italic">
+        <p className="font-sans text-small text-ink-mute italic">
           Ingen data ännu — kan ta upp till 48 h efter anslutning.
         </p>
       ) : (
@@ -301,17 +301,17 @@ function GscPagesCard({
                 <Link
                   href={path}
                   target="_blank"
-                  className="font-sans text-[13px] text-ink-body hover:text-primary-deep truncate underline decoration-transparent hover:decoration-accent/40 underline-offset-[3px] transition-colors"
+                  className="font-sans text-small text-ink-body hover:text-primary-deep truncate underline decoration-transparent hover:decoration-accent/40 underline-offset-[3px] transition-colors"
                 >
                   {path}
                 </Link>
-                <span className="font-sans text-[12px] tabular-nums text-ink-mute whitespace-nowrap min-w-[44px] text-right">
+                <span className="font-sans text-caption tabular-nums text-ink-mute whitespace-nowrap min-w-[44px] text-right">
                   {r.clicks} klick
                 </span>
-                <span className="font-sans text-[12px] tabular-nums text-ink-mute whitespace-nowrap min-w-[44px] text-right">
+                <span className="font-sans text-caption tabular-nums text-ink-mute whitespace-nowrap min-w-[44px] text-right">
                   {fmtCtr(r.ctr)}
                 </span>
-                <span className="font-sans text-[12px] tabular-nums font-semibold text-primary-deep whitespace-nowrap min-w-[48px] text-right">
+                <span className="font-sans text-caption tabular-nums font-semibold text-primary-deep whitespace-nowrap min-w-[48px] text-right">
                   pos {fmtPosition(r.position)}
                 </span>
               </li>
@@ -333,7 +333,7 @@ function SchemaCard({
   const issues = reports.filter((r) => r.issues.length > 0);
   return (
     <AdminSection title="Strukturerad data" eyebrow="schema.org-validering">
-      <p className="font-sans text-[13px] text-ink-mute leading-relaxed mb-4">
+      <p className="font-sans text-small text-ink-mute leading-relaxed mb-4">
         Strukturkontroll mot vad våra JSON-LD-renderare förväntar sig.
         Lättviktig — täcker fältnärvaro och uppenbara typfel, inte allt
         schema.org rekommenderar. Komplettera med{" "}
@@ -348,7 +348,7 @@ function SchemaCard({
         före lansering.
       </p>
       {issues.length === 0 ? (
-        <p className="font-sans text-[14px] text-accent-deep italic">
+        <p className="font-sans text-body text-accent-deep italic">
           Inga problem — {reports.length} sidor passerade kontrollen.
         </p>
       ) : (
@@ -359,11 +359,11 @@ function SchemaCard({
                 <Link
                   href={r.url}
                   target="_blank"
-                  className="font-sans text-[13.5px] font-semibold text-primary-deep hover:text-primary truncate"
+                  className="font-sans text-small font-semibold text-primary-deep hover:text-primary truncate"
                 >
                   {r.page}
                 </Link>
-                <span className="font-sans text-[10.5px] uppercase tracking-[0.16em] font-semibold text-ink-soft whitespace-nowrap">
+                <span className="font-sans text-micro uppercase tracking-[0.16em] font-semibold text-ink-soft whitespace-nowrap">
                   {r.type}
                 </span>
               </div>
@@ -371,7 +371,7 @@ function SchemaCard({
                 {r.issues.map((it, j) => (
                   <li
                     key={j}
-                    className={`flex gap-2 items-baseline font-sans text-[12.5px] ${
+                    className={`flex gap-2 items-baseline font-sans text-caption ${
                       it.severity === "error" ? "text-status-error" : "text-status-warn-text"
                     }`}
                   >
@@ -389,7 +389,7 @@ function SchemaCard({
         </ul>
       )}
       {issues.length > 12 && (
-        <p className="mt-3 font-sans text-[12px] text-ink-mute italic">
+        <p className="mt-3 font-sans text-caption text-ink-mute italic">
           +{issues.length - 12} fler sidor med varningar — visa de viktigaste först.
         </p>
       )}
@@ -404,12 +404,12 @@ function CannibalisationCard({
 }) {
   return (
     <AdminSection title="Kannibalisering" eyebrow="Konkurrerande nyckelord">
-      <p className="font-sans text-[13px] text-ink-mute leading-relaxed mb-4">
+      <p className="font-sans text-small text-ink-mute leading-relaxed mb-4">
         Sidor som riktar sig mot samma nyckelord. Google rankar bara en —
         konsolidera, gör en kanonisk eller skifta inriktningen för dubbletter.
       </p>
       {items.length === 0 ? (
-        <p className="font-sans text-[14px] text-accent-deep italic">
+        <p className="font-sans text-body text-accent-deep italic">
           Inga konflikter — alla fokusnyckelord är unika.
         </p>
       ) : (
@@ -420,10 +420,10 @@ function CannibalisationCard({
               className="rounded-xl border border-status-warn/30 bg-status-warn/[0.05] p-3"
             >
               <div className="flex items-baseline justify-between gap-3 mb-1">
-                <span className="font-sans text-[13.5px] font-semibold text-primary-deep">
+                <span className="font-sans text-small font-semibold text-primary-deep">
                   &quot;{c.keyword}&quot;
                 </span>
-                <span className="font-sans text-[10.5px] uppercase tracking-[0.16em] font-semibold text-status-warn-text">
+                <span className="font-sans text-micro uppercase tracking-[0.16em] font-semibold text-status-warn-text">
                   {c.source === "seoFocusKw" ? "Fokus" : "AI-kluster"} · {c.pages.length} sidor
                 </span>
               </div>
@@ -433,7 +433,7 @@ function CannibalisationCard({
                     <Link
                       href={p.url}
                       target="_blank"
-                      className="font-sans text-[13px] text-ink-body hover:text-primary-deep underline decoration-transparent hover:decoration-accent/40 underline-offset-[3px] transition-colors"
+                      className="font-sans text-small text-ink-body hover:text-primary-deep underline decoration-transparent hover:decoration-accent/40 underline-offset-[3px] transition-colors"
                     >
                       {p.name}
                     </Link>
@@ -455,18 +455,18 @@ function KeywordCoverageCard({
 }) {
   return (
     <AdminSection title="Nyckelordstäckning" eyebrow="AI- & LLM-intent">
-      <p className="font-sans text-[13px] text-ink-mute leading-relaxed mb-4">
+      <p className="font-sans text-small text-ink-mute leading-relaxed mb-4">
         AI-nyckelord (intent-kluster) tilldelade per produkt. Hjälper oss att
         rankas i AI-sök och att se var täckningen är tunn.
       </p>
 
       {coverage.orphans.length > 0 && (
         <div className="mb-4 rounded-xl border border-status-error/25 bg-status-error/[0.04] px-3 py-2.5">
-          <p className="font-sans text-[12.5px] font-semibold text-[#7A331E] mb-1">
+          <p className="font-sans text-caption font-semibold text-[#7A331E] mb-1">
             {coverage.orphans.length}{" "}
             {coverage.orphans.length === 1 ? "produkt utan" : "produkter utan"} nyckelord
           </p>
-          <ul className="font-sans text-[12.5px] text-ink-body space-y-0.5">
+          <ul className="font-sans text-caption text-ink-body space-y-0.5">
             {coverage.orphans.slice(0, 6).map((p, i) => (
               <li key={i}>
                 <Link
@@ -485,23 +485,23 @@ function KeywordCoverageCard({
       )}
 
       {coverage.topKeywords.length === 0 ? (
-        <p className="font-sans text-[14px] text-ink-mute italic">
+        <p className="font-sans text-body text-ink-mute italic">
           Inga AI-nyckelord ifyllda än.
         </p>
       ) : (
         <ul className="space-y-2">
           {coverage.topKeywords.slice(0, 12).map((k, i) => (
             <li key={i} className="flex items-baseline justify-between gap-3">
-              <span className="font-sans text-[13.5px] text-ink-body truncate">
+              <span className="font-sans text-small text-ink-body truncate">
                 {k.keyword}
               </span>
-              <span className="font-sans text-[12px] tabular-nums text-ink-mute whitespace-nowrap">
+              <span className="font-sans text-caption tabular-nums text-ink-mute whitespace-nowrap">
                 {k.pages.length} {k.pages.length === 1 ? "produkt" : "produkter"}
               </span>
             </li>
           ))}
           {coverage.topKeywords.length > 12 && (
-            <li className="font-sans text-[12px] italic text-ink-mute">
+            <li className="font-sans text-caption italic text-ink-mute">
               +{coverage.topKeywords.length - 12} fler nyckelord
             </li>
           )}
@@ -521,20 +521,20 @@ function IndexCoverageCard({
   if (summary.total === 0) {
     return (
       <AdminSection title="Indexering" eyebrow="Google URL Inspection">
-        <p className="font-sans text-[13px] text-ink-mute leading-relaxed mb-3">
+        <p className="font-sans text-small text-ink-mute leading-relaxed mb-3">
           Visar om Google har den faktiska sidan i sitt index. Kräver att GSC är
           anslutet och att veckokronan har körts minst en gång.
         </p>
         {gscOn ? (
-          <p className="font-sans text-[13.5px] text-ink-mute italic">
+          <p className="font-sans text-small text-ink-mute italic">
             Ingen kontroll har körts än. Kör{" "}
-            <code className="px-1 rounded bg-surface-warm font-mono text-[12px]">
+            <code className="px-1 rounded bg-surface-warm font-mono text-caption">
               npx tsx scripts/inspect-gsc-index.ts
             </code>{" "}
             första gången, eller vänta tills schemalagd kron körs.
           </p>
         ) : (
-          <p className="font-sans text-[13.5px] text-ink-mute italic">
+          <p className="font-sans text-small text-ink-mute italic">
             Anslut GSC först — se ADR 0014.
           </p>
         )}
@@ -544,7 +544,7 @@ function IndexCoverageCard({
 
   return (
     <AdminSection title="Indexering" eyebrow="Google URL Inspection">
-      <p className="font-sans text-[13px] text-ink-mute leading-relaxed mb-4">
+      <p className="font-sans text-small text-ink-mute leading-relaxed mb-4">
         Är våra sidor faktiskt i Googles index? Veckokronan
         kontrollerar varje publicerad URL.
       </p>
@@ -557,12 +557,12 @@ function IndexCoverageCard({
       </div>
 
       {summary.problems.length === 0 ? (
-        <p className="font-sans text-[13.5px] text-accent-deep italic">
+        <p className="font-sans text-small text-accent-deep italic">
           Alla {summary.total} kontrollerade sidor är indexerade — bra.
         </p>
       ) : (
         <>
-          <p className="font-sans text-[10.5px] uppercase tracking-[0.2em] font-semibold text-ink-mute mb-2">
+          <p className="font-sans text-micro uppercase tracking-[0.2em] font-semibold text-ink-mute mb-2">
             {summary.problems.length}{" "}
             {summary.problems.length === 1 ? "sida att åtgärda" : "sidor att åtgärda"}
           </p>
@@ -590,11 +590,11 @@ function IndexCoverageCard({
                   <Link
                     href={path}
                     target="_blank"
-                    className="font-sans text-[13px] text-ink-body hover:text-primary-deep truncate underline decoration-transparent hover:decoration-accent/40 underline-offset-[3px] transition-colors"
+                    className="font-sans text-small text-ink-body hover:text-primary-deep truncate underline decoration-transparent hover:decoration-accent/40 underline-offset-[3px] transition-colors"
                   >
                     {path}
                   </Link>
-                  <span className="font-sans text-[11.5px] text-ink-mute whitespace-nowrap">
+                  <span className="font-sans text-micro text-ink-mute whitespace-nowrap">
                     {p.coverageState ?? badge.label}
                   </span>
                 </li>
@@ -619,27 +619,27 @@ function LlmCitationCard({
   if (!llmOn && latest.length === 0) {
     return (
       <AdminSection title="AI-citeringar" eyebrow="LLM-spårning">
-        <p className="font-sans text-[13px] text-ink-mute leading-relaxed mb-3">
+        <p className="font-sans text-small text-ink-mute leading-relaxed mb-3">
           Provkör Claude / ChatGPT / valfri OpenAI-kompatibel modell mot
           kuraterade prompts (svenska sökintents) och se om svaret nämner
           biomax.nu. Kör veckovis via cron.
         </p>
-        <p className="font-sans text-[13.5px] text-ink-mute italic mb-3">
+        <p className="font-sans text-small text-ink-mute italic mb-3">
           Inte konfigurerat. Sätt{" "}
-          <code className="px-1 rounded bg-surface-warm font-mono text-[12px]">
+          <code className="px-1 rounded bg-surface-warm font-mono text-caption">
             LLM_API_KEY
           </code>
           ,{" "}
-          <code className="px-1 rounded bg-surface-warm font-mono text-[12px]">
+          <code className="px-1 rounded bg-surface-warm font-mono text-caption">
             LLM_BASE_URL
           </code>{" "}
           och{" "}
-          <code className="px-1 rounded bg-surface-warm font-mono text-[12px]">
+          <code className="px-1 rounded bg-surface-warm font-mono text-caption">
             LLM_MODEL
           </code>{" "}
           i produktionsmiljön.
         </p>
-        <p className="font-sans text-[12px] text-ink-soft italic">
+        <p className="font-sans text-caption text-ink-soft italic">
           Se ADR 0015 för uppstart. Funkar mot Anthropic, OpenAI, Mistral,
           Together, Groq och självhostad Ollama / LiteLLM / vLLM.
         </p>
@@ -649,7 +649,7 @@ function LlmCitationCard({
 
   return (
     <AdminSection title="AI-citeringar" eyebrow="LLM-spårning">
-      <p className="font-sans text-[13px] text-ink-mute leading-relaxed mb-4">
+      <p className="font-sans text-small text-ink-mute leading-relaxed mb-4">
         Får vi nämnande i AI-svar (ChatGPT, Claude, Perplexity, Gemini)? Vecka
         för vecka mot {LLM_PROMPTS.length} kuraterade prompts.
       </p>
@@ -661,9 +661,9 @@ function LlmCitationCard({
       </div>
 
       {latest.length === 0 ? (
-        <p className="font-sans text-[13.5px] text-ink-mute italic">
+        <p className="font-sans text-small text-ink-mute italic">
           Inga prober körda än. Kör{" "}
-          <code className="px-1 rounded bg-surface-warm font-mono text-[12px]">
+          <code className="px-1 rounded bg-surface-warm font-mono text-caption">
             npx tsx scripts/run-llm-citation-checks.ts
           </code>
           .
@@ -688,14 +688,14 @@ function LlmCitationCard({
               >
                 <span aria-hidden className={`inline-block w-2 h-2 rounded-full mt-1.5 ${dot}`} />
                 <div className="min-w-0">
-                  <p className="font-sans text-[13.5px] font-semibold text-primary-deep truncate">
+                  <p className="font-sans text-small font-semibold text-primary-deep truncate">
                     {l.promptLabel}
                   </p>
-                  <p className="font-sans text-[11.5px] text-ink-mute truncate">
+                  <p className="font-sans text-micro text-ink-mute truncate">
                     {l.model} · {status}
                   </p>
                 </div>
-                <span className="font-sans text-[10.5px] uppercase tracking-[0.16em] font-semibold text-ink-soft whitespace-nowrap">
+                <span className="font-sans text-micro uppercase tracking-[0.16em] font-semibold text-ink-soft whitespace-nowrap">
                   {l.topic}
                 </span>
               </li>
@@ -704,7 +704,7 @@ function LlmCitationCard({
         </ul>
       )}
       {summary.partial && (
-        <p className="mt-3 font-sans text-[12px] text-ink-mute italic">
+        <p className="mt-3 font-sans text-caption text-ink-mute italic">
           Vissa prompts har inte körts än —{" "}
           {LLM_PROMPTS.length - latest.length} av {LLM_PROMPTS.length} saknas.
         </p>
@@ -722,13 +722,13 @@ function PositionAlertsCard({
 }) {
   return (
     <AdminSection title="Rankningsvarningar" eyebrow="Positions- & klicktapp">
-      <p className="font-sans text-[13px] text-ink-mute leading-relaxed mb-4">
+      <p className="font-sans text-small text-ink-mute leading-relaxed mb-4">
         Sökord som tappat position eller klick under senaste 7 dagarna jämfört
         med veckan dessförinnan. Beräknat från lokalt sparad GSC-historik —
         inga API-anrop behövs.
       </p>
       {alerts.length === 0 ? (
-        <p className="font-sans text-[13.5px] text-ink-mute italic">
+        <p className="font-sans text-small text-ink-mute italic">
           {gscOn
             ? "Inga signifikanta tapp upptäckta — antingen mår allt bra, eller så har vi inte tillräckligt med snapshot-historik än."
             : "Anslut GSC och kör snapshot-kronan i ≥14 dagar — då börjar varningar dyka upp här."}
@@ -763,15 +763,15 @@ function PositionAlertsCard({
                   <Link
                     href={path}
                     target="_blank"
-                    className="font-sans text-[13.5px] font-semibold text-primary-deep hover:text-primary truncate inline-block max-w-full"
+                    className="font-sans text-small font-semibold text-primary-deep hover:text-primary truncate inline-block max-w-full"
                   >
                     {a.query}
                   </Link>
-                  <p className="font-sans text-[11.5px] text-ink-mute truncate">
+                  <p className="font-sans text-micro text-ink-mute truncate">
                     {ALERT_LABEL[a.kind]} · {path}
                   </p>
                 </div>
-                <span className="font-sans text-[12px] tabular-nums font-semibold text-ink-body whitespace-nowrap">
+                <span className="font-sans text-caption tabular-nums font-semibold text-ink-body whitespace-nowrap">
                   {detail}
                 </span>
               </li>
@@ -802,10 +802,10 @@ function MiniCount({
           : "text-ink-mute";
   return (
     <div className="bg-surface rounded-lg border border-border-soft p-2 text-center">
-      <p className={`font-sans text-[16px] font-semibold tabular-nums ${valueColor}`}>
+      <p className={`font-sans text-lead font-semibold tabular-nums ${valueColor}`}>
         {value}
       </p>
-      <p className="font-sans text-[10.5px] uppercase tracking-[0.16em] font-semibold text-ink-mute mt-0.5">
+      <p className="font-sans text-micro uppercase tracking-[0.16em] font-semibold text-ink-mute mt-0.5">
         {label}
       </p>
     </div>
@@ -819,12 +819,12 @@ function ContentDepthCard({
 }) {
   return (
     <AdminSection title="Innehållsdjup" eyebrow="Per produktsida">
-      <p className="font-sans text-[13px] text-ink-mute leading-relaxed mb-4">
+      <p className="font-sans text-small text-ink-mute leading-relaxed mb-4">
         Sammansatt poäng från ord, rubriker, bilder, ingredienstabell och FAQ.
         Svagaste sidor först — det här är arbetslistan.
       </p>
       {rows.length === 0 ? (
-        <p className="font-sans text-[14px] text-ink-mute italic">
+        <p className="font-sans text-body text-ink-mute italic">
           Inga publicerade produkter.
         </p>
       ) : (
@@ -832,7 +832,7 @@ function ContentDepthCard({
           {rows.slice(0, 12).map((r, i) => (
             <li key={i} className="px-1 py-2.5 flex items-baseline gap-3">
               <span
-                className={`inline-block w-12 text-right font-sans text-[13.5px] font-semibold tabular-nums ${
+                className={`inline-block w-12 text-right font-sans text-small font-semibold tabular-nums ${
                   r.score < 50
                     ? "text-status-error"
                     : r.score < 75
@@ -845,11 +845,11 @@ function ContentDepthCard({
               <Link
                 href={r.url}
                 target="_blank"
-                className="flex-1 min-w-0 font-sans text-[13.5px] text-ink-body hover:text-primary-deep truncate"
+                className="flex-1 min-w-0 font-sans text-small text-ink-body hover:text-primary-deep truncate"
               >
                 {r.name}
               </Link>
-              <span className="font-sans text-[11.5px] text-ink-mute whitespace-nowrap tabular-nums">
+              <span className="font-sans text-micro text-ink-mute whitespace-nowrap tabular-nums">
                 {r.wordCount}o · {r.headingCount}h · {r.imageCount}b
                 {r.hasFaq && " · FAQ"}
               </span>

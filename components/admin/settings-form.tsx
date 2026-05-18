@@ -146,7 +146,7 @@ export function SettingsForm({
         <h2 className="font-display text-xl font-medium tracking-tight text-primary-deep mb-1">
           Frakt
         </h2>
-        <p className="font-sans text-[13px] text-ink-mute leading-relaxed mb-5">
+        <p className="font-sans text-small text-ink-mute leading-relaxed mb-5">
           Standard fraktavgift och eventuell fri-frakt-tröskel. Lämna
           tröskeln tom för att aldrig erbjuda fri frakt.
         </p>
@@ -189,7 +189,7 @@ export function SettingsForm({
         <h2 className="font-display text-xl font-medium tracking-tight text-primary-deep mb-1">
           Lager
         </h2>
-        <p className="font-sans text-[13px] text-ink-mute leading-relaxed mb-5">
+        <p className="font-sans text-small text-ink-mute leading-relaxed mb-5">
           Standard-tröskel för &quot;Få kvar&quot;-markeringen i admin när en
           enskild produkt inte har egen tröskel.
         </p>
@@ -221,7 +221,7 @@ export function SettingsForm({
         <h2 className="font-display text-xl font-medium tracking-tight text-primary-deep mb-1">
           Lagerlarm
         </h2>
-        <p className="font-sans text-[13px] text-ink-mute leading-relaxed mb-5">
+        <p className="font-sans text-small text-ink-mute leading-relaxed mb-5">
           E-postadresser som tar emot det dagliga lagerlarmet (07:30 UTC).
           Flera adresser separeras med komma. Lämna tomt för att stänga av
           larmet.
@@ -249,7 +249,7 @@ export function SettingsForm({
         <h2 className="font-display text-xl font-medium tracking-tight text-primary-deep mb-1">
           Trustpilot
         </h2>
-        <p className="font-sans text-[13px] text-ink-mute leading-relaxed mb-5">
+        <p className="font-sans text-small text-ink-mute leading-relaxed mb-5">
           Klistra in aktuellt betyg och antal omdömen från Trustpilot-panelen.
           Lämna tomt så visar vi en &quot;Läs våra omdömen&quot;-CTA istället
           för en påhittad siffra. (Automatisk uppdatering via API följer när
@@ -300,7 +300,7 @@ export function SettingsForm({
       {error && (
         <p
           role="alert"
-          className="font-sans text-[12.5px] text-status-error bg-status-error/10 px-3 py-2 rounded-md"
+          className="font-sans text-caption text-status-error bg-status-error/10 px-3 py-2 rounded-md"
         >
           {error}
         </p>
@@ -308,7 +308,7 @@ export function SettingsForm({
       {saved && (
         <p
           role="status"
-          className="font-sans text-[12.5px] text-accent-deep font-semibold"
+          className="font-sans text-caption text-accent-deep font-semibold"
         >
           ✓ {saved}
         </p>

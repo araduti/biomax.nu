@@ -69,7 +69,7 @@ export function LoginForm() {
         <p
           id="login-error"
           role="alert"
-          className="font-sans text-[13px] text-status-error bg-status-error/10 px-3 py-2 rounded-md"
+          className="font-sans text-small text-status-error bg-status-error/10 px-3 py-2 rounded-md"
         >
           {error}
         </p>
@@ -79,7 +79,7 @@ export function LoginForm() {
       </Button>
       <Link
         href="/glomt-losenord"
-        className="text-center font-sans text-[13px] text-primary hover:text-primary-deep transition-colors"
+        className="text-center font-sans text-small text-primary hover:text-primary-deep transition-colors"
       >
         Glömt lösenord?
       </Link>

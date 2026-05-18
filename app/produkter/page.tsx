@@ -205,7 +205,7 @@ export default async function ProductsIndex({
                 </Display>
                 <Link
                   href="/produkter"
-                  className="font-sans text-[13px] font-semibold text-accent-deep hover:text-primary-deep border-b border-accent/40 hover:border-accent pb-px transition-colors"
+                  className="font-sans text-small font-semibold text-accent-deep hover:text-primary-deep border-b border-accent/40 hover:border-accent pb-px transition-colors"
                 >
                   ← Hela sortimentet
                 </Link>
@@ -239,7 +239,7 @@ export default async function ProductsIndex({
                 </p>
                 <Link
                   href="/produkter"
-                  className="mt-6 inline-flex items-center gap-2 font-sans text-[13.5px] font-semibold text-accent-deep hover:text-primary-deep transition-colors"
+                  className="mt-6 inline-flex items-center gap-2 font-sans text-small font-semibold text-accent-deep hover:text-primary-deep transition-colors"
                 >
                   Se hela sortimentet <span aria-hidden>→</span>
                 </Link>

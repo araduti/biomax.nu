@@ -94,7 +94,7 @@ export function BuyOptionsPanel({
           role="radio"
           aria-checked={mode === "once"}
           onClick={() => setMode("once")}
-          className={`px-4 py-1.5 rounded-full font-sans text-[13px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
+          className={`px-4 py-1.5 rounded-full font-sans text-small font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
             mode === "once"
               ? "bg-surface text-primary-deep shadow-sm"
               : "text-ink-mute hover:text-ink-body"
@@ -107,7 +107,7 @@ export function BuyOptionsPanel({
           role="radio"
           aria-checked={mode === "subscribe"}
           onClick={() => setMode("subscribe")}
-          className={`px-4 py-1.5 rounded-full font-sans text-[13px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
+          className={`px-4 py-1.5 rounded-full font-sans text-small font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
             mode === "subscribe"
               ? "bg-surface text-primary-deep shadow-sm"
               : "text-ink-mute hover:text-ink-body"
@@ -122,7 +122,7 @@ export function BuyOptionsPanel({
 
       {mode === "subscribe" && (
         <div className="mt-4 p-4 rounded-2xl bg-accent/[0.06] border border-accent/15">
-          <p className="font-sans text-[13px] text-ink-body">
+          <p className="font-sans text-small text-ink-body">
             <strong className="font-semibold text-primary-deep">
               {formatPriceSEK(discounted)}
             </strong>{" "}
@@ -132,7 +132,7 @@ export function BuyOptionsPanel({
             per leverans · avsluta när du vill, utan kostnad.
           </p>
           <div className="mt-3">
-            <p className="font-sans text-[11px] uppercase tracking-[0.18em] font-semibold text-ink-soft mb-1.5">
+            <p className="font-sans text-micro uppercase tracking-[0.18em] font-semibold text-ink-soft mb-1.5">
               Leveransintervall
             </p>
             <div role="radiogroup" aria-label="Intervall" className="flex flex-wrap gap-2">
@@ -145,7 +145,7 @@ export function BuyOptionsPanel({
                     role="radio"
                     aria-checked={active}
                     onClick={() => setInterval(d)}
-                    className={`px-3.5 py-1.5 rounded-full border font-sans text-[12.5px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
+                    className={`px-3.5 py-1.5 rounded-full border font-sans text-caption font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
                       active
                         ? "bg-primary-deep text-surface border-primary-deep"
                         : "bg-surface text-ink-body border-border hover:border-border-soft hover:bg-surface-warm"
@@ -203,7 +203,7 @@ export function BuyOptionsPanel({
       {error && (
         <p
           role="alert"
-          className="mt-3 font-sans text-[12.5px] text-status-error bg-status-error/10 px-3 py-2 rounded-md inline-block"
+          className="mt-3 font-sans text-caption text-status-error bg-status-error/10 px-3 py-2 rounded-md inline-block"
         >
           {error}
         </p>
@@ -219,7 +219,7 @@ export function BuyOptionsPanel({
           /villkor) without misleading framing. The earlier copy said
           "Första gången-garanti" which implied a first-buyer-only perk;
           this offer applies to every order. */}
-      <p className="mt-5 flex items-start gap-2 font-sans text-[12.5px] text-ink-mute leading-snug">
+      <p className="mt-5 flex items-start gap-2 font-sans text-caption text-ink-mute leading-snug">
         <span aria-hidden className="text-accent-deep">✓</span>
         <span>
           <strong className="font-semibold text-primary-deep">

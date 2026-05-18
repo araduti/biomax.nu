@@ -29,7 +29,7 @@ export function BundlesForProduct({
           <Display as="h2" size="md">
             Köp {currentProductName} tillsammans med…
           </Display>
-          <p className="mt-4 font-sans text-[15px] text-ink-mute leading-relaxed">
+          <p className="mt-4 font-sans text-body-lg text-ink-mute leading-relaxed">
             Utvalda kombinationer där {currentProductName} ingår — och där
             slutpriset är lägre än om du köper dem var för sig.
           </p>
@@ -70,7 +70,7 @@ export function BundlesForProduct({
                 >
                   {b.name}
                 </Link>
-                <p className="mt-2 font-sans text-[12.5px] text-ink-mute">
+                <p className="mt-2 font-sans text-caption text-ink-mute">
                   {b.items.length} produkter · {b.discountPercent} % rabatt
                 </p>
                 <div className="mt-auto pt-5 flex items-baseline gap-3">
@@ -78,13 +78,13 @@ export function BundlesForProduct({
                     {formatPriceSEK(b.bundlePriceSek.toString())}
                   </span>
                   {b.savingsSek > 0 && (
-                    <span className="font-sans text-[13px] text-ink-soft line-through tabular-nums">
+                    <span className="font-sans text-small text-ink-soft line-through tabular-nums">
                       {formatPriceSEK(b.listTotalSek.toString())}
                     </span>
                   )}
                 </div>
                 {b.savingsSek > 0 && (
-                  <p className="mt-1 font-sans text-[12px] text-accent-deep font-semibold">
+                  <p className="mt-1 font-sans text-caption text-accent-deep font-semibold">
                     Du sparar {formatPriceSEK(b.savingsSek.toString())}
                   </p>
                 )}

@@ -156,8 +156,8 @@ export default async function AdminOrdersPage({
                 href={href}
                 className={
                   isActive
-                    ? "inline-flex items-center gap-2 px-4 min-h-11 rounded-full bg-primary-deep text-surface font-sans text-[13.5px] font-semibold"
-                    : "inline-flex items-center gap-2 px-4 min-h-11 rounded-full bg-surface-alt border-2 border-border text-ink-body font-sans text-[13.5px] font-semibold hover:border-primary/40"
+                    ? "inline-flex items-center gap-2 px-4 min-h-11 rounded-full bg-primary-deep text-surface font-sans text-small font-semibold"
+                    : "inline-flex items-center gap-2 px-4 min-h-11 rounded-full bg-surface-alt border-2 border-border text-ink-body font-sans text-small font-semibold hover:border-primary/40"
                 }
               >
                 <span>{f.label}</span>
@@ -165,8 +165,8 @@ export default async function AdminOrdersPage({
                   <span
                     className={
                       isActive
-                        ? "inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 rounded-full bg-surface/25 text-surface font-sans text-[11.5px] font-bold tabular-nums"
-                        : "inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 rounded-full bg-ink-mute/15 text-ink-mute font-sans text-[11.5px] font-bold tabular-nums"
+                        ? "inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 rounded-full bg-surface/25 text-surface font-sans text-micro font-bold tabular-nums"
+                        : "inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 rounded-full bg-ink-mute/15 text-ink-mute font-sans text-micro font-bold tabular-nums"
                     }
                   >
                     {count}
@@ -183,7 +183,7 @@ export default async function AdminOrdersPage({
             name="q"
             defaultValue={q ?? ""}
             placeholder="Sök ordernr eller e-post"
-            className="h-12 px-4 rounded-lg border-2 border-border bg-surface-alt font-sans text-[15px] text-ink placeholder:text-ink-soft outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 min-w-[280px]"
+            className="h-12 px-4 rounded-lg border-2 border-border bg-surface-alt font-sans text-body-lg text-ink placeholder:text-ink-soft outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 min-w-[280px]"
           />
         </form>
       </div>
@@ -194,7 +194,7 @@ export default async function AdminOrdersPage({
           the list just consumes plain-shape rows. */}
       <div className="bg-surface-alt border border-border rounded-xl overflow-hidden">
         {orders.length === 0 ? (
-          <p className="px-5 py-12 text-center font-sans text-[14.5px] text-ink-mute">
+          <p className="px-5 py-12 text-center font-sans text-body text-ink-mute">
             {activeFilter.slug === "paid"
               ? "Inga ordrar väntar på packning just nu."
               : "Inga ordrar matchar filtret."}
@@ -214,7 +214,7 @@ export default async function AdminOrdersPage({
           />
         )}
         {total > orders.length && (
-          <p className="px-5 py-3 border-t border-border-soft font-sans text-[13px] text-ink-mute text-center">
+          <p className="px-5 py-3 border-t border-border-soft font-sans text-small text-ink-mute text-center">
             Visar {orders.length} av {total} ordrar. Avgränsa med filter
             eller sökning för att se fler.
           </p>

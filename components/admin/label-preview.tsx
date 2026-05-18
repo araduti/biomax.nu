@@ -54,7 +54,7 @@ export function Label({
 }) {
   return (
     <div>
-      <p className="font-sans text-[11px] uppercase tracking-[0.16em] font-semibold text-ink-soft mb-2">
+      <p className="font-sans text-micro uppercase tracking-[0.16em] font-semibold text-ink-soft mb-2">
         145 × {height} mm — variant {variant === "stamped" ? "A" : "B"}
       </p>
 

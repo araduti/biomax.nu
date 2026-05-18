@@ -43,7 +43,7 @@ export default function AngerFormularPage() {
         och skicka per post.
       </p>
 
-      <div className="rounded-2xl border border-border bg-surface px-5 md:px-6 py-5 my-6 font-sans text-[14px] leading-[1.8] text-ink-body whitespace-pre-line">
+      <div className="rounded-2xl border border-border bg-surface px-5 md:px-6 py-5 my-6 font-sans text-body leading-[1.8] text-ink-body whitespace-pre-line">
         {`Till: Biomax Handelsbolag, Ekenleden 15A, 428 36 Kållered, kontakt@biomax.nu
 
 Jag/vi (*) meddelar härmed att jag/vi (*) frånträder mitt/vårt (*) köpeavtal avseende följande varor (*) / tjänster (*):
@@ -102,7 +102,7 @@ ________________________________________________________________________
         .
       </p>
 
-      <p className="text-[13px] text-ink-mute italic mt-6">
+      <p className="text-small text-ink-mute italic mt-6">
         Mer information om dina rättigheter finns på{" "}
         <Link href="/villkor">köp- &amp; leveransvillkor</Link> och{" "}
         <Link href="/frakt-och-retur">frakt &amp; retur</Link>.

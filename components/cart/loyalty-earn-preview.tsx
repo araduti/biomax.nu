@@ -63,7 +63,7 @@ export function LoyaltyEarnPreview({
 
   if (variant === "drawer") {
     return (
-      <p className="font-sans text-[12px] text-accent-deep font-semibold mb-1">
+      <p className="font-sans text-caption text-accent-deep font-semibold mb-1">
         {member ? (
           <>
             ✦ Du tjänar {points.toLocaleString("sv-SE")} poäng på denna order
@@ -87,7 +87,7 @@ export function LoyaltyEarnPreview({
   // page variant — used on /varukorg next to totals
   return (
     <div className="bg-surface-warm border border-accent/30 rounded-xl px-4 py-3">
-      <p className="font-sans text-[13.5px] text-primary-deep">
+      <p className="font-sans text-small text-primary-deep">
         <span className="font-semibold text-accent-deep">✦</span>{" "}
         {member ? (
           <>

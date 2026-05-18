@@ -64,7 +64,7 @@ export default async function HeroListPage() {
       <div className="mb-6">
         <Link
           href="/admin/startsida/hero/ny"
-          className="inline-flex items-center gap-2 h-12 px-5 rounded-lg bg-primary-deep text-surface font-sans text-[15px] font-semibold hover:bg-primary transition-colors"
+          className="inline-flex items-center gap-2 h-12 px-5 rounded-lg bg-primary-deep text-surface font-sans text-body-lg font-semibold hover:bg-primary transition-colors"
         >
           <span aria-hidden>+</span>
           Lägg till ny hero-bild
@@ -96,13 +96,13 @@ export default async function HeroListPage() {
                   )}
                 </div>
                 <div className="min-w-0">
-                  <p className="font-sans text-[14px] font-semibold tracking-tight text-primary-deep">
+                  <p className="font-sans text-body font-semibold tracking-tight text-primary-deep">
                     {h.name}
                   </p>
-                  <p className="font-sans text-[13px] text-ink-mute mt-1 truncate">
+                  <p className="font-sans text-small text-ink-mute mt-1 truncate">
                     “{h.motif}” · {h.caption}
                   </p>
-                  <p className="font-sans text-[12px] text-ink-soft mt-1">
+                  <p className="font-sans text-caption text-ink-soft mt-1">
                     {h.season
                       ? `Säsong: ${seasons[h.season].label}`
                       : h.startsAt || h.endsAt
@@ -115,7 +115,7 @@ export default async function HeroListPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   {isActive && (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent-deep text-surface font-sans text-[12px] font-semibold">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent-deep text-surface font-sans text-caption font-semibold">
                       <span className="w-1.5 h-1.5 rounded-full bg-surface" />
                       Aktiv nu
                     </span>
@@ -130,7 +130,7 @@ export default async function HeroListPage() {
           );
         })}
         {heros.length === 0 && (
-          <li className="px-5 py-12 text-center font-sans text-[14px] text-ink-mute italic">
+          <li className="px-5 py-12 text-center font-sans text-body text-ink-mute italic">
             Inga hero-bilder ännu. Klicka “Lägg till ny hero-bild” för att
             börja.
           </li>
@@ -157,7 +157,7 @@ function StatusPill({ status }: { status: "DRAFT" | "PUBLISHED" | "ARCHIVED" }) 
   const s = map[status];
   return (
     <span
-      className={`inline-flex items-center px-3 py-1 rounded-full font-sans text-[12px] font-semibold ${s.bg} ${s.color}`}
+      className={`inline-flex items-center px-3 py-1 rounded-full font-sans text-caption font-semibold ${s.bg} ${s.color}`}
     >
       {s.label}
     </span>

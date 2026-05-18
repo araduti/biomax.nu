@@ -46,7 +46,7 @@ export function FounderBand() {
           />
           {/* Caption */}
           <div className="absolute left-6 right-6 bottom-6 flex flex-col gap-1">
-            <span className="font-sans text-[10px] font-bold uppercase tracking-[0.24em] text-accent-on-dark">
+            <span className="font-sans text-micro font-bold uppercase tracking-[0.24em] text-accent-on-dark">
               Grundare · Sedan 2001
             </span>
             <span className="font-display text-2xl md:text-[26px] font-medium tracking-tight text-surface leading-tight">

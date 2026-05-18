@@ -33,7 +33,7 @@ export function AllergenPicker({
             onClick={() => toggle(a.slug)}
             title={a.examples}
             aria-pressed={active}
-            className={`px-3 py-1.5 rounded-full border font-sans text-[12.5px] font-semibold transition-colors ${
+            className={`px-3 py-1.5 rounded-full border font-sans text-caption font-semibold transition-colors ${
               active
                 ? "bg-status-warn text-surface border-status-warn"
                 : "bg-surface text-ink-body border-border hover:border-border-soft hover:bg-surface-warm"

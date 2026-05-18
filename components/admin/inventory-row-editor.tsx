@@ -89,7 +89,7 @@ export function InventoryRowEditor({ row }: { row: InventoryRow }) {
         <div className="flex flex-wrap items-baseline gap-3">
           <Link
             href={`/admin/produkter/${row.productSlug}`}
-            className="font-sans text-[14px] font-semibold text-primary-deep hover:text-primary transition-colors"
+            className="font-sans text-body font-semibold text-primary-deep hover:text-primary transition-colors"
           >
             {row.name}
           </Link>
@@ -97,7 +97,7 @@ export function InventoryRowEditor({ row }: { row: InventoryRow }) {
             {severity.label}
           </AdminStatusPill>
         </div>
-        <p className="mt-1 font-sans text-[13px] text-ink-mute">
+        <p className="mt-1 font-sans text-small text-ink-mute">
           {row.sku}
           {row.manageStock
             ? ` · tröskel ${row.threshold} st`
@@ -106,7 +106,7 @@ export function InventoryRowEditor({ row }: { row: InventoryRow }) {
         {error && (
           <p
             role="alert"
-            className="mt-2 font-sans text-[13px] text-status-error"
+            className="mt-2 font-sans text-small text-status-error"
           >
             {error}
           </p>
@@ -122,14 +122,14 @@ export function InventoryRowEditor({ row }: { row: InventoryRow }) {
             onChange={(e) => setDraft(e.target.value.replace(/[^0-9]/g, ""))}
             disabled={pending}
             aria-label={`Lagersaldo för ${row.name}`}
-            className="w-24 h-12 px-3 rounded-md border-2 border-border bg-surface font-sans text-[17px] tabular-nums text-right focus:border-primary focus:ring-2 focus:ring-primary/15"
+            className="w-24 h-12 px-3 rounded-md border-2 border-border bg-surface font-sans text-lead tabular-nums text-right focus:border-primary focus:ring-2 focus:ring-primary/15"
             autoFocus
           />
           <button
             type="button"
             onClick={save}
             disabled={pending}
-            className="h-12 px-5 rounded-md bg-primary-deep text-surface font-sans text-[14px] font-semibold hover:bg-primary-deep/90 disabled:opacity-50"
+            className="h-12 px-5 rounded-md bg-primary-deep text-surface font-sans text-body font-semibold hover:bg-primary-deep/90 disabled:opacity-50"
           >
             {pending ? "Sparar…" : "Spara"}
           </button>
@@ -141,7 +141,7 @@ export function InventoryRowEditor({ row }: { row: InventoryRow }) {
               setError(null);
             }}
             disabled={pending}
-            className="h-12 px-4 font-sans text-[13.5px] text-ink-soft hover:text-ink-body"
+            className="h-12 px-4 font-sans text-small text-ink-soft hover:text-ink-body"
           >
             Avbryt
           </button>
@@ -149,7 +149,7 @@ export function InventoryRowEditor({ row }: { row: InventoryRow }) {
       ) : (
         <div className="flex items-center gap-4">
           <p
-            className={`font-sans text-[15px] font-semibold tabular-nums whitespace-nowrap min-w-[60px] text-right ${
+            className={`font-sans text-body-lg font-semibold tabular-nums whitespace-nowrap min-w-[60px] text-right ${
               row.severity === "out"
                 ? "text-status-error"
                 : row.severity === "low"
@@ -167,7 +167,7 @@ export function InventoryRowEditor({ row }: { row: InventoryRow }) {
                 setDraft(String(row.stock));
                 setError(null);
               }}
-              className="h-12 px-5 rounded-md border-2 border-border bg-surface font-sans text-[14px] font-semibold text-ink-body hover:bg-surface-warm"
+              className="h-12 px-5 rounded-md border-2 border-border bg-surface font-sans text-body font-semibold text-ink-body hover:bg-surface-warm"
             >
               Ändra
             </button>

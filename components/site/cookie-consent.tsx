@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { recordConsent } from "@/lib/consent/actions";
+import { CONSENT_SUBJECT_KEY } from "@/lib/consent/constants";
 
 /**
  * Cookie / tracking consent banner.
@@ -64,6 +66,49 @@ function writeConsent(c: Consent) {
   }
 }
 
+/**
+ * Stable per-visitor id so a chain of consent events (grant → withdraw →
+ * re-grant) correlates server-side (ADR 0023). Random, not derived from
+ * any PII. Survives in localStorage; if it's wiped we mint a fresh one
+ * and the next event simply starts a new chain — acceptable.
+ */
+function getSubjectKey(): string {
+  try {
+    const existing = window.localStorage.getItem(CONSENT_SUBJECT_KEY);
+    if (existing) return existing;
+    const minted =
+      typeof crypto !== "undefined" && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `ck_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 12)}`;
+    window.localStorage.setItem(CONSENT_SUBJECT_KEY, minted);
+    return minted;
+  } catch {
+    // Private mode / no storage — still produce something usable for
+    // this one event so the proof row isn't lost.
+    return `ck_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 12)}`;
+  }
+}
+
+type ConsentSource =
+  | "banner-accept-all"
+  | "banner-necessary-only"
+  | "banner-custom";
+
+function logConsentServerSide(
+  analytics: boolean,
+  marketing: boolean,
+  source: ConsentSource
+) {
+  // Fire-and-forget — never block the banner on the network/DB. The
+  // server action is itself fail-soft (ADR 0023).
+  void recordConsent({
+    subjectKey: getSubjectKey(),
+    analytics,
+    marketing,
+    source,
+  }).catch(() => {});
+}
+
 export function CookieConsent() {
   const [visible, setVisible] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
@@ -79,13 +124,17 @@ export function CookieConsent() {
 
   if (!visible) return null;
 
-  function save(c: { analytics: boolean; marketing: boolean }) {
+  function save(
+    c: { analytics: boolean; marketing: boolean },
+    source: ConsentSource
+  ) {
     writeConsent({
       functional: true,
       analytics: c.analytics,
       marketing: c.marketing,
       at: new Date().toISOString(),
     });
+    logConsentServerSide(c.analytics, c.marketing, source);
     setVisible(false);
   }
 
@@ -100,7 +149,7 @@ export function CookieConsent() {
           <p className="font-display text-lg font-medium tracking-tight text-primary-deep mb-2">
             Cookies och spårning
           </p>
-          <p className="font-sans text-[13.5px] text-ink-body leading-relaxed mb-4">
+          <p className="font-sans text-small text-ink-body leading-relaxed mb-4">
             Vi använder bara nödvändiga cookies för att sajten ska fungera
             (kassan, inloggning). Vill du också hjälpa oss förbättra sidan med
             anonym besökstatistik?{" "}
@@ -115,22 +164,32 @@ export function CookieConsent() {
           <div className="flex flex-wrap items-center gap-3">
             <button
               type="button"
-              onClick={() => save({ analytics: true, marketing: true })}
-              className="px-4 py-2 rounded-md bg-primary-deep text-surface font-sans text-[13px] font-semibold hover:bg-primary-deep/90 transition-colors"
+              onClick={() =>
+                save(
+                  { analytics: true, marketing: true },
+                  "banner-accept-all"
+                )
+              }
+              className="px-4 py-2 rounded-md bg-primary-deep text-surface font-sans text-small font-semibold hover:bg-primary-deep/90 transition-colors"
             >
               Acceptera alla
             </button>
             <button
               type="button"
-              onClick={() => save({ analytics: false, marketing: false })}
-              className="px-4 py-2 rounded-md border border-border bg-surface font-sans text-[13px] font-semibold text-ink-body hover:bg-surface-warm transition-colors"
+              onClick={() =>
+                save(
+                  { analytics: false, marketing: false },
+                  "banner-necessary-only"
+                )
+              }
+              className="px-4 py-2 rounded-md border border-border bg-surface font-sans text-small font-semibold text-ink-body hover:bg-surface-warm transition-colors"
             >
               Bara nödvändiga
             </button>
             <button
               type="button"
               onClick={() => setShowDetail(true)}
-              className="font-sans text-[12.5px] text-ink-mute underline decoration-accent/30 underline-offset-[3px] hover:text-primary-deep"
+              className="font-sans text-caption text-ink-mute underline decoration-accent/30 underline-offset-[3px] hover:text-primary-deep"
             >
               Anpassa
             </button>
@@ -151,10 +210,10 @@ export function CookieConsent() {
                 aria-label="Nödvändiga cookies"
               />
               <div className="flex-1">
-                <p className="font-sans text-[13px] font-semibold text-ink-body">
+                <p className="font-sans text-small font-semibold text-ink-body">
                   Nödvändiga (alltid på)
                 </p>
-                <p className="font-sans text-[12px] text-ink-mute">
+                <p className="font-sans text-caption text-ink-mute">
                   Session, kundvagn, säkerhet. Krävs för att kunna handla.
                 </p>
               </div>
@@ -170,11 +229,11 @@ export function CookieConsent() {
               <div className="flex-1">
                 <label
                   htmlFor="consent-analytics"
-                  className="font-sans text-[13px] font-semibold text-ink-body cursor-pointer"
+                  className="font-sans text-small font-semibold text-ink-body cursor-pointer"
                 >
                   Statistik
                 </label>
-                <p className="font-sans text-[12px] text-ink-mute">
+                <p className="font-sans text-caption text-ink-mute">
                   Anonym besökstatistik (Plausible) — hjälper oss förstå vad
                   som funkar. Ingen personlig profil byggs.
                 </p>
@@ -191,11 +250,11 @@ export function CookieConsent() {
               <div className="flex-1">
                 <label
                   htmlFor="consent-marketing"
-                  className="font-sans text-[13px] font-semibold text-ink-body cursor-pointer"
+                  className="font-sans text-small font-semibold text-ink-body cursor-pointer"
                 >
                   Marknadsföring
                 </label>
-                <p className="font-sans text-[12px] text-ink-mute">
+                <p className="font-sans text-caption text-ink-mute">
                   Pixlar från t.ex. Meta / Google Ads (inte aktivt idag —
                   framtida förberedelse).
                 </p>
@@ -205,15 +264,17 @@ export function CookieConsent() {
           <div className="flex flex-wrap gap-3">
             <button
               type="button"
-              onClick={() => save({ analytics, marketing })}
-              className="px-4 py-2 rounded-md bg-primary-deep text-surface font-sans text-[13px] font-semibold hover:bg-primary-deep/90 transition-colors"
+              onClick={() =>
+                save({ analytics, marketing }, "banner-custom")
+              }
+              className="px-4 py-2 rounded-md bg-primary-deep text-surface font-sans text-small font-semibold hover:bg-primary-deep/90 transition-colors"
             >
               Spara val
             </button>
             <button
               type="button"
               onClick={() => setShowDetail(false)}
-              className="font-sans text-[12.5px] text-ink-mute underline decoration-accent/30 underline-offset-[3px] hover:text-primary-deep"
+              className="font-sans text-caption text-ink-mute underline decoration-accent/30 underline-offset-[3px] hover:text-primary-deep"
             >
               Tillbaka
             </button>

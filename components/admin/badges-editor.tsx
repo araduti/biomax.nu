@@ -80,7 +80,7 @@ export function BadgesEditor({
         {values.map((v, i) => (
           <span
             key={i}
-            className="inline-flex items-center gap-1.5 rounded-full bg-primary-deep/[0.08] text-primary-deep px-2.5 py-1 font-sans text-[11.5px] uppercase tracking-[0.16em] font-semibold"
+            className="inline-flex items-center gap-1.5 rounded-full bg-primary-deep/[0.08] text-primary-deep px-2.5 py-1 font-sans text-micro uppercase tracking-[0.16em] font-semibold"
           >
             {v}
             <button
@@ -108,22 +108,22 @@ export function BadgesEditor({
               : ""
           }
           disabled={remaining <= 0}
-          className="flex-1 min-w-[120px] outline-none bg-transparent font-sans text-[13px] text-ink-body placeholder:text-ink-soft px-1 py-0.5"
+          className="flex-1 min-w-[120px] outline-none bg-transparent font-sans text-small text-ink-body placeholder:text-ink-soft px-1 py-0.5"
         />
       </div>
 
       <div className="flex items-baseline justify-between gap-3">
-        <p className="font-sans text-[11.5px] text-ink-mute leading-snug">
+        <p className="font-sans text-micro text-ink-mute leading-snug">
           Visas i kortets toppikon på sortimentet. Max {MAX_BADGES} per produkt.
         </p>
-        <p className="font-sans text-[11.5px] text-ink-soft tabular-nums whitespace-nowrap">
+        <p className="font-sans text-micro text-ink-soft tabular-nums whitespace-nowrap">
           {values.length} / {MAX_BADGES}
         </p>
       </div>
 
       {/* Preset chips */}
       <div>
-        <p className="font-sans text-[10.5px] uppercase tracking-[0.2em] font-semibold text-ink-soft mb-1.5">
+        <p className="font-sans text-micro uppercase tracking-[0.2em] font-semibold text-ink-soft mb-1.5">
           Förinställningar
         </p>
         <div className="flex flex-wrap gap-1.5">
@@ -140,10 +140,10 @@ export function BadgesEditor({
                 aria-pressed={on}
                 className={
                   on
-                    ? "rounded-full bg-primary-deep/[0.08] text-primary-deep px-3 py-1 font-sans text-[11.5px] uppercase tracking-[0.16em] font-semibold"
+                    ? "rounded-full bg-primary-deep/[0.08] text-primary-deep px-3 py-1 font-sans text-micro uppercase tracking-[0.16em] font-semibold"
                     : remaining <= 0
-                      ? "rounded-full border border-dashed border-border-soft px-3 py-1 font-sans text-[11.5px] uppercase tracking-[0.16em] font-semibold text-ink-soft/50 cursor-not-allowed"
-                      : "rounded-full border border-dashed border-border-soft px-3 py-1 font-sans text-[11.5px] uppercase tracking-[0.16em] font-semibold text-ink-mute hover:text-primary-deep hover:border-primary-deep transition-colors"
+                      ? "rounded-full border border-dashed border-border-soft px-3 py-1 font-sans text-micro uppercase tracking-[0.16em] font-semibold text-ink-soft/50 cursor-not-allowed"
+                      : "rounded-full border border-dashed border-border-soft px-3 py-1 font-sans text-micro uppercase tracking-[0.16em] font-semibold text-ink-mute hover:text-primary-deep hover:border-primary-deep transition-colors"
                 }
               >
                 {on ? "✓ " : "+ "}

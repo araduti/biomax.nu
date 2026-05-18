@@ -100,7 +100,7 @@ export function KeywordChipsEditor({
 
   return (
     <div>
-      <label className="block font-sans text-[13px] font-medium text-ink-body mb-1.5">
+      <label className="block font-sans text-small font-medium text-ink-body mb-1.5">
         {label}
       </label>
       <div
@@ -110,7 +110,7 @@ export function KeywordChipsEditor({
         {values.map((v, i) => (
           <span
             key={i}
-            className="inline-flex items-center gap-1.5 rounded-full bg-accent/15 text-accent-deep px-2.5 py-1 font-sans text-[12.5px] font-medium"
+            className="inline-flex items-center gap-1.5 rounded-full bg-accent/15 text-accent-deep px-2.5 py-1 font-sans text-caption font-medium"
           >
             {v}
             <button
@@ -134,22 +134,22 @@ export function KeywordChipsEditor({
           onBlur={commit}
           placeholder={values.length === 0 ? "Skriv ett nyckelord och tryck Enter…" : ""}
           disabled={remaining <= 0}
-          className="flex-1 min-w-[120px] outline-none bg-transparent font-sans text-[13.5px] text-ink-body placeholder:text-ink-soft px-1 py-0.5"
+          className="flex-1 min-w-[120px] outline-none bg-transparent font-sans text-small text-ink-body placeholder:text-ink-soft px-1 py-0.5"
         />
       </div>
       <div className="mt-1.5 flex items-baseline justify-between gap-3">
         {hint && (
-          <p className="font-sans text-[11.5px] text-ink-mute leading-snug">
+          <p className="font-sans text-micro text-ink-mute leading-snug">
             {hint}
           </p>
         )}
-        <p className="font-sans text-[11.5px] text-ink-soft tabular-nums whitespace-nowrap">
+        <p className="font-sans text-micro text-ink-soft tabular-nums whitespace-nowrap">
           {values.length} / {max}
         </p>
       </div>
       {unusedGsc.length > 0 && remaining > 0 && (
         <div className="mt-3">
-          <p className="font-sans text-[11px] uppercase tracking-[0.16em] font-semibold text-accent-deep mb-1.5">
+          <p className="font-sans text-micro uppercase tracking-[0.16em] font-semibold text-accent-deep mb-1.5">
             Från Google Search Console — riktiga sökningar
           </p>
           <div className="flex flex-wrap gap-1.5">
@@ -160,10 +160,10 @@ export function KeywordChipsEditor({
                 onClick={() => addRaw(g.keyword)}
                 className="group/gsc inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/[0.06] px-3 py-1 hover:bg-accent/15 hover:border-accent transition-colors"
               >
-                <span className="font-sans text-[12px] font-medium text-accent-deep">
+                <span className="font-sans text-caption font-medium text-accent-deep">
                   + {g.keyword}
                 </span>
-                <span className="font-sans text-[10.5px] tabular-nums text-ink-soft group-hover/gsc:text-accent-deep transition-colors">
+                <span className="font-sans text-micro tabular-nums text-ink-soft group-hover/gsc:text-accent-deep transition-colors">
                   {g.clicks > 0
                     ? `${g.clicks} klick · pos ${g.position.toFixed(1)}`
                     : `${g.impressions} v · pos ${g.position.toFixed(1)}`}
@@ -178,7 +178,7 @@ export function KeywordChipsEditor({
       )}
       {unusedSuggestions.length > 0 && remaining > 0 && (
         <div className="mt-2.5 flex flex-wrap gap-1.5 items-baseline">
-          <span className="font-sans text-[11px] uppercase tracking-[0.16em] font-semibold text-ink-soft">
+          <span className="font-sans text-micro uppercase tracking-[0.16em] font-semibold text-ink-soft">
             Från sajten:
           </span>
           {unusedSuggestions.slice(0, 8).map((s) => (
@@ -186,7 +186,7 @@ export function KeywordChipsEditor({
               key={s}
               type="button"
               onClick={() => addRaw(s)}
-              className="rounded-full border border-dashed border-border-soft px-2.5 py-0.5 font-sans text-[12px] text-ink-mute hover:text-accent-deep hover:border-accent-deep transition-colors"
+              className="rounded-full border border-dashed border-border-soft px-2.5 py-0.5 font-sans text-caption text-ink-mute hover:text-accent-deep hover:border-accent-deep transition-colors"
             >
               + {s}
             </button>

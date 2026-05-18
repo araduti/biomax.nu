@@ -104,18 +104,18 @@ export function ReturnAdminRow({ data }: { data: ReturnRowData }) {
       <header className="flex flex-wrap items-baseline justify-between gap-3 mb-4">
         <div className="flex flex-wrap items-baseline gap-3">
           <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full font-sans text-[11px] uppercase tracking-[0.16em] font-semibold ${data.statusTone}`}
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full font-sans text-micro uppercase tracking-[0.16em] font-semibold ${data.statusTone}`}
           >
             {data.statusLabel}
           </span>
           <p className="font-display text-base font-medium text-primary-deep">
             {data.returnNumber}
           </p>
-          <p className="font-sans text-[12.5px] text-ink-mute">
+          <p className="font-sans text-caption text-ink-mute">
             {data.createdAt}
           </p>
         </div>
-        <p className="font-sans text-[13px] text-ink-body">
+        <p className="font-sans text-small text-ink-body">
           <Link
             href={`/admin/ordrar/${data.orderNumber}`}
             className="text-primary-deep underline decoration-accent/40 underline-offset-[3px] hover:decoration-accent"
@@ -133,7 +133,7 @@ export function ReturnAdminRow({ data }: { data: ReturnRowData }) {
         {data.items.map((it, i) => (
           <li
             key={i}
-            className="font-sans text-[13.5px] text-ink-body flex items-baseline gap-2"
+            className="font-sans text-small text-ink-body flex items-baseline gap-2"
           >
             <span>{it.productName}</span>
             <span className="text-ink-soft">·</span>
@@ -143,13 +143,13 @@ export function ReturnAdminRow({ data }: { data: ReturnRowData }) {
       </ul>
 
       {data.reason && (
-        <p className="mb-3 font-sans text-[13px] text-ink-mute italic leading-relaxed">
+        <p className="mb-3 font-sans text-small text-ink-mute italic leading-relaxed">
           Anledning: {data.reason}
         </p>
       )}
 
       {data.status === "REFUNDED" && (
-        <p className="mb-3 font-sans text-[13px] text-ink-body">
+        <p className="mb-3 font-sans text-small text-ink-body">
           <strong>Återbetalat:</strong>{" "}
           {data.refundAmount ? `${data.refundAmount} kr` : "—"} · ref{" "}
           <code>{data.refundReference || "—"}</code>
@@ -195,7 +195,7 @@ export function ReturnAdminRow({ data }: { data: ReturnRowData }) {
             type="button"
             onClick={() => setConfirmingReject(true)}
             disabled={pending}
-            className="ml-auto font-sans text-[13px] text-ink-soft hover:text-status-error transition-colors underline decoration-ink-soft/30 underline-offset-[3px]"
+            className="ml-auto font-sans text-small text-ink-soft hover:text-status-error transition-colors underline decoration-ink-soft/30 underline-offset-[3px]"
           >
             Avvisa retur
           </button>
@@ -204,7 +204,7 @@ export function ReturnAdminRow({ data }: { data: ReturnRowData }) {
 
       {confirmingReject && (
         <div className="mt-4 pt-4 border-t border-border-soft bg-status-error/5 -mx-5 md:-mx-6 px-5 md:px-6 py-4 rounded-b-2xl">
-          <p className="font-sans text-[14.5px] text-ink-body mb-3">
+          <p className="font-sans text-body text-ink-body mb-3">
             Avvisa {data.returnNumber}? Kunden får ingen återbetalning och
             varan returneras inte. Skriv en kort intern notering om varför —
             visas inte för kunden, men hjälper kollegorna förstå beslutet.
@@ -215,14 +215,14 @@ export function ReturnAdminRow({ data }: { data: ReturnRowData }) {
             placeholder="T.ex. utanför 14-dagars-fönstret, eller produkten är öppnad."
             rows={2}
             maxLength={500}
-            className="w-full px-3 py-2 mb-3 bg-surface border-2 border-border rounded-md font-sans text-[14.5px] focus:border-status-error focus:ring-2 focus:ring-status-error/15"
+            className="w-full px-3 py-2 mb-3 bg-surface border-2 border-border rounded-md font-sans text-body focus:border-status-error focus:ring-2 focus:ring-status-error/15"
           />
           <div className="flex flex-wrap gap-3">
             <button
               type="button"
               onClick={() => moderate("REJECTED", rejectNote || undefined)}
               disabled={pending}
-              className="h-12 px-5 rounded-md bg-status-error text-surface font-sans text-[14px] font-semibold hover:bg-[#9F4630] disabled:opacity-50"
+              className="h-12 px-5 rounded-md bg-status-error text-surface font-sans text-body font-semibold hover:bg-[#9F4630] disabled:opacity-50"
             >
               {pending ? "Avvisar…" : "Ja, avvisa retur"}
             </button>
@@ -234,7 +234,7 @@ export function ReturnAdminRow({ data }: { data: ReturnRowData }) {
                 setError(null);
               }}
               disabled={pending}
-              className="h-12 px-5 font-sans text-[14px] text-ink-mute hover:text-ink-body"
+              className="h-12 px-5 font-sans text-body text-ink-mute hover:text-ink-body"
             >
               Avbryt
             </button>
@@ -244,7 +244,7 @@ export function ReturnAdminRow({ data }: { data: ReturnRowData }) {
 
       {refundOpen && (
         <div className="mt-4 pt-4 border-t border-border-soft bg-accent/5 -mx-5 md:-mx-6 px-5 md:px-6 py-4 rounded-b-2xl">
-          <p className="font-sans text-[14.5px] text-ink-body mb-4">
+          <p className="font-sans text-body text-ink-body mb-4">
             Registrera återbetalning för{" "}
             <strong className="font-semibold text-primary-deep">
               {data.returnNumber}
@@ -290,7 +290,7 @@ export function ReturnAdminRow({ data }: { data: ReturnRowData }) {
                 setError(null);
               }}
               disabled={pending}
-              className="h-12 px-5 font-sans text-[14px] text-ink-mute hover:text-ink-body"
+              className="h-12 px-5 font-sans text-body text-ink-mute hover:text-ink-body"
             >
               Avbryt
             </button>
@@ -301,7 +301,7 @@ export function ReturnAdminRow({ data }: { data: ReturnRowData }) {
       {error && (
         <p
           role="alert"
-          className="mt-3 font-sans text-[12.5px] text-status-error"
+          className="mt-3 font-sans text-caption text-status-error"
         >
           {error}
         </p>

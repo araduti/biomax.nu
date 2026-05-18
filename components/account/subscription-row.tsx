@@ -99,19 +99,19 @@ export function SubscriptionRow({
       <header className="flex flex-wrap items-baseline justify-between gap-3 mb-4">
         <div className="flex items-baseline gap-3">
           <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full font-sans text-[11px] uppercase tracking-[0.16em] font-semibold ${STATUS_TONE[subscription.status]}`}
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full font-sans text-micro uppercase tracking-[0.16em] font-semibold ${STATUS_TONE[subscription.status]}`}
           >
             {STATUS_LABEL[subscription.status]}
           </span>
           <p className="font-display text-lg text-primary-deep">
             {subscription.intervalLabel}
           </p>
-          <p className="font-sans text-[12.5px] text-ink-soft">
+          <p className="font-sans text-caption text-ink-soft">
             −{subscription.discountPercent} % per leverans
           </p>
         </div>
         {!isCancelled && (
-          <p className="font-sans text-[13px] text-ink-body">
+          <p className="font-sans text-small text-ink-body">
             Nästa leverans:{" "}
             <strong className="font-semibold text-primary-deep">
               {formatDate(subscription.nextOrderAt)}
@@ -138,16 +138,16 @@ export function SubscriptionRow({
             <div className="flex-1 min-w-0">
               <Link
                 href={`/produkter/${line.productSlug}`}
-                className="font-display text-[15px] font-medium text-primary-deep hover:text-primary transition-colors"
+                className="font-display text-body-lg font-medium text-primary-deep hover:text-primary transition-colors"
               >
                 {line.productName}
               </Link>
               {line.variantLabel && (
-                <p className="font-sans text-[11.5px] uppercase tracking-[0.14em] font-semibold text-ink-soft mt-0.5">
+                <p className="font-sans text-micro uppercase tracking-[0.14em] font-semibold text-ink-soft mt-0.5">
                   {line.variantLabel}
                 </p>
               )}
-              <p className="font-sans text-[12.5px] text-ink-mute mt-0.5">
+              <p className="font-sans text-caption text-ink-mute mt-0.5">
                 {line.quantity} st · vid skapandet {line.unitPriceAtCreate.toFixed(2)} kr / st
               </p>
             </div>
@@ -156,7 +156,7 @@ export function SubscriptionRow({
       </ul>
 
       {subscription.shippingAddressLine && (
-        <p className="mb-4 font-sans text-[12.5px] text-ink-mute">
+        <p className="mb-4 font-sans text-caption text-ink-mute">
           Levereras till: {subscription.shippingAddressLine}
         </p>
       )}
@@ -171,7 +171,7 @@ export function SubscriptionRow({
                 dispatch(() => pauseSubscription(subscription.id))
               }
               disabled={pending}
-              className="px-4 py-1.5 rounded-md border border-border bg-surface hover:bg-surface-warm font-sans text-[13px] font-semibold text-ink-body transition-colors"
+              className="px-4 py-1.5 rounded-md border border-border bg-surface hover:bg-surface-warm font-sans text-small font-semibold text-ink-body transition-colors"
             >
               Pausa
             </button>
@@ -182,14 +182,14 @@ export function SubscriptionRow({
                 dispatch(() => resumeSubscription(subscription.id))
               }
               disabled={pending}
-              className="px-4 py-1.5 rounded-md bg-primary-deep text-surface hover:bg-primary-deep/90 font-sans text-[13px] font-semibold transition-colors"
+              className="px-4 py-1.5 rounded-md bg-primary-deep text-surface hover:bg-primary-deep/90 font-sans text-small font-semibold transition-colors"
             >
               Återuppta
             </button>
           )}
 
           {/* Interval changer — simple select for compactness. */}
-          <label className="inline-flex items-center gap-2 font-sans text-[12.5px] text-ink-mute">
+          <label className="inline-flex items-center gap-2 font-sans text-caption text-ink-mute">
             Intervall
             <select
               value={subscription.intervalDays}
@@ -202,7 +202,7 @@ export function SubscriptionRow({
                   )
                 )
               }
-              className="px-2.5 py-1.5 rounded-md border border-border bg-surface font-sans text-[13px] text-ink-body"
+              className="px-2.5 py-1.5 rounded-md border border-border bg-surface font-sans text-small text-ink-body"
             >
               {SUBSCRIPTION_INTERVAL_DAYS.map((d) => (
                 <option key={d} value={d}>
@@ -215,7 +215,7 @@ export function SubscriptionRow({
           <button
             type="button"
             onClick={() => setConfirmingCancel(true)}
-            className="ml-auto font-sans text-[12.5px] text-ink-soft hover:text-status-error transition-colors"
+            className="ml-auto font-sans text-caption text-ink-soft hover:text-status-error transition-colors"
           >
             Avsluta prenumerationen
           </button>
@@ -224,7 +224,7 @@ export function SubscriptionRow({
 
       {confirmingCancel && !isCancelled && (
         <div className="pt-4 border-t border-border-soft">
-          <p className="font-sans text-[13.5px] text-ink-body mb-3">
+          <p className="font-sans text-small text-ink-body mb-3">
             Säker på att du vill avsluta? Du kan starta en ny prenumeration när
             som helst.
           </p>
@@ -234,7 +234,7 @@ export function SubscriptionRow({
             placeholder="Valfritt — berätta varför, det hjälper oss bli bättre."
             rows={2}
             maxLength={240}
-            className="w-full px-3 py-2 mb-3 bg-surface border border-border rounded-md font-sans text-[13.5px] text-ink-body placeholder:text-ink-soft focus:outline-none focus:border-accent"
+            className="w-full px-3 py-2 mb-3 bg-surface border border-border rounded-md font-sans text-small text-ink-body placeholder:text-ink-soft focus:outline-none focus:border-accent"
           />
           <div className="flex flex-wrap gap-3">
             <button
@@ -245,7 +245,7 @@ export function SubscriptionRow({
                 )
               }
               disabled={pending}
-              className="px-4 py-1.5 rounded-md bg-status-error text-surface hover:bg-[#9F4630] font-sans text-[13px] font-semibold transition-colors"
+              className="px-4 py-1.5 rounded-md bg-status-error text-surface hover:bg-[#9F4630] font-sans text-small font-semibold transition-colors"
             >
               {pending ? "Avslutar…" : "Ja, avsluta"}
             </button>
@@ -256,7 +256,7 @@ export function SubscriptionRow({
                 setCancelReason("");
               }}
               disabled={pending}
-              className="px-4 py-1.5 rounded-md border border-border bg-surface hover:bg-surface-warm font-sans text-[13px] font-semibold text-ink-body transition-colors"
+              className="px-4 py-1.5 rounded-md border border-border bg-surface hover:bg-surface-warm font-sans text-small font-semibold text-ink-body transition-colors"
             >
               Behåll
             </button>
@@ -267,7 +267,7 @@ export function SubscriptionRow({
       {error && (
         <p
           role="alert"
-          className="mt-3 font-sans text-[12.5px] text-status-error bg-status-error/10 px-3 py-2 rounded-md"
+          className="mt-3 font-sans text-caption text-status-error bg-status-error/10 px-3 py-2 rounded-md"
         >
           {error}
         </p>

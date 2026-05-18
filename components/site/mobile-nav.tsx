@@ -90,7 +90,7 @@ export function MobileNav({
             className="lg:hidden fixed top-0 right-0 bottom-0 z-50 w-[88vw] max-w-[360px] bg-surface border-l border-border shadow-2xl flex flex-col"
           >
             <div className="flex items-center justify-between px-5 py-4 border-b border-border-soft">
-              <p className="font-sans text-[11px] uppercase tracking-[0.2em] text-ink-soft font-semibold">
+              <p className="font-sans text-micro uppercase tracking-[0.2em] text-ink-soft font-semibold">
                 Meny
               </p>
               <button
@@ -135,7 +135,7 @@ export function MobileNav({
             </nav>
 
             <div className="px-5 py-4 border-t border-border-soft">
-              <p className="font-sans text-[11.5px] text-ink-soft">
+              <p className="font-sans text-micro text-ink-soft">
                 Biomax HB · Sedan 2001 · Kållered
               </p>
             </div>
@@ -150,7 +150,7 @@ function DrawerLink({ href, label }: { href: string; label: string }) {
   return (
     <Link
       href={href}
-      className="block px-4 min-h-12 flex items-center rounded-md font-sans text-[15px] text-ink-body font-medium hover:bg-surface-warm hover:text-primary transition-colors"
+      className="block px-4 min-h-12 flex items-center rounded-md font-sans text-body-lg text-ink-body font-medium hover:bg-surface-warm hover:text-primary transition-colors"
     >
       {label}
     </Link>
@@ -166,7 +166,7 @@ function DrawerGroup({
 }) {
   return (
     <div className="mt-2">
-      <p className="px-4 pt-3 pb-1 font-sans text-[10.5px] uppercase tracking-[0.16em] text-ink-soft font-semibold">
+      <p className="px-4 pt-3 pb-1 font-sans text-micro uppercase tracking-[0.16em] text-ink-soft font-semibold">
         {label}
       </p>
       {children}
@@ -178,7 +178,7 @@ function DrawerSubLink({ href, label }: { href: string; label: string }) {
   return (
     <Link
       href={href}
-      className="block px-4 min-h-11 flex items-center rounded-md font-sans text-[14px] text-ink-mute hover:bg-surface-warm hover:text-primary transition-colors"
+      className="block px-4 min-h-11 flex items-center rounded-md font-sans text-body text-ink-mute hover:bg-surface-warm hover:text-primary transition-colors"
     >
       {label}
     </Link>

@@ -240,7 +240,7 @@ export function HeroForm({ initial }: { initial?: Initial }) {
   return (
     <form onSubmit={onSubmit} className="space-y-8 max-w-[820px]">
       {error && (
-        <div className="bg-status-error/8 border border-status-error/30 rounded-xl px-5 py-4 font-sans text-[14.5px] text-status-error">
+        <div className="bg-status-error/8 border border-status-error/30 rounded-xl px-5 py-4 font-sans text-body text-status-error">
           {error}
         </div>
       )}
@@ -251,7 +251,7 @@ export function HeroForm({ initial }: { initial?: Initial }) {
           onChange={(e) => setName(e.target.value)}
           required
           maxLength={80}
-          className="h-12 w-full px-4 rounded-lg border border-border bg-surface font-sans text-[15.5px] text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+          className="h-12 w-full px-4 rounded-lg border border-border bg-surface font-sans text-body-lg text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
         />
       </Field>
 
@@ -264,7 +264,7 @@ export function HeroForm({ initial }: { initial?: Initial }) {
           onChange={(e) => setMotif(e.target.value)}
           required
           maxLength={60}
-          className="h-12 w-full px-4 rounded-lg border border-border bg-surface font-sans text-[15.5px] text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+          className="h-12 w-full px-4 rounded-lg border border-border bg-surface font-sans text-body-lg text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
         />
       </Field>
 
@@ -277,7 +277,7 @@ export function HeroForm({ initial }: { initial?: Initial }) {
           onChange={(e) => setCaption(e.target.value)}
           required
           maxLength={120}
-          className="h-12 w-full px-4 rounded-lg border border-border bg-surface font-sans text-[15.5px] text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+          className="h-12 w-full px-4 rounded-lg border border-border bg-surface font-sans text-body-lg text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
         />
       </Field>
 
@@ -320,7 +320,7 @@ export function HeroForm({ initial }: { initial?: Initial }) {
           onChange={(e) => setPhotoAlt(e.target.value)}
           required
           maxLength={200}
-          className="h-12 w-full px-4 rounded-lg border border-border bg-surface font-sans text-[15.5px] text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+          className="h-12 w-full px-4 rounded-lg border border-border bg-surface font-sans text-body-lg text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
         />
       </Field>
 
@@ -351,7 +351,7 @@ export function HeroForm({ initial }: { initial?: Initial }) {
                 }`}
                 style={{ backgroundColor: s.hex }}
               />
-              <span className="font-sans text-[11px] text-ink-mute">
+              <span className="font-sans text-micro text-ink-mute">
                 {s.label}
               </span>
             </button>
@@ -359,7 +359,7 @@ export function HeroForm({ initial }: { initial?: Initial }) {
           <button
             type="button"
             onClick={() => setShowHex(!showHex)}
-            className="font-sans text-[12.5px] text-primary-deep underline decoration-accent/40 underline-offset-[3px] self-center ml-2"
+            className="font-sans text-caption text-primary-deep underline decoration-accent/40 underline-offset-[3px] self-center ml-2"
           >
             {showHex ? "Dölj annan färg" : "Annan färg…"}
           </button>
@@ -370,7 +370,7 @@ export function HeroForm({ initial }: { initial?: Initial }) {
             onChange={(e) => setAccent(e.target.value)}
             placeholder="#7A8B6F"
             pattern="#[0-9a-fA-F]{6}"
-            className="h-11 w-[140px] px-3 rounded-lg border border-border bg-surface font-mono text-[14px] text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+            className="h-11 w-[140px] px-3 rounded-lg border border-border bg-surface font-mono text-body text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
           />
         )}
       </Field>
@@ -403,7 +403,7 @@ export function HeroForm({ initial }: { initial?: Initial }) {
                   type="button"
                   onClick={() => setSeason(s)}
                   aria-pressed={season === s}
-                  className={`h-11 px-5 rounded-lg border-2 font-sans text-[14px] font-semibold transition-colors ${
+                  className={`h-11 px-5 rounded-lg border-2 font-sans text-body font-semibold transition-colors ${
                     season === s
                       ? "border-primary-deep bg-primary-deep text-surface"
                       : "border-border bg-surface text-primary-deep hover:bg-surface-warm"
@@ -418,7 +418,7 @@ export function HeroForm({ initial }: { initial?: Initial }) {
           {timingKind === "dates" && (
             <div className="pt-2 space-y-4">
               <div>
-                <p className="font-sans text-[13px] text-ink-mute font-semibold mb-2">
+                <p className="font-sans text-small text-ink-mute font-semibold mb-2">
                   Snabbval för svenska högsäsonger
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -436,38 +436,38 @@ export function HeroForm({ initial }: { initial?: Initial }) {
                         // something specific (keep their override intact).
                         if (priority === 0) setPriority(10);
                       }}
-                      className="h-11 px-4 rounded-lg border-2 border-border bg-surface font-sans text-[14px] font-semibold text-primary-deep hover:border-primary-deep hover:bg-surface-warm transition-colors"
+                      className="h-11 px-4 rounded-lg border-2 border-border bg-surface font-sans text-body font-semibold text-primary-deep hover:border-primary-deep hover:bg-surface-warm transition-colors"
                     >
                       {p.label}
                     </button>
                   ))}
                 </div>
-                <p className="font-sans text-[12.5px] text-ink-mute mt-2 italic">
+                <p className="font-sans text-caption text-ink-mute mt-2 italic">
                   Klick fyller i nästa datum automatiskt och sätter prioritet 10 så att kampanjen vinner över årstiden.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <label className="block">
-                  <span className="font-sans text-[13px] text-ink-mute font-semibold mb-1.5 block">
+                  <span className="font-sans text-small text-ink-mute font-semibold mb-1.5 block">
                     Aktiv från
                   </span>
                   <input
                     type="date"
                     value={startsAt ? startsAt.slice(0, 10) : ""}
                     onChange={(e) => setStartsAt(e.target.value)}
-                    className="h-12 w-full px-3 rounded-lg border border-border bg-surface font-sans text-[15.5px] text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+                    className="h-12 w-full px-3 rounded-lg border border-border bg-surface font-sans text-body-lg text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
                   />
                 </label>
                 <label className="block">
-                  <span className="font-sans text-[13px] text-ink-mute font-semibold mb-1.5 block">
+                  <span className="font-sans text-small text-ink-mute font-semibold mb-1.5 block">
                     Aktiv till och med
                   </span>
                   <input
                     type="date"
                     value={endsAt ? endsAt.slice(0, 10) : ""}
                     onChange={(e) => setEndsAt(e.target.value)}
-                    className="h-12 w-full px-3 rounded-lg border border-border bg-surface font-sans text-[15.5px] text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+                    className="h-12 w-full px-3 rounded-lg border border-border bg-surface font-sans text-body-lg text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
                   />
                 </label>
               </div>
@@ -486,7 +486,7 @@ export function HeroForm({ initial }: { initial?: Initial }) {
           onChange={(e) => setPriority(Number(e.target.value))}
           min={0}
           max={100}
-          className="h-12 w-[120px] px-3 rounded-lg border border-border bg-surface font-sans text-[15.5px] text-ink tabular-nums outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+          className="h-12 w-[120px] px-3 rounded-lg border border-border bg-surface font-sans text-body-lg text-ink tabular-nums outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
         />
       </Field>
 
@@ -501,7 +501,7 @@ export function HeroForm({ initial }: { initial?: Initial }) {
               type="button"
               onClick={() => setStatus(s)}
               aria-pressed={status === s}
-              className={`h-11 px-5 rounded-lg border-2 font-sans text-[14px] font-semibold transition-colors ${
+              className={`h-11 px-5 rounded-lg border-2 font-sans text-body font-semibold transition-colors ${
                 status === s
                   ? "border-primary-deep bg-primary-deep text-surface"
                   : "border-border bg-surface text-primary-deep hover:bg-surface-warm"
@@ -521,7 +521,7 @@ export function HeroForm({ initial }: { initial?: Initial }) {
         <button
           type="submit"
           disabled={pending}
-          className="inline-flex items-center justify-center h-12 px-6 rounded-lg bg-primary-deep text-surface font-sans text-[15px] font-semibold hover:bg-primary disabled:opacity-60 transition-colors"
+          className="inline-flex items-center justify-center h-12 px-6 rounded-lg bg-primary-deep text-surface font-sans text-body-lg font-semibold hover:bg-primary disabled:opacity-60 transition-colors"
         >
           {pending ? "Sparar…" : "Spara ändringar"}
         </button>
@@ -530,14 +530,14 @@ export function HeroForm({ initial }: { initial?: Initial }) {
             <button
               type="button"
               onClick={onArchive}
-              className="inline-flex items-center justify-center h-12 px-5 rounded-lg border border-border bg-surface font-sans text-[14px] font-semibold text-primary-deep hover:bg-surface-warm transition-colors"
+              className="inline-flex items-center justify-center h-12 px-5 rounded-lg border border-border bg-surface font-sans text-body font-semibold text-primary-deep hover:bg-surface-warm transition-colors"
             >
               Arkivera
             </button>
             <button
               type="button"
               onClick={onDelete}
-              className="inline-flex items-center justify-center h-12 px-5 rounded-lg font-sans text-[14px] font-semibold text-status-error hover:bg-status-error/8 transition-colors"
+              className="inline-flex items-center justify-center h-12 px-5 rounded-lg font-sans text-body font-semibold text-status-error hover:bg-status-error/8 transition-colors"
             >
               Ta bort permanent
             </button>
@@ -562,7 +562,7 @@ function Field({
       <label className="block font-display text-[18px] font-medium tracking-tight text-primary-deep mb-1">
         {label}
       </label>
-      <p className="font-sans text-[13.5px] text-ink-mute leading-relaxed mb-3 max-w-[640px]">
+      <p className="font-sans text-small text-ink-mute leading-relaxed mb-3 max-w-[640px]">
         {hint}
       </p>
       {children}
@@ -592,11 +592,11 @@ function RadioCard({
           : "border-border bg-surface hover:bg-surface-warm"
       }`}
     >
-      <p className="font-display text-[15px] font-semibold text-primary-deep">
+      <p className="font-display text-body-lg font-semibold text-primary-deep">
         {checked && <span className="text-accent-deep mr-1">●</span>}
         {label}
       </p>
-      <p className="font-sans text-[12.5px] text-ink-mute mt-0.5">{sub}</p>
+      <p className="font-sans text-caption text-ink-mute mt-0.5">{sub}</p>
     </button>
   );
 }
@@ -635,7 +635,7 @@ function HeroPreview({
             unoptimized
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-surface/50 font-sans text-[13px]">
+          <div className="absolute inset-0 flex items-center justify-center text-surface/50 font-sans text-small">
             (Lägg till en bild så visas förhandsvisningen)
           </div>
         )}
@@ -676,13 +676,13 @@ function HeroPreview({
         </div>
 
         {/* Motif bottom-left — matches hero.tsx */}
-        <div className="absolute bottom-4 left-5 md:left-6 font-display italic text-[12px] text-surface/70 pointer-events-none max-w-[60%]">
+        <div className="absolute bottom-4 left-5 md:left-6 font-display italic text-caption text-surface/70 pointer-events-none max-w-[60%]">
           {motif || <span className="text-surface/40">(skriv en rubrik)</span>}
         </div>
       </div>
 
       {caption && (
-        <p className="font-sans text-[12.5px] text-ink-mute italic">
+        <p className="font-sans text-caption text-ink-mute italic">
           Underrubrik (visas inte i bilden — för sökmotorer + andra
           kanaler): {caption}
         </p>

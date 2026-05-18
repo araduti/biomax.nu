@@ -89,7 +89,7 @@ export default function ButikPage() {
           <p className="mt-3 font-display text-lg font-medium text-primary-deep">
             Eken Hälsobutik
           </p>
-          <address className="mt-1 not-italic font-sans text-[15.5px] text-ink-body leading-relaxed">
+          <address className="mt-1 not-italic font-sans text-body-lg text-ink-body leading-relaxed">
             Ekenleden 15A
             <br />
             428 36 Kållered
@@ -100,14 +100,14 @@ export default function ButikPage() {
             href="https://maps.google.com/?q=Ekenleden%2015A,%20428%2036%20K%C3%A5llered"
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-4 inline-flex items-center gap-1.5 font-sans text-[13px] font-semibold text-accent-deep hover:text-primary-deep transition-colors"
+            className="mt-4 inline-flex items-center gap-1.5 font-sans text-small font-semibold text-accent-deep hover:text-primary-deep transition-colors"
           >
             Visa på karta <span aria-hidden>↗</span>
           </a>
         </div>
         <div className="bg-surface-alt border border-border rounded-2xl p-6">
           <Eyebrow>Öppettider</Eyebrow>
-          <dl className="mt-3 font-sans text-[15px] text-ink-body leading-relaxed grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5">
+          <dl className="mt-3 font-sans text-body-lg text-ink-body leading-relaxed grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5">
             <dt className="font-semibold">Tis–Fre</dt>
             <dd>10:00–18:00</dd>
             <dt className="font-semibold">Lör</dt>
@@ -122,7 +122,7 @@ export default function ButikPage() {
 
       <div className="bg-surface-alt border border-border rounded-2xl p-6 mb-12">
         <Eyebrow>Hitta hit</Eyebrow>
-        <ul className="mt-3 space-y-2 font-sans text-[14.5px] text-ink-body leading-relaxed">
+        <ul className="mt-3 space-y-2 font-sans text-body text-ink-body leading-relaxed">
           <li>
             <strong className="font-semibold">Bil:</strong> Cirka 15 min söder
             om Göteborg via E6/E20, avfart Kållered.
@@ -138,7 +138,7 @@ export default function ButikPage() {
         </ul>
       </div>
 
-      <article className="prose-biomax font-sans text-[16.5px] md:text-[17px] leading-[1.75] text-ink-body space-y-5">
+      <article className="prose-biomax font-sans text-lead md:text-lead leading-[1.75] text-ink-body space-y-5">
         <p>
           I butiken hittar du hela det sortiment vi säljer på biomax.nu, plus
           möjligheten att ställa frågor till någon som faktiskt vet svaret.
@@ -163,7 +163,7 @@ export default function ButikPage() {
       </article>
 
       <aside className="mt-12 pt-10 border-t border-border-soft">
-        <p className="font-sans text-[14px] text-ink-mute italic">
+        <p className="font-sans text-body text-ink-mute italic">
           Helgdagar och eventuella kortare stängningar kan påverka öppettiderna
           — mejla{" "}
           <a

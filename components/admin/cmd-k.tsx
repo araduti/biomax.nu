@@ -222,14 +222,14 @@ export function CmdK({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Sök produkter, ordrar, kunder…"
-            className="flex-1 h-10 bg-transparent font-sans text-[16px] text-ink outline-none placeholder:text-ink-soft"
+            className="flex-1 h-10 bg-transparent font-sans text-lead text-ink outline-none placeholder:text-ink-soft"
             type="text"
             spellCheck={false}
             autoComplete="off"
             aria-autocomplete="list"
             aria-controls="cmdk-list"
           />
-          <kbd className="hidden sm:inline-flex items-center px-2 h-6 rounded bg-surface-warm border border-border-soft font-sans text-[11px] text-ink-mute">
+          <kbd className="hidden sm:inline-flex items-center px-2 h-6 rounded bg-surface-warm border border-border-soft font-sans text-micro text-ink-mute">
             Esc
           </kbd>
         </div>
@@ -240,7 +240,7 @@ export function CmdK({
           className="max-h-[60vh] overflow-y-auto py-1"
         >
           {rows.length === 0 ? (
-            <p className="px-5 py-10 text-center font-sans text-[14px] text-ink-mute italic">
+            <p className="px-5 py-10 text-center font-sans text-body text-ink-mute italic">
               {query.trim().length < 2
                 ? "Skriv minst två tecken för att söka."
                 : "Inga träffar för ”" + query.trim() + "”."}
@@ -255,21 +255,21 @@ export function CmdK({
           )}
         </div>
 
-        <div className="px-5 py-2.5 border-t border-border-soft bg-surface-warm flex items-center gap-4 font-sans text-[11.5px] text-ink-mute">
+        <div className="px-5 py-2.5 border-t border-border-soft bg-surface-warm flex items-center gap-4 font-sans text-micro text-ink-mute">
           <span>
-            <kbd className="inline-flex items-center px-1.5 h-5 rounded bg-surface border border-border-soft text-[10.5px] mr-1">
+            <kbd className="inline-flex items-center px-1.5 h-5 rounded bg-surface border border-border-soft text-micro mr-1">
               ↑↓
             </kbd>
             navigera
           </span>
           <span>
-            <kbd className="inline-flex items-center px-1.5 h-5 rounded bg-surface border border-border-soft text-[10.5px] mr-1">
+            <kbd className="inline-flex items-center px-1.5 h-5 rounded bg-surface border border-border-soft text-micro mr-1">
               ↵
             </kbd>
             välj
           </span>
           <span>
-            <kbd className="inline-flex items-center px-1.5 h-5 rounded bg-surface border border-border-soft text-[10.5px] mr-1">
+            <kbd className="inline-flex items-center px-1.5 h-5 rounded bg-surface border border-border-soft text-micro mr-1">
               Esc
             </kbd>
             stäng
@@ -307,7 +307,7 @@ function RowList({
     <>
       {buckets.map((b) => (
         <div key={b.label} className="mb-1.5 last:mb-0">
-          <p className="px-5 pt-2 pb-1 font-sans text-[10.5px] uppercase tracking-[0.16em] text-ink-soft font-semibold">
+          <p className="px-5 pt-2 pb-1 font-sans text-micro uppercase tracking-[0.16em] text-ink-soft font-semibold">
             {b.label}
           </p>
           {b.items.map(({ row, index }) => {
@@ -344,7 +344,7 @@ function RowList({
                   // Customer avatar — generated initial circle.
                   <span
                     aria-hidden
-                    className="w-9 h-9 rounded-full bg-accent-deep/15 text-accent-deep flex items-center justify-center font-sans text-[13px] font-semibold flex-shrink-0"
+                    className="w-9 h-9 rounded-full bg-accent-deep/15 text-accent-deep flex items-center justify-center font-sans text-small font-semibold flex-shrink-0"
                   >
                     {row.initial}
                   </span>
@@ -357,11 +357,11 @@ function RowList({
                   </span>
                 ) : null}
                 <div className="flex-1 min-w-0">
-                  <p className="font-sans text-[14px] font-semibold text-primary-deep truncate">
+                  <p className="font-sans text-body font-semibold text-primary-deep truncate">
                     {row.title}
                   </p>
                   {row.sublabel && (
-                    <p className="font-sans text-[12px] text-ink-mute truncate mt-0.5">
+                    <p className="font-sans text-caption text-ink-mute truncate mt-0.5">
                       {row.sublabel}
                     </p>
                   )}
@@ -369,7 +369,7 @@ function RowList({
                 {active && (
                   <span
                     aria-hidden
-                    className="font-sans text-[11px] text-ink-mute"
+                    className="font-sans text-micro text-ink-mute"
                   >
                     ↵
                   </span>

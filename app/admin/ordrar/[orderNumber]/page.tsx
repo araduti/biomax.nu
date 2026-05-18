@@ -82,7 +82,7 @@ export default async function AdminOrderDetail({
       <div className="mb-6 flex flex-wrap gap-3">
         <Link
           href={`/admin/ordrar/${order.orderNumber}/faktura`}
-          className="inline-flex items-center gap-2 h-11 px-4 rounded-lg border border-border bg-surface-alt font-sans text-[14px] font-semibold text-primary-deep hover:bg-surface-warm transition-colors"
+          className="inline-flex items-center gap-2 h-11 px-4 rounded-lg border border-border bg-surface-alt font-sans text-body font-semibold text-primary-deep hover:bg-surface-warm transition-colors"
         >
           <span aria-hidden>📄</span>
           Skriv ut faktura
@@ -91,7 +91,7 @@ export default async function AdminOrderDetail({
 
       {/* Status actions */}
       <section className="mb-8 pb-6 border-b border-border-soft">
-        <h2 className="font-sans text-[15px] md:text-[16px] font-semibold tracking-tight text-primary-deep mb-3">
+        <h2 className="font-sans text-body-lg md:text-lead font-semibold tracking-tight text-primary-deep mb-3">
           Hantera order
         </h2>
         <OrderStatusUpdate
@@ -103,7 +103,7 @@ export default async function AdminOrderDetail({
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6">
         {/* Items + totals */}
         <section className="border-y border-border-soft">
-          <h2 className="px-6 py-4 border-b border-border-soft font-sans text-[12px] uppercase tracking-[0.16em] text-ink-mute font-semibold">
+          <h2 className="px-6 py-4 border-b border-border-soft font-sans text-caption uppercase tracking-[0.16em] text-ink-mute font-semibold">
             Innehåll · {order.items.length} produkter
           </h2>
           {order.items.length > 0 ? (
@@ -130,28 +130,28 @@ export default async function AdminOrderDetail({
                     <div className="w-20 h-20 rounded-lg bg-surface-warm flex-shrink-0" />
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="font-sans text-[14px] font-semibold tracking-tight text-primary-deep line-clamp-2">
+                    <p className="font-sans text-body font-semibold tracking-tight text-primary-deep line-clamp-2">
                       {item.productName}
                     </p>
-                    <p className="font-sans text-[13px] text-ink-mute mt-1">
+                    <p className="font-sans text-small text-ink-mute mt-1">
                       {item.productSku && <>SKU: {item.productSku} · </>}
                       {item.quantity} ×{" "}
                       {formatPriceSEK(item.unitPrice.toString())}
                     </p>
                   </div>
-                  <span className="font-sans text-[14px] font-semibold text-primary-deep tabular-nums whitespace-nowrap">
+                  <span className="font-sans text-body font-semibold text-primary-deep tabular-nums whitespace-nowrap">
                     {formatPriceSEK(item.totalPrice.toString())}
                   </span>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="px-6 py-8 text-center font-sans text-[14.5px] text-ink-mute italic max-w-[480px] mx-auto">
+            <p className="px-6 py-8 text-center font-sans text-body text-ink-mute italic max-w-[480px] mx-auto">
               Inga raditems sparade (importerad order — bara totalbelopp).
             </p>
           )}
 
-          <dl className="px-6 py-5 border-t border-border space-y-2.5 font-sans text-[15px]">
+          <dl className="px-6 py-5 border-t border-border space-y-2.5 font-sans text-body-lg">
             <div className="flex justify-between text-ink-body">
               <dt>Delsumma</dt>
               <dd className="font-semibold tabular-nums">
@@ -183,7 +183,7 @@ export default async function AdminOrderDetail({
                 {formatPriceSEK(order.taxAmount.toString())}
               </dd>
             </div>
-            <div className="flex justify-between text-primary-deep font-sans text-[17px] font-semibold pt-3 border-t border-border-soft mt-3">
+            <div className="flex justify-between text-primary-deep font-sans text-lead font-semibold pt-3 border-t border-border-soft mt-3">
               <dt>Totalt</dt>
               <dd className="font-medium tabular-nums">
                 {formatPriceSEK(order.totalAmount.toString())}
@@ -199,7 +199,7 @@ export default async function AdminOrderDetail({
         <aside className="border border-border-soft rounded-xl divide-y divide-border-soft self-start">
           <div className="p-5">
             <div className="flex items-baseline justify-between gap-2 mb-2">
-              <h3 className="font-sans text-[11px] uppercase tracking-[0.16em] text-ink-mute font-semibold">
+              <h3 className="font-sans text-micro uppercase tracking-[0.16em] text-ink-mute font-semibold">
                 Kund
               </h3>
               <CopyButton value={order.email} label="Kopiera e-post" />
@@ -207,20 +207,20 @@ export default async function AdminOrderDetail({
             {order.user ? (
               <Link
                 href={`/admin/kunder/${order.user.id}`}
-                className="font-sans text-[14px] font-semibold tracking-tight text-primary-deep hover:text-primary transition-colors"
+                className="font-sans text-body font-semibold tracking-tight text-primary-deep hover:text-primary transition-colors"
               >
                 {order.user.name ?? order.user.email}
               </Link>
             ) : (
-              <p className="font-sans text-[14px] font-semibold text-primary-deep">
+              <p className="font-sans text-body font-semibold text-primary-deep">
                 Gästbeställning
               </p>
             )}
-            <p className="font-sans text-[14px] text-ink-mute mt-1 break-all">
+            <p className="font-sans text-body text-ink-mute mt-1 break-all">
               {order.email}
             </p>
             {order.marketingConsent && (
-              <p className="font-sans text-[12.5px] text-accent-deep font-semibold mt-2">
+              <p className="font-sans text-caption text-accent-deep font-semibold mt-2">
                 ✓ Nyhetsbrev
               </p>
             )}
@@ -229,12 +229,12 @@ export default async function AdminOrderDetail({
           {order.shippingAddress && (
             <div className="p-5">
               <div className="flex items-baseline justify-between gap-2 mb-2">
-                <h3 className="font-sans text-[11px] uppercase tracking-[0.16em] text-ink-mute font-semibold">
+                <h3 className="font-sans text-micro uppercase tracking-[0.16em] text-ink-mute font-semibold">
                   Levereras till
                 </h3>
                 <CopyButton value={addressLines} label="Kopiera adress" />
               </div>
-              <p className="font-sans text-[15px] text-ink-body leading-relaxed">
+              <p className="font-sans text-body-lg text-ink-body leading-relaxed">
                 <strong className="font-semibold text-primary-deep">
                   {order.shippingAddress.fullName}
                 </strong>
@@ -256,15 +256,15 @@ export default async function AdminOrderDetail({
           )}
 
           <div className="p-5">
-            <h3 className="font-sans text-[11px] uppercase tracking-[0.16em] text-ink-mute font-semibold mb-2">
+            <h3 className="font-sans text-micro uppercase tracking-[0.16em] text-ink-mute font-semibold mb-2">
               Betalning
             </h3>
-            <p className="font-sans text-[15px] text-ink-body">
+            <p className="font-sans text-body-lg text-ink-body">
               {order.paymentProvider}
             </p>
             {order.paymentReference ? (
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                <code className="font-mono text-[12.5px] text-ink-mute break-all">
+                <code className="font-mono text-caption text-ink-mute break-all">
                   {order.paymentReference}
                 </code>
                 <CopyButton
@@ -273,7 +273,7 @@ export default async function AdminOrderDetail({
                 />
               </div>
             ) : (
-              <p className="mt-2 font-sans text-[13px] text-ink-soft">—</p>
+              <p className="mt-2 font-sans text-small text-ink-soft">—</p>
             )}
           </div>
         </aside>

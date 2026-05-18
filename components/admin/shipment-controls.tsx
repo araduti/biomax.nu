@@ -65,7 +65,7 @@ export function ShipmentControls({
 
   return (
     <section className="mt-12 pt-8 border-t border-border">
-      <p className="font-sans text-[11px] uppercase tracking-[0.16em] text-ink-soft font-semibold mb-4">
+      <p className="font-sans text-micro uppercase tracking-[0.16em] text-ink-soft font-semibold mb-4">
         Frakt
       </p>
 
@@ -73,12 +73,12 @@ export function ShipmentControls({
         <p className="font-display text-base font-medium text-primary-deep">
           {deliveryLabel}
         </p>
-        <p className="font-sans text-[13px] text-ink-mute">
+        <p className="font-sans text-small text-ink-mute">
           {carrier ?? "PostNord"}
           {trackingNumber ? (
             <>
               {" · "}
-              <code className="font-mono text-[12.5px]">
+              <code className="font-mono text-caption">
                 {trackingNumber}
               </code>
             </>
@@ -91,12 +91,12 @@ export function ShipmentControls({
             href={labelPdfUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block font-sans text-[13px] font-semibold text-primary-deep underline decoration-accent/40 underline-offset-[3px] hover:decoration-accent"
+            className="inline-block font-sans text-small font-semibold text-primary-deep underline decoration-accent/40 underline-offset-[3px] hover:decoration-accent"
           >
             Öppna fraktsedel (PDF) ↗
           </a>
         ) : stubTracking ? (
-          <p className="font-sans text-[12.5px] text-ink-mute">
+          <p className="font-sans text-caption text-ink-mute">
             Testförsändelse — ingen fraktsedel (PostNord-nyckel saknas).
           </p>
         ) : null}
@@ -128,7 +128,7 @@ export function ShipmentControls({
       {error && (
         <p
           role="alert"
-          className="mt-3 font-sans text-[12.5px] text-status-error"
+          className="mt-3 font-sans text-caption text-status-error"
         >
           {error}
         </p>

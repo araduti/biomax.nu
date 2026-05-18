@@ -71,7 +71,7 @@ export function ReturnRequestForm({
         <p className="font-display text-base font-medium text-primary-deep">
           Retur registrerad — {success}
         </p>
-        <p className="mt-1 font-sans text-[13px] text-ink-body">
+        <p className="mt-1 font-sans text-small text-ink-body">
           Vi mejlar instruktioner för returfrakten inom någon dag.
         </p>
       </div>
@@ -83,7 +83,7 @@ export function ReturnRequestForm({
       <p className="font-display text-base font-medium text-primary-deep mb-1">
         Returnera produkter
       </p>
-      <p className="font-sans text-[12.5px] text-ink-mute mb-4 leading-relaxed">
+      <p className="font-sans text-caption text-ink-mute mb-4 leading-relaxed">
         14 dagars öppet köp. Vi skickar instruktioner för retur efter att
         du registrerat ärendet.
       </p>
@@ -104,7 +104,7 @@ export function ReturnRequestForm({
                 key={line.id}
                 className="flex items-center justify-between gap-3"
               >
-                <span className="font-sans text-[13.5px] text-ink-body">
+                <span className="font-sans text-small text-ink-body">
                   {line.productName}{" "}
                   <span className="text-ink-soft">(max {line.quantity})</span>
                 </span>
@@ -123,7 +123,7 @@ export function ReturnRequestForm({
                   >
                     −
                   </button>
-                  <span className="min-w-[24px] text-center font-sans text-[13px] font-semibold">
+                  <span className="min-w-[24px] text-center font-sans text-small font-semibold">
                     {qty[line.id] ?? 0}
                   </span>
                   <button
@@ -145,7 +145,7 @@ export function ReturnRequestForm({
             ))}
           </ul>
           <label className="block mb-4">
-            <span className="block font-sans text-[12px] font-semibold text-ink-soft mb-1.5">
+            <span className="block font-sans text-caption font-semibold text-ink-soft mb-1.5">
               Anledning (valfritt)
             </span>
             <textarea
@@ -154,13 +154,13 @@ export function ReturnRequestForm({
               rows={2}
               maxLength={500}
               placeholder="Hjälper oss förstå om något var fel — eller bara att produkten inte passade."
-              className="w-full px-3 py-2 bg-surface border border-border rounded-md font-sans text-[13.5px]"
+              className="w-full px-3 py-2 bg-surface border border-border rounded-md font-sans text-small"
             />
           </label>
           {error && (
             <p
               role="alert"
-              className="mb-3 font-sans text-[12.5px] text-status-error"
+              className="mb-3 font-sans text-caption text-status-error"
             >
               {error}
             </p>
@@ -176,7 +176,7 @@ export function ReturnRequestForm({
                 setError(null);
               }}
               disabled={pending}
-              className="font-sans text-[13px] text-ink-soft hover:text-ink-body"
+              className="font-sans text-small text-ink-soft hover:text-ink-body"
             >
               Avbryt
             </button>

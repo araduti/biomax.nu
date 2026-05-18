@@ -14,7 +14,10 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Standalone design prototypes / reference mockups — not part of
     // the app build (loose .jsx with undefined demo components).
-    "Design/**",
+    "**/Design/**",
+    // Tooling state: spawned-task git worktrees are full repo copies;
+    // never lint them as part of the main tree.
+    ".claude/**",
   ]),
   {
     // The React-Compiler advisory rules (eslint-plugin-react-hooks

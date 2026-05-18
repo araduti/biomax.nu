@@ -34,12 +34,12 @@ export default async function UnsubscribePage({
             <>
               <p className="mt-6 font-sans text-base md:text-lg leading-relaxed text-ink-mute">
                 Vi har tagit bort{" "}
-                <code className="font-mono text-[14px] bg-surface-warm px-1.5 py-0.5 rounded">
+                <code className="font-mono text-body bg-surface-warm px-1.5 py-0.5 rounded">
                   {result.emailMasked}
                 </code>{" "}
                 från vår prenumerantlista. Du kommer inte att få fler brev från oss.
               </p>
-              <p className="mt-4 font-sans text-[14px] text-ink-soft">
+              <p className="mt-4 font-sans text-body text-ink-soft">
                 Det här gäller alla våra marknadsutskick. Du fortsätter förstås
                 att få orderbekräftelser och liknande mejl som hör till
                 pågående beställningar.
@@ -59,7 +59,7 @@ export default async function UnsubscribePage({
             </p>
           )}
 
-          <p className="mt-10 font-sans text-[13px] text-ink-soft">
+          <p className="mt-10 font-sans text-small text-ink-soft">
             <Link
               href="/"
               className="text-primary-deep underline decoration-accent/40 underline-offset-[3px] hover:decoration-accent"

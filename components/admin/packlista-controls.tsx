@@ -21,25 +21,25 @@ export function PacklistaControls({
   return (
     <div className="mb-6 flex flex-wrap gap-3 items-end print:hidden">
       <form className="flex flex-wrap gap-3 items-end" method="get">
-        <label className="font-sans text-[13px] text-ink-mute flex flex-col gap-1.5">
+        <label className="font-sans text-small text-ink-mute flex flex-col gap-1.5">
           Filtrera per datum (valfritt)
           <input
             type="date"
             name="date"
             defaultValue={defaultDate}
-            className="h-12 px-3 rounded-md border-2 border-border bg-surface font-sans text-[15px]"
+            className="h-12 px-3 rounded-md border-2 border-border bg-surface font-sans text-body-lg"
           />
         </label>
         <button
           type="submit"
-          className="h-12 px-5 rounded-md bg-primary-deep text-surface font-sans text-[14px] font-semibold hover:bg-primary-deep/90"
+          className="h-12 px-5 rounded-md bg-primary-deep text-surface font-sans text-body font-semibold hover:bg-primary-deep/90"
         >
           Visa
         </button>
         {dateActive && (
           <Link
             href={showAllHref}
-            className="h-12 px-5 inline-flex items-center rounded-md border-2 border-border bg-surface font-sans text-[14px] font-semibold text-ink-body hover:bg-surface-warm"
+            className="h-12 px-5 inline-flex items-center rounded-md border-2 border-border bg-surface font-sans text-body font-semibold text-ink-body hover:bg-surface-warm"
           >
             Visa alla att packa
           </Link>
@@ -48,7 +48,7 @@ export function PacklistaControls({
       <button
         type="button"
         onClick={() => window.print()}
-        className="ml-auto h-12 px-5 rounded-md border-2 border-border bg-surface font-sans text-[14px] font-semibold hover:bg-surface-warm"
+        className="ml-auto h-12 px-5 rounded-md border-2 border-border bg-surface font-sans text-body font-semibold hover:bg-surface-warm"
       >
         Skriv ut
       </button>

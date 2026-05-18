@@ -48,10 +48,10 @@ export function SeoSnippetPreview({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <p className="font-sans text-[10px] uppercase tracking-[0.16em] font-semibold text-ink-mute">
+        <p className="font-sans text-micro uppercase tracking-[0.16em] font-semibold text-ink-mute">
           Google-förhandsvisning
         </p>
-        <div className="flex rounded-md border border-border overflow-hidden text-[11px] font-sans font-semibold">
+        <div className="flex rounded-md border border-border overflow-hidden text-micro font-sans font-semibold">
           <button
             type="button"
             onClick={() => setDevice("desktop")}
@@ -80,7 +80,7 @@ export function SeoSnippetPreview({
       <div
         className={`${widthClass} rounded-xl bg-white border border-border-soft px-5 py-4 shadow-[0_1px_0_rgba(15,32,44,0.04)] transition-[max-width] duration-200`}
       >
-        <p className="font-sans text-[12px] text-[#5f6368] leading-snug truncate">
+        <p className="font-sans text-caption text-[#5f6368] leading-snug truncate">
           {breadcrumb}
         </p>
         <p className="mt-1 font-sans text-[18px] md:text-[20px] leading-snug text-[#1a0dab] hover:underline cursor-pointer">
@@ -88,7 +88,7 @@ export function SeoSnippetPreview({
             <span className="italic text-[#5f6368]">(Ingen titel)</span>
           )}
         </p>
-        <p className="mt-1 font-sans text-[13px] leading-snug text-[#4d5156]">
+        <p className="mt-1 font-sans text-small leading-snug text-[#4d5156]">
           {displayDesc || (
             <span className="italic text-[#5f6368]">(Ingen beskrivning)</span>
           )}
@@ -170,10 +170,10 @@ function CounterRow({
   return (
     <div className="bg-surface-alt border border-border rounded-xl p-3">
       <div className="flex items-baseline justify-between gap-2 mb-1.5">
-        <span className="font-sans text-[11px] uppercase tracking-[0.16em] font-semibold text-ink-mute">
+        <span className="font-sans text-micro uppercase tracking-[0.16em] font-semibold text-ink-mute">
           {label}
         </span>
-        <span className="font-sans text-[12px] tabular-nums">
+        <span className="font-sans text-caption tabular-nums">
           <span className="font-semibold text-ink-body">{length}</span>
           <span className="text-ink-mute">
             {" "}
@@ -187,7 +187,7 @@ function CounterRow({
           style={{ width: sweetWidth }}
         />
       </div>
-      <p className="mt-1.5 font-sans text-[11.5px] text-ink-mute">
+      <p className="mt-1.5 font-sans text-micro text-ink-mute">
         {STATUS_LABEL[status]}
         {fallbackNote && (
           <>

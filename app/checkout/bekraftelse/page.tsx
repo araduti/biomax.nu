@@ -93,7 +93,7 @@ function PaymentReceivedFallback() {
             </ButtonLink>
           </div>
           <div className="mt-14 pt-8 border-t border-border-soft">
-            <p className="font-sans text-[13px] text-ink-mute leading-relaxed">
+            <p className="font-sans text-small text-ink-mute leading-relaxed">
               Frågor om din beställning? Mejla{" "}
               <Link
                 href="mailto:kontakt@biomax.nu"
@@ -164,7 +164,7 @@ export default async function ConfirmationPage({
             Vi har skickat en bekräftelse till{" "}
             <strong className="font-semibold">{order.email}</strong>.
             Ordernummer{" "}
-            <code className="font-mono text-[15px] bg-surface-warm px-1.5 py-0.5 rounded">
+            <code className="font-mono text-body-lg bg-surface-warm px-1.5 py-0.5 rounded">
               {order.orderNumber}
             </code>
             .
@@ -181,15 +181,15 @@ export default async function ConfirmationPage({
                   <li key={i} className="flex gap-4">
                     <span
                       aria-hidden
-                      className="flex-shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary-deep text-surface font-display text-[15px] font-medium tabular-nums"
+                      className="flex-shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary-deep text-surface font-display text-body-lg font-medium tabular-nums"
                     >
                       {i + 1}
                     </span>
                     <div className="flex-1 pt-0.5">
-                      <p className="font-display text-[16px] font-medium text-primary-deep tracking-tight">
+                      <p className="font-display text-lead font-medium text-primary-deep tracking-tight">
                         {step.title}
                       </p>
-                      <p className="mt-1 font-sans text-[14px] text-ink-mute leading-relaxed">
+                      <p className="mt-1 font-sans text-body text-ink-mute leading-relaxed">
                         {step.body}
                       </p>
                     </div>
@@ -216,22 +216,22 @@ export default async function ConfirmationPage({
                     className="py-4 flex items-baseline justify-between gap-3 font-sans"
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="font-display text-[15px] font-medium text-primary-deep tracking-tight truncate">
+                      <p className="font-display text-body-lg font-medium text-primary-deep tracking-tight truncate">
                         {item.productName}
                       </p>
-                      <p className="text-[13px] text-ink-mute mt-0.5">
+                      <p className="text-small text-ink-mute mt-0.5">
                         {item.quantity} ×{" "}
                         {formatPriceSEK(item.unitPrice.toString())}
                       </p>
                     </div>
-                    <span className="text-[14px] font-semibold text-ink-body whitespace-nowrap">
+                    <span className="text-body font-semibold text-ink-body whitespace-nowrap">
                       {formatPriceSEK(item.totalPrice.toString())}
                     </span>
                   </li>
                 ))}
               </ul>
 
-              <dl className="px-6 md:px-8 py-5 border-t border-border space-y-2 font-sans text-[14px]">
+              <dl className="px-6 md:px-8 py-5 border-t border-border space-y-2 font-sans text-body">
                 <div className="flex justify-between text-ink-body">
                   <dt>Delsumma</dt>
                   <dd className="font-semibold">
@@ -273,7 +273,7 @@ export default async function ConfirmationPage({
 
           {/* Support footer */}
           <div className="mt-14 pt-8 border-t border-border-soft">
-            <p className="font-sans text-[13px] text-ink-mute leading-relaxed">
+            <p className="font-sans text-small text-ink-mute leading-relaxed">
               Något som inte stämmer i beställningen? Mejla{" "}
               <Link
                 href="mailto:kontakt@biomax.nu"

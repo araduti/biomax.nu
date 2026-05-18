@@ -24,13 +24,13 @@ export async function Header() {
       <div className="max-w-[1240px] mx-auto px-6 md:px-8 py-5 flex items-center justify-between gap-8">
         <Link href="/" aria-label="Biomax — startsidan" className="flex flex-col gap-1">
           <BiomaxLogo height={32} className="text-primary" />
-          <span className="font-sans text-[9px] uppercase tracking-[0.24em] text-ink-mute font-medium pl-0.5">
+          <span className="font-sans text-micro uppercase tracking-[0.24em] text-ink-mute font-medium pl-0.5">
             Sedan 2001 · Kållered
           </span>
         </Link>
         <nav
           aria-label="Huvudnavigation"
-          className="hidden lg:flex items-center gap-8 font-sans text-[15px] text-ink-body font-medium"
+          className="hidden lg:flex items-center gap-8 font-sans text-body-lg text-ink-body font-medium"
         >
           <Link href="/produkter" className="hover:text-primary transition-colors">
             Produkter

@@ -84,7 +84,7 @@ export function ProductImageUpload({
 
   return (
     <div className="bg-surface-alt border border-border rounded-xl p-6 md:p-8">
-      <p className="font-sans text-[11px] uppercase tracking-[0.16em] font-semibold text-ink-mute mb-4">
+      <p className="font-sans text-micro uppercase tracking-[0.16em] font-semibold text-ink-mute mb-4">
         Produktbild
       </p>
 
@@ -122,7 +122,7 @@ export function ProductImageUpload({
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
-            <p className="font-sans text-[13px] text-ink-mute">
+            <p className="font-sans text-small text-ink-mute">
               Ingen bild ännu
             </p>
           </div>
@@ -157,7 +157,7 @@ export function ProductImageUpload({
                 : "Byt bild"}
           </p>
           <p
-            className="font-sans text-[12px] uppercase tracking-[0.16em] font-semibold"
+            className="font-sans text-caption uppercase tracking-[0.16em] font-semibold"
             style={
               isDragging || pending
                 ? { opacity: 0.9 }
@@ -186,12 +186,12 @@ export function ProductImageUpload({
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={pending}
-          className="inline-flex items-center justify-center gap-2 rounded-full font-sans font-semibold text-[13px] tracking-tight bg-primary text-surface hover:bg-primary-deep border border-transparent transition-colors disabled:opacity-50 px-5 h-10"
+          className="inline-flex items-center justify-center gap-2 rounded-full font-sans font-semibold text-small tracking-tight bg-primary text-surface hover:bg-primary-deep border border-transparent transition-colors disabled:opacity-50 px-5 h-10"
         >
           {pending ? "Bearbetar…" : "Välj bild"}
         </button>
         {success && (
-          <span className="font-sans text-[13px] text-accent-deep font-semibold">
+          <span className="font-sans text-small text-accent-deep font-semibold">
             Sparat ✓
           </span>
         )}
@@ -200,13 +200,13 @@ export function ProductImageUpload({
       {error && (
         <p
           role="alert"
-          className="mt-4 font-sans text-[13px] text-status-error bg-status-error/10 px-3 py-2 rounded-md"
+          className="mt-4 font-sans text-small text-status-error bg-status-error/10 px-3 py-2 rounded-md"
         >
           {error}
         </p>
       )}
 
-      <p className="mt-4 font-sans text-[12px] text-ink-soft leading-relaxed max-w-[420px]">
+      <p className="mt-4 font-sans text-caption text-ink-soft leading-relaxed max-w-[420px]">
         Bilden trimmas och centreras automatiskt mot vit bakgrund i 1000×1000 px.
         Helst en bild av flaskan/burken på vit eller nära-vit bakgrund —
         resten sköter vi.

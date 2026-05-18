@@ -31,7 +31,7 @@ export function Bestsellers({ products }: { products: ProductWithCategories[] })
           </div>
           <Link
             href="/produkter"
-            className="font-sans text-[13px] font-semibold text-primary border-b border-primary/40 pb-0.5 hover:border-primary transition-colors"
+            className="font-sans text-small font-semibold text-primary border-b border-primary/40 pb-0.5 hover:border-primary transition-colors"
           >
             Se alla produkter →
           </Link>

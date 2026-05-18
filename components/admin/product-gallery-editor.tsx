@@ -103,7 +103,7 @@ export function ProductGalleryEditor({
   return (
     <div>
       {urls.length === 0 ? (
-        <p className="font-sans text-[13px] text-ink-mute italic mb-3">
+        <p className="font-sans text-small text-ink-mute italic mb-3">
           Inga galleribilder än. Lägg till för att visa fler vinklar — t.ex.
           baksidans innehållsdeklaration, en livsstilsbild, eller en närbild
           på kapslarna.
@@ -150,7 +150,7 @@ export function ProductGalleryEditor({
                   ✕
                 </IconButton>
               </div>
-              <span className="absolute top-1.5 left-1.5 inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary-deep/80 text-surface font-sans text-[10px] font-semibold tabular-nums">
+              <span className="absolute top-1.5 left-1.5 inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary-deep/80 text-surface font-sans text-micro font-semibold tabular-nums">
                 {i + 1}
               </span>
             </li>
@@ -178,7 +178,7 @@ export function ProductGalleryEditor({
         >
           {pending ? "Bearbetar…" : "+ Lägg till bilder"}
         </Button>
-        <p className="font-sans text-[12px] text-ink-mute">
+        <p className="font-sans text-caption text-ink-mute">
           {remaining > 0
             ? `${remaining} kvar (max ${MAX_IMAGES})`
             : `Galleriet är fullt (${MAX_IMAGES} bilder)`}
@@ -186,7 +186,7 @@ export function ProductGalleryEditor({
         {saved && (
           <span
             role="status"
-            className="font-sans text-[12px] text-accent-deep font-semibold"
+            className="font-sans text-caption text-accent-deep font-semibold"
           >
             ✓ Sparat
           </span>
@@ -196,7 +196,7 @@ export function ProductGalleryEditor({
       {error && (
         <p
           role="alert"
-          className="mt-3 font-sans text-[12.5px] text-status-error bg-status-error/10 px-3 py-2 rounded-md"
+          className="mt-3 font-sans text-caption text-status-error bg-status-error/10 px-3 py-2 rounded-md"
         >
           {error}
         </p>
@@ -218,7 +218,7 @@ function IconButton({
   variant?: "default" | "danger";
 } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
   const base =
-    "inline-flex items-center justify-center w-7 h-7 rounded-md font-sans text-[14px] font-semibold transition-colors disabled:opacity-30 disabled:cursor-not-allowed";
+    "inline-flex items-center justify-center w-7 h-7 rounded-md font-sans text-body font-semibold transition-colors disabled:opacity-30 disabled:cursor-not-allowed";
   const palette =
     variant === "danger"
       ? "bg-status-error text-white hover:bg-[#7A331E]"

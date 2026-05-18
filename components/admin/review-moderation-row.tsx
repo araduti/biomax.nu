@@ -76,16 +76,16 @@ export function ReviewModerationRow({ review }: { review: Review }) {
         <div className="min-w-0">
           <div className="flex items-center gap-2 text-accent-deep mb-1">
             <StarRating value={review.rating} size={15} />
-            <span className="font-sans text-[12px] text-ink-soft">
+            <span className="font-sans text-caption text-ink-soft">
               {review.rating}/5
             </span>
             {review.verified && (
-              <span className="font-sans text-[10.5px] uppercase tracking-[0.14em] font-semibold text-accent-deep ml-1">
+              <span className="font-sans text-micro uppercase tracking-[0.14em] font-semibold text-accent-deep ml-1">
                 ✓ Verifierat köp
               </span>
             )}
           </div>
-          <div className="font-sans text-[12.5px] text-ink-mute">
+          <div className="font-sans text-caption text-ink-mute">
             <Link
               href={`/admin/produkter/${review.product.slug}`}
               className="text-primary-deep underline decoration-accent/40 underline-offset-[3px] hover:decoration-accent"
@@ -103,7 +103,7 @@ export function ReviewModerationRow({ review }: { review: Review }) {
         </div>
         <span
           className={
-            "shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-full font-sans text-[11px] uppercase tracking-[0.14em] font-semibold " +
+            "shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-full font-sans text-micro uppercase tracking-[0.14em] font-semibold " +
             STATUS_TONE[review.status]
           }
         >
@@ -113,27 +113,27 @@ export function ReviewModerationRow({ review }: { review: Review }) {
 
       {/* Review body */}
       {review.title && (
-        <p className="font-display text-[16px] font-medium text-primary-deep tracking-tight mb-1">
+        <p className="font-display text-lead font-medium text-primary-deep tracking-tight mb-1">
           {review.title}
         </p>
       )}
-      <p className="font-sans text-[14px] text-ink-body leading-relaxed whitespace-pre-line">
+      <p className="font-sans text-body text-ink-body leading-relaxed whitespace-pre-line">
         {review.body}
       </p>
 
       {/* Existing store response */}
       {review.storeResponse && !responseOpen && (
         <div className="mt-4 ml-4 pl-4 border-l-2 border-accent/40">
-          <p className="font-sans text-[11px] uppercase tracking-[0.16em] font-semibold text-accent-deep mb-1">
+          <p className="font-sans text-micro uppercase tracking-[0.16em] font-semibold text-accent-deep mb-1">
             Svar från Biomax
           </p>
-          <p className="font-sans text-[13.5px] text-ink-body leading-relaxed whitespace-pre-line">
+          <p className="font-sans text-small text-ink-body leading-relaxed whitespace-pre-line">
             {review.storeResponse}
           </p>
           <button
             type="button"
             onClick={() => setResponseOpen(true)}
-            className="mt-2 font-sans text-[11.5px] text-primary-deep underline decoration-accent/40 underline-offset-[3px] hover:decoration-accent"
+            className="mt-2 font-sans text-micro text-primary-deep underline decoration-accent/40 underline-offset-[3px] hover:decoration-accent"
           >
             Redigera svar
           </button>
@@ -145,7 +145,7 @@ export function ReviewModerationRow({ review }: { review: Review }) {
         <div className="mt-4 border-t border-border-soft pt-4">
           <label
             htmlFor={`resp-${review.id}`}
-            className="block font-sans text-[12px] font-semibold text-ink-soft mb-1.5"
+            className="block font-sans text-caption font-semibold text-ink-soft mb-1.5"
           >
             Svar från Biomax
           </label>
@@ -156,7 +156,7 @@ export function ReviewModerationRow({ review }: { review: Review }) {
             onChange={(e) => setResponseDraft(e.target.value)}
             disabled={pending}
             placeholder="Tack för din feedback! …"
-            className="w-full px-3 py-2 bg-surface border border-border rounded-md font-sans text-[13.5px] text-ink-body focus:outline-none focus:border-accent disabled:opacity-50"
+            className="w-full px-3 py-2 bg-surface border border-border rounded-md font-sans text-small text-ink-body focus:outline-none focus:border-accent disabled:opacity-50"
           />
           <div className="mt-2 flex items-center gap-2">
             <Button
@@ -270,7 +270,7 @@ export function ReviewModerationRow({ review }: { review: Review }) {
         {savedFlash && (
           <span
             role="status"
-            className="font-sans text-[12px] text-accent-deep font-semibold"
+            className="font-sans text-caption text-accent-deep font-semibold"
           >
             ✓ {savedFlash}
           </span>
@@ -278,7 +278,7 @@ export function ReviewModerationRow({ review }: { review: Review }) {
         {error && (
           <span
             role="alert"
-            className="font-sans text-[12px] text-status-error font-semibold"
+            className="font-sans text-caption text-status-error font-semibold"
           >
             {error}
           </span>

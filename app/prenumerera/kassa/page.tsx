@@ -80,10 +80,10 @@ export default async function SubscriptionCheckoutPage({
           <div className="mt-7 rounded-2xl border border-border bg-surface-alt p-5 md:p-6">
             <div className="flex items-baseline justify-between gap-4">
               <div className="min-w-0">
-                <p className="font-display text-[17px] font-medium tracking-tight text-primary-deep truncate">
+                <p className="font-display text-lead font-medium tracking-tight text-primary-deep truncate">
                   {t.productName}
                 </p>
-                <p className="mt-0.5 font-sans text-[13px] text-ink-mute">
+                <p className="mt-0.5 font-sans text-small text-ink-mute">
                   {intervalLabelSwedish(t.intervalDays)} · −
                   {t.discountPercent} % på varje leverans
                 </p>
@@ -92,10 +92,10 @@ export default async function SubscriptionCheckoutPage({
                 <span className="font-display text-[20px] font-medium text-primary-deep">
                   {formatPriceSEK(discounted)}
                 </span>{" "}
-                <span className="font-sans text-[13px] text-ink-soft line-through">
+                <span className="font-sans text-small text-ink-soft line-through">
                   {formatPriceSEK(t.listUnitPrice)}
                 </span>
-                <p className="font-sans text-[12px] text-ink-soft">
+                <p className="font-sans text-caption text-ink-soft">
                   per leverans
                 </p>
               </div>
@@ -108,7 +108,7 @@ export default async function SubscriptionCheckoutPage({
             intervalDays={intervalDays}
           />
 
-          <p className="mt-6 font-sans text-[12.5px] text-ink-mute leading-relaxed">
+          <p className="mt-6 font-sans text-caption text-ink-mute leading-relaxed">
             Frågor om prenumerationer? Mejla{" "}
             <Link
               href="mailto:kontakt@biomax.nu"

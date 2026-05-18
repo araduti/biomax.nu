@@ -57,28 +57,28 @@ export default async function LoyaltyAccountPage() {
       <section className="mt-8 bg-surface-warm border border-accent/30 rounded-2xl p-6 md:p-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
-            <p className="font-sans text-[11px] uppercase tracking-[0.22em] font-semibold text-ink-soft">
+            <p className="font-sans text-micro uppercase tracking-[0.22em] font-semibold text-ink-soft">
               Saldo
             </p>
             <p className="mt-2 font-display text-[40px] md:text-[48px] font-medium tracking-tight text-primary-deep leading-none">
               {balance ? balance.balance.toLocaleString("sv-SE") : "0"}
             </p>
-            <p className="mt-1 font-sans text-[13px] text-ink-mute">poäng</p>
+            <p className="mt-1 font-sans text-small text-ink-mute">poäng</p>
           </div>
           <div>
-            <p className="font-sans text-[11px] uppercase tracking-[0.22em] font-semibold text-ink-soft">
+            <p className="font-sans text-micro uppercase tracking-[0.22em] font-semibold text-ink-soft">
               Värde just nu
             </p>
             <p className="mt-2 font-display text-[28px] md:text-[32px] font-medium tracking-tight text-primary-deep">
               {formatPriceSEK(balance ? pointsToKr(balance.balance) : 0)}
             </p>
-            <p className="mt-1 font-sans text-[13px] text-ink-mute">
+            <p className="mt-1 font-sans text-small text-ink-mute">
               {MIN_REDEMPTION_POINTS} poäng ={" "}
               {formatPriceSEK((MIN_REDEMPTION_POINTS * ORE_PER_POINT) / 100)}
             </p>
           </div>
           <div>
-            <p className="font-sans text-[11px] uppercase tracking-[0.22em] font-semibold text-ink-soft">
+            <p className="font-sans text-micro uppercase tracking-[0.22em] font-semibold text-ink-soft">
               Totalt tjänat
             </p>
             <p className="mt-2 font-display text-[28px] md:text-[32px] font-medium tracking-tight text-primary-deep">
@@ -86,7 +86,7 @@ export default async function LoyaltyAccountPage() {
                 ? balance.lifetimeEarned.toLocaleString("sv-SE")
                 : "0"}
             </p>
-            <p className="mt-1 font-sans text-[13px] text-ink-mute">
+            <p className="mt-1 font-sans text-small text-ink-mute">
               poäng sedan{" "}
               {balance ? dateFmt.format(balance.enrolledAt) : "starten"}
             </p>
@@ -101,10 +101,10 @@ export default async function LoyaltyAccountPage() {
         </h2>
         <ul className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <li className="bg-surface-alt border border-border rounded-2xl p-5">
-            <p className="font-display text-[15px] font-semibold text-accent-deep mb-2">
+            <p className="font-display text-body-lg font-semibold text-accent-deep mb-2">
               Tjäna
             </p>
-            <p className="font-sans text-[14.5px] text-ink-body leading-relaxed">
+            <p className="font-sans text-body text-ink-body leading-relaxed">
               Du får{" "}
               <strong className="font-semibold text-primary-deep">
                 1 poäng per {KR_PER_EARNED_POINT} kr
@@ -114,10 +114,10 @@ export default async function LoyaltyAccountPage() {
             </p>
           </li>
           <li className="bg-surface-alt border border-border rounded-2xl p-5">
-            <p className="font-display text-[15px] font-semibold text-accent-deep mb-2">
+            <p className="font-display text-body-lg font-semibold text-accent-deep mb-2">
               Använd
             </p>
-            <p className="font-sans text-[14.5px] text-ink-body leading-relaxed">
+            <p className="font-sans text-body text-ink-body leading-relaxed">
               <strong className="font-semibold text-primary-deep">
                 {MIN_REDEMPTION_POINTS} poäng ={" "}
                 {formatPriceSEK((MIN_REDEMPTION_POINTS * ORE_PER_POINT) / 100)}{" "}
@@ -128,17 +128,17 @@ export default async function LoyaltyAccountPage() {
             </p>
           </li>
           <li className="bg-surface-alt border border-border rounded-2xl p-5">
-            <p className="font-display text-[15px] font-semibold text-accent-deep mb-2">
+            <p className="font-display text-body-lg font-semibold text-accent-deep mb-2">
               Behåll
             </p>
-            <p className="font-sans text-[14.5px] text-ink-body leading-relaxed">
+            <p className="font-sans text-body text-ink-body leading-relaxed">
               Poängen gäller så länge du är aktiv. Får du en order tillbaka
               eller säger upp den justerar vi saldot automatiskt.
             </p>
           </li>
         </ul>
         {WELCOME_BONUS_POINTS > 0 && (
-          <p className="mt-5 font-sans text-[13.5px] text-ink-mute italic">
+          <p className="mt-5 font-sans text-small text-ink-mute italic">
             Som tack för att du skapade konto fick du{" "}
             {WELCOME_BONUS_POINTS} poäng i välkomstbonus.
           </p>
@@ -151,7 +151,7 @@ export default async function LoyaltyAccountPage() {
           Historik
         </h2>
         {history.length === 0 ? (
-          <p className="font-sans text-[14.5px] text-ink-mute italic">
+          <p className="font-sans text-body text-ink-mute italic">
             Inga händelser ännu. När du gör din första order dyker den upp
             här.
           </p>
@@ -166,7 +166,7 @@ export default async function LoyaltyAccountPage() {
                 >
                   <div className="flex items-center justify-between gap-4 px-5 md:px-6 py-4">
                     <div className="flex-1 min-w-0">
-                      <p className="font-display text-[15px] font-medium tracking-tight text-primary-deep">
+                      <p className="font-display text-body-lg font-medium tracking-tight text-primary-deep">
                         {labelForKind(row.kind)}
                         {row.orderNumber && (
                           <>
@@ -180,18 +180,18 @@ export default async function LoyaltyAccountPage() {
                           </>
                         )}
                       </p>
-                      <p className="font-sans text-[12.5px] text-ink-mute mt-0.5">
+                      <p className="font-sans text-caption text-ink-mute mt-0.5">
                         {row.description} · {dateFmt.format(row.createdAt)}
                       </p>
                     </div>
                     <span
-                      className={`font-display text-[16px] font-medium tabular-nums whitespace-nowrap ${
+                      className={`font-display text-lead font-medium tabular-nums whitespace-nowrap ${
                         positive ? "text-accent-deep" : "text-status-error"
                       }`}
                     >
                       {positive ? "+" : ""}
                       {row.points.toLocaleString("sv-SE")}
-                      <span className="font-sans text-[12px] text-ink-mute font-normal ml-1">
+                      <span className="font-sans text-caption text-ink-mute font-normal ml-1">
                         p
                       </span>
                     </span>

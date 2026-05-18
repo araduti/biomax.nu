@@ -101,17 +101,17 @@ export function CouponEditForm({
             onChange={(e) => setActive(e.target.checked)}
             className="w-4 h-4"
           />
-          <span className="font-sans text-[14px] text-ink-body font-semibold">
+          <span className="font-sans text-body text-ink-body font-semibold">
             Aktiv
           </span>
         </label>
-        <p className="mt-1 font-sans text-[11.5px] text-ink-soft">
+        <p className="mt-1 font-sans text-micro text-ink-soft">
           Avaktivera istället för att ta bort när koden använts.
         </p>
       </div>
 
       <div>
-        <label className="block font-sans text-[12px] font-semibold text-ink-soft mb-1.5">
+        <label className="block font-sans text-caption font-semibold text-ink-soft mb-1.5">
           Rabattyp
         </label>
         <div className="flex gap-3 mb-3">
@@ -122,7 +122,7 @@ export function CouponEditForm({
               onChange={() => setDiscountType("percent")}
               disabled={pending}
             />
-            <span className="font-sans text-[13px]">Procent</span>
+            <span className="font-sans text-small">Procent</span>
           </label>
           <label className="flex items-center gap-1.5 cursor-pointer">
             <input
@@ -131,7 +131,7 @@ export function CouponEditForm({
               onChange={() => setDiscountType("amount")}
               disabled={pending}
             />
-            <span className="font-sans text-[13px]">Fast belopp</span>
+            <span className="font-sans text-small">Fast belopp</span>
           </label>
         </div>
         {discountType === "percent" ? (
@@ -191,7 +191,7 @@ export function CouponEditForm({
       <div>
         <label
           htmlFor="coupon-desc"
-          className="block font-sans text-[12px] font-semibold text-ink-soft mb-1.5"
+          className="block font-sans text-caption font-semibold text-ink-soft mb-1.5"
         >
           Intern beskrivning
         </label>
@@ -201,7 +201,7 @@ export function CouponEditForm({
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           disabled={pending}
-          className="w-full px-3 py-2 bg-surface border border-border rounded-md font-sans text-[13.5px] text-ink-body focus:outline-none focus:border-accent disabled:opacity-50"
+          className="w-full px-3 py-2 bg-surface border border-border rounded-md font-sans text-small text-ink-body focus:outline-none focus:border-accent disabled:opacity-50"
         />
       </div>
 
@@ -220,7 +220,7 @@ export function CouponEditForm({
           {deleting ? "Tar bort…" : "Ta bort"}
         </Button>
         {usedCount > 0 && (
-          <p className="font-sans text-[11.5px] text-ink-soft">
+          <p className="font-sans text-micro text-ink-soft">
             Använd {usedCount} gång{usedCount === 1 ? "" : "er"} — kan inte tas
             bort.
           </p>
@@ -228,7 +228,7 @@ export function CouponEditForm({
         {saved && (
           <span
             role="status"
-            className="font-sans text-[12.5px] text-accent-deep font-semibold"
+            className="font-sans text-caption text-accent-deep font-semibold"
           >
             ✓ Sparat
           </span>
@@ -238,7 +238,7 @@ export function CouponEditForm({
       {error && (
         <p
           role="alert"
-          className="font-sans text-[12.5px] text-status-error bg-status-error/10 px-3 py-2 rounded-md"
+          className="font-sans text-caption text-status-error bg-status-error/10 px-3 py-2 rounded-md"
         >
           {error}
         </p>

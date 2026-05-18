@@ -92,7 +92,7 @@ export function IngredientPinsEditor({
   return (
     <div>
       {pinned.length === 0 ? (
-        <p className="font-sans text-[13.5px] text-ink-mute italic mb-4">
+        <p className="font-sans text-small text-ink-mute italic mb-4">
           Inga pinnade än — sidan visar automatiska matchningar.
         </p>
       ) : (
@@ -112,11 +112,11 @@ export function IngredientPinsEditor({
                 />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-sans text-[13.5px] font-semibold text-primary-deep truncate">
+                <p className="font-sans text-small font-semibold text-primary-deep truncate">
                   {p.name}
                 </p>
                 {p.primaryCategory && (
-                  <p className="font-sans text-[11px] text-ink-soft">
+                  <p className="font-sans text-micro text-ink-soft">
                     {p.primaryCategory}
                   </p>
                 )}
@@ -186,16 +186,16 @@ export function IngredientPinsEditor({
                         />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-sans text-[13px] font-semibold text-primary-deep truncate">
+                        <p className="font-sans text-small font-semibold text-primary-deep truncate">
                           {r.name}
                         </p>
                         {r.primaryCategory && (
-                          <p className="font-sans text-[11px] text-ink-soft">
+                          <p className="font-sans text-micro text-ink-soft">
                             {r.primaryCategory}
                           </p>
                         )}
                       </div>
-                      <span className="font-sans text-[11px] text-accent-deep font-semibold">
+                      <span className="font-sans text-micro text-accent-deep font-semibold">
                         {already ? "Tillagd" : "+ Pinna"}
                       </span>
                     </button>
@@ -208,26 +208,26 @@ export function IngredientPinsEditor({
       )}
 
       <div className="mt-3 flex items-center gap-3">
-        <p className="font-sans text-[12px] text-ink-mute">
+        <p className="font-sans text-caption text-ink-mute">
           {remaining > 0 ? `${remaining} kvar (max ${MAX})` : `Listan är full`}
         </p>
         {saved && (
           <span
             role="status"
-            className="font-sans text-[12px] text-accent-deep font-semibold"
+            className="font-sans text-caption text-accent-deep font-semibold"
           >
             ✓ Sparat
           </span>
         )}
         {searching && (
-          <span className="font-sans text-[12px] text-ink-soft">Söker…</span>
+          <span className="font-sans text-caption text-ink-soft">Söker…</span>
         )}
       </div>
 
       {error && (
         <p
           role="alert"
-          className="mt-3 font-sans text-[12.5px] text-status-error bg-status-error/10 px-3 py-2 rounded-md"
+          className="mt-3 font-sans text-caption text-status-error bg-status-error/10 px-3 py-2 rounded-md"
         >
           {error}
         </p>

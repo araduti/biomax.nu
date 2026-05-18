@@ -80,7 +80,7 @@ export function IntegrationBanner({
   return (
     <div className="bg-surface-warm border-b border-border-soft">
       <div className="flex items-center gap-3 px-6 md:px-8 lg:px-9 py-2 flex-wrap">
-        <span className="font-sans text-[12.5px] uppercase tracking-[0.16em] font-semibold text-ink-mute">
+        <span className="font-sans text-caption uppercase tracking-[0.16em] font-semibold text-ink-mute">
           {unconfigured.length === 1
             ? "1 integration ej konfigurerad"
             : `${unconfigured.length} integrationer ej konfigurerade`}
@@ -91,7 +91,7 @@ export function IntegrationBanner({
               key={s.id}
               href={s.helpHref}
               title={s.warningCopy}
-              className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md bg-surface border border-border-soft font-sans text-[13px] font-semibold text-ink-body hover:bg-surface-alt hover:border-border transition-colors"
+              className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-md bg-surface border border-border-soft font-sans text-small font-semibold text-ink-body hover:bg-surface-alt hover:border-border transition-colors"
             >
               {s.label}
             </Link>
@@ -102,7 +102,7 @@ export function IntegrationBanner({
             type="button"
             onClick={dismissForever}
             data-admin-compact
-            className="h-7 px-2.5 inline-flex items-center font-sans text-[12.5px] text-ink-mute hover:text-ink-body transition-colors"
+            className="h-7 px-2.5 inline-flex items-center font-sans text-caption text-ink-mute hover:text-ink-body transition-colors"
           >
             Visa inte igen
           </button>

@@ -69,7 +69,7 @@ export function AdminPageHeader({
             )}
           </div>
           {subtitle && (
-            <div className="mt-2.5 font-sans text-[14px] leading-[1.45] text-[var(--d-ink-2)] max-w-[64ch]">
+            <div className="mt-2.5 font-sans text-body leading-[1.45] text-[var(--d-ink-2)] max-w-[64ch]">
               {subtitle}
             </div>
           )}

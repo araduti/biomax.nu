@@ -156,7 +156,7 @@ export function VariantsEditor({
 
   return (
     <div>
-      <p className="font-sans text-[12.5px] text-ink-mute mb-3 leading-relaxed max-w-[640px]">
+      <p className="font-sans text-caption text-ink-mute mb-3 leading-relaxed max-w-[640px]">
         Använd varianter när samma produkt finns i flera storlekar, smaker
         eller styrkor. Varje variant har egen SKU, eget pris och eget lager.
         Lämnas listan tom använder produktsidan moder­produktens pris och
@@ -165,7 +165,7 @@ export function VariantsEditor({
 
       {rows.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border bg-surface-warm/40 px-4 py-5">
-          <p className="font-sans text-[13px] text-ink-mute italic mb-3">
+          <p className="font-sans text-small text-ink-mute italic mb-3">
             Inga varianter — produkten säljs som en enda SKU.
           </p>
           <Button type="button" size="sm" variant="outline" onClick={addRow}>
@@ -228,7 +228,7 @@ export function VariantsEditor({
                 disabled={pending || !r.manageStock}
               />
               <label
-                className="inline-flex flex-col items-center gap-1 text-[10.5px] font-sans uppercase tracking-[0.14em] font-semibold text-ink-soft cursor-pointer pt-[18px]"
+                className="inline-flex flex-col items-center gap-1 text-micro font-sans uppercase tracking-[0.14em] font-semibold text-ink-soft cursor-pointer pt-[18px]"
                 title="Standard — välj denna variant som förvald"
               >
                 {i === 0 && <span className="invisible">x</span>}
@@ -289,13 +289,13 @@ export function VariantsEditor({
         {saved && (
           <span
             role="status"
-            className="font-sans text-[12.5px] text-accent-deep font-semibold"
+            className="font-sans text-caption text-accent-deep font-semibold"
           >
             ✓ Sparat
           </span>
         )}
         {rows.length > 0 && (
-          <span className="font-sans text-[11.5px] text-ink-soft ml-auto">
+          <span className="font-sans text-micro text-ink-soft ml-auto">
             {rows.length} {rows.length === 1 ? "variant" : "varianter"}
           </span>
         )}
@@ -304,7 +304,7 @@ export function VariantsEditor({
       {error && (
         <p
           role="alert"
-          className="mt-3 font-sans text-[12.5px] text-status-error bg-status-error/10 px-3 py-2 rounded-md"
+          className="mt-3 font-sans text-caption text-status-error bg-status-error/10 px-3 py-2 rounded-md"
         >
           {error}
         </p>

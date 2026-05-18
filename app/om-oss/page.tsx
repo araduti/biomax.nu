@@ -33,7 +33,7 @@ export default function OmOssPage() {
         </blockquote>
       </header>
 
-      <article className="prose-biomax font-sans text-[16.5px] md:text-[17px] leading-[1.8] text-ink-body space-y-6">
+      <article className="prose-biomax font-sans text-lead md:text-lead leading-[1.8] text-ink-body space-y-6">
         <p>
           Biomax HB är ett kunskapsföretag som importerar, utvecklar och
           marknadsför hälsokostprodukter som bidrar till ökad livskvalitet för
@@ -131,7 +131,7 @@ export default function OmOssPage() {
         <h2 className="mt-2 font-display text-2xl md:text-[26px] font-medium tracking-tight text-primary-deep mb-3">
           Vill du sälja Biomax?
         </h2>
-        <p className="font-sans text-[15.5px] text-ink-body leading-relaxed">
+        <p className="font-sans text-body-lg text-ink-body leading-relaxed">
           För information om hur du blir återförsäljare av våra produkter,
           mejla{" "}
           <a
@@ -149,17 +149,17 @@ export default function OmOssPage() {
         <h2 className="mt-2 font-display text-2xl md:text-[26px] font-medium tracking-tight text-primary-deep mb-4">
           Eken Hälsobutik · Kållered
         </h2>
-        <address className="not-italic font-sans text-[15.5px] text-ink-body leading-relaxed">
+        <address className="not-italic font-sans text-body-lg text-ink-body leading-relaxed">
           Ekenleden 15A
           <br />
           428 36 Kållered
           <br />
           Västra Götaland
         </address>
-        <p className="mt-3 font-sans text-[14.5px] text-ink-mute leading-relaxed">
+        <p className="mt-3 font-sans text-body text-ink-mute leading-relaxed">
           Tis–Fre 10:00–18:00 · Lör 10:00–15:00
         </p>
-        <p className="mt-4 font-sans text-[14px] text-ink-mute">
+        <p className="mt-4 font-sans text-body text-ink-mute">
           Söder om Göteborg, lättåtkomligt med bil eller pendel.{" "}
           <Link
             href="/butik"

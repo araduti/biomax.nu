@@ -130,7 +130,7 @@ export function RichTextEditor({
     editorProps: {
       attributes: {
         class: cn(
-          "prose-biomax max-w-none px-4 py-3 outline-none font-sans text-[15px] leading-relaxed text-ink-body",
+          "prose-biomax max-w-none px-4 py-3 outline-none font-sans text-body-lg leading-relaxed text-ink-body",
           minHeight
         ),
         ...(placeholder ? { "data-placeholder": placeholder } : {}),
@@ -194,7 +194,7 @@ export function RichTextEditor({
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
-        <label className="font-sans text-[12px] uppercase tracking-[0.18em] font-semibold text-ink-mute">
+        <label className="font-sans text-caption uppercase tracking-[0.18em] font-semibold text-ink-mute">
           {label}
         </label>
       )}
@@ -220,7 +220,7 @@ export function RichTextEditor({
         )}
       </div>
       {hint && (
-        <p className="font-sans text-[12px] text-ink-soft">{hint}</p>
+        <p className="font-sans text-caption text-ink-soft">{hint}</p>
       )}
     </div>
   );
@@ -295,7 +295,7 @@ function Toolbar({
               aria-label={action.title}
               aria-pressed={isActive(action.id)}
               className={cn(
-                "min-w-[32px] h-8 px-2 rounded font-sans text-[13px] transition-colors",
+                "min-w-[32px] h-8 px-2 rounded font-sans text-small transition-colors",
                 action.className,
                 isActive(action.id)
                   ? "bg-primary text-surface"
@@ -341,26 +341,26 @@ function LinkDialog({
             onCancel();
           }
         }}
-        className="flex-1 min-w-[240px] h-9 px-3 rounded-md border border-border bg-surface-alt font-sans text-[13px] text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+        className="flex-1 min-w-[240px] h-9 px-3 rounded-md border border-border bg-surface-alt font-sans text-small text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
       />
       <button
         type="button"
         onClick={() => onApply(url)}
-        className="h-9 px-4 rounded-md bg-primary text-surface font-sans font-semibold text-[13px] hover:bg-primary-deep transition-colors"
+        className="h-9 px-4 rounded-md bg-primary text-surface font-sans font-semibold text-small hover:bg-primary-deep transition-colors"
       >
         Använd
       </button>
       <button
         type="button"
         onClick={() => onApply("")}
-        className="h-9 px-3 rounded-md border border-border text-[13px] text-ink-body font-sans hover:bg-surface-alt transition-colors"
+        className="h-9 px-3 rounded-md border border-border text-small text-ink-body font-sans hover:bg-surface-alt transition-colors"
       >
         Ta bort länk
       </button>
       <button
         type="button"
         onClick={onCancel}
-        className="h-9 px-3 rounded-md font-sans text-[13px] text-ink-mute hover:bg-surface-alt transition-colors"
+        className="h-9 px-3 rounded-md font-sans text-small text-ink-mute hover:bg-surface-alt transition-colors"
       >
         Avbryt
       </button>

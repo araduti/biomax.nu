@@ -61,7 +61,7 @@ export default async function AdminReturnsPage() {
       />
 
       {returns.length === 0 ? (
-        <p className="font-sans text-[14px] text-ink-mute italic">
+        <p className="font-sans text-body text-ink-mute italic">
           Inga returer registrerade.
         </p>
       ) : (

@@ -43,10 +43,10 @@ export function OgCardPreview({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <p className="font-sans text-[10px] uppercase tracking-[0.16em] font-semibold text-ink-mute">
+        <p className="font-sans text-micro uppercase tracking-[0.16em] font-semibold text-ink-mute">
           Sociala kort — förhandsvisning
         </p>
-        <div className="flex rounded-md border border-border overflow-hidden text-[11px] font-sans font-semibold">
+        <div className="flex rounded-md border border-border overflow-hidden text-micro font-sans font-semibold">
           <button
             type="button"
             onClick={() => setPlatform("slack")}
@@ -123,15 +123,15 @@ function SlackCard({
   return (
     <div className="max-w-[520px] flex gap-3 rounded-lg bg-white border border-border-soft p-3 shadow-[0_1px_0_rgba(15,32,44,0.04)]">
       <div className="border-l-[3px] border-[#3F0F40] pl-3 flex-1 min-w-0">
-        <p className="font-sans text-[12px] font-semibold text-[#1d1c1d]">
+        <p className="font-sans text-caption font-semibold text-[#1d1c1d]">
           biomax.nu
         </p>
-        <p className="mt-0.5 font-sans text-[14.5px] font-bold text-[#1264A3] leading-snug">
+        <p className="mt-0.5 font-sans text-body font-bold text-[#1264A3] leading-snug">
           {title || (
             <span className="italic font-normal text-[#616061]">(Ingen titel)</span>
           )}
         </p>
-        <p className="mt-0.5 font-sans text-[13px] text-[#1d1c1d] leading-snug">
+        <p className="mt-0.5 font-sans text-small text-[#1d1c1d] leading-snug">
           {description || (
             <span className="italic text-[#616061]">(Ingen beskrivning)</span>
           )}
@@ -169,15 +169,15 @@ function FacebookCard({
         </div>
       )}
       <div className="px-4 py-3">
-        <p className="font-sans text-[12px] uppercase tracking-wide text-[#606770] truncate">
+        <p className="font-sans text-caption uppercase tracking-wide text-[#606770] truncate">
           {SITE_HOST}
         </p>
-        <p className="mt-0.5 font-sans text-[16px] font-semibold text-[#050505] leading-snug">
+        <p className="mt-0.5 font-sans text-lead font-semibold text-[#050505] leading-snug">
           {title || (
             <span className="italic font-normal text-[#606770]">(Ingen titel)</span>
           )}
         </p>
-        <p className="mt-0.5 font-sans text-[13px] text-[#606770] leading-snug line-clamp-2">
+        <p className="mt-0.5 font-sans text-small text-[#606770] leading-snug line-clamp-2">
           {description || (
             <span className="italic text-[#606770]">(Ingen beskrivning)</span>
           )}
@@ -208,11 +208,11 @@ function FallbackChip({
   return (
     <div className="bg-surface-alt border border-border rounded-xl p-3">
       <div className="flex items-baseline justify-between gap-2 mb-1">
-        <span className="font-sans text-[11px] uppercase tracking-[0.16em] font-semibold text-ink-mute">
+        <span className="font-sans text-micro uppercase tracking-[0.16em] font-semibold text-ink-mute">
           {label}
         </span>
         {length !== undefined && max !== undefined && (
-          <span className="font-sans text-[12px] tabular-nums">
+          <span className="font-sans text-caption tabular-nums">
             <span
               className={`font-semibold ${
                 length === 0 || length > max
@@ -226,7 +226,7 @@ function FallbackChip({
           </span>
         )}
       </div>
-      <p className="font-sans text-[11.5px]">
+      <p className="font-sans text-micro">
         {filled ? (
           <span className="text-accent-deep font-medium">Anpassad</span>
         ) : (

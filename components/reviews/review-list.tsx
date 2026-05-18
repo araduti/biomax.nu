@@ -33,7 +33,7 @@ export function ReviewList({
 }) {
   if (aggregate.count === 0) {
     return (
-      <p className="font-sans text-[14px] text-ink-mute italic">
+      <p className="font-sans text-body text-ink-mute italic">
         Inga recensioner än — bli först med att dela din erfarenhet.
       </p>
     );
@@ -48,12 +48,12 @@ export function ReviewList({
             <span className="font-display text-4xl font-medium tracking-tight text-primary-deep tabular-nums">
               {aggregate.average.toFixed(1)}
             </span>
-            <span className="font-sans text-[14px] text-ink-soft">/ 5</span>
+            <span className="font-sans text-body text-ink-soft">/ 5</span>
           </div>
           <div className="mt-2 text-accent-deep">
             <StarRating value={aggregate.average} size={18} />
           </div>
-          <p className="mt-2 font-sans text-[13px] text-ink-mute">
+          <p className="mt-2 font-sans text-small text-ink-mute">
             Baserat på {aggregate.count}{" "}
             {aggregate.count === 1 ? "recension" : "recensioner"}
           </p>
@@ -67,7 +67,7 @@ export function ReviewList({
             return (
               <li
                 key={star}
-                className="grid grid-cols-[28px_1fr_36px] items-center gap-2 font-sans text-[12.5px] text-ink-mute"
+                className="grid grid-cols-[28px_1fr_36px] items-center gap-2 font-sans text-caption text-ink-mute"
               >
                 <span className="tabular-nums">{star} ★</span>
                 <span className="relative h-1.5 rounded-full bg-border-soft overflow-hidden">
@@ -88,14 +88,14 @@ export function ReviewList({
           chip state is shareable and SEO-friendly. */}
       {goalCounts.length > 0 && (
         <div className="mb-8 -mt-4">
-          <p className="font-sans text-[11.5px] uppercase tracking-[0.18em] font-semibold text-ink-soft mb-2.5">
+          <p className="font-sans text-micro uppercase tracking-[0.18em] font-semibold text-ink-soft mb-2.5">
             Filtrera efter behov
           </p>
           <div className="flex flex-wrap gap-2">
             <Link
               href={`${baseHref}#recensioner`}
               scroll={false}
-              className={`px-3.5 py-1.5 rounded-full border font-sans text-[12.5px] font-semibold transition-colors ${
+              className={`px-3.5 py-1.5 rounded-full border font-sans text-caption font-semibold transition-colors ${
                 !activeGoal
                   ? "bg-primary-deep text-surface border-primary-deep"
                   : "bg-surface text-ink-body border-border hover:border-border-soft hover:bg-surface-warm"
@@ -111,7 +111,7 @@ export function ReviewList({
                   key={g.goal}
                   href={`${baseHref}?recensioner=${encodeURIComponent(g.goal)}#recensioner`}
                   scroll={false}
-                  className={`px-3.5 py-1.5 rounded-full border font-sans text-[12.5px] font-semibold transition-colors ${
+                  className={`px-3.5 py-1.5 rounded-full border font-sans text-caption font-semibold transition-colors ${
                     active
                       ? "bg-primary-deep text-surface border-primary-deep"
                       : "bg-surface text-ink-body border-border hover:border-border-soft hover:bg-surface-warm"
@@ -123,7 +123,7 @@ export function ReviewList({
             })}
           </div>
           {activeGoal && reviews.length === 0 && (
-            <p className="mt-5 font-sans text-[14px] text-ink-mute italic">
+            <p className="mt-5 font-sans text-body text-ink-mute italic">
               Inga recensioner i den här kategorin än.
             </p>
           )}
@@ -137,7 +137,7 @@ export function ReviewList({
             <div className="flex items-center gap-3 mb-2 text-accent-deep">
               <StarRating value={r.rating} size={15} />
               {r.verified && (
-                <span className="inline-flex items-center gap-1 font-sans text-[11px] uppercase tracking-[0.14em] font-semibold text-accent-deep">
+                <span className="inline-flex items-center gap-1 font-sans text-micro uppercase tracking-[0.14em] font-semibold text-accent-deep">
                   <svg
                     width="11"
                     height="11"
@@ -154,14 +154,14 @@ export function ReviewList({
               )}
             </div>
             {r.title && (
-              <p className="font-display text-[16px] font-medium text-primary-deep tracking-tight mb-1">
+              <p className="font-display text-lead font-medium text-primary-deep tracking-tight mb-1">
                 {r.title}
               </p>
             )}
-            <p className="font-sans text-[14.5px] text-ink-body leading-relaxed whitespace-pre-line">
+            <p className="font-sans text-body text-ink-body leading-relaxed whitespace-pre-line">
               {r.body}
             </p>
-            <p className="mt-3 font-sans text-[12px] text-ink-soft">
+            <p className="mt-3 font-sans text-caption text-ink-soft">
               {r.authorDisplay} · {formatDate(r.createdAt)}
               {r.reviewerGoal && BEHOV_LABEL_BY_SLUG.has(r.reviewerGoal) && (
                 <>
@@ -174,14 +174,14 @@ export function ReviewList({
             </p>
             {r.storeResponse && (
               <div className="mt-4 ml-4 pl-4 border-l-2 border-accent/40">
-                <p className="font-sans text-[11px] uppercase tracking-[0.16em] font-semibold text-accent-deep mb-1">
+                <p className="font-sans text-micro uppercase tracking-[0.16em] font-semibold text-accent-deep mb-1">
                   Svar från Biomax
                 </p>
-                <p className="font-sans text-[14px] text-ink-body leading-relaxed whitespace-pre-line">
+                <p className="font-sans text-body text-ink-body leading-relaxed whitespace-pre-line">
                   {r.storeResponse}
                 </p>
                 {r.storeRespondedAt && (
-                  <p className="mt-2 font-sans text-[11.5px] text-ink-soft">
+                  <p className="mt-2 font-sans text-micro text-ink-soft">
                     {formatDate(r.storeRespondedAt)}
                   </p>
                 )}

@@ -191,8 +191,8 @@ export default async function AdminProductsPage({
                 href={buildHref({ status: f.slug })}
                 className={
                   isActive
-                    ? "inline-flex items-center gap-2 px-4 min-h-11 rounded-full bg-primary-deep text-surface font-sans text-[13.5px] font-semibold"
-                    : "inline-flex items-center gap-2 px-4 min-h-11 rounded-full bg-surface-alt border-2 border-border text-ink-body font-sans text-[13.5px] font-semibold hover:border-primary/40"
+                    ? "inline-flex items-center gap-2 px-4 min-h-11 rounded-full bg-primary-deep text-surface font-sans text-small font-semibold"
+                    : "inline-flex items-center gap-2 px-4 min-h-11 rounded-full bg-surface-alt border-2 border-border text-ink-body font-sans text-small font-semibold hover:border-primary/40"
                 }
               >
                 <span>{f.label}</span>
@@ -200,8 +200,8 @@ export default async function AdminProductsPage({
                   <span
                     className={
                       isActive
-                        ? "inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 rounded-full bg-surface/25 text-surface font-sans text-[11.5px] font-bold tabular-nums"
-                        : "inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 rounded-full bg-ink-mute/15 text-ink-mute font-sans text-[11.5px] font-bold tabular-nums"
+                        ? "inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 rounded-full bg-surface/25 text-surface font-sans text-micro font-bold tabular-nums"
+                        : "inline-flex items-center justify-center min-w-[24px] h-5 px-1.5 rounded-full bg-ink-mute/15 text-ink-mute font-sans text-micro font-bold tabular-nums"
                     }
                   >
                     {count}
@@ -226,8 +226,8 @@ export default async function AdminProductsPage({
                   href={buildHref({ health: f.slug })}
                   className={
                     isActive
-                      ? "inline-flex items-center gap-2 px-3 min-h-9 rounded-full border border-border bg-surface-warm text-ink-body font-sans text-[12.5px] font-semibold"
-                      : "inline-flex items-center gap-2 px-3 min-h-9 rounded-full border border-border bg-surface-alt text-ink-mute font-sans text-[12.5px] font-semibold hover:text-ink-body hover:border-primary/30"
+                      ? "inline-flex items-center gap-2 px-3 min-h-9 rounded-full border border-border bg-surface-warm text-ink-body font-sans text-caption font-semibold"
+                      : "inline-flex items-center gap-2 px-3 min-h-9 rounded-full border border-border bg-surface-alt text-ink-mute font-sans text-caption font-semibold hover:text-ink-body hover:border-primary/30"
                   }
                 >
                   <span
@@ -235,7 +235,7 @@ export default async function AdminProductsPage({
                     className={`inline-block w-2 h-2 rounded-full ${f.color}`}
                   />
                   <span>{f.label}</span>
-                  <span className="font-sans text-[11.5px] font-bold tabular-nums text-ink-soft">
+                  <span className="font-sans text-micro font-bold tabular-nums text-ink-soft">
                     {count}
                   </span>
                 </Link>
@@ -254,7 +254,7 @@ export default async function AdminProductsPage({
               name="q"
               defaultValue={q ?? ""}
               placeholder="Sök namn eller SKU"
-              className="h-11 px-4 rounded-lg border-2 border-border bg-surface-alt font-sans text-[14.5px] text-ink placeholder:text-ink-soft outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 min-w-[260px]"
+              className="h-11 px-4 rounded-lg border-2 border-border bg-surface-alt font-sans text-body text-ink placeholder:text-ink-soft outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 min-w-[260px]"
             />
           </form>
         </div>
@@ -262,7 +262,7 @@ export default async function AdminProductsPage({
 
       <div className="bg-surface-alt border border-border rounded-xl overflow-hidden">
         {products.length === 0 ? (
-          <p className="px-5 py-12 text-center font-sans text-[14.5px] text-ink-mute">
+          <p className="px-5 py-12 text-center font-sans text-body text-ink-mute">
             Inga produkter matchar filtret.
           </p>
         ) : (
@@ -294,10 +294,10 @@ export default async function AdminProductsPage({
                       />
                     </div>
                     <div className="min-w-0">
-                      <p className="font-sans text-[14px] font-semibold tracking-tight text-primary-deep">
+                      <p className="font-sans text-body font-semibold tracking-tight text-primary-deep">
                         {p.name}
                       </p>
-                      <p className="font-sans text-[13px] text-ink-mute mt-1">
+                      <p className="font-sans text-small text-ink-mute mt-1">
                         {p.sku} · {p.categories[0]?.name ?? "Okategoriserad"} ·{" "}
                         {p.totalSales.toLocaleString("sv-SE")} sålda
                       </p>
@@ -311,15 +311,15 @@ export default async function AdminProductsPage({
                     <span
                       className={
                         oos
-                          ? "font-sans text-[14px] font-semibold text-status-error whitespace-nowrap tabular-nums"
+                          ? "font-sans text-body font-semibold text-status-error whitespace-nowrap tabular-nums"
                           : lowStock
-                            ? "font-sans text-[14px] font-semibold text-status-low whitespace-nowrap tabular-nums"
-                            : "font-sans text-[14px] text-ink-mute whitespace-nowrap tabular-nums"
+                            ? "font-sans text-body font-semibold text-status-low whitespace-nowrap tabular-nums"
+                            : "font-sans text-body text-ink-mute whitespace-nowrap tabular-nums"
                       }
                     >
                       {!p.manageStock ? "∞" : `${p.stock} st`}
                     </span>
-                    <span className="font-sans text-[14px] font-semibold text-primary-deep tracking-tight whitespace-nowrap min-w-[80px] text-right tabular-nums">
+                    <span className="font-sans text-body font-semibold text-primary-deep tracking-tight whitespace-nowrap min-w-[80px] text-right tabular-nums">
                       {formatPriceSEK(p.price.toString())}
                     </span>
                   </Link>

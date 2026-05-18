@@ -44,7 +44,7 @@ export function CategoryFilter({
         {options.map((o) => (
           <Pill key={o.slug} href={o.href} active={activeSlug === o.slug}>
             <span>{o.name}</span>
-            <span className="text-ink-soft text-[10.5px] ml-1.5 tabular-nums">
+            <span className="text-ink-soft text-micro ml-1.5 tabular-nums">
               {o.count}
             </span>
           </Pill>
@@ -72,7 +72,7 @@ function Pill({
   children: React.ReactNode;
 }) {
   const base =
-    "snap-start flex-shrink-0 inline-flex items-center px-3.5 py-1.5 rounded-full text-[12.5px] tracking-wide whitespace-nowrap";
+    "snap-start flex-shrink-0 inline-flex items-center px-3.5 py-1.5 rounded-full text-caption tracking-wide whitespace-nowrap";
   return (
     <Link
       href={href}

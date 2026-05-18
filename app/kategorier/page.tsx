@@ -92,10 +92,10 @@ export default async function CategoriesIndex() {
                     <Display size="md" className="mt-1 mb-2">
                       {c.name}
                     </Display>
-                    <p className="font-sans text-[14px] text-ink-mute leading-relaxed line-clamp-3">
+                    <p className="font-sans text-body text-ink-mute leading-relaxed line-clamp-3">
                       {meta.description}
                     </p>
-                    <span className="mt-4 inline-flex items-center gap-1.5 font-sans text-[13px] font-semibold text-primary border-b border-primary/30 pb-0.5 group-hover:border-primary transition-colors">
+                    <span className="mt-4 inline-flex items-center gap-1.5 font-sans text-small font-semibold text-primary border-b border-primary/30 pb-0.5 group-hover:border-primary transition-colors">
                       Utforska {c._count.products} produkt{c._count.products === 1 ? "" : "er"}
                       <span aria-hidden className="transition-transform group-hover:translate-x-0.5">
                         →

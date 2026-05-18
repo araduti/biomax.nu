@@ -27,7 +27,7 @@ export function AuthShell({
         <div className="max-w-[1240px] mx-auto px-6 md:px-8 py-5">
           <Link href="/" aria-label="Biomax — startsidan" className="inline-flex flex-col gap-1">
             <BiomaxLogo height={32} className="text-primary" />
-            <span className="font-sans text-[9px] uppercase tracking-[0.24em] text-ink-mute font-medium pl-0.5">
+            <span className="font-sans text-micro uppercase tracking-[0.24em] text-ink-mute font-medium pl-0.5">
               Sedan 2001 · Kållered
             </span>
           </Link>
@@ -53,7 +53,7 @@ export function AuthShell({
           </div>
 
           {footer && (
-            <p className="mt-6 text-center font-sans text-[13px] text-ink-mute">
+            <p className="mt-6 text-center font-sans text-small text-ink-mute">
               {footer}
             </p>
           )}

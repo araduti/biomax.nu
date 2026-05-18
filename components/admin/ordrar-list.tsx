@@ -170,7 +170,7 @@ export function OrdrarList({ orders }: { orders: OrdrarListRow[] }) {
         <div
           role="status"
           aria-live="polite"
-          className="fixed top-20 right-6 z-30 px-4 py-2 rounded-lg bg-primary-deep text-surface font-sans text-[13.5px] font-semibold shadow-lg"
+          className="fixed top-20 right-6 z-30 px-4 py-2 rounded-lg bg-primary-deep text-surface font-sans text-small font-semibold shadow-lg"
         >
           {flash}
         </div>
@@ -197,7 +197,7 @@ export function OrdrarList({ orders }: { orders: OrdrarListRow[] }) {
                 className="w-4 h-4"
                 aria-label="Markera alla synliga ordrar"
               />
-              <span className="font-sans text-[12px] text-ink-mute">
+              <span className="font-sans text-caption text-ink-mute">
                 {selected.size > 0
                   ? `${selected.size} valda`
                   : `${orders.length} ${orders.length === 1 ? "order" : "ordrar"}`}
@@ -236,22 +236,22 @@ export function OrdrarList({ orders }: { orders: OrdrarListRow[] }) {
                   className="contents focus-visible:outline-none"
                 >
                   <span className="min-w-0">
-                    <span className="block font-sans text-[13.5px] font-semibold text-primary-deep">
+                    <span className="block font-sans text-small font-semibold text-primary-deep">
                       {o.orderNumber}
                     </span>
-                    <span className="block font-sans text-[12.5px] text-ink-mute mt-0.5">
+                    <span className="block font-sans text-caption text-ink-mute mt-0.5">
                       {dateFmt.format(o.createdAt)}
                       {o.legacySource ? " · arkiverad" : ""}
                     </span>
                   </span>
-                  <span className="font-sans text-[14px] text-ink-body truncate">
+                  <span className="font-sans text-body text-ink-body truncate">
                     {o.email}
                   </span>
-                  <span className="font-sans text-[12.5px] text-ink-mute whitespace-nowrap tabular-nums">
+                  <span className="font-sans text-caption text-ink-mute whitespace-nowrap tabular-nums">
                     {o.itemCount} st
                   </span>
                   <OrderStatusBadge status={o.status} />
-                  <span className="font-sans text-[13.5px] font-semibold text-primary-deep tabular-nums whitespace-nowrap min-w-[80px] text-right">
+                  <span className="font-sans text-small font-semibold text-primary-deep tabular-nums whitespace-nowrap min-w-[80px] text-right">
                     {formatPriceSEK(o.totalAmount)}
                   </span>
                 </Link>
@@ -273,7 +273,7 @@ export function OrdrarList({ orders }: { orders: OrdrarListRow[] }) {
                     disabled={pending}
                     data-admin-compact
                     className={cn(
-                      "inline-flex items-center gap-1.5 h-8 px-3 rounded-md font-sans text-[12.5px] font-semibold shadow-sm transition-colors disabled:opacity-50",
+                      "inline-flex items-center gap-1.5 h-8 px-3 rounded-md font-sans text-caption font-semibold shadow-sm transition-colors disabled:opacity-50",
                       o.status === "PAID"
                         ? "bg-primary-deep text-surface hover:bg-primary"
                         : "bg-surface border border-border text-ink-body hover:bg-surface-warm"
@@ -312,7 +312,7 @@ export function OrdrarList({ orders }: { orders: OrdrarListRow[] }) {
           aria-label="Markerade ordrar"
           className="fixed bottom-0 left-0 lg:left-[280px] right-0 z-30 bg-primary-deep text-surface px-5 md:px-10 py-3 flex items-center gap-4 shadow-[0_-6px_24px_rgba(15,32,44,0.18)]"
         >
-          <span className="font-sans text-[13.5px] font-semibold">
+          <span className="font-sans text-small font-semibold">
             {selected.size} {selected.size === 1 ? "order" : "ordrar"} valda
           </span>
           <button
@@ -320,7 +320,7 @@ export function OrdrarList({ orders }: { orders: OrdrarListRow[] }) {
             onClick={bulkFulfill}
             disabled={pending}
             data-admin-compact
-            className="inline-flex items-center gap-1.5 h-9 px-4 rounded-md bg-surface text-primary-deep font-sans text-[13px] font-semibold hover:bg-surface-warm transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 h-9 px-4 rounded-md bg-surface text-primary-deep font-sans text-small font-semibold hover:bg-surface-warm transition-colors disabled:opacity-50"
           >
             <Check size={14} strokeWidth={2.25} aria-hidden />
             Markera som skickade
@@ -330,7 +330,7 @@ export function OrdrarList({ orders }: { orders: OrdrarListRow[] }) {
             onClick={clearSelection}
             disabled={pending}
             data-admin-compact
-            className="ml-auto inline-flex items-center gap-1.5 h-9 px-3 rounded-md text-surface/80 hover:text-surface hover:bg-surface/10 font-sans text-[13px] font-semibold transition-colors"
+            className="ml-auto inline-flex items-center gap-1.5 h-9 px-3 rounded-md text-surface/80 hover:text-surface hover:bg-surface/10 font-sans text-small font-semibold transition-colors"
           >
             Avbryt
           </button>

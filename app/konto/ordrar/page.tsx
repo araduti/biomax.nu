@@ -42,7 +42,7 @@ export default async function OrdersListPage() {
           <p className="font-display italic text-2xl text-primary-deep mb-3">
             Inga ordrar
           </p>
-          <p className="font-sans text-[14px] text-ink-mute mb-6 max-w-[420px] mx-auto leading-relaxed">
+          <p className="font-sans text-body text-ink-mute mb-6 max-w-[420px] mx-auto leading-relaxed">
             När du gör din första beställning hos Biomax dyker den upp här.
           </p>
           <ButtonLink href="/produkter" variant="primary" size="md">
@@ -63,21 +63,21 @@ export default async function OrdersListPage() {
                   className="grid grid-cols-[1fr_auto] md:grid-cols-[1fr_auto_auto_auto] items-center gap-4 px-5 md:px-6 py-4 hover:bg-surface-warm transition-colors"
                 >
                   <div className="min-w-0">
-                    <p className="font-display text-[15px] font-medium tracking-tight text-primary-deep">
+                    <p className="font-display text-body-lg font-medium tracking-tight text-primary-deep">
                       {o.orderNumber}
                     </p>
-                    <p className="font-sans text-[12px] text-ink-mute mt-0.5">
+                    <p className="font-sans text-caption text-ink-mute mt-0.5">
                       {dateFmt.format(o.createdAt)} · {o._count.items}{" "}
                       {o._count.items === 1 ? "produkt" : "produkter"}
                       {o.legacySource ? " · arkiverad" : ""}
                     </p>
                   </div>
                   <span
-                    className={`hidden md:inline font-sans text-[11px] font-semibold uppercase tracking-[0.18em] ${status.tone}`}
+                    className={`hidden md:inline font-sans text-micro font-semibold uppercase tracking-[0.18em] ${status.tone}`}
                   >
                     {status.label}
                   </span>
-                  <span className="font-display text-[16px] font-medium text-primary-deep tracking-tight whitespace-nowrap text-right md:text-left min-w-[90px]">
+                  <span className="font-display text-lead font-medium text-primary-deep tracking-tight whitespace-nowrap text-right md:text-left min-w-[90px]">
                     {formatPriceSEK(o.totalAmount.toString())}
                   </span>
                   <span aria-hidden className="hidden md:inline text-primary">
