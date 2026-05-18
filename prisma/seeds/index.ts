@@ -37,6 +37,10 @@ try {
 }
 
 async function main() {
+  // Tenants must always exist (Korg) — independent of the admin gate.
+  const { seedTenants } = await import("./tenants");
+  await seedTenants();
+
   const force = process.argv.includes("--force");
   const email = process.env.SEED_ADMIN_EMAIL?.trim().toLowerCase();
   const password = process.env.SEED_ADMIN_PASSWORD;

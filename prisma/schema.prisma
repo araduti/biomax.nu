@@ -33,6 +33,13 @@ enum UserRole {
   admin
 }
 
+/// Korg multi-tenant lifecycle (ADR 0030 D6). ACTIVE serves traffic;
+/// SUSPENDED 402/holds the storefront without deleting data.
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+}
+
 model User {
   id            String     @id @default(cuid())
   email         String     @unique
@@ -1261,4 +1268,23 @@ model LoyaltyTransaction {
   @@index([accountId, createdAt])
   @@index([userId, createdAt])
   @@index([orderId])
+}
+
+/// Korg tenant (ADR 0026/0028/0030). One row per merchant shop.
+/// biomax.nu is tenant zero (slug "biomax"); legally + architecturally
+/// just a tenant (ADR 0026 §0). Slice 1: identity/branding only —
+/// tenantId on owned models + RLS lands in the ADR 0028 D1 increment.
+model Tenant {
+  id              String       @id @default(cuid())
+  /// Subdomain label: {slug}.korg.nu. Lowercase, DNS-safe.
+  slug            String       @unique
+  name            String
+  tagline         String?
+  /// Storefront primary color; biomax keeps its existing navy.
+  primaryColorHex String       @default("#1e3a5f")
+  status          TenantStatus @default(ACTIVE)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([status])
 }

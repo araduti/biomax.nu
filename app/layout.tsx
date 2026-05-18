@@ -13,6 +13,7 @@ import { WebVitalsReporter } from "@/components/site/web-vitals-reporter";
 import { CookieConsent } from "@/components/site/cookie-consent";
 import { ShippingConfigProvider } from "@/lib/site/shipping-config-context";
 import { getShippingRules } from "@/lib/site/settings";
+import { currentTenant } from "@/lib/tenant";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -111,10 +112,13 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const shipping = await getShippingRules();
+  const tenant = await currentTenant();
   return (
     <html
       lang="sv"
       data-scroll-behavior="smooth"
+      data-tenant={tenant.slug}
+      style={{ "--color-primary": tenant.primaryColorHex } as React.CSSProperties}
       className={`${playfair.variable} ${inter.variable} ${instrumentSerif.variable} ${jetbrainsMono.variable} ${hankenGrotesk.variable} h-full antialiased`}
     >
       <head>
@@ -173,6 +177,27 @@ export default async function RootLayout({
         <Analytics />
         <WebVitalsReporter />
         <CookieConsent />
+        {process.env.NODE_ENV !== "production" && (
+          <div
+            aria-hidden
+            style={{
+              position: "fixed",
+              bottom: 8,
+              left: 8,
+              zIndex: 2147483647,
+              background: tenant.primaryColorHex,
+              color: "#fff",
+              font: "600 11px/1 ui-sans-serif, system-ui, sans-serif",
+              padding: "6px 9px",
+              borderRadius: 6,
+              letterSpacing: "0.04em",
+              boxShadow: "0 2px 8px rgba(0,0,0,.25)",
+              pointerEvents: "none",
+            }}
+          >
+            KORG · {tenant.name} ({tenant.slug})
+          </div>
+        )}
       </body>
     </html>
   );
