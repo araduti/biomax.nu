@@ -1,7 +1,8 @@
-import { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { existsSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { createRequire } from "node:module";
+import { join, sep } from "node:path";
 
 /**
  * Prisma Client singleton for server components and server actions.
@@ -9,18 +10,32 @@ import { join } from "node:path";
  * In dev with HMR we cache on `globalThis` to prevent connection-pool
  * exhaustion across re-evaluations.
  *
- * **Self-healing on `prisma generate`**: after a migration, `prisma generate`
- * rewrites the runtime client at `node_modules/.prisma/client/`. Turbopack
- * doesn't watch `node_modules`, so a cached instance keeps pointing at the
- * *old* generated class — missing new model accessors and crashing with
- * "Cannot read properties of undefined (reading 'findMany')".
+ * **Self-healing on `prisma generate`** (Prisma 7):
  *
- * To recover automatically without a manual dev-server restart, we expose
- * `prisma` as a thin `Proxy` that, on every access, checks the generated
- * client's mtime and rebuilds the instance whenever it changes. The mtime
- * stat is throttled to once per second so the per-query cost stays
- * negligible. In prod (where the build is immutable) this branch never
- * fires.
+ * `prisma generate` rewrites the *generated* client at
+ * `node_modules/.prisma/client/` — `index.js` (the ~320 KB codegen module
+ * carrying the model accessors and the argument-validation schema) plus the
+ * wasm query compiler. The `node_modules/@prisma/client` package is only a
+ * static re-export shim of `.prisma/client`; its own files keep their
+ * install-time mtime forever. So `.prisma/client/index.js` is the correct —
+ * and only — file to stat for "the client was regenerated".
+ *
+ * Detecting regeneration is necessary but not sufficient. A plain
+ * `import { PrismaClient } from "@prisma/client"` is resolved once and the
+ * class is pinned in the module cache for the life of the dev process.
+ * Re-`new`-ing that cached class yields a fresh instance of the *stale*
+ * class, so newly added fields still fail validation with
+ * `Unknown argument 'X'`. Rebuilding the instance alone never recovers.
+ *
+ * To actually self-heal without a dev-server restart we (a) throttle-stat
+ * `.prisma/client/index.js`'s mtime, and on change (b) evict the regenerated
+ * codegen from the CJS `require` cache and re-`require` `@prisma/client` to
+ * obtain a *new* `PrismaClient` class, then (c) instantiate from it. We only
+ * evict the generated files (`.prisma/client/*` and the thin
+ * `@prisma/client` re-export shim) and deliberately keep
+ * `@prisma/client/runtime/*` cached — that runtime is generic, unchanged by
+ * `generate`, and multi-MB + wasm, so re-parsing it every migration would be
+ * needlessly slow. In prod (immutable build) none of this branch runs.
  */
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -38,6 +53,14 @@ const GENERATED_CLIENT_PATH = join(
 
 const STAT_THROTTLE_MS = 1000;
 
+// A real Node CJS require (Next externalizes @prisma/client), so this shares
+// the runtime's require.cache and resolves the on-disk node_modules copy.
+const nodeRequire = createRequire(join(process.cwd(), "noop.cjs"));
+
+const GENERATED_DIR = `${sep}.prisma${sep}client${sep}`;
+const SHIM_DIR = `${sep}@prisma${sep}client${sep}`;
+const RUNTIME_DIR = `${sep}runtime${sep}`;
+
 function generatedClientMtime(): number {
   try {
     if (!existsSync(GENERATED_CLIENT_PATH)) return 0;
@@ -45,6 +68,20 @@ function generatedClientMtime(): number {
   } catch {
     return 0;
   }
+}
+
+function loadPrismaClientClass(): typeof PrismaClient {
+  // Drop the regenerated codegen + its re-export shim from the CJS cache so
+  // the next require rebuilds the class from the freshly generated source.
+  // Keep @prisma/client/runtime/* (generic, unchanged, heavy) cached.
+  for (const key of Object.keys(nodeRequire.cache)) {
+    if (key.includes(RUNTIME_DIR)) continue;
+    if (key.includes(GENERATED_DIR) || key.includes(SHIM_DIR)) {
+      delete nodeRequire.cache[key];
+    }
+  }
+  return (nodeRequire("@prisma/client") as { PrismaClient: typeof PrismaClient })
+    .PrismaClient;
 }
 
 function createClient(): PrismaClient {
@@ -56,7 +93,8 @@ function createClient(): PrismaClient {
   const adapter = new PrismaPg({
     connectionString: process.env.DATABASE_URL,
   });
-  return new PrismaClient({
+  const PrismaClientCtor = loadPrismaClientClass();
+  return new PrismaClientCtor({
     adapter,
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
   });
@@ -76,15 +114,9 @@ function ensureLive(): PrismaClient {
   // 50 times only costs us one stat call per second.
   const now = Date.now();
   const since = globalForPrisma.prismaLastCheckedAt ?? 0;
-  if (
-    !globalForPrisma.prisma ||
-    now - since > STAT_THROTTLE_MS
-  ) {
+  if (!globalForPrisma.prisma || now - since > STAT_THROTTLE_MS) {
     const ts = generatedClientMtime();
-    if (
-      !globalForPrisma.prisma ||
-      globalForPrisma.prismaGeneratedAt !== ts
-    ) {
+    if (!globalForPrisma.prisma || globalForPrisma.prismaGeneratedAt !== ts) {
       // Best-effort cleanup of the stale instance before replacing.
       globalForPrisma.prisma?.$disconnect().catch(() => {});
       globalForPrisma.prisma = createClient();
