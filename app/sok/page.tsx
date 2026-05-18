@@ -59,7 +59,7 @@ export default async function SearchPage({ searchParams }: RouteParams) {
 
         <section className="max-w-[1240px] mx-auto px-6 md:px-8 py-10 md:py-16">
           {q.length < 2 ? (
-            <p className="font-sans text-[14.5px] text-ink-mute italic">
+            <p className="font-sans text-body text-ink-mute italic">
               Skriv minst två tecken.
             </p>
           ) : total === 0 ? (
@@ -67,7 +67,7 @@ export default async function SearchPage({ searchParams }: RouteParams) {
               <p className="font-sans text-base text-ink-body mb-2">
                 Inga träffar på &quot;<strong>{q}</strong>&quot;.
               </p>
-              <p className="font-sans text-[14px] text-ink-mute">
+              <p className="font-sans text-body text-ink-mute">
                 Försök ett kortare ord, eller bläddra i{" "}
                 <Link
                   href="/produkter"
@@ -102,13 +102,13 @@ export default async function SearchPage({ searchParams }: RouteParams) {
                             />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-display text-[15px] font-medium text-primary-deep leading-tight line-clamp-2">
+                            <p className="font-display text-body-lg font-medium text-primary-deep leading-tight line-clamp-2">
                               {p.name}
                             </p>
-                            <p className="mt-1 font-sans text-[12.5px] text-ink-mute line-clamp-2">
+                            <p className="mt-1 font-sans text-caption text-ink-mute line-clamp-2">
                               {p.shortDescription.slice(0, 80)}
                             </p>
-                            <p className="mt-1.5 font-sans text-[13px] text-primary-deep tabular-nums font-semibold">
+                            <p className="mt-1.5 font-sans text-small text-primary-deep tabular-nums font-semibold">
                               {formatPriceSEK(p.price)}
                             </p>
                           </div>
@@ -134,7 +134,7 @@ export default async function SearchPage({ searchParams }: RouteParams) {
                           <p className="font-display text-lg font-medium text-primary-deep tracking-tight">
                             {b.label} →
                           </p>
-                          <p className="mt-1.5 font-sans text-[13.5px] text-ink-mute leading-relaxed line-clamp-2">
+                          <p className="mt-1.5 font-sans text-small text-ink-mute leading-relaxed line-clamp-2">
                             {b.summary}
                           </p>
                         </Link>
@@ -159,7 +159,7 @@ export default async function SearchPage({ searchParams }: RouteParams) {
                           <p className="font-display text-lg font-medium text-primary-deep tracking-tight">
                             {i.name} →
                           </p>
-                          <p className="mt-1.5 font-sans text-[13.5px] text-ink-mute leading-relaxed line-clamp-2">
+                          <p className="mt-1.5 font-sans text-small text-ink-mute leading-relaxed line-clamp-2">
                             {i.summary}
                           </p>
                         </Link>

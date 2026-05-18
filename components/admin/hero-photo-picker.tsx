@@ -103,7 +103,7 @@ function TabButton({
       role="tab"
       aria-selected={active}
       onClick={onClick}
-      className={`h-12 px-5 -mb-px border-b-2 font-sans text-[15px] font-semibold flex items-center gap-2 transition-colors ${
+      className={`h-12 px-5 -mb-px border-b-2 font-sans text-body-lg font-semibold flex items-center gap-2 transition-colors ${
         active
           ? "text-primary-deep border-primary-deep"
           : "text-ink-mute border-transparent hover:text-ink-body"
@@ -167,7 +167,7 @@ function UnsplashSearchTab({
     <div>
       {/* Suggestion chips — one-click jumps to a curated query */}
       <div className="mb-4">
-        <p className="font-sans text-[12.5px] text-ink-mute font-semibold mb-2">
+        <p className="font-sans text-caption text-ink-mute font-semibold mb-2">
           Förslag — klicka för att söka
         </p>
         <div className="flex flex-wrap gap-2">
@@ -180,7 +180,7 @@ function UnsplashSearchTab({
                 type="button"
                 onClick={() => runSearch(s.query)}
                 aria-pressed={active}
-                className={`h-10 px-4 rounded-full border-2 font-sans text-[13px] font-semibold transition-colors ${
+                className={`h-10 px-4 rounded-full border-2 font-sans text-small font-semibold transition-colors ${
                   active
                     ? "border-primary-deep bg-primary-deep text-surface"
                     : "border-border bg-surface text-primary-deep hover:bg-surface-warm"
@@ -207,30 +207,30 @@ function UnsplashSearchTab({
             }
           }}
           placeholder="Sök t.ex. ”midsummer flowers”, ”winter forest”…"
-          className="flex-1 h-12 px-4 rounded-lg border border-border bg-surface font-sans text-[15.5px] text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+          className="flex-1 h-12 px-4 rounded-lg border border-border bg-surface font-sans text-body-lg text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
         />
         <button
           type="button"
           onClick={() => runSearch(query)}
           disabled={searching}
-          className="h-12 px-5 rounded-lg bg-primary-deep text-surface font-sans text-[15px] font-semibold hover:bg-primary disabled:opacity-60 transition-colors"
+          className="h-12 px-5 rounded-lg bg-primary-deep text-surface font-sans text-body-lg font-semibold hover:bg-primary disabled:opacity-60 transition-colors"
         >
           {searching ? "Söker…" : "Sök"}
         </button>
       </div>
 
       {error && (
-        <p className="mb-4 font-sans text-[14px] text-status-error">{error}</p>
+        <p className="mb-4 font-sans text-body text-status-error">{error}</p>
       )}
 
       {photos === null && !searching && (
-        <p className="font-sans text-[14px] text-ink-mute italic py-8">
+        <p className="font-sans text-body text-ink-mute italic py-8">
           Skriv in vad du letar efter, eller klicka på ett förslag ovan.
         </p>
       )}
 
       {photos && photos.length === 0 && !searching && (
-        <p className="font-sans text-[14px] text-ink-mute italic py-8">
+        <p className="font-sans text-body text-ink-mute italic py-8">
           Inga träffar för ”{query}”. Prova en annan formulering.
         </p>
       )}
@@ -265,12 +265,12 @@ function UnsplashSearchTab({
                     unoptimized
                   />
                   {isSelected && (
-                    <span className="absolute top-2 right-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary-deep text-surface font-sans text-[11.5px] font-semibold">
+                    <span className="absolute top-2 right-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary-deep text-surface font-sans text-micro font-semibold">
                       ✓ Vald
                     </span>
                   )}
                 </button>
-                <p className="font-sans text-[11px] text-ink-mute mt-1.5 truncate">
+                <p className="font-sans text-micro text-ink-mute mt-1.5 truncate">
                   Foto:{" "}
                   <Link
                     href={p.photographer.profileUrl}
@@ -294,18 +294,18 @@ function UnsplashSearchTab({
             type="button"
             onClick={() => runSearch(query, page - 1)}
             disabled={searching || page <= 1}
-            className="h-10 px-4 rounded-lg border border-border bg-surface font-sans text-[14px] font-semibold text-primary-deep hover:bg-surface-warm disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="h-10 px-4 rounded-lg border border-border bg-surface font-sans text-body font-semibold text-primary-deep hover:bg-surface-warm disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             ← Föregående
           </button>
-          <span className="font-sans text-[13px] text-ink-mute tabular-nums">
+          <span className="font-sans text-small text-ink-mute tabular-nums">
             Sida {page} av {totalPages}
           </span>
           <button
             type="button"
             onClick={() => runSearch(query, page + 1)}
             disabled={searching || page >= totalPages}
-            className="h-10 px-4 rounded-lg border border-border bg-surface font-sans text-[14px] font-semibold text-primary-deep hover:bg-surface-warm disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="h-10 px-4 rounded-lg border border-border bg-surface font-sans text-body font-semibold text-primary-deep hover:bg-surface-warm disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             Nästa →
           </button>
@@ -321,12 +321,12 @@ function UnsplashNotConfigured() {
       <p className="font-display text-[18px] font-medium tracking-tight text-primary-deep mb-3">
         Anslut Unsplash för att söka bilder härifrån
       </p>
-      <p className="font-sans text-[14px] text-ink-body leading-relaxed mb-4">
+      <p className="font-sans text-body text-ink-body leading-relaxed mb-4">
         Unsplash har miljontals fria bilder som passar våra säsonger. Skaffa
         en gratis API-nyckel (tar två minuter) så kan du söka direkt i admin
         istället för att gå mellan flikar.
       </p>
-      <ol className="font-sans text-[14px] text-ink-body leading-relaxed space-y-2 list-decimal pl-5 mb-4">
+      <ol className="font-sans text-body text-ink-body leading-relaxed space-y-2 list-decimal pl-5 mb-4">
         <li>
           Gå till{" "}
           <Link
@@ -348,13 +348,13 @@ function UnsplashNotConfigured() {
         </li>
         <li>
           Lägg till i <code>.env.local</code>:{" "}
-          <code className="font-mono text-[13px] bg-surface px-2 py-0.5 rounded">
+          <code className="font-mono text-small bg-surface px-2 py-0.5 rounded">
             UNSPLASH_ACCESS_KEY=…
           </code>
         </li>
         <li>Starta om dev-servern.</li>
       </ol>
-      <p className="font-sans text-[13px] text-ink-mute italic">
+      <p className="font-sans text-small text-ink-mute italic">
         Under tiden kan du använda flikarna <strong>Bibliotek</strong> eller{" "}
         <strong>Egen bild</strong>.
       </p>
@@ -382,14 +382,14 @@ function LibraryTab({
 
   if (photos === null) {
     return (
-      <p className="font-sans text-[14px] text-ink-mute italic py-8">
+      <p className="font-sans text-body text-ink-mute italic py-8">
         Laddar bibliotek…
       </p>
     );
   }
   if (photos.length === 0) {
     return (
-      <p className="font-sans text-[14px] text-ink-mute italic py-8">
+      <p className="font-sans text-body text-ink-mute italic py-8">
         Inga sparade hero-bilder än. Sök på Unsplash eller ladda upp en
         egen — sedan dyker de upp här för återanvändning.
       </p>
@@ -420,7 +420,7 @@ function LibraryTab({
               unoptimized
             />
             {isSelected && (
-              <span className="absolute top-2 right-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary-deep text-surface font-sans text-[11.5px] font-semibold">
+              <span className="absolute top-2 right-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary-deep text-surface font-sans text-micro font-semibold">
                 ✓ Vald
               </span>
             )}
@@ -484,10 +484,10 @@ function UploadTab({
           <span aria-hidden className="text-5xl text-ink-soft mb-3">
             🖼
           </span>
-          <p className="font-display text-[17px] font-medium text-primary-deep">
+          <p className="font-display text-lead font-medium text-primary-deep">
             Dra hit en bild från datorn
           </p>
-          <p className="font-sans text-[13.5px] text-ink-mute mt-1">
+          <p className="font-sans text-small text-ink-mute mt-1">
             eller klicka för att välja en fil
           </p>
           <input
@@ -502,18 +502,18 @@ function UploadTab({
         </label>
         {uploading && (
           <div className="absolute inset-0 bg-surface/90 backdrop-blur-sm flex items-center justify-center">
-            <p className="font-display text-[16px] font-medium text-primary-deep">
+            <p className="font-display text-lead font-medium text-primary-deep">
               Laddar upp och bearbetar bilden…
             </p>
           </div>
         )}
       </div>
       {error && (
-        <p className="font-sans text-[14px] text-status-error">{error}</p>
+        <p className="font-sans text-body text-status-error">{error}</p>
       )}
 
       <div>
-        <p className="font-sans text-[12.5px] text-ink-mute font-semibold mb-2">
+        <p className="font-sans text-caption text-ink-mute font-semibold mb-2">
           Eller klistra in en bild-URL — vi laddar ner den åt dig vid Spara
         </p>
         <div className="flex gap-2">
@@ -521,7 +521,7 @@ function UploadTab({
             value={urlInput}
             onChange={(e) => setUrlInput(e.target.value)}
             placeholder="https://images.unsplash.com/photo-…"
-            className="flex-1 h-12 px-3 rounded-lg border border-border bg-surface font-sans text-[14.5px] text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
+            className="flex-1 h-12 px-3 rounded-lg border border-border bg-surface font-sans text-body text-ink outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
           />
           <button
             type="button"
@@ -530,13 +530,13 @@ function UploadTab({
               onPick({ url: urlInput.trim() });
               setUrlInput("");
             }}
-            className="h-12 px-5 rounded-lg border border-border bg-surface font-sans text-[14px] font-semibold text-primary-deep hover:bg-surface-warm disabled:opacity-60 transition-colors"
+            className="h-12 px-5 rounded-lg border border-border bg-surface font-sans text-body font-semibold text-primary-deep hover:bg-surface-warm disabled:opacity-60 transition-colors"
           >
             Använd URL
           </button>
         </div>
         {currentPhotoUrl.startsWith("/uploads/hero/") && (
-          <p className="mt-3 font-sans text-[12.5px] text-accent-deep font-semibold">
+          <p className="mt-3 font-sans text-caption text-accent-deep font-semibold">
             ✓ Sparad lokalt på biomax.nu — förblir tillgänglig.
           </p>
         )}
