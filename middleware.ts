@@ -1,5 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { tenantSlugFromHost, TENANT_HEADER } from "@/lib/tenant/host";
+import {
+  tenantSlugFromHost,
+  isPlatformHost,
+  TENANT_HEADER,
+  PLATFORM_HOST_HEADER,
+} from "@/lib/tenant/host";
 
 /**
  * Korg tenant-resolution middleware (ADR 0028 D3 — there was no
@@ -12,9 +17,16 @@ import { tenantSlugFromHost, TENANT_HEADER } from "@/lib/tenant/host";
  * server-side later.
  */
 export function middleware(req: NextRequest) {
-  const slug = tenantSlugFromHost(req.headers.get("host"));
+  const host = req.headers.get("host");
   const headers = new Headers(req.headers);
-  headers.set(TENANT_HEADER, slug);
+
+  if (isPlatformHost(host)) {
+    // Platform (Ampliosoft) host — ADR 0031. No tenant context here;
+    // the platform plane is cross-tenant and gated separately.
+    headers.set(PLATFORM_HOST_HEADER, "1");
+  } else {
+    headers.set(TENANT_HEADER, tenantSlugFromHost(host));
+  }
   return NextResponse.next({ request: { headers } });
 }
 

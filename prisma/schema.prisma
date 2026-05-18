@@ -40,6 +40,29 @@ enum TenantStatus {
   SUSPENDED
 }
 
+/// Platform (Ampliosoft) authority plane — ADR 0031. Deliberately NOT
+/// a UserRole value and NOT a tenant membership: platform power must
+/// be explicit, greppable in one table, and impossible to reach via
+/// any tenant-side role change. SUPPORT = read-mostly + scoped
+/// actions; SUPERADMIN = full.
+enum PlatformRole {
+  SUPERADMIN
+  SUPPORT
+}
+
+/// One row per Ampliosoft operator with cross-tenant authority
+/// (ADR 0031 D3). Hand-picked, never derived from User.role. The
+/// platform admin surface lives on its own host (admin.korg.nu) with
+/// its own auth cookie and mandatory 2FA.
+model PlatformAdmin {
+  id           String       @id @default(cuid())
+  userId       String       @unique
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platformRole PlatformRole @default(SUPPORT)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
 model User {
   id            String     @id @default(cuid())
   email         String     @unique
@@ -70,6 +93,9 @@ model User {
   twoFactors    TwoFactor[]
   returns       Return[]
   loyaltyAccount     LoyaltyAccount?
+  /// Platform (Ampliosoft) authority — present only for the few
+  /// cross-tenant operators (ADR 0031). NULL for everyone else.
+  platformAdmin      PlatformAdmin?
   /// Transactions where this user (an admin) created an ADJUST_ADMIN
   /// row. Named relation because the customer-side join is via
   /// `LoyaltyAccount` → `LoyaltyTransaction`.

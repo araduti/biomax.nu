@@ -15,6 +15,25 @@
 
 export const DEFAULT_TENANT_SLUG = "biomax";
 export const TENANT_HEADER = "x-korg-tenant";
+/** Set to "1" by middleware when the request is on the platform host
+ *  (admin.korg.nu / admin.localhost) — ADR 0031. The platform surface
+ *  is gated on this; a tenant host can never reach it. */
+export const PLATFORM_HOST_HEADER = "x-korg-platform-host";
+export const PLATFORM_HOST_LABEL = "admin";
+
+/** True when the Host is the platform host (admin.korg.nu or, in dev,
+ *  admin.localhost[:port]). Edge-safe. */
+export function isPlatformHost(host: string | null | undefined): boolean {
+  if (!host) return false;
+  const hostname = host.split(":")[0].trim().toLowerCase();
+  const parts = hostname.split(".");
+  // admin.localhost (dev) | admin.korg.nu (prod)
+  if (parts[0] !== PLATFORM_HOST_LABEL) return false;
+  return (
+    (parts.length === 2 && parts[1] === "localhost") ||
+    (parts.length >= 3 && parts.slice(-2).join(".") === "korg.nu")
+  );
+}
 
 const IPV4 = /^\d{1,3}(\.\d{1,3}){3}$/;
 
