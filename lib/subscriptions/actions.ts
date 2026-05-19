@@ -3,6 +3,8 @@
 import { z } from "zod";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { tenantScope } from "@/lib/tenant/db";
+import { currentTenant } from "@/lib/tenant";
 import { currentUser } from "@/lib/session";
 import { cuidSchema, fail } from "@/lib/validation/shared";
 import { DEFAULT_SUBSCRIPTION_DISCOUNT_PERCENT } from "./constants";
@@ -215,10 +217,13 @@ export async function finalizePaidSubscription(
   return sub.id;
 }
 
-async function authorizedSubscription(subscriptionId: string) {
+async function authorizedSubscription(
+  tx: Prisma.TransactionClient,
+  subscriptionId: string
+) {
   const user = await currentUser();
   if (!user) return null;
-  const sub = await prisma.subscription.findUnique({
+  const sub = await tx.subscription.findUnique({
     where: { id: subscriptionId },
     select: { id: true, userId: true, status: true, intervalDays: true },
   });
@@ -231,15 +236,18 @@ export async function pauseSubscription(
 ): Promise<SubscriptionActionResult> {
   const idParsed = cuidSchema.safeParse(rawId);
   if (!idParsed.success) return fail(idParsed.error);
-  const sub = await authorizedSubscription(idParsed.data);
-  if (!sub) return { ok: false, error: "Prenumerationen hittades inte." };
-  if (sub.status === "CANCELLED")
-    return { ok: false, error: "En avslutad prenumeration kan inte pausas." };
-  await prisma.subscription.update({
-    where: { id: sub.id },
-    data: { status: "PAUSED" },
+  const { id: tenantId } = await currentTenant();
+  return tenantScope(tenantId, async (tx) => {
+    const sub = await authorizedSubscription(tx, idParsed.data);
+    if (!sub) return { ok: false, error: "Prenumerationen hittades inte." };
+    if (sub.status === "CANCELLED")
+      return { ok: false, error: "En avslutad prenumeration kan inte pausas." };
+    await tx.subscription.update({
+      where: { id: sub.id },
+      data: { status: "PAUSED" },
+    });
+    return { ok: true, subscriptionId: sub.id };
   });
-  return { ok: true, subscriptionId: sub.id };
 }
 
 export async function resumeSubscription(
@@ -247,19 +255,25 @@ export async function resumeSubscription(
 ): Promise<SubscriptionActionResult> {
   const idParsed = cuidSchema.safeParse(rawId);
   if (!idParsed.success) return fail(idParsed.error);
-  const sub = await authorizedSubscription(idParsed.data);
-  if (!sub) return { ok: false, error: "Prenumerationen hittades inte." };
-  if (sub.status === "CANCELLED")
-    return { ok: false, error: "En avslutad prenumeration kan inte återupptas." };
-  // Resume schedules the next order one interval out — gives the customer
-  // a predictable "I'll get my next box in N days" expectation.
-  const nextOrderAt = new Date();
-  nextOrderAt.setUTCDate(nextOrderAt.getUTCDate() + sub.intervalDays);
-  await prisma.subscription.update({
-    where: { id: sub.id },
-    data: { status: "ACTIVE", nextOrderAt },
+  const { id: tenantId } = await currentTenant();
+  return tenantScope(tenantId, async (tx) => {
+    const sub = await authorizedSubscription(tx, idParsed.data);
+    if (!sub) return { ok: false, error: "Prenumerationen hittades inte." };
+    if (sub.status === "CANCELLED")
+      return {
+        ok: false,
+        error: "En avslutad prenumeration kan inte återupptas.",
+      };
+    // Resume schedules the next order one interval out — gives the customer
+    // a predictable "I'll get my next box in N days" expectation.
+    const nextOrderAt = new Date();
+    nextOrderAt.setUTCDate(nextOrderAt.getUTCDate() + sub.intervalDays);
+    await tx.subscription.update({
+      where: { id: sub.id },
+      data: { status: "ACTIVE", nextOrderAt },
+    });
+    return { ok: true, subscriptionId: sub.id };
   });
-  return { ok: true, subscriptionId: sub.id };
 }
 
 export async function cancelSubscription(
@@ -271,19 +285,22 @@ export async function cancelSubscription(
     reason: rawReason,
   });
   if (!parsed.success) return fail(parsed.error);
-  const sub = await authorizedSubscription(parsed.data.subscriptionId);
-  if (!sub) return { ok: false, error: "Prenumerationen hittades inte." };
-  if (sub.status === "CANCELLED")
+  const { id: tenantId } = await currentTenant();
+  return tenantScope(tenantId, async (tx) => {
+    const sub = await authorizedSubscription(tx, parsed.data.subscriptionId);
+    if (!sub) return { ok: false, error: "Prenumerationen hittades inte." };
+    if (sub.status === "CANCELLED")
+      return { ok: true, subscriptionId: sub.id };
+    await tx.subscription.update({
+      where: { id: sub.id },
+      data: {
+        status: "CANCELLED",
+        cancelledAt: new Date(),
+        cancellationReason: parsed.data.reason || null,
+      },
+    });
     return { ok: true, subscriptionId: sub.id };
-  await prisma.subscription.update({
-    where: { id: sub.id },
-    data: {
-      status: "CANCELLED",
-      cancelledAt: new Date(),
-      cancellationReason: parsed.data.reason || null,
-    },
   });
-  return { ok: true, subscriptionId: sub.id };
 }
 
 export async function changeInterval(
@@ -296,25 +313,30 @@ export async function changeInterval(
   });
   if (!parsed.success) return fail(parsed.error);
   const { subscriptionId, intervalDays } = parsed.data;
-  const sub = await authorizedSubscription(subscriptionId);
-  if (!sub) return { ok: false, error: "Prenumerationen hittades inte." };
-  // Reschedule the next order — but only push forward, never pull back
-  // (don't surprise the customer with an earlier renewal than they
-  // expected). If the new interval would result in an earlier date than
-  // the existing nextOrderAt, keep the existing.
-  const proposed = new Date();
-  proposed.setUTCDate(proposed.getUTCDate() + intervalDays);
-  const current = await prisma.subscription.findUnique({
-    where: { id: sub.id },
-    select: { nextOrderAt: true },
+  const { id: tenantId } = await currentTenant();
+  return tenantScope(tenantId, async (tx) => {
+    const sub = await authorizedSubscription(tx, subscriptionId);
+    if (!sub) return { ok: false, error: "Prenumerationen hittades inte." };
+    // Reschedule the next order — but only push forward, never pull back
+    // (don't surprise the customer with an earlier renewal than they
+    // expected). If the new interval would result in an earlier date than
+    // the existing nextOrderAt, keep the existing.
+    const proposed = new Date();
+    proposed.setUTCDate(proposed.getUTCDate() + intervalDays);
+    const current = await tx.subscription.findUnique({
+      where: { id: sub.id },
+      select: { nextOrderAt: true },
+    });
+    const nextOrderAt =
+      current && current.nextOrderAt > proposed
+        ? current.nextOrderAt
+        : proposed;
+    await tx.subscription.update({
+      where: { id: sub.id },
+      data: { intervalDays, nextOrderAt },
+    });
+    return { ok: true, subscriptionId: sub.id };
   });
-  const nextOrderAt =
-    current && current.nextOrderAt > proposed ? current.nextOrderAt : proposed;
-  await prisma.subscription.update({
-    where: { id: sub.id },
-    data: { intervalDays, nextOrderAt },
-  });
-  return { ok: true, subscriptionId: sub.id };
 }
 
 export async function changeQuantity(
@@ -329,16 +351,22 @@ export async function changeQuantity(
   const { subscriptionLineId, quantity } = parsed.data;
   const user = await currentUser();
   if (!user) return { ok: false, error: "Logga in först." };
-  const line = await prisma.subscriptionLine.findUnique({
-    where: { id: subscriptionLineId },
-    select: { subscriptionId: true, subscription: { select: { userId: true } } },
+  const { id: tenantId } = await currentTenant();
+  return tenantScope(tenantId, async (tx) => {
+    const line = await tx.subscriptionLine.findUnique({
+      where: { id: subscriptionLineId },
+      select: {
+        subscriptionId: true,
+        subscription: { select: { userId: true } },
+      },
+    });
+    if (!line || line.subscription.userId !== user.id) {
+      return { ok: false, error: "Raden hittades inte." };
+    }
+    await tx.subscriptionLine.update({
+      where: { id: subscriptionLineId },
+      data: { quantity },
+    });
+    return { ok: true, subscriptionId: line.subscriptionId };
   });
-  if (!line || line.subscription.userId !== user.id) {
-    return { ok: false, error: "Raden hittades inte." };
-  }
-  await prisma.subscriptionLine.update({
-    where: { id: subscriptionLineId },
-    data: { quantity },
-  });
-  return { ok: true, subscriptionId: line.subscriptionId };
 }

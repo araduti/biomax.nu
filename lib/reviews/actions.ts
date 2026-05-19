@@ -1,8 +1,11 @@
 "use server";
 
 import { z } from "zod";
+import type { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { tenantScope } from "@/lib/tenant/db";
+import { currentTenant } from "@/lib/tenant";
 import { currentUser } from "@/lib/session";
 import { BEHOV_LABELS } from "@/lib/symptoms/behov-labels";
 import { fail } from "@/lib/validation/shared";
@@ -69,61 +72,76 @@ export async function submitReview(raw: unknown): Promise<SubmitReviewResult> {
   const authorName = input.authorName?.trim() || null;
   const reviewerGoal = input.reviewerGoal ?? null;
 
-  const product = await prisma.product.findUnique({
-    where: { slug: input.productSlug },
-    select: { id: true },
-  });
-  if (!product) return { ok: false, error: "Produkten hittades inte." };
-
-  // Rate-limit: one PENDING or APPROVED review per user per product.
-  // Prevents accidental double-submit and obvious spam. Editors can still
-  // request a re-write via support if the first review needs correction.
-  const existing = await prisma.review.findFirst({
-    where: {
-      productId: product.id,
-      userId: user.id,
-      status: { in: ["PENDING", "APPROVED"] },
-    },
-    select: { id: true },
-  });
-  if (existing) {
-    return {
-      ok: false,
-      error: "Du har redan lämnat en recension för denna produkt.",
-    };
-  }
-
-  const verified = await isVerifiedPurchase(user.id, product.id);
-
+  const { id: tenantId } = await currentTenant();
+  let created: boolean;
   try {
-    await prisma.review.create({
-      data: {
-        productId: product.id,
-        userId: user.id,
-        rating: input.rating,
-        title,
-        body,
-        authorName,
-        verified,
-        reviewerGoal,
-        status: "PENDING",
-      },
+    created = await tenantScope(tenantId, async (tx) => {
+      const product = await tx.product.findUnique({
+        where: { slug: input.productSlug },
+        select: { id: true },
+      });
+      if (!product) return false;
+
+      // Rate-limit: one PENDING or APPROVED review per user per product.
+      // Prevents accidental double-submit and obvious spam. Editors can
+      // still request a re-write via support if the first review needs
+      // correction.
+      const existing = await tx.review.findFirst({
+        where: {
+          productId: product.id,
+          userId: user.id,
+          status: { in: ["PENDING", "APPROVED"] },
+        },
+        select: { id: true },
+      });
+      if (existing) {
+        throw new DuplicateReviewError();
+      }
+
+      const verified = await isVerifiedPurchase(tx, user.id, product.id);
+
+      await tx.review.create({
+        data: {
+          productId: product.id,
+          userId: user.id,
+          tenantId,
+          rating: input.rating,
+          title,
+          body,
+          authorName,
+          verified,
+          reviewerGoal,
+          status: "PENDING",
+        },
+      });
+      return true;
     });
   } catch (err) {
+    if (err instanceof DuplicateReviewError) {
+      return {
+        ok: false,
+        error: "Du har redan lämnat en recension för denna produkt.",
+      };
+    }
     console.error("submitReview failed:", err);
     return { ok: false, error: "Kunde inte spara recensionen." };
   }
+
+  if (!created) return { ok: false, error: "Produkten hittades inte." };
 
   revalidatePath(`/produkter/${input.productSlug}`);
   revalidatePath("/admin/recensioner");
   return { ok: true, status: "PENDING" };
 }
 
+class DuplicateReviewError extends Error {}
+
 async function isVerifiedPurchase(
+  tx: Prisma.TransactionClient,
   userId: string,
   productId: string
 ): Promise<boolean> {
-  const hit = await prisma.orderItem.findFirst({
+  const hit = await tx.orderItem.findFirst({
     where: {
       productId,
       order: {
