@@ -13,10 +13,14 @@ import {
   type IngredientCategory,
   type ReferenceKind,
 } from "@/lib/knowledge/ingredients";
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { publicProductWhere } from "@/lib/products/availability";
 import { JsonLd } from "@/components/seo/json-ld";
 import { breadcrumbLd, definedTermLd } from "@/lib/jsonld";
+
+// Multi-tenant (ADR 0032 D4): path-keyed route ISR/SSG would serve one
+// tenant's HTML to another (route cache keyed by URL, not Host).
+export const dynamic = "force-dynamic";
 
 type RouteParams = Promise<{ slug: string }>;
 
@@ -61,10 +65,12 @@ export default async function IngredientPage({
   // Find products that mention this ingredient (or its aliases) in their list.
   // Cheap server-side filter — the row name was already used to slug-match
   // upstream so we replicate that logic with a JSONB containment query.
-  const allProducts = await prisma.product.findMany({
-    where: publicProductWhere(),
-    select: { slug: true, name: true, ingredientList: true, imageUrl: true },
-  });
+  const allProducts = await hostTenantScope((tx) =>
+    tx.product.findMany({
+      where: publicProductWhere(),
+      select: { slug: true, name: true, ingredientList: true, imageUrl: true },
+    })
+  );
   const matchTerms = [ing.name.toLowerCase(), ...(ing.aliases ?? []).map((a) => a.toLowerCase())];
   const products = allProducts.filter((p) => {
     const list = p.ingredientList as { rows?: { name: string }[] } | null;

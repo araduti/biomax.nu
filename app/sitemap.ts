@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { getAllIngredients } from "@/lib/knowledge/ingredients";
 import { findProductsForIngredient } from "@/lib/knowledge/ingredient-products";
 import { publicProductWhere } from "@/lib/products/availability";
@@ -14,21 +14,27 @@ const SITE = "https://www.biomax.nu";
 // (Products & categories use their own `updatedAt`, not this.)
 const SITE_CONTENT_UPDATED = new Date("2026-05-17T00:00:00Z");
 
-export const revalidate = 3600;
+// Multi-tenant (ADR 0032 D4): path-keyed route ISR would serve one
+// tenant's sitemap to another (route cache keyed by URL, not Host).
+export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [products, categories] = await Promise.all([
-    prisma.product.findMany({
-      where: publicProductWhere(),
-      select: { slug: true, updatedAt: true },
-    }),
-    prisma.category.findMany({
-      where: {
-        slug: { not: "uncategorized" },
-        products: { some: publicProductWhere() },
-      },
-      select: { slug: true, updatedAt: true },
-    }),
+    hostTenantScope((tx) =>
+      tx.product.findMany({
+        where: publicProductWhere(),
+        select: { slug: true, updatedAt: true },
+      })
+    ),
+    hostTenantScope((tx) =>
+      tx.category.findMany({
+        where: {
+          slug: { not: "uncategorized" },
+          products: { some: publicProductWhere() },
+        },
+        select: { slug: true, updatedAt: true },
+      })
+    ),
   ]);
 
   const now = SITE_CONTENT_UPDATED;

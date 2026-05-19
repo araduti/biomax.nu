@@ -7,7 +7,7 @@
  * We render this dynamically from Postgres so new products and categories
  * appear automatically. Cached for 1 hour.
  */
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { categoryMetaBySlug } from "@/lib/categories";
 import { stripHtml } from "@/lib/sanitize";
 import { getAllIngredients } from "@/lib/knowledge/ingredients";
@@ -18,28 +18,34 @@ import { getActiveBundles } from "@/lib/bundles/queries";
 
 const SITE = "https://www.biomax.nu";
 
-export const revalidate = 3600;
+// Multi-tenant (ADR 0032 D4): path-keyed route ISR would serve one
+// tenant's llms.txt to another (route cache keyed by URL, not Host).
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   const [products, categories] = await Promise.all([
-    prisma.product.findMany({
-      where: publicProductWhere(),
-      select: {
-        slug: true,
-        name: true,
-        shortDescription: true,
-        seoFocusKw: true,
-      },
-      orderBy: { totalSales: "desc" },
-    }),
-    prisma.category.findMany({
-      where: {
-        slug: { not: "uncategorized" },
-        products: { some: publicProductWhere() },
-      },
-      select: { slug: true, name: true },
-      orderBy: { name: "asc" },
-    }),
+    hostTenantScope((tx) =>
+      tx.product.findMany({
+        where: publicProductWhere(),
+        select: {
+          slug: true,
+          name: true,
+          shortDescription: true,
+          seoFocusKw: true,
+        },
+        orderBy: { totalSales: "desc" },
+      })
+    ),
+    hostTenantScope((tx) =>
+      tx.category.findMany({
+        where: {
+          slug: { not: "uncategorized" },
+          products: { some: publicProductWhere() },
+        },
+        select: { slug: true, name: true },
+        orderBy: { name: "asc" },
+      })
+    ),
   ]);
 
   const lines: string[] = [];

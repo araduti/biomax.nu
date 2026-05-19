@@ -9,7 +9,7 @@ import { Display, Eyebrow, Accent } from "@/components/ui/typography";
 import { JsonLd } from "@/components/seo/json-ld";
 import { breadcrumbLd, faqLd } from "@/lib/jsonld";
 import { ProductCard } from "@/components/product/product-card";
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { publicProductWhere } from "@/lib/products/availability";
 import {
   getRatingsByProductIds,
@@ -27,7 +27,9 @@ const dateFmt = new Intl.DateTimeFormat("sv-SE", {
 
 const SITE = "https://www.biomax.nu";
 
-export const revalidate = 3600;
+// Multi-tenant (ADR 0032 D4): path-keyed route ISR would serve one
+// tenant's HTML to another (route cache keyed by URL, not Host).
+export const dynamic = "force-dynamic";
 
 export async function generateStaticParams() {
   return getAllSymptoms().map((s) => ({ slug: s.slug }));
@@ -68,14 +70,16 @@ export default async function SymptomLandingPage({
   // so the page always has at least a handful of products to point at.
   const curated =
     sym.productSlugs.length > 0
-      ? await prisma.product.findMany({
-          where: {
-            ...publicProductWhere(),
-            slug: { in: sym.productSlugs },
-            price: { gt: 0 },
-          },
-          include: { categories: { select: { name: true }, take: 1 } },
-        })
+      ? await hostTenantScope((tx) =>
+          tx.product.findMany({
+            where: {
+              ...publicProductWhere(),
+              slug: { in: sym.productSlugs },
+              price: { gt: 0 },
+            },
+            include: { categories: { select: { name: true }, take: 1 } },
+          })
+        )
       : [];
   const orderBySlug = new Map(sym.productSlugs.map((s, i) => [s, i]));
   curated.sort(
@@ -85,16 +89,18 @@ export default async function SymptomLandingPage({
 
   let products = curated;
   if (products.length === 0) {
-    products = await prisma.product.findMany({
-      where: {
-        ...publicProductWhere(),
-        price: { gt: 0 },
-        categories: { some: { slug: sym.categorySlug } },
-      },
-      include: { categories: { select: { name: true }, take: 1 } },
-      orderBy: { totalSales: "desc" },
-      take: 3,
-    });
+    products = await hostTenantScope((tx) =>
+      tx.product.findMany({
+        where: {
+          ...publicProductWhere(),
+          price: { gt: 0 },
+          categories: { some: { slug: sym.categorySlug } },
+        },
+        include: { categories: { select: { name: true }, take: 1 } },
+        orderBy: { totalSales: "desc" },
+        take: 3,
+      })
+    );
   }
 
   const ratings = await getRatingsByProductIds(products.map((p) => p.id));
