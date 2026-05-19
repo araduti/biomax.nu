@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { currentUser } from "@/lib/session";
 import { Display, Eyebrow } from "@/components/ui/typography";
 import { formatPriceSEK } from "@/lib/format";
@@ -12,7 +12,8 @@ export default async function RoutinePage() {
   const user = await currentUser();
   if (!user) return null;
 
-  const wl = await prisma.wishlist.findUnique({
+  const wl = await hostTenantScope((tx) =>
+    tx.wishlist.findUnique({
     where: { userId: user.id },
     include: {
       items: {
@@ -31,7 +32,8 @@ export default async function RoutinePage() {
         },
       },
     },
-  });
+    })
+  );
 
   // Hide unpublished products silently — admin may have unpublished one
   // after the customer saved it. We don't delete the WishlistProduct row
