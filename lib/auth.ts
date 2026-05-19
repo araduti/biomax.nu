@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-import { twoFactor } from "better-auth/plugins";
+import { twoFactor, organization } from "better-auth/plugins";
 import { createAuthMiddleware, APIError } from "better-auth/api";
 import { prisma } from "./prisma";
 import { sendTransactional } from "./email/client";
@@ -209,6 +209,15 @@ export const auth = betterAuth({
         amount: 10,
         length: 10,
       },
+    }),
+    // Korg tenant plane (ADR 0031 D2): Organization 1:1 Tenant. The
+    // session's active organization → Tenant (Watchtower pattern;
+    // wired into resolution in the tenantId+RLS sub-slice). Org
+    // deletion is disabled — tenant lifecycle is a platform action
+    // (ADR 0031 D6), not a self-serve org delete. Invitation email
+    // delivery is added with the merchant-staff UI later.
+    organization({
+      disableOrganizationDeletion: true,
     }),
   ],
 });

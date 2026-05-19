@@ -7,16 +7,17 @@ import {
 } from "@/lib/tenant/host";
 
 /**
- * Korg tenant-resolution middleware (ADR 0028 D3 — there was no
- * middleware before this). Edge-safe: parses Host → tenant slug and
- * forwards it as a request header so server code
- * (`lib/tenant`.currentTenant) can resolve the Tenant row without a
- * client-supplied id (IDOR-proof by construction).
+ * Korg tenant resolution (ADR 0028 D3). Next 16 renamed Middleware →
+ * **Proxy** (file must be `proxy.ts`, export `proxy`); the legacy
+ * `middleware.ts` convention is deprecated and broke routing here.
  *
- * Slice 1 is subdomain-only; custom-domain lookup (a DB call) moves
- * server-side later.
+ * Edge-safe: parses Host → tenant slug and forwards it as a request
+ * header so server code (`lib/tenant`.currentTenant) resolves the
+ * Tenant row without a client-supplied id (IDOR-proof by
+ * construction). Subdomain-only for now; custom-domain lookup (a DB
+ * call) moves server-side later.
  */
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const host = req.headers.get("host");
   const headers = new Headers(req.headers);
 

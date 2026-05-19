@@ -96,6 +96,10 @@ model User {
   /// Platform (Ampliosoft) authority — present only for the few
   /// cross-tenant operators (ADR 0031). NULL for everyone else.
   platformAdmin      PlatformAdmin?
+  /// Better Auth organization plugin (ADR 0031 D2): tenant-staff
+  /// memberships + invitations this user sent.
+  members            Member[]
+  sentInvitations    Invitation[] @relation("invitation_inviter")
   /// Transactions where this user (an admin) created an ADJUST_ADMIN
   /// row. Named relation because the customer-side join is via
   /// `LoyaltyAccount` → `LoyaltyTransaction`.
@@ -165,6 +169,59 @@ model Verification {
   updatedAt  DateTime @updatedAt
 
   @@index([identifier])
+}
+
+// ───────────── Better Auth `organization` plugin (ADR 0031 D2)
+// Schema dictated by better-auth/plugins/organization (see
+// node_modules/better-auth/dist/plugins/organization/schema.mjs).
+// Don't rename fields. Organization 1:1 Tenant (Watchtower pattern):
+// the session's active organization → Tenant. Teams unused.
+model Organization {
+  id        String       @id
+  name      String
+  slug      String       @unique
+  logo      String?
+  /// Better Auth serialises org metadata to a JSON string.
+  metadata  String?
+  createdAt DateTime     @default(now())
+  members   Member[]
+  invitations Invitation[]
+  /// 1:1 link to the Korg tenant this org represents.
+  tenant    Tenant?
+
+  @@index([slug])
+}
+
+model Member {
+  id             String       @id
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Org role: owner | admin | member (Better Auth defaults; ADR 0031
+  /// D2 reads member≈staff for now, refined later).
+  role           String
+  createdAt      DateTime     @default(now())
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+}
+
+model Invitation {
+  id             String       @id
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  email          String
+  role           String
+  status         String       @default("pending")
+  teamId         String?
+  inviterId      String
+  inviter        User         @relation("invitation_inviter", fields: [inviterId], references: [id], onDelete: Cascade)
+  expiresAt      DateTime
+  createdAt      DateTime     @default(now())
+
+  @@index([organizationId])
+  @@index([email])
 }
 
 model Category {
@@ -1309,6 +1366,10 @@ model Tenant {
   /// Storefront primary color; biomax keeps its existing navy.
   primaryColorHex String       @default("#1e3a5f")
   status          TenantStatus @default(ACTIVE)
+  /// 1:1 Better Auth Organization backing this tenant (ADR 0031 D2).
+  /// Nullable during the 3a backfill; every tenant gets one by seed.
+  organizationId  String?      @unique
+  organization    Organization? @relation(fields: [organizationId], references: [id])
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 

@@ -12,28 +12,77 @@
  */
 import { prisma } from "../../lib/prisma";
 
+import { randomUUID } from "node:crypto";
+
+const TENANTS = [
+  {
+    slug: "biomax",
+    name: "Biomax",
+    tagline: "Livskvalitet i fokus sedan 2001",
+    primaryColorHex: "#1e3a5f",
+  },
+  {
+    slug: "demo",
+    name: "Demo Butik",
+    tagline: "En andra hyresgäst — för att se Korg flerhyresgäst i dev",
+    primaryColorHex: "#7A8B6F",
+  },
+] as const;
+
+/**
+ * Idempotent: ensures each tenant, its 1:1 Better Auth Organization
+ * (ADR 0031 D2), the link, and — for biomax (tenant zero) — backfills
+ * existing `role=admin` users as org `owner` members (ADR 0031 D5).
+ */
 export async function seedTenants(): Promise<void> {
-  await prisma.tenant.upsert({
-    where: { slug: "biomax" },
-    update: {},
-    create: {
-      slug: "biomax",
-      name: "Biomax",
-      tagline: "Livskvalitet i fokus sedan 2001",
-      primaryColorHex: "#1e3a5f",
-    },
-  });
-  await prisma.tenant.upsert({
-    where: { slug: "demo" },
-    update: {},
-    create: {
-      slug: "demo",
-      name: "Demo Butik",
-      tagline: "En andra hyresgäst — för att se Korg flerhyresgäst i dev",
-      primaryColorHex: "#7A8B6F",
-    },
-  });
-  console.log("[seed] tenants ensured: biomax (zero), demo");
+  for (const t of TENANTS) {
+    const tenant = await prisma.tenant.upsert({
+      where: { slug: t.slug },
+      update: {},
+      create: t,
+    });
+
+    let orgId = tenant.organizationId;
+    if (!orgId) {
+      const org = await prisma.organization.upsert({
+        where: { slug: t.slug },
+        update: {},
+        create: { id: randomUUID(), name: t.name, slug: t.slug },
+      });
+      orgId = org.id;
+      await prisma.tenant.update({
+        where: { id: tenant.id },
+        data: { organizationId: orgId },
+      });
+    }
+
+    if (t.slug === "biomax") {
+      const admins = await prisma.user.findMany({
+        where: { role: "admin" },
+        select: { id: true },
+      });
+      for (const a of admins) {
+        await prisma.member.upsert({
+          where: {
+            organizationId_userId: { organizationId: orgId, userId: a.id },
+          },
+          update: {},
+          create: {
+            id: randomUUID(),
+            organizationId: orgId,
+            userId: a.id,
+            role: "owner",
+          },
+        });
+      }
+      if (admins.length) {
+        console.log(
+          `[seed] biomax org: ${admins.length} existing admin(s) → owner members`
+        );
+      }
+    }
+  }
+  console.log("[seed] tenants + orgs ensured: biomax (zero), demo");
 }
 
 // Standalone entrypoint (tsx prisma/seeds/tenants.ts)
