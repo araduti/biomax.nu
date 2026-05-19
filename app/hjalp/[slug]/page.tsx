@@ -15,7 +15,7 @@ import {
   getRatingsByProductIds,
   getGoalReviewsForProducts,
 } from "@/lib/reviews/queries";
-import { getSymptom, getAllSymptoms } from "@/lib/symptoms/registry";
+import { getSymptom } from "@/lib/symptoms/registry";
 import { getIngredient } from "@/lib/knowledge/ingredients";
 import { DEFAULT_SUBSCRIPTION_DISCOUNT_PERCENT } from "@/lib/subscriptions/constants";
 
@@ -31,9 +31,11 @@ const SITE = "https://www.biomax.nu";
 // tenant's HTML to another (route cache keyed by URL, not Host).
 export const dynamic = "force-dynamic";
 
-export async function generateStaticParams() {
-  return getAllSymptoms().map((s) => ({ slug: s.slug }));
-}
+// generateStaticParams removed (ADR 0032 D4): the route is
+// force-dynamic for tenant isolation, so build-time param
+// enumeration is inert AND a footgun — if force-dynamic were ever
+// lifted it would prerender path-keyed HTML over the seam's
+// host-resolved product reads. Dynamic-only by construction.
 
 export async function generateMetadata({
   params,

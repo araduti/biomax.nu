@@ -8,7 +8,6 @@ import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { Display, Eyebrow } from "@/components/ui/typography";
 import {
   getIngredient,
-  getAllIngredients,
   getRelated,
   type IngredientCategory,
   type ReferenceKind,
@@ -34,9 +33,9 @@ const CATEGORY_LABEL: Record<IngredientCategory, string> = {
   other: "Övrigt",
 };
 
-export async function generateStaticParams() {
-  return getAllIngredients().map((i) => ({ slug: i.slug }));
-}
+// generateStaticParams removed (ADR 0032 D4): force-dynamic for
+// tenant isolation → build-time enumeration is inert AND a footgun
+// over the seam's host-resolved product reads. Dynamic-only.
 
 export async function generateMetadata({
   params,

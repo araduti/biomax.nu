@@ -29,7 +29,6 @@ import {
 } from "@/lib/jsonld";
 import {
   getIngredient,
-  getAllIngredients,
   getRelated,
 } from "@/lib/knowledge/ingredients";
 import { findProductsForIngredient } from "@/lib/knowledge/ingredient-products";
@@ -38,21 +37,14 @@ import { formatPriceSEK } from "@/lib/format";
 
 type RouteParams = Promise<{ slug: string }>;
 
-export const revalidate = 3600;
-
-/**
- * Only generate landing pages for ingredients that actually have products.
- * Cheaper than rendering 19 routes, more honest SEO than a "köp X" page that
- * shows a 0-product grid.
- */
-export async function generateStaticParams() {
-  const out: { slug: string }[] = [];
-  for (const ing of getAllIngredients()) {
-    const products = await findProductsForIngredient(ing);
-    if (products.length > 0) out.push({ slug: ing.slug });
-  }
-  return out;
-}
+// Multi-tenant (ADR 0032 D4): path-keyed route ISR would serve one
+// tenant's "köp X" HTML to another (route cache is URL-keyed, not
+// Host-keyed). Dynamic per request; product data is tenant-scoped via
+// findProductsForIngredient → the seam. generateStaticParams was
+// removed: it enumerated one tenant's catalog at build time (a
+// multi-tenant anti-pattern) and is incompatible with the now
+// host-resolved data layer.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
