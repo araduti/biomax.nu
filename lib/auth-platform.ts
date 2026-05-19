@@ -39,6 +39,10 @@ export const platformAuth = betterAuth({
   database: prismaAdapter(prisma, { provider: "postgresql" }),
   baseURL:
     process.env.PLATFORM_AUTH_URL ?? "http://admin.localhost:3000",
+  // Mounted at /api/platform-auth/[...all] (NOT the default /api/auth).
+  // Without this Better Auth strips the wrong prefix → every endpoint
+  // 404s and login "fails".
+  basePath: "/api/platform-auth",
   secret: betterAuthSecret,
 
   emailAndPassword: { enabled: true },
