@@ -1,5 +1,5 @@
 import { AdminShell } from "@/components/admin/admin-shell";
-import { requireAdmin } from "@/lib/admin/guard";
+import { requireTenantRole } from "@/lib/admin/guard";
 import { getAdminBadges } from "@/lib/admin/badges";
 import { getIntegrationStatus } from "@/lib/admin/integration-status";
 
@@ -25,7 +25,7 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const admin = await requireAdmin();
+  const admin = await requireTenantRole("admin");
   const display = admin.firstName || admin.name || admin.email;
   // Parallel-fetch action counts so the sidebar can render chips next
   // to "Ordrar / Returer / Recensioner / Lager". Cached 60 s — every

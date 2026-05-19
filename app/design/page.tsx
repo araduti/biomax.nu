@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { BiomaxLogo } from "@/components/brand/BiomaxLogo";
-import { requireAdmin } from "@/lib/admin/guard";
+import { requireTenantRole } from "@/lib/admin/guard";
 
 export const metadata: Metadata = {
   title: "Design — biomax.nu",
   robots: { index: false, follow: false },
 };
 
-// Admin-only design-system preview. requireAdmin() throws/redirects for
+// Admin-only design-system preview. requireTenantRole() throws/redirects for
 // non-admins so the 1700-line client tree is never rendered for anonymous
 // visitors. The robots noindex above is belt; this is suspenders.
 
@@ -1654,7 +1654,7 @@ function Footer() {
 }
 
 export default async function DesignPage() {
-  await requireAdmin();
+  await requireTenantRole("admin");
   return (
     <main style={{ background: T.surface, fontFamily: T.fontBody, color: T.ink }}>
       <PaletteReference />

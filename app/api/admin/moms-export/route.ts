@@ -16,7 +16,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/admin/guard";
+import { requireTenantRole } from "@/lib/admin/guard";
 import { audit } from "@/lib/admin/audit";
 
 export const runtime = "nodejs";
@@ -43,7 +43,7 @@ function csvEscape(s: string): string {
 }
 
 export async function GET(req: Request) {
-  const admin = await requireAdmin();
+  const admin = await requireTenantRole("admin");
 
   const url = new URL(req.url);
   const fromStr = url.searchParams.get("from") ?? "";
@@ -180,7 +180,7 @@ export async function GET(req: Request) {
   const filename = `biomax-moms-${parsed.data.from}-${parsed.data.to}.csv`;
 
   await audit({
-    actorId: admin.id,
+    actorId: admin.userId,
     action: "moms.export",
     diff: { from: parsed.data.from, to: parsed.data.to, orderCount: orders.length },
   });

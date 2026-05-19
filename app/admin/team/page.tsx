@@ -1,13 +1,13 @@
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { TeamManager } from "@/components/admin/team-manager";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/admin/guard";
+import { requireTenantRole } from "@/lib/admin/guard";
 
 export const metadata = { title: "Team & behörighet" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminTeamPage() {
-  const me = await requireAdmin();
+  const me = await requireTenantRole("owner");
 
   const admins = await prisma.user.findMany({
     where: { role: "admin" },
@@ -31,7 +31,7 @@ export default async function AdminTeamPage() {
       [a.firstName, a.lastName].filter(Boolean).join(" ") ||
       a.email,
     twoFactorEnabled: a.twoFactorEnabled,
-    isSelf: a.id === me.id,
+    isSelf: a.id === me.userId,
   }));
 
   return (

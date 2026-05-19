@@ -2,14 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "./guard";
+import { requireTenantRole } from "./guard";
 import { audit } from "./audit";
 
 type Result = { ok: true } | { ok: false; error: string };
 
 /**
  * Access control for the admin surface. Admin status is a plain
- * `User.role` string re-checked on every request by requireAdmin();
+ * `User.role` string re-checked on every request by requireTenantRole();
  * these actions are the only supported way to change it from the UI
  * (besides the CLI `scripts/make-admin.ts` and the bootstrap seeder).
  *
@@ -20,13 +20,13 @@ type Result = { ok: true } | { ok: false; error: string };
  *   - The LAST admin cannot be demoted (the panel must never become
  *     unreachable — recovery would need shell + the make-admin script).
  *
- * Note: promoting/demoting changes the DB row immediately. requireAdmin
+ * Note: promoting/demoting changes the DB row immediately. requireTenantRole
  * re-queries per request and 2FA is enforced there, so a freshly
  * promoted user still has to pass 2FA enrolment before /admin opens.
  */
 
 export async function promoteToAdmin(emailRaw: string): Promise<Result> {
-  const actor = await requireAdmin();
+  const actor = await requireTenantRole("owner");
   const email = emailRaw.trim().toLowerCase();
   if (!email) return { ok: false, error: "Ange en e-postadress." };
 
@@ -50,7 +50,7 @@ export async function promoteToAdmin(emailRaw: string): Promise<Result> {
     data: { role: "admin" },
   });
   await audit({
-    actorId: actor.id,
+    actorId: actor.userId,
     action: "team.promote",
     entityType: "User",
     entityId: user.id,
@@ -63,9 +63,9 @@ export async function promoteToAdmin(emailRaw: string): Promise<Result> {
 }
 
 export async function demoteAdmin(userId: string): Promise<Result> {
-  const actor = await requireAdmin();
+  const actor = await requireTenantRole("owner");
 
-  if (userId === actor.id) {
+  if (userId === actor.userId) {
     return {
       ok: false,
       error:
@@ -95,7 +95,7 @@ export async function demoteAdmin(userId: string): Promise<Result> {
     data: { role: "customer" },
   });
   await audit({
-    actorId: actor.id,
+    actorId: actor.userId,
     action: "team.demote",
     entityType: "User",
     entityId: target.id,

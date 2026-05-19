@@ -10,7 +10,7 @@ import {
 } from "@/lib/admin/stats";
 import { getAdminBadges } from "@/lib/admin/badges";
 import { getPlausibleSnapshot } from "@/lib/integrations/plausible";
-import { requireAdmin } from "@/lib/admin/guard";
+import { requireTenantRole } from "@/lib/admin/guard";
 
 /**
  * Admin overview ("Översikt") — Direction D composition, Phase 1 data.
@@ -33,7 +33,7 @@ const eyebrowDateFmt = new Intl.DateTimeFormat("sv-SE", {
 export default async function AdminOverview() {
   const [admin, s, badges, pack, bestSellers, daily, visits] =
     await Promise.all([
-      requireAdmin(),
+      requireTenantRole("admin"),
       getDashboardStats(),
       getAdminBadges(),
       getPackQueue(8),
