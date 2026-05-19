@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { currentTenant } from "@/lib/tenant";
+import { withTenantRLS } from "@/lib/tenant/rls";
 import { TopBar } from "@/components/site/top-bar";
 import { Header } from "@/components/site/header";
 import { Footer } from "@/components/site/footer";
@@ -33,11 +35,13 @@ import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { productCacheTag } from "@/lib/cache/tags";
 
-// ISR with tag-based invalidation. Admin product/image saves call
-// `revalidateTag(productCacheTag(slug))` so edits land within seconds
-// instead of waiting for the 10-min window. React `cache()` further
-// dedupes `getProduct` calls within a single render (metadata + body).
-export const revalidate = 600;
+// Multi-tenant (ADR 0028/0030 D7): tenant-scoped routes must NOT use
+// path-keyed route-level ISR — Next caches the rendered route by URL
+// path, not by Host, so one tenant's HTML (and notFound status) would
+// be served to another. The route is dynamic; data-layer caching is
+// retained via the tenant-keyed `unstable_cache` in getProduct
+// (revalidate 600 + tag invalidation preserved there).
+export const dynamic = "force-dynamic";
 
 type RouteParams = Promise<{ slug: string }>;
 
@@ -73,23 +77,32 @@ function rehydrateDates<T>(row: T): T {
   return row;
 }
 
-async function fetchProduct(slug: string) {
-  return prisma.product.findUnique({
-    where: { slug },
-    include: {
-      categories: { select: { id: true, name: true, slug: true } },
-      variants: { orderBy: { position: "asc" } },
-    },
-  });
+async function fetchProduct(tenantId: string, slug: string) {
+  // Tenant-isolated read: FORCE RLS on "Product" + SET LOCAL via
+  // withTenantRLS → another tenant's slug resolves to null → 404.
+  return withTenantRLS(tenantId, (tx) =>
+    tx.product.findUnique({
+      where: { slug },
+      include: {
+        categories: { select: { id: true, name: true, slug: true } },
+        variants: { orderBy: { position: "asc" } },
+      },
+    })
+  );
 }
 
 type ProductRow = Awaited<ReturnType<typeof fetchProduct>>;
 
 const getProduct = cache(async (slug: string): Promise<ProductRow> => {
-  const row = await unstable_cache(() => fetchProduct(slug), ["product-by-slug", slug], {
-    tags: [productCacheTag(slug)],
-    revalidate: 600,
-  })();
+  const tenant = await currentTenant();
+  // Cache key MUST include the tenant (ADR 0028/0030 D7) — a slug-only
+  // key would serve one tenant's product to another (cache poisoning,
+  // defeating RLS at the cache layer).
+  const row = await unstable_cache(
+    () => fetchProduct(tenant.id, slug),
+    ["product-by-slug", tenant.id, slug],
+    { tags: [productCacheTag(slug)], revalidate: 600 }
+  )();
   return rehydrateDates(row);
 });
 
@@ -188,17 +201,19 @@ export default async function ProductPage({
     pinnedProducts.length > 0
       ? pinnedProducts
       : primaryCategory
-        ? await prisma.product.findMany({
-            where: {
-              ...publicProductWhere(),
-              price: { gt: 0 },
-              slug: { not: product.slug },
-              categories: { some: { id: primaryCategory.id } },
-            },
-            include: { categories: { select: { name: true }, take: 1 } },
-            orderBy: { totalSales: "desc" },
-            take: 3,
-          })
+        ? await withTenantRLS((await currentTenant()).id, (tx) =>
+            tx.product.findMany({
+              where: {
+                ...publicProductWhere(),
+                price: { gt: 0 },
+                slug: { not: product.slug },
+                categories: { some: { id: primaryCategory.id } },
+              },
+              include: { categories: { select: { name: true }, take: 1 } },
+              orderBy: { totalSales: "desc" },
+              take: 3,
+            })
+          )
         : [];
 
   const crumbs = [
