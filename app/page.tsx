@@ -1,4 +1,5 @@
-import { prisma } from "@/lib/prisma";
+import { currentTenant } from "@/lib/tenant";
+import { tenantScope } from "@/lib/tenant/db";
 import { currentSeason, type Season } from "@/lib/seasons";
 import { getActiveHero } from "@/lib/homepage/hero";
 import { publicProductWhere } from "@/lib/products/availability";
@@ -31,7 +32,11 @@ export const metadata: Metadata = {
   },
 };
 
-export const revalidate = 300; // ISR: refresh hero/bestsellers data every 5 min
+// Multi-tenant (ADR 0032 D4): path-keyed route ISR would serve one
+// tenant's homepage HTML to another (route cache is keyed by URL, not
+// Host). Dynamic per request; data-layer caching belongs in
+// tenant-keyed helpers, not route-level ISR.
+export const dynamic = "force-dynamic";
 
 // Last-resort fallback when no editor has marked any product as featured for
 // the current season. Kept narrow — the goal is "homepage never blank", not
@@ -55,45 +60,55 @@ export default async function Home() {
   // batches them in flight.
   const needs = new Set(blocks.map((b) => b.kind));
 
+  // Tenant-scoped reads (ADR 0032 D2): resolve once, run owned-model
+  // queries through the seam → withTenantRLS → FORCE RLS.
+  const { id: tenantId } = await currentTenant();
+
   const editorPickedPromise = needs.has("hero")
-    ? prisma.product.findFirst({
-        where: { ...publicProductWhere(), featured: true, price: { gt: 0 } },
-        orderBy: { updatedAt: "desc" },
-        select: { id: true, slug: true, name: true, price: true, imageUrl: true },
-      })
+    ? tenantScope(tenantId, (tx) =>
+        tx.product.findFirst({
+          where: { ...publicProductWhere(), featured: true, price: { gt: 0 } },
+          orderBy: { updatedAt: "desc" },
+          select: { id: true, slug: true, name: true, price: true, imageUrl: true },
+        })
+      )
     : Promise.resolve(null);
 
   const bestsellersPromise = needs.has("bestsellers")
-    ? prisma.product.findMany({
-        where: { ...publicProductWhere(), price: { gt: 0 } },
-        orderBy: { totalSales: "desc" },
-        take: 6, // take the max any block payload could need; renderer slices
-        select: {
-          id: true,
-          slug: true,
-          name: true,
-          shortDescription: true,
-          imageUrl: true,
-          price: true,
-          totalSales: true,
-          categories: { select: { name: true }, take: 1 },
-        },
-      })
+    ? tenantScope(tenantId, (tx) =>
+        tx.product.findMany({
+          where: { ...publicProductWhere(), price: { gt: 0 } },
+          orderBy: { totalSales: "desc" },
+          take: 6, // take the max any block payload could need; renderer slices
+          select: {
+            id: true,
+            slug: true,
+            name: true,
+            shortDescription: true,
+            imageUrl: true,
+            price: true,
+            totalSales: true,
+            categories: { select: { name: true }, take: 1 },
+          },
+        })
+      )
     : Promise.resolve([]);
 
   const categoriesPromise = needs.has("categories")
-    ? prisma.category.findMany({
-        where: {
-          slug: { not: "uncategorized" },
-          products: { some: publicProductWhere() },
-        },
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          _count: { select: { products: { where: publicProductWhere() } } },
-        },
-      })
+    ? tenantScope(tenantId, (tx) =>
+        tx.category.findMany({
+          where: {
+            slug: { not: "uncategorized" },
+            products: { some: publicProductWhere() },
+          },
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            _count: { select: { products: { where: publicProductWhere() } } },
+          },
+        })
+      )
     : Promise.resolve([]);
 
   const bundlesPromise = needs.has("bundle-rail")
@@ -118,10 +133,12 @@ export default async function Home() {
   // an unnecessary query when the editor has claimed the slot.
   const fallbackFeatured =
     needs.has("hero") && !editorPicked
-      ? await prisma.product.findUnique({
-          where: { slug: SEASONAL_FALLBACK_SLUG[season] },
-          select: { id: true, slug: true, name: true, price: true, imageUrl: true },
-        })
+      ? await tenantScope(tenantId, (tx) =>
+          tx.product.findUnique({
+            where: { slug: SEASONAL_FALLBACK_SLUG[season] },
+            select: { id: true, slug: true, name: true, price: true, imageUrl: true },
+          })
+        )
       : null;
 
   const ctx: HomepageContext = {

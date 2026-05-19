@@ -8,7 +8,7 @@
  *
  * Returns three buckets, each capped, with `kind` for grouped rendering.
  */
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { publicProductWhere } from "@/lib/products/availability";
 import { getAllIngredients } from "@/lib/knowledge/ingredients";
 import { getAllSymptoms } from "@/lib/symptoms/registry";
@@ -61,24 +61,28 @@ export async function search(rawQuery: string): Promise<SearchResults> {
 
   // Products: case-insensitive contains across name + shortDescription.
   // We don't search longDescription (signal-to-noise tanks).
-  const products = await prisma.product.findMany({
-    where: {
-      ...publicProductWhere(),
-      OR: [
-        { name: { contains: q, mode: "insensitive" } },
-        { shortDescription: { contains: q, mode: "insensitive" } },
-      ],
-    },
-    orderBy: { totalSales: "desc" },
-    take: PRODUCT_LIMIT,
-    select: {
-      slug: true,
-      name: true,
-      shortDescription: true,
-      imageUrl: true,
-      price: true,
-    },
-  });
+  // Tenant-scoped via the seam (ADR 0032 D2); resolves the tenant from
+  // the request Host — search() runs during the /sok RSC render.
+  const products = await hostTenantScope((tx) =>
+    tx.product.findMany({
+      where: {
+        ...publicProductWhere(),
+        OR: [
+          { name: { contains: q, mode: "insensitive" } },
+          { shortDescription: { contains: q, mode: "insensitive" } },
+        ],
+      },
+      orderBy: { totalSales: "desc" },
+      take: PRODUCT_LIMIT,
+      select: {
+        slug: true,
+        name: true,
+        shortDescription: true,
+        imageUrl: true,
+        price: true,
+      },
+    })
+  );
 
   // Ingredients (in-memory — ~40 entries, no need for SQL).
   const ingredients = getAllIngredients()

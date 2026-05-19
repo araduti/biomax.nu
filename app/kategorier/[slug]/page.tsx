@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { currentTenant } from "@/lib/tenant";
+import { tenantScope, hostTenantScope } from "@/lib/tenant/db";
 import { publicProductWhere } from "@/lib/products/availability";
 import { TopBar } from "@/components/site/top-bar";
 import { Header } from "@/components/site/header";
@@ -21,7 +22,9 @@ import {
 } from "@/lib/jsonld";
 import { categoryMetaBySlug } from "@/lib/categories";
 
-export const revalidate = 600;
+// Multi-tenant (ADR 0032 D4): no path-keyed route ISR — would serve
+// one tenant's category HTML to another. Dynamic per request.
+export const dynamic = "force-dynamic";
 
 type RouteParams = Promise<{ slug: string }>;
 
@@ -31,7 +34,9 @@ export async function generateMetadata({
   params: RouteParams;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const category = await prisma.category.findUnique({ where: { slug } });
+  const category = await hostTenantScope((tx) =>
+    tx.category.findUnique({ where: { slug } })
+  );
   if (!category) return { title: "Hälsoområde hittades inte" };
   const meta = categoryMetaBySlug(slug);
   return {
@@ -49,59 +54,66 @@ export default async function CategoryPage({
   params: RouteParams;
 }) {
   const { slug } = await params;
-  const category = await prisma.category.findUnique({
-    where: { slug },
-    select: {
-      id: true,
-      slug: true,
-      name: true,
-      _count: { select: { products: { where: publicProductWhere() } } },
-    },
-  });
+  const { id: tenantId } = await currentTenant();
+  const category = await tenantScope(tenantId, (tx) =>
+    tx.category.findUnique({
+      where: { slug },
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        _count: { select: { products: { where: publicProductWhere() } } },
+      },
+    })
+  );
   if (!category) {
-    const hit = await prisma.redirect.findUnique({
-      where: { fromPath: `/kategorier/${slug}` },
-      select: { toPath: true },
-    });
+    const hit = await tenantScope(tenantId, (tx) =>
+      tx.redirect.findUnique({
+        where: { fromPath: `/kategorier/${slug}` },
+        select: { toPath: true },
+      })
+    );
     if (hit) redirect(hit.toPath);
     notFound();
   }
   const meta = categoryMetaBySlug(slug);
   if (!meta) notFound();
 
-  const [products, allCategories] = await Promise.all([
-    prisma.product.findMany({
-      where: {
-        ...publicProductWhere(),
-        price: { gt: 0 },
-        categories: { some: { id: category.id } },
-      },
-      // Explicit select — see comment in app/produkter/page.tsx.
-      select: {
-        id: true,
-        slug: true,
-        name: true,
-        shortDescription: true,
-        imageUrl: true,
-        price: true,
-        totalSales: true,
-        categories: { select: { name: true }, take: 1 },
-      },
-      orderBy: { totalSales: "desc" },
-    }),
-    prisma.category.findMany({
-      where: {
-        slug: { not: "uncategorized" },
-        products: { some: publicProductWhere() },
-      },
-      select: {
-        slug: true,
-        name: true,
-        _count: { select: { products: { where: publicProductWhere() } } },
-      },
-      orderBy: { name: "asc" },
-    }),
-  ]);
+  const [products, allCategories] = await tenantScope(tenantId, (tx) =>
+    Promise.all([
+      tx.product.findMany({
+        where: {
+          ...publicProductWhere(),
+          price: { gt: 0 },
+          categories: { some: { id: category.id } },
+        },
+        // Explicit select — see comment in app/produkter/page.tsx.
+        select: {
+          id: true,
+          slug: true,
+          name: true,
+          shortDescription: true,
+          imageUrl: true,
+          price: true,
+          totalSales: true,
+          categories: { select: { name: true }, take: 1 },
+        },
+        orderBy: { totalSales: "desc" },
+      }),
+      tx.category.findMany({
+        where: {
+          slug: { not: "uncategorized" },
+          products: { some: publicProductWhere() },
+        },
+        select: {
+          slug: true,
+          name: true,
+          _count: { select: { products: { where: publicProductWhere() } } },
+        },
+        orderBy: { name: "asc" },
+      }),
+    ])
+  );
 
   const ratings = await getRatingsByProductIds(products.map((p) => p.id));
 
