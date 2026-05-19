@@ -25,6 +25,21 @@ export function proxy(req: NextRequest) {
     // Platform (Ampliosoft) host — ADR 0031. No tenant context here;
     // the platform plane is cross-tenant and gated separately.
     headers.set(PLATFORM_HOST_HEADER, "1");
+
+    // The platform host serves ONLY the platform app — never the
+    // storefront. Anything outside /platform and the platform auth
+    // endpoint redirects to /platform (which itself bounces to
+    // /platform/login when unauthenticated).
+    const path = req.nextUrl.pathname;
+    const isPlatformPath =
+      path === "/platform" ||
+      path.startsWith("/platform/") ||
+      path.startsWith("/api/platform-auth");
+    if (!isPlatformPath) {
+      const url = req.nextUrl.clone();
+      url.pathname = "/platform";
+      return NextResponse.redirect(url);
+    }
   } else {
     headers.set(TENANT_HEADER, tenantSlugFromHost(host));
   }
