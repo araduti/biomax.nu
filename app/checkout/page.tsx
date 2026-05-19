@@ -5,7 +5,7 @@ import { Footer } from "@/components/site/footer";
 import { isKlarnaConfigured } from "@/lib/klarna/client";
 import { currentUser } from "@/lib/session";
 import { getTrustpilotSummary } from "@/lib/integrations/trustpilot";
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { CheckoutFlow } from "./checkout-flow";
 
 export const metadata: Metadata = {
@@ -19,18 +19,20 @@ export default async function CheckoutPage() {
   const klarnaConfigured = isKlarnaConfigured();
   const trustpilot = await getTrustpilotSummary();
   const recommendations = (
-    await prisma.product.findMany({
-      where: { status: "PUBLISHED" },
-      take: 3,
-      orderBy: { createdAt: "desc" },
-      select: {
-        slug: true,
-        name: true,
-        shortDescription: true,
-        imageUrl: true,
-        price: true,
-      },
-    })
+    await hostTenantScope((tx) =>
+      tx.product.findMany({
+        where: { status: "PUBLISHED" },
+        take: 3,
+        orderBy: { createdAt: "desc" },
+        select: {
+          slug: true,
+          name: true,
+          shortDescription: true,
+          imageUrl: true,
+          price: true,
+        },
+      })
+    )
   ).map((p) => ({
     slug: p.slug,
     name: p.name,

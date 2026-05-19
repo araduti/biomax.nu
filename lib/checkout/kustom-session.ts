@@ -18,6 +18,8 @@ import {
 import type { CheckoutLine, CheckoutDiscount } from "@/lib/klarna/cart-to-order";
 import type { KlarnaAddress } from "@/lib/klarna/types";
 import { currentTenant } from "@/lib/tenant";
+import { tenantScope } from "@/lib/tenant/db";
+import { withTenantRLS } from "@/lib/tenant/rls";
 import {
   resolvePaymentCredentialsForTenant,
   type ResolvedPaymentCredentials,
@@ -97,19 +99,23 @@ async function buildValidatedPayload(
   const cart = parsed.data;
 
   const productIds = [...new Set(cart.map((l) => l.productId))];
-  const products = await prisma.product.findMany({
-    where: { id: { in: productIds } },
-    select: {
-      id: true,
-      slug: true,
-      sku: true,
-      name: true,
-      price: true,
-      status: true,
-      imageUrl: true,
-      variants: { select: { id: true, sku: true, price: true } },
-    },
-  });
+  // Owned-model read (storefront → Host tenant already resolved above).
+  // Route through the seam (ADR 0032 D2).
+  const products = await tenantScope(tenant.id, (tx) =>
+    tx.product.findMany({
+      where: { id: { in: productIds } },
+      select: {
+        id: true,
+        slug: true,
+        sku: true,
+        name: true,
+        price: true,
+        status: true,
+        imageUrl: true,
+        variants: { select: { id: true, sku: true, price: true } },
+      },
+    })
+  );
 
   const lines: CheckoutLine[] = [];
   for (const item of cart) {
@@ -383,16 +389,22 @@ export async function startSubscriptionCheckout(
       ) / 100;
     const orderNumber = generateSubOrderNumber();
     const trackingToken = crypto.randomBytes(24).toString("base64url");
-    const lastAddress = await prisma.address.findFirst({
-      where: { userId: user.id },
-      orderBy: { createdAt: "desc" },
-      select: { id: true },
-    });
+    const lastAddress = await tenantScope(tenant.id, (tx) =>
+      tx.address.findFirst({
+        where: { userId: user.id },
+        orderBy: { createdAt: "desc" },
+        select: { id: true },
+      })
+    );
     const unitPrice =
       Math.round(t.listUnitPrice * (1 - t.discountPercent / 100) * 100) / 100;
 
     try {
-      await prisma.$transaction(async (tx) => {
+      // ADR 0032 D7: same stub-PAID first-order + subscription write,
+      // now the inner body of withTenantRLS (the storefront tenant is
+      // resolved above). Mirrors placeOrder's stub path; every owned
+      // create stamped tenantId for WITH-CHECK readiness.
+      await withTenantRLS(tenant.id, async (tx) => {
         const order = await tx.order.create({
           data: {
             orderNumber,
@@ -414,6 +426,7 @@ export async function startSubscriptionCheckout(
             shippingAddressId: lastAddress?.id ?? null,
             billingAddressId: lastAddress?.id ?? null,
             legacySource: null,
+            tenantId: tenant.id,
             items: {
               create: [
                 {
@@ -425,6 +438,7 @@ export async function startSubscriptionCheckout(
                   quantity: t.quantity,
                   unitPrice,
                   totalPrice: unitPrice * t.quantity,
+                  tenantId: tenant.id,
                 },
               ],
             },
@@ -437,6 +451,7 @@ export async function startSubscriptionCheckout(
           firstOrderId: order.id,
           shippingAddressId: lastAddress?.id ?? null,
           billingAddressId: lastAddress?.id ?? null,
+          tenantId: tenant.id,
         });
       });
     } catch (err) {
@@ -445,10 +460,12 @@ export async function startSubscriptionCheckout(
     }
 
     try {
-      const created = await prisma.order.findUnique({
-        where: { orderNumber },
-        select: { id: true },
-      });
+      const created = await tenantScope(tenant.id, (tx) =>
+        tx.order.findUnique({
+          where: { orderNumber },
+          select: { id: true },
+        })
+      );
       if (created) {
         const { awardOrderPoints } = await import("@/lib/loyalty/earn");
         await awardOrderPoints(created.id);
