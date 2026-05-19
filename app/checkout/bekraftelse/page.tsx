@@ -12,6 +12,8 @@ import {
   ensureOrderFromKustomOrder,
 } from "@/lib/checkout/order-actions";
 import { getKlarnaOrder, isKlarnaConfigured } from "@/lib/klarna/client";
+import { currentTenant } from "@/lib/tenant";
+import { resolvePaymentCredentialsForTenant } from "@/lib/klarna/credentials";
 import { ClearCartOnMount, DeliveryReminder } from "./clear-cart";
 
 export const metadata: Metadata = {
@@ -125,10 +127,15 @@ export default async function ConfirmationPage({
   // read fails we still show a graceful "payment received" page
   // because the webhook will persist the order out-of-band.
   const kustomOrderId = params.klarna_order_id;
-  if (!orderNumber && kustomOrderId && isKlarnaConfigured()) {
+  // Per-tenant credentials (ADR 0034): this page has the Host, so we
+  // resolve the tenant + its creds and pass the tenant id into
+  // ensureOrderFromKustomOrder for the merchant_data cross-check.
+  const tenant = await currentTenant();
+  const creds = await resolvePaymentCredentialsForTenant(tenant.id);
+  if (!orderNumber && kustomOrderId && isKlarnaConfigured(creds)) {
     try {
-      const kustomOrder = await getKlarnaOrder(kustomOrderId);
-      const res = await ensureOrderFromKustomOrder(kustomOrder);
+      const kustomOrder = await getKlarnaOrder(kustomOrderId, creds);
+      const res = await ensureOrderFromKustomOrder(kustomOrder, tenant.id);
       if (res.ok) orderNumber = res.orderNumber;
     } catch (err) {
       console.error("[bekraftelse] Kustom read/ensure failed", err);

@@ -619,9 +619,18 @@ export async function getOrderForConfirmation(orderNumber: string) {
  * shipped casing/shape variants (cf. lib/postnord/booking.ts).
  */
 export async function ensureOrderFromKustomOrder(
-  k: KlarnaOrder
+  k: KlarnaOrder,
+  /**
+   * Tenant resolved by the caller (ADR 0034 D5): the confirmation page
+   * passes `currentTenant().id` (Host); the push webhook passes the
+   * tenant it recovered from the push token / merchant_data. When
+   * provided it is cross-checked against `merchant_data.t`. This slice
+   * only *validates + exposes* the tenant — wrapping the 5-domain write
+   * in `withTenantRLS` is ADR 0032 D7 / slice #7 (see TODO below).
+   */
+  resolvedTenantId?: string | null
 ): Promise<
-  | { ok: true; orderNumber: string; created: boolean }
+  | { ok: true; orderNumber: string; created: boolean; tenantId: string | null }
   | { ok: false; error: string }
 > {
   const paymentReference = k.order_id;
@@ -634,7 +643,12 @@ export async function ensureOrderFromKustomOrder(
     select: { orderNumber: true },
   });
   if (existing) {
-    return { ok: true, orderNumber: existing.orderNumber, created: false };
+    return {
+      ok: true,
+      orderNumber: existing.orderNumber,
+      created: false,
+      tenantId: resolvedTenantId ?? null,
+    };
   }
 
   if (!isKustomOrderComplete(k.status)) {
@@ -727,13 +741,21 @@ export async function ensureOrderFromKustomOrder(
   let redeemUserId: string | null = null;
   let subscriptionIntent: SubscriptionIntent | null = null;
   let subscriptionUserId: string | null = null;
+  // Tenant marker stamped into merchant_data at the createKlarnaOrder
+  // call sites (ADR 0034 D5). Authoritative once the order is read
+  // back (Kustom echoes merchant_data verbatim).
+  let merchantDataTenantId: string | null = null;
   if (k.merchant_data) {
     try {
       const md = JSON.parse(k.merchant_data) as {
+        t?: string;
         uid?: string;
         lp?: number;
         sub?: SubscriptionIntent;
       };
+      if (md && typeof md.t === "string" && md.t) {
+        merchantDataTenantId = md.t;
+      }
       if (md && typeof md.lp === "number" && md.lp > 0 && md.uid) {
         redeemedPoints = Math.floor(md.lp);
         redeemUserId = md.uid;
@@ -752,6 +774,30 @@ export async function ensureOrderFromKustomOrder(
       );
     }
   }
+
+  // Tenant cross-check (ADR 0034 D5). If the caller resolved a tenant
+  // (push token, or the confirmation page's Host) AND merchant_data
+  // carries one, they MUST agree — a mismatch means a token/order
+  // confusion and the paid order must not be persisted under the wrong
+  // merchant. The authoritative value is merchant_data.t (we authored
+  // it); the caller's value is the bootstrap signal.
+  if (
+    resolvedTenantId &&
+    merchantDataTenantId &&
+    resolvedTenantId !== merchantDataTenantId
+  ) {
+    console.error(
+      `[kustom-confirm] tenant mismatch on ${paymentReference}: ` +
+        `resolved=${resolvedTenantId} merchant_data=${merchantDataTenantId}`
+    );
+    return {
+      ok: false,
+      error: "Betalningen kunde inte kopplas till rätt butik.",
+    };
+  }
+  const effectiveTenantId =
+    merchantDataTenantId ?? resolvedTenantId ?? null;
+
   const { pointsToKr } = await import("@/lib/loyalty/constants");
   // Subscription first orders carry the recurring discount as a Kustom
   // discount line; record the same amount on our Order so the persisted
@@ -795,6 +841,12 @@ export async function ensureOrderFromKustomOrder(
   const trackingToken = crypto.randomBytes(24).toString("base64url");
 
   try {
+    // TODO(#7) ADR 0032 D7: this 5-domain write becomes the *inner*
+    // body of `withTenantRLS(effectiveTenantId, async (tx) => …)` —
+    // `SET LOCAL app.current_tenant_id` then the existing order/stock/
+    // loyalty/subscription writes, WITH CHECK blocking cross-tenant
+    // writes. effectiveTenantId is resolved + validated above; only
+    // the RLS wrap is deferred to slice #7 (not done here on purpose).
     await prisma.$transaction(async (tx) => {
       const address = await tx.address.create({
         data: {
@@ -895,7 +947,12 @@ export async function ensureOrderFromKustomOrder(
       select: { orderNumber: true },
     });
     if (raced) {
-      return { ok: true, orderNumber: raced.orderNumber, created: false };
+      return {
+        ok: true,
+        orderNumber: raced.orderNumber,
+        created: false,
+        tenantId: effectiveTenantId,
+      };
     }
     if (err instanceof InsufficientStockError) {
       // The customer ALREADY PAID through Kustom but we can't reserve
@@ -1004,5 +1061,10 @@ export async function ensureOrderFromKustomOrder(
     })();
   }
 
-  return { ok: true, orderNumber, created: true };
+  return {
+    ok: true,
+    orderNumber,
+    created: true,
+    tenantId: effectiveTenantId,
+  };
 }

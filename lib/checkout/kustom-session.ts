@@ -17,6 +17,11 @@ import {
 } from "@/lib/klarna/cart-to-order";
 import type { CheckoutLine, CheckoutDiscount } from "@/lib/klarna/cart-to-order";
 import type { KlarnaAddress } from "@/lib/klarna/types";
+import { currentTenant } from "@/lib/tenant";
+import {
+  resolvePaymentCredentialsForTenant,
+  type ResolvedPaymentCredentials,
+} from "@/lib/klarna/credentials";
 import { cuidSchema, positiveIntSchema, fail } from "@/lib/validation/shared";
 import {
   resolveSubscriptionTarget,
@@ -70,9 +75,20 @@ async function buildValidatedPayload(
   rawCart: unknown,
   rawLoyaltyPoints: unknown
 ): Promise<
-  | { ok: true; payload: Awaited<ReturnType<typeof buildKlarnaPayload>> }
+  | {
+      ok: true;
+      payload: Awaited<ReturnType<typeof buildKlarnaPayload>>;
+      creds: ResolvedPaymentCredentials;
+    }
   | { ok: false; error: string }
 > {
+  // Resolve the acting tenant (Host → currentTenant, ADR 0028 D3) and
+  // its payment credentials (ADR 0034 D4: per-tenant store, env
+  // fallback for tenant zero). The tenant id is stamped into
+  // merchant_data so the Host-less push webhook can recover it
+  // (ADR 0034 D5).
+  const tenant = await currentTenant();
+  const creds = await resolvePaymentCredentialsForTenant(tenant.id);
   const parsed = CartSchema.safeParse(rawCart);
   if (!parsed.success) {
     const f = fail(parsed.error);
@@ -142,7 +158,11 @@ async function buildValidatedPayload(
   const user = await currentUser();
   const requestedPoints = Number(rawLoyaltyPoints);
   let discount: CheckoutDiscount | null = null;
-  let merchantData: string | undefined;
+  // merchant_data always carries the tenant marker `t` (ADR 0034 D5);
+  // loyalty `uid`/`lp` are merged in when a redemption is validated.
+  const merchantData: { t: string; uid?: string; lp?: number } = {
+    t: tenant.id,
+  };
   if (
     user?.id &&
     Number.isFinite(requestedPoints) &&
@@ -173,7 +193,8 @@ async function buildValidatedPayload(
       label: "Familjen Biomax-poäng",
       reference: "LOYALTY",
     };
-    merchantData = JSON.stringify({ uid: user.id, lp: v.points });
+    merchantData.uid = user.id;
+    merchantData.lp = v.points;
   }
 
   const billingAddress = await prefillAddress();
@@ -181,11 +202,12 @@ async function buildValidatedPayload(
     lines,
     baseURL,
     discount,
-    billingAddress
+    billingAddress,
+    creds.webhookSecret
   );
-  if (merchantData) payload.merchant_data = merchantData;
+  payload.merchant_data = JSON.stringify(merchantData);
 
-  return { ok: true, payload };
+  return { ok: true, payload, creds };
 }
 
 /**
@@ -201,7 +223,7 @@ export async function createKustomCheckout(
   const built = await buildValidatedPayload(rawCart, rawLoyaltyPoints);
   if (!built.ok) return built;
   try {
-    const order = await createKlarnaOrder(built.payload);
+    const order = await createKlarnaOrder(built.payload, built.creds);
     if (!order.html_snippet || !order.order_id) {
       return {
         ok: false,
@@ -243,7 +265,7 @@ export async function updateKustomCheckout(
   const built = await buildValidatedPayload(rawCart, rawLoyaltyPoints);
   if (!built.ok) return built;
   try {
-    await updateKustomOrder(orderId, built.payload);
+    await updateKustomOrder(orderId, built.payload, built.creds);
     return { ok: true };
   } catch (err) {
     return {
@@ -332,6 +354,11 @@ export async function startSubscriptionCheckout(
   if (!resolved.ok) return { ok: false, error: resolved.error };
   const t = resolved.target;
 
+  // Per-tenant credentials (ADR 0034). Drives stub-vs-real for this
+  // tenant and is threaded into the Kustom call + push URL.
+  const tenant = await currentTenant();
+  const creds = await resolvePaymentCredentialsForTenant(tenant.id);
+
   const intent: SubscriptionIntent = {
     pid: t.productId,
     vid: t.variantId,
@@ -346,7 +373,7 @@ export async function startSubscriptionCheckout(
     Math.round(lineSubtotal * (t.discountPercent / 100) * 100) / 100;
 
   // ── Stub mode: no iframe. Create stub-PAID first order + sub. ──
-  if (!isKlarnaConfigured()) {
+  if (!isKlarnaConfigured(creds)) {
     const shippingAmount = await shippingForSubtotal(lineSubtotal);
     const subtotal = lineSubtotal - discountKr;
     const totalAmount = subtotal + shippingAmount;
@@ -465,12 +492,19 @@ export async function startSubscriptionCheckout(
     lines,
     baseURL,
     discount,
-    billingAddress
+    billingAddress,
+    creds.webhookSecret
   );
-  payload.merchant_data = JSON.stringify({ uid: user.id, sub: intent });
+  // merchant_data carries the tenant marker `t` (ADR 0034 D5)
+  // alongside the subscription intent.
+  payload.merchant_data = JSON.stringify({
+    t: tenant.id,
+    uid: user.id,
+    sub: intent,
+  });
 
   try {
-    const order = await createKlarnaOrder(payload);
+    const order = await createKlarnaOrder(payload, creds);
     if (!order.html_snippet || !order.order_id) {
       return {
         ok: false,
