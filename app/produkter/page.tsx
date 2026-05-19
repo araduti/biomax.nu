@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { currentTenant } from "@/lib/tenant";
+import { withTenantRLS } from "@/lib/tenant/rls";
 import { publicProductWhere } from "@/lib/products/availability";
 import { TopBar } from "@/components/site/top-bar";
 import { Header } from "@/components/site/header";
@@ -93,25 +95,32 @@ export default async function ProductsIndex({
       ? ([{ publishedAt: "desc" as const }, { createdAt: "desc" as const }])
       : ([{ totalSales: "desc" as const }]);
 
+  // Korg 3b-3 Product pilot: this listing's product read goes through
+  // the tenant RLS seam (withTenantRLS → SET LOCAL app.current_tenant_id
+  // → FORCE RLS policy on "Product"). Proves end-to-end isolation on
+  // one path. Other Product accessors stay unwrapped for now; the
+  // transitional policy is permissive when the GUC is unset so they
+  // keep working until each is migrated.
+  const tenant = await currentTenant();
   const [products, categories] = await Promise.all([
-    prisma.product.findMany({
-      where: { ...publicProductWhere(), price: { gt: 0 } },
-      orderBy,
-      // Explicit select — the card only renders 7 fields. Default `include`
-      // would pull longDescription + ingredientList JSON + every SEO/OG
-      // field for every card, which is 10-50× the bytes we need.
-      select: {
-        id: true,
-        slug: true,
-        name: true,
-        shortDescription: true,
-        imageUrl: true,
-        price: true,
-        compareAtPrice: true,
-        totalSales: true,
-        categories: { select: { name: true }, take: 1 },
-      },
-    }),
+    withTenantRLS(tenant.id, (tx) =>
+      tx.product.findMany({
+        where: { ...publicProductWhere(), price: { gt: 0 } },
+        orderBy,
+        // Explicit select — the card only renders 7 fields.
+        select: {
+          id: true,
+          slug: true,
+          name: true,
+          shortDescription: true,
+          imageUrl: true,
+          price: true,
+          compareAtPrice: true,
+          totalSales: true,
+          categories: { select: { name: true }, take: 1 },
+        },
+      })
+    ),
     prisma.category.findMany({
       where: {
         slug: { not: "uncategorized" },
