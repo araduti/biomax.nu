@@ -3,6 +3,8 @@
 import crypto from "node:crypto";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { tenantScope } from "@/lib/tenant/db";
+import { currentTenant } from "@/lib/tenant";
 import { emailSchema, cuidSchema } from "@/lib/validation/shared";
 import {
   enforceRateLimit,
@@ -85,80 +87,84 @@ export async function upsertCartSnapshot(raw: unknown): Promise<void> {
   const email = input.email;
   const rawLines = input.items;
 
-  if (rawLines.length === 0) {
-    await prisma.cartSnapshot
-      .deleteMany({ where: { email, recoveredAt: null } })
-      .catch(() => {});
-    return;
-  }
+  const { id: tenantId } = await currentTenant();
+  await tenantScope(tenantId, async (tx) => {
+    if (rawLines.length === 0) {
+      await tx.cartSnapshot
+        .deleteMany({ where: { email, recoveredAt: null } })
+        .catch(() => {});
+      return;
+    }
 
-  // Re-fetch products to recompute name/image/price authoritatively.
-  // Anything that doesn't resolve (deleted, draft) is silently dropped.
-  const productIds = [...new Set(rawLines.map((l) => l.productId))];
-  const products = await prisma.product.findMany({
-    where: { id: { in: productIds }, status: "PUBLISHED" },
-    select: {
-      id: true,
-      slug: true,
-      name: true,
-      imageUrl: true,
-      price: true,
-    },
+    // Re-fetch products to recompute name/image/price authoritatively.
+    // Anything that doesn't resolve (deleted, draft) is silently dropped.
+    const productIds = [...new Set(rawLines.map((l) => l.productId))];
+    const products = await tx.product.findMany({
+      where: { id: { in: productIds }, status: "PUBLISHED" },
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        imageUrl: true,
+        price: true,
+      },
+    });
+
+    const resolved: SnapshotItem[] = [];
+    for (const line of rawLines) {
+      const p = products.find((x) => x.id === line.productId);
+      if (!p) continue;
+      resolved.push({
+        productId: p.id,
+        productSlug: p.slug,
+        productName: p.name,
+        productImageUrl: p.imageUrl,
+        quantity: line.quantity,
+        unitPrice: parseFloat(p.price.toString()),
+      });
+    }
+
+    if (resolved.length === 0) {
+      await tx.cartSnapshot
+        .deleteMany({ where: { email, recoveredAt: null } })
+        .catch(() => {});
+      return;
+    }
+
+    const subtotalSek = resolved.reduce(
+      (s, it) => s + it.unitPrice * it.quantity,
+      0
+    );
+
+    try {
+      // Use updateMany-then-create to avoid the findFirst+update race.
+      const updated = await tx.cartSnapshot.updateMany({
+        where: { email, recoveredAt: null },
+        data: {
+          items: resolved as unknown as object,
+          subtotalSek,
+          userId: input.userId ?? null,
+          firstEmailSentAt: null,
+          secondEmailSentAt: null,
+        },
+      });
+      if (updated.count > 0) return;
+
+      await tx.cartSnapshot.create({
+        data: {
+          email,
+          userId: input.userId ?? null,
+          items: resolved as unknown as object,
+          subtotalSek,
+          tenantId,
+          recoveryToken: crypto.randomBytes(24).toString("base64url"),
+        },
+      });
+    } catch (err) {
+      // Cart capture is best-effort. Don't surface errors to the user.
+      console.error("[cart-snapshot] upsert failed:", err);
+    }
   });
-
-  const resolved: SnapshotItem[] = [];
-  for (const line of rawLines) {
-    const p = products.find((x) => x.id === line.productId);
-    if (!p) continue;
-    resolved.push({
-      productId: p.id,
-      productSlug: p.slug,
-      productName: p.name,
-      productImageUrl: p.imageUrl,
-      quantity: line.quantity,
-      unitPrice: parseFloat(p.price.toString()),
-    });
-  }
-
-  if (resolved.length === 0) {
-    await prisma.cartSnapshot
-      .deleteMany({ where: { email, recoveredAt: null } })
-      .catch(() => {});
-    return;
-  }
-
-  const subtotalSek = resolved.reduce(
-    (s, it) => s + it.unitPrice * it.quantity,
-    0
-  );
-
-  try {
-    // Use updateMany-then-create to avoid the findFirst+update race.
-    const updated = await prisma.cartSnapshot.updateMany({
-      where: { email, recoveredAt: null },
-      data: {
-        items: resolved as unknown as object,
-        subtotalSek,
-        userId: input.userId ?? null,
-        firstEmailSentAt: null,
-        secondEmailSentAt: null,
-      },
-    });
-    if (updated.count > 0) return;
-
-    await prisma.cartSnapshot.create({
-      data: {
-        email,
-        userId: input.userId ?? null,
-        items: resolved as unknown as object,
-        subtotalSek,
-        recoveryToken: crypto.randomBytes(24).toString("base64url"),
-      },
-    });
-  } catch (err) {
-    // Cart capture is best-effort. Don't surface errors to the user.
-    console.error("[cart-snapshot] upsert failed:", err);
-  }
 }
 
 /**

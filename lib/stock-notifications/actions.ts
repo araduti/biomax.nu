@@ -3,6 +3,8 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { tenantScope } from "@/lib/tenant/db";
+import { currentTenant } from "@/lib/tenant";
 import { sendTransactional } from "@/lib/email/client";
 import { stockBackInStockEmail } from "@/lib/email/templates";
 import { emailSchema, fail } from "@/lib/validation/shared";
@@ -42,37 +44,39 @@ export async function requestStockNotification(raw: unknown): Promise<RequestRes
     };
   }
 
-  const product = await prisma.product.findUnique({
-    where: { slug: parsed.data.productSlug },
-    select: { id: true, stock: true, manageStock: true, status: true },
-  });
-  if (!product) return { ok: false, error: "Produkten hittades inte." };
-  if (product.status !== "PUBLISHED") {
-    return { ok: false, error: "Produkten är inte tillgänglig." };
-  }
-
-  // If the product is already in stock, no point queuing — send a
-  // friendly confirmation and skip the row.
-  if (!product.manageStock || product.stock > 0) {
-    return { ok: false, error: "Produkten finns redan i lager." };
-  }
-
+  const { id: tenantId } = await currentTenant();
   try {
-    await prisma.stockNotificationRequest.upsert({
-      where: {
-        productId_email: { productId: product.id, email },
-      },
-      create: { productId: product.id, email },
-      // Reset fulfilledAt so a customer can re-subscribe after a previous
-      // notification fired and the product later went out of stock again.
-      update: { fulfilledAt: null },
+    return await tenantScope(tenantId, async (tx) => {
+      const product = await tx.product.findUnique({
+        where: { slug: parsed.data.productSlug },
+        select: { id: true, stock: true, manageStock: true, status: true },
+      });
+      if (!product) return { ok: false, error: "Produkten hittades inte." };
+      if (product.status !== "PUBLISHED") {
+        return { ok: false, error: "Produkten är inte tillgänglig." };
+      }
+
+      // If the product is already in stock, no point queuing — send a
+      // friendly confirmation and skip the row.
+      if (!product.manageStock || product.stock > 0) {
+        return { ok: false, error: "Produkten finns redan i lager." };
+      }
+
+      await tx.stockNotificationRequest.upsert({
+        where: {
+          productId_email: { productId: product.id, email },
+        },
+        create: { productId: product.id, email, tenantId },
+        // Reset fulfilledAt so a customer can re-subscribe after a previous
+        // notification fired and the product later went out of stock again.
+        update: { fulfilledAt: null },
+      });
+      return { ok: true };
     });
   } catch (err) {
     console.error("requestStockNotification failed:", err);
     return { ok: false, error: "Kunde inte spara förfrågan." };
   }
-
-  return { ok: true };
 }
 
 /**

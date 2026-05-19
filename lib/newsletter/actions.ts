@@ -2,7 +2,8 @@
 
 import crypto from "node:crypto";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
+import { tenantScope } from "@/lib/tenant/db";
+import { currentTenant } from "@/lib/tenant";
 import { emailSchema, fail } from "@/lib/validation/shared";
 import {
   enforceRateLimit,
@@ -48,46 +49,49 @@ export async function subscribeToNewsletter(
     };
   }
 
+  const { id: tenantId } = await currentTenant();
   try {
-    const existing = await prisma.newsletterSubscriber.findUnique({
-      where: { email },
-      select: { id: true, unsubscribedAt: true },
-    });
+    return await tenantScope(tenantId, async (tx) => {
+      const existing = await tx.newsletterSubscriber.findUnique({
+        where: { email },
+        select: { id: true, unsubscribedAt: true },
+      });
 
-    if (existing && !existing.unsubscribedAt) {
-      return { ok: true, alreadySubscribed: true };
-    }
+      if (existing && !existing.unsubscribedAt) {
+        return { ok: true, alreadySubscribed: true };
+      }
 
-    if (existing) {
-      // Re-activate a previously-unsubscribed address. Reset welcome stage
-      // so they get the series again — they're a "new" subscriber from
-      // our perspective, and have explicitly opted back in.
-      await prisma.newsletterSubscriber.update({
-        where: { id: existing.id },
+      if (existing) {
+        // Re-activate a previously-unsubscribed address. Reset welcome stage
+        // so they get the series again — they're a "new" subscriber from
+        // our perspective, and have explicitly opted back in.
+        await tx.newsletterSubscriber.update({
+          where: { id: existing.id },
+          data: {
+            unsubscribedAt: null,
+            welcomeSeriesStage: 0,
+            welcomeSeriesStartedAt: null,
+            source,
+            consentedAt: new Date(),
+          },
+        });
+        return { ok: true, alreadySubscribed: false };
+      }
+
+      await tx.newsletterSubscriber.create({
         data: {
-          unsubscribedAt: null,
-          welcomeSeriesStage: 0,
-          welcomeSeriesStartedAt: null,
+          email,
           source,
-          consentedAt: new Date(),
+          tenantId,
+          unsubscribeToken: crypto.randomBytes(24).toString("base64url"),
         },
       });
       return { ok: true, alreadySubscribed: false };
-    }
-
-    await prisma.newsletterSubscriber.create({
-      data: {
-        email,
-        source,
-        unsubscribeToken: crypto.randomBytes(24).toString("base64url"),
-      },
     });
   } catch (err) {
     console.error("subscribeToNewsletter failed:", err);
     return { ok: false, error: "Kunde inte spara prenumerationen." };
   }
-
-  return { ok: true, alreadySubscribed: false };
 }
 
 /**
@@ -100,17 +104,20 @@ export async function unsubscribeByToken(token: string): Promise<{
   emailMasked: string | null;
 }> {
   if (!token) return { ok: true, emailMasked: null };
+  const { id: tenantId } = await currentTenant();
   try {
-    const row = await prisma.newsletterSubscriber.findUnique({
-      where: { unsubscribeToken: token },
-      select: { id: true, email: true },
+    return await tenantScope(tenantId, async (tx) => {
+      const row = await tx.newsletterSubscriber.findUnique({
+        where: { unsubscribeToken: token },
+        select: { id: true, email: true },
+      });
+      if (!row) return { ok: true, emailMasked: null };
+      await tx.newsletterSubscriber.update({
+        where: { id: row.id },
+        data: { unsubscribedAt: new Date() },
+      });
+      return { ok: true, emailMasked: maskEmail(row.email) };
     });
-    if (!row) return { ok: true, emailMasked: null };
-    await prisma.newsletterSubscriber.update({
-      where: { id: row.id },
-      data: { unsubscribedAt: new Date() },
-    });
-    return { ok: true, emailMasked: maskEmail(row.email) };
   } catch (err) {
     console.error("unsubscribeByToken failed:", err);
     return { ok: true, emailMasked: null };
