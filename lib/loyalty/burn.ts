@@ -92,6 +92,16 @@ export async function redeemPointsForOrder(input: {
   userId: string;
   points: number;
   tx?: Prisma.TransactionClient;
+  /**
+   * Tenant to stamp on the BURN_REDEMPTION ledger row (ADR 0032 D7 /
+   * WITH-CHECK readiness). Only passed by callers that invoke this
+   * INSIDE a `withTenantRLS` tx (the checkout 5-domain write), where
+   * `SET LOCAL app.current_tenant_id` is active so a stamped row
+   * satisfies WITH CHECK. The standalone-tx path (no `tx`) leaves it
+   * null — that ledger row is scoped by the loyalty domain slice, not
+   * here.
+   */
+  tenantId?: string | null;
 }): Promise<number> {
   if (input.points <= 0) return 0;
 
@@ -157,6 +167,7 @@ export async function redeemPointsForOrder(input: {
         points: -input.points,
         orderId: input.orderId,
         description: "Använda poäng vid kassan",
+        tenantId: input.tenantId ?? null,
       },
     });
     return input.points;

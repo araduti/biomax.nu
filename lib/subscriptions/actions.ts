@@ -173,6 +173,14 @@ export async function finalizePaidSubscription(
     firstOrderId: string;
     shippingAddressId: string | null;
     billingAddressId: string | null;
+    /**
+     * Tenant to stamp on the Subscription + its line (ADR 0032 D7 /
+     * WITH-CHECK readiness). Callers run this inside the paid-order
+     * `withTenantRLS` tx (or the stub equivalent), so the stamped rows
+     * satisfy WITH CHECK once strict. `null` only on the legacy
+     * env/tenant-zero fallback where the surrounding tx is unscoped.
+     */
+    tenantId: string | null;
   }
 ): Promise<string> {
   const existing = await tx.subscription.findFirst({
@@ -194,6 +202,7 @@ export async function finalizePaidSubscription(
       nextOrderAt,
       shippingAddressId: args.shippingAddressId,
       billingAddressId: args.billingAddressId,
+      tenantId: args.tenantId,
       lines: {
         create: [
           {
@@ -201,6 +210,7 @@ export async function finalizePaidSubscription(
             variantId: args.intent.vid,
             quantity: args.intent.q,
             unitPriceAtCreate: args.intent.up,
+            tenantId: args.tenantId,
           },
         ],
       },
