@@ -23,15 +23,19 @@
  */
 import { z } from "zod";
 
-/** Trim + lowercase email, 320-char RFC 5321 limit. */
+/**
+ * Trim + lowercase email, 320-char RFC 5321 limit.
+ *
+ * v4 idiom (ADR 0035): transforms first, then `.pipe()` into the
+ * top-level `z.email()` validator. Order matters — whitespace gets
+ * trimmed before email-shape is checked.
+ */
 export const emailSchema = z
   .string()
   .trim()
   .toLowerCase()
   .max(320, "E-postadressen är för lång.")
-  .refine((v) => v.includes("@") && v.includes("."), {
-    message: "Ogiltig e-postadress.",
-  });
+  .pipe(z.email("Ogiltig e-postadress."));
 
 /** Optional trimmed string, becomes null when empty. */
 export const optionalTrimmedString = (maxLength: number) =>
@@ -55,12 +59,12 @@ export const postalCodeSchema = z
     message: "Ange ett giltigt postnummer (t.ex. 412 50).",
   });
 
-/** Cuid pattern Prisma produces by default. Cheap server-side sanity. */
-export const cuidSchema = z
-  .string()
-  .min(20)
-  .max(40)
-  .regex(/^[a-z0-9]+$/i, "Ogiltigt id.");
+/**
+ * Cuid v1 — Prisma's `@default(cuid())` produces these. v4 idiom
+ * (ADR 0035): the top-level `z.cuid()` validates length + alphabet in
+ * one call. Replaces the v3-era min/max/regex chain.
+ */
+export const cuidSchema = z.cuid("Ogiltigt id.");
 
 /** Positive integer with a configurable cap. */
 export const positiveIntSchema = (max = 999) =>

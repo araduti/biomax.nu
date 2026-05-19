@@ -76,6 +76,41 @@ const eslintConfig = defineConfig([
       ],
     },
   },
+  {
+    // ── Zod v4 only (ADR 0035) ──
+    // The dep is already pinned to ^4 in package.json; this guard
+    // stops copy-pasted v3 snippets from re-entering. Each message
+    // points at the canonical v4 replacement.
+    files: ["**/*.{ts,tsx}"],
+    ignores: ["**/*.test.ts", "**/*.integration.test.ts"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          // z.string().email() / .url() / .uuid() / .cuid() / … — v3
+          // string-method format constructors.
+          selector:
+            "CallExpression[callee.type='MemberExpression'][callee.property.name=/^(email|url|uuid|cuid|cuid2|ulid|nanoid|emoji|ipv4|ipv6|cidr|base64|base64url|datetime|date|time|duration)$/][callee.object.type='CallExpression'][callee.object.callee.type='MemberExpression'][callee.object.callee.object.name='z'][callee.object.callee.property.name='string']",
+          message:
+            "Zod v3 string-method format is banned. Use the top-level constructor (z.email(), z.uuid(), z.iso.datetime(), …). ADR 0035.",
+        },
+        {
+          // .passthrough() — v3 object mode; v4 uses z.looseObject({}).
+          selector:
+            "CallExpression[callee.type='MemberExpression'][callee.property.name='passthrough'][arguments.length=0]",
+          message:
+            "z.object().passthrough() is v3 surface. Use z.looseObject({…}) (ADR 0035).",
+        },
+        {
+          // errorMap: …  — v3 schema-options key; v4 uses `error:`.
+          selector:
+            "Property[key.name='errorMap'][computed=false][shorthand=false]",
+          message:
+            "`errorMap:` is v3 schema-options surface. Use the v4 `error:` function/string (ADR 0035).",
+        },
+      ],
+    },
+  },
 ]);
 
 export default eslintConfig;
