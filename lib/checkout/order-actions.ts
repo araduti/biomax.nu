@@ -32,6 +32,7 @@ import {
 } from "@/lib/validation/shared";
 import {
   enforceRateLimit,
+  enforceTenantRateLimit,
   clientIp,
   ORDER_PLACEMENT_RULE,
 } from "@/lib/security/rate-limit";
@@ -131,6 +132,22 @@ export async function placeOrder(
   // to this id; every owned create is stamped with it (WITH-CHECK
   // readiness — column still nullable per slice 3b-2, set anyway).
   const { id: tenantId } = await currentTenant();
+
+  // ─── 1d. Per-tenant order-placement bucket (ADR 0033 A1) ──
+  // Layered on top of the global IP cap above. Stops a card-testing
+  // run aimed at one tenant from burning the global IP budget for
+  // unrelated tenants on the shared cluster.
+  const tenantRl = await enforceTenantRateLimit(
+    ORDER_PLACEMENT_RULE,
+    tenantId,
+    ip
+  );
+  if (!tenantRl.allowed) {
+    return {
+      ok: false,
+      error: `För många försök just nu — försök igen om ${Math.ceil(tenantRl.retryAfterSeconds / 60)} minuter.`,
+    };
+  }
 
   // ─── 2. Fetch authoritative product data ───────────────
   const productIds = [...new Set(input.cart.map((l) => l.productId))];

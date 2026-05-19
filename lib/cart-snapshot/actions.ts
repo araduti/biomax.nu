@@ -8,6 +8,7 @@ import { currentTenant } from "@/lib/tenant";
 import { emailSchema, cuidSchema } from "@/lib/validation/shared";
 import {
   enforceRateLimit,
+  enforceTenantRateLimit,
   clientIp,
   CART_SNAPSHOT_RULE,
 } from "@/lib/security/rate-limit";
@@ -88,6 +89,14 @@ export async function upsertCartSnapshot(raw: unknown): Promise<void> {
   const rawLines = input.items;
 
   const { id: tenantId } = await currentTenant();
+  // ADR 0033 A1: per-tenant cap layered on the global IP one. Silent
+  // no-op on deny to match the rest of this action's posture.
+  const tenantLimit = await enforceTenantRateLimit(
+    CART_SNAPSHOT_RULE,
+    tenantId,
+    ip
+  );
+  if (!tenantLimit.allowed) return;
   await tenantScope(tenantId, async (tx) => {
     if (rawLines.length === 0) {
       await tx.cartSnapshot

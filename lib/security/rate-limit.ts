@@ -203,3 +203,38 @@ export const TWO_FACTOR_IP_RULE: RateLimitRule = {
   limit: 10,
   windowMs: 5 * 60 * 1000,
 };
+
+// ── Per-tenant noisy-neighbour buckets (ADR 0033 Part A1) ───────────
+// These run ALONGSIDE the global IP/email buckets above — additive,
+// never weakening. The identifier form is `t:<tenantId>:<ip-or-email>`,
+// so the bucket is keyed by *(scope, tenantId, source)*: a single IP
+// that hammers tenant A is throttled in tenant A's bucket without
+// affecting its budget under tenant B, and one tenant being attacked
+// can't burn the global IP budget for another tenant on the same row.
+//
+// Only rules that fire AFTER the host-tenant has been resolved get a
+// per-tenant variant: login / 2FA stay global because tenant context
+// at that point is ambiguous (auth happens before/independent of the
+// org->tenant link). Webhooks (Klarna/Brevo) also stay global — they
+// resolve the tenant from the payload, not the request host, and the
+// tenant attribution is what the limiter would itself need to gate on.
+//
+// Per-tenant **connection-pool ceilings** (e.g. pgbouncer pool_size
+// per role/database) are deliberately deferred to the hosting build
+// (ADR 0029 / ADR 0033 Part A1, "pgbouncer choice"). Add them when
+// the trigger thresholds in ADR 0033 Part B are first reviewed —
+// premature pooler config is wasted infra today, when there is one
+// real tenant.
+
+export async function enforceTenantRateLimit(
+  rule: RateLimitRule,
+  tenantId: string,
+  identifier: string
+): Promise<RateLimitResult> {
+  // Distinct scope so per-tenant counts don't pollute the global
+  // bucket's row + the DB is greppable: `…:tenant` rows belong to A1.
+  return enforceRateLimit(
+    { ...rule, scope: `${rule.scope}:tenant` },
+    `t:${tenantId}:${identifier}`
+  );
+}

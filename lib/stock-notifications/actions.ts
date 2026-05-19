@@ -9,6 +9,7 @@ import { stockBackInStockEmail } from "@/lib/email/templates";
 import { emailSchema, fail } from "@/lib/validation/shared";
 import {
   enforceRateLimit,
+  enforceTenantRateLimit,
   clientIp,
   STOCK_NOTIFY_RULE,
 } from "@/lib/security/rate-limit";
@@ -44,6 +45,18 @@ export async function requestStockNotification(raw: unknown): Promise<RequestRes
   }
 
   const { id: tenantId } = await currentTenant();
+  // ADR 0033 A1: per-tenant bucket alongside the global IP cap.
+  const tenantRl = await enforceTenantRateLimit(
+    STOCK_NOTIFY_RULE,
+    tenantId,
+    ip
+  );
+  if (!tenantRl.allowed) {
+    return {
+      ok: false,
+      error: `För många försök just nu — försök igen om ${Math.ceil(tenantRl.retryAfterSeconds / 60)} minuter.`,
+    };
+  }
   try {
     return await tenantScope(tenantId, async (tx) => {
       const product = await tx.product.findUnique({

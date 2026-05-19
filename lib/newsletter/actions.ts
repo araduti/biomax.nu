@@ -7,6 +7,7 @@ import { currentTenant } from "@/lib/tenant";
 import { emailSchema, fail } from "@/lib/validation/shared";
 import {
   enforceRateLimit,
+  enforceTenantRateLimit,
   clientIp,
   NEWSLETTER_SIGNUP_RULE,
 } from "@/lib/security/rate-limit";
@@ -50,6 +51,20 @@ export async function subscribeToNewsletter(
   }
 
   const { id: tenantId } = await currentTenant();
+  // ADR 0033 A1: per-tenant cap (additionally to the global per-IP one
+  // above) — a single tenant being scraped for newsletter abuse can't
+  // burn the global IP budget for unrelated tenants.
+  const tenantLimit = await enforceTenantRateLimit(
+    NEWSLETTER_SIGNUP_RULE,
+    tenantId,
+    ip
+  );
+  if (!tenantLimit.allowed) {
+    return {
+      ok: false,
+      error: `För många försök just nu — försök igen om ${Math.ceil(tenantLimit.retryAfterSeconds / 60)} minuter.`,
+    };
+  }
   try {
     return await tenantScope(tenantId, async (tx) => {
       const existing = await tx.newsletterSubscriber.findUnique({

@@ -10,6 +10,7 @@ import { BEHOV_LABELS } from "@/lib/symptoms/behov-labels";
 import { fail } from "@/lib/validation/shared";
 import {
   enforceRateLimit,
+  enforceTenantRateLimit,
   clientIp,
   REVIEW_SUBMISSION_RULE,
 } from "@/lib/security/rate-limit";
@@ -72,6 +73,18 @@ export async function submitReview(raw: unknown): Promise<SubmitReviewResult> {
   const reviewerGoal = input.reviewerGoal ?? null;
 
   const { id: tenantId } = await currentTenant();
+  // ADR 0033 A1: per-tenant bucket on top of the global IP cap.
+  const tenantRl = await enforceTenantRateLimit(
+    REVIEW_SUBMISSION_RULE,
+    tenantId,
+    ip
+  );
+  if (!tenantRl.allowed) {
+    return {
+      ok: false,
+      error: `För många recensioner just nu — försök igen om ${Math.ceil(tenantRl.retryAfterSeconds / 60)} minuter.`,
+    };
+  }
   let created: boolean;
   try {
     created = await tenantScope(tenantId, async (tx) => {

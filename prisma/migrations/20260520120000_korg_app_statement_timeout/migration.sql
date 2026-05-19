@@ -1,0 +1,43 @@
+-- Korg 3b-5 (ADR 0033 Part A1): noisy-neighbour query budget on the
+-- runtime role.
+--
+-- Why on the role, not the cluster:
+--   - `statement_timeout` set on the cluster would also kill long-
+--     running migrations and operational queries (the `biomax` role
+--     used by `prisma migrate deploy`). Scoping to the runtime role
+--     bounds only the request-path traffic served by Next.js.
+--   - `korg_app` is the LOGIN role used by Vercel/Node at runtime
+--     (ADR 0028 D1 / 0029); the `biomax` migrate role keeps no limit.
+--
+-- Why 15s:
+--   - The slowest legitimate query in the request path today is
+--     `placeOrder` (lib/checkout/order-actions.ts) — an interactive
+--     `withTenantRLS` tx that fans out 5 domain writes. Local p99
+--     under realistic cart sizes is sub-second; 15s leaves >10x head-
+--     room before the cap bites. The sitemap RSC and admin reports
+--     are read-heavy but indexed; none observed >2s. If a request
+--     genuinely needs more, it belongs in a background job, not the
+--     request path.
+--   - 15s also fits a Vercel hobby-tier function timeout (10–60s
+--     depending on plan) — capping below the platform's wall clock
+--     ensures Postgres returns a clean `statement timeout` instead
+--     of the surface returning an opaque 504.
+--
+-- Why `idle_in_transaction_session_timeout` too:
+--   - The seam opens interactive transactions (`withTenantRLS`).
+--     An abandoned request that leaks a tx would hold row locks +
+--     a connection slot indefinitely. 30s is generous for any
+--     legitimate interactive tx (we don't run multi-statement work
+--     longer than that on the request path) and short enough that
+--     a stuck tx self-heals before it cascades.
+--
+-- Idempotency: ALTER ROLE … SET is a write-or-update on
+-- pg_db_role_setting; safe to re-apply.
+--
+-- Per-tenant connection ceilings (pgbouncer / pool-level) are
+-- deliberately NOT here — they belong to the hosting build
+-- (ADR 0029, see NOTES in lib/security/rate-limit.ts). Re-visit when
+-- ADR 0033 Part B trigger fires or capacity review flags a need.
+
+ALTER ROLE korg_app SET statement_timeout = '15s';
+ALTER ROLE korg_app SET idle_in_transaction_session_timeout = '30s';
