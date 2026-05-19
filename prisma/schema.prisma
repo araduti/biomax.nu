@@ -1562,8 +1562,56 @@ model Tenant {
   /// Nullable during the 3a backfill; every tenant gets one by seed.
   organizationId  String?      @unique
   organization    Organization? @relation(fields: [organizationId], references: [id])
+  /// Per-tenant payment connection (ADR 0034 D1). 1:1, optional:
+  /// tenant zero (biomax) falls back to env until the row is seeded.
+  paymentCredential TenantPaymentCredential?
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
   @@index([status])
+}
+
+/// Onboarding/audit signal for a payment connection (ADR 0034 D1).
+/// NOT the stub switch — that stays credential *presence*
+/// (`isKlarnaConfigured()`, ADR 0009).
+enum PaymentMode {
+  TEST
+  LIVE
+}
+
+/// Per-tenant Kustom/Klarna merchant credentials (ADR 0034 / ADR 0028
+/// D4 / ADR 0026 §4). **Platform-plane config, deliberately OUTSIDE
+/// the ADR 0032 tenant data-access seam** (D2): the webhook resolves
+/// *which* tenant from this table, so it cannot itself be tenant-RLS
+/// gated — same bootstrap argument as the Tenant table. Confidentiality
+/// is provided by encryption at rest (ADR 0034 D3), not RLS. Secrets
+/// (`apiSecretEnc`, `webhookSecretEnc`) are sealed via
+/// lib/security/secret-box.ts — never plaintext in DB or git.
+/// `provider` reuses the existing PaymentProvider enum (value KLARNA;
+/// internal Klarna naming kept on purpose) to future-proof a second
+/// processor without a migration.
+model TenantPaymentCredential {
+  id              String          @id @default(cuid())
+  tenantId        String          @unique
+  tenant          Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  provider        PaymentProvider @default(KLARNA)
+  /// Kustom API key id / legacy Klarna username. Identifying, not a
+  /// secret → plaintext, so it can be a resolution fallback.
+  apiKeyId        String
+  /// Sealed Kustom API password / legacy Klarna password.
+  apiSecretEnc    String
+  /// Sealed per-tenant push-webhook token (the ?token= mitigation for
+  /// unsigned Kustom v3 push). Null = no per-tenant token yet.
+  webhookSecretEnc String?
+  /// Kustom/Klarna API host. ADR 0020 footgun guard (a klarna.com host
+  /// can't run KSA) is enforced at resolution against this value too.
+  baseUrl         String
+  mode            PaymentMode     @default(TEST)
+  /// Sealing scheme of the *Enc columns (ADR 0034 D3). 1 = dev
+  /// AES-256-GCM, KEK from env. Bumped by the ADR 0029 KMS migration.
+  encVersion      Int             @default(1)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([provider])
 }
