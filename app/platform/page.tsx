@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { requirePlatformAdmin } from "@/lib/platform/guard";
 import { TenantStatusButton } from "./tenant-status-button";
+import { TenantExportButton } from "./tenant-export-button";
 
 export const metadata: Metadata = {
   title: "Korg · Plattform",
@@ -91,11 +92,21 @@ export default async function PlatformHome() {
                 {t.createdAt.toISOString().slice(0, 10)}
               </td>
               <td style={{ ...td, textAlign: "right" }}>
-                <TenantStatusButton
-                  tenantId={t.id}
-                  slug={t.slug}
-                  status={t.status}
-                />
+                <span
+                  style={{
+                    display: "inline-flex",
+                    gap: 8,
+                    alignItems: "center",
+                    justifyContent: "flex-end",
+                  }}
+                >
+                  <TenantExportButton tenantId={t.id} slug={t.slug} />
+                  <TenantStatusButton
+                    tenantId={t.id}
+                    slug={t.slug}
+                    status={t.status}
+                  />
+                </span>
               </td>
             </tr>
           ))}
