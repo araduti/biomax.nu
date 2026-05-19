@@ -3,8 +3,12 @@
 import crypto from "node:crypto";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { currentUser } from "@/lib/session";
+import { currentTenant } from "@/lib/tenant";
+import { tenantScope, hostTenantScope } from "@/lib/tenant/db";
+import { withTenantRLS } from "@/lib/tenant/rls";
 import { isKlarnaConfigured } from "@/lib/klarna/client";
 import { isKustomOrderComplete } from "@/lib/klarna/types";
 import type { KlarnaOrder } from "@/lib/klarna/types";
@@ -120,9 +124,18 @@ export async function placeOrder(
     };
   }
 
+  // ─── 1c. Resolve the acting tenant (storefront → Host) ──
+  // ADR 0028 D3 / 0032 D7: the storefront server action has a Host, so
+  // currentTenant() resolves it (tenant zero / biomax when single-
+  // tenant). All owned-model reads + the atomic write below are scoped
+  // to this id; every owned create is stamped with it (WITH-CHECK
+  // readiness — column still nullable per slice 3b-2, set anyway).
+  const { id: tenantId } = await currentTenant();
+
   // ─── 2. Fetch authoritative product data ───────────────
   const productIds = [...new Set(input.cart.map((l) => l.productId))];
-  const products = await prisma.product.findMany({
+  const products = await tenantScope(tenantId, (tx) =>
+    tx.product.findMany({
     where: { id: { in: productIds } },
     select: {
       id: true,
@@ -144,7 +157,8 @@ export async function placeOrder(
         },
       },
     },
-  });
+    })
+  );
 
   // ─── 2b. Fetch + validate any referenced bundles ────────
   // The cart's bundleId/discountPercent are not trusted — we re-read the
@@ -160,17 +174,19 @@ export async function placeOrder(
   ];
   const bundles =
     bundleIds.length > 0
-      ? await prisma.bundle.findMany({
-          where: { id: { in: bundleIds } },
-          select: {
-            id: true,
-            slug: true,
-            name: true,
-            discountPercent: true,
-            active: true,
-            items: { select: { productId: true } },
-          },
-        })
+      ? await tenantScope(tenantId, (tx) =>
+          tx.bundle.findMany({
+            where: { id: { in: bundleIds } },
+            select: {
+              id: true,
+              slug: true,
+              name: true,
+              discountPercent: true,
+              active: true,
+              items: { select: { productId: true } },
+            },
+          })
+        )
       : [];
 
   // ─── 3. Validate availability ──────────────────────────
@@ -375,7 +391,11 @@ export async function placeOrder(
   // did nothing wrong.
   for (let attempt = 1; ; attempt++) {
   try {
-    await prisma.$transaction(async (tx) => {
+    // ADR 0032 D7: withTenantRLS IS the outer interactive tx (it opens
+    // prisma.$transaction + issues SET LOCAL app.current_tenant_id) —
+    // the existing 5-domain body runs unchanged on the same `tx`. No
+    // nested transaction. Every owned create below is stamped tenantId.
+    await withTenantRLS(tenantId, async (tx) => {
       const address = await tx.address.create({
         data: {
           userId,
@@ -385,6 +405,7 @@ export async function placeOrder(
           city: input.shipping.city,
           countryCode: "SE",
           phone: input.customer.phone || null,
+          tenantId,
         },
       });
       await tx.order.create({
@@ -408,6 +429,7 @@ export async function placeOrder(
           marketingConsent: input.marketingConsent ?? false,
           shippingAddressId: address.id,
           billingAddressId: address.id,
+          tenantId,
           // `legacySource` is reserved for genuine imports (WordPress XML).
           // Stub-checkout orders are real, fresh orders — they're just paid
           // through the dev fallback when Klarna creds aren't set. Marking
@@ -427,6 +449,7 @@ export async function placeOrder(
               bundleSlug: r.bundleSlug,
               bundleName: r.bundleName,
               bundleDiscountPercent: r.bundleDiscountPercent,
+              tenantId,
             })),
           },
         },
@@ -479,10 +502,12 @@ export async function placeOrder(
   let createdOrderId: string | null = null;
   if (redeemedPoints > 0 || isStub) {
     try {
-      const created = await prisma.order.findUnique({
-        where: { orderNumber },
-        select: { id: true },
-      });
+      const created = await tenantScope(tenantId, (tx) =>
+        tx.order.findUnique({
+          where: { orderNumber },
+          select: { id: true },
+        })
+      );
       createdOrderId = created?.id ?? null;
     } catch (err) {
       console.error("[checkout] loyalty post-create lookup failed", err);
@@ -579,7 +604,11 @@ export async function placeOrder(
  * Only returns minimal data (no full address/PII) — confirmation displays.
  */
 export async function getOrderForConfirmation(orderNumber: string) {
-  return prisma.order.findUnique({
+  // Owned-model read on the confirmation page (has Host) → scope to the
+  // resolved tenant via the seam (ADR 0032 D2). hostTenantScope
+  // resolves currentTenant() then runs withTenantRLS.
+  return hostTenantScope((tx) =>
+    tx.order.findUnique({
     where: { orderNumber },
     select: {
       orderNumber: true,
@@ -599,7 +628,8 @@ export async function getOrderForConfirmation(orderNumber: string) {
         },
       },
     },
-  });
+    })
+  );
 }
 
 /**
@@ -624,9 +654,11 @@ export async function ensureOrderFromKustomOrder(
    * Tenant resolved by the caller (ADR 0034 D5): the confirmation page
    * passes `currentTenant().id` (Host); the push webhook passes the
    * tenant it recovered from the push token / merchant_data. When
-   * provided it is cross-checked against `merchant_data.t`. This slice
-   * only *validates + exposes* the tenant — wrapping the 5-domain write
-   * in `withTenantRLS` is ADR 0032 D7 / slice #7 (see TODO below).
+   * provided it is cross-checked against `merchant_data.t`. The
+   * resolved tenant now scopes every owned-model read here and is the
+   * outer `withTenantRLS` of the 5-domain atomic write (ADR 0032 D7 /
+   * slice #7 — done). Legacy env/tenant-zero orders with no tenant
+   * signal stay on a plain $transaction, single-tenant unchanged.
    */
   resolvedTenantId?: string | null
 ): Promise<
@@ -638,10 +670,43 @@ export async function ensureOrderFromKustomOrder(
     return { ok: false, error: "Kustom-ordern saknar order_id." };
   }
 
-  const existing = await prisma.order.findFirst({
-    where: { paymentReference },
-    select: { orderNumber: true },
-  });
+  // ── Tenant for the scoped reads + the atomic write (ADR 0032 D7) ──
+  // Pure, side-effect-free, no control-flow change: derive the tenant
+  // from the merchant_data marker we authored (ADR 0034 D5), falling
+  // back to the caller-resolved id. This equals the `effectiveTenantId`
+  // computed (and *validated* against merchant_data) further down — the
+  // explicit mismatch rejection stays at its original site so the
+  // dual-path idempotency/control flow is byte-for-byte unchanged. When
+  // neither signal is present (legacy order pre-#6 + webhook env/
+  // tenant-zero fallback, ADR 0034 D4/D5) it is null → reads run
+  // unscoped and the write stays a plain $transaction with no tenantId
+  // stamped, preserving single-tenant behaviour exactly.
+  let scopeTenantId: string | null = null;
+  if (k.merchant_data) {
+    try {
+      const t = (JSON.parse(k.merchant_data) as { t?: unknown }).t;
+      if (typeof t === "string" && t) scopeTenantId = t;
+    } catch {
+      /* the fuller parse + warn happens at the existing site below */
+    }
+  }
+  scopeTenantId = scopeTenantId ?? resolvedTenantId ?? null;
+
+  // Run an owned-model read either through the tenant seam (scoped) or
+  // directly (legacy env/tenant-zero fallback, unscoped — unchanged).
+  const readScoped = <T>(
+    fn: (c: Prisma.TransactionClient) => Promise<T>
+  ): Promise<T> =>
+    scopeTenantId
+      ? tenantScope(scopeTenantId, fn)
+      : fn(prisma as unknown as Prisma.TransactionClient);
+
+  const existing = await readScoped((tx) =>
+    tx.order.findFirst({
+      where: { paymentReference },
+      select: { orderNumber: true },
+    })
+  );
   if (existing) {
     return {
       ok: true,
@@ -668,18 +733,25 @@ export async function ensureOrderFromKustomOrder(
   // Map lines back to products by the SKU we set in `reference`
   // (product SKU or variant SKU).
   const skus = [...new Set(physical.map((l) => l.reference).filter(Boolean))];
-  const products = await prisma.product.findMany({
-    where: {
-      OR: [{ sku: { in: skus } }, { variants: { some: { sku: { in: skus } } } }],
-    },
-    select: {
-      id: true,
-      sku: true,
-      name: true,
-      manageStock: true,
-      variants: { select: { id: true, sku: true, label: true, manageStock: true } },
-    },
-  });
+  const products = await readScoped((tx) =>
+    tx.product.findMany({
+      where: {
+        OR: [
+          { sku: { in: skus } },
+          { variants: { some: { sku: { in: skus } } } },
+        ],
+      },
+      select: {
+        id: true,
+        sku: true,
+        name: true,
+        manageStock: true,
+        variants: {
+          select: { id: true, sku: true, label: true, manageStock: true },
+        },
+      },
+    })
+  );
 
   type ResolvedLine = {
     productId: string;
@@ -840,14 +912,20 @@ export async function ensureOrderFromKustomOrder(
   const orderNumber = generateOrderNumber();
   const trackingToken = crypto.randomBytes(24).toString("base64url");
 
+  // ADR 0032 D7: withTenantRLS IS the outer interactive tx (opens
+  // prisma.$transaction + SET LOCAL app.current_tenant_id); the same
+  // 5-domain body runs unchanged on `tx`, no nesting, WITH CHECK
+  // blocking cross-tenant writes once strict. effectiveTenantId was
+  // resolved AND validated against merchant_data above (== scopeTenantId
+  // by construction). Legacy env/tenant-zero fallback (scopeTenantId
+  // null): plain $transaction, no stamping — single-tenant unchanged.
+  const runOrderTx = <T>(
+    fn: (tx: Prisma.TransactionClient) => Promise<T>
+  ): Promise<T> =>
+    scopeTenantId ? withTenantRLS(scopeTenantId, fn) : prisma.$transaction(fn);
+
   try {
-    // TODO(#7) ADR 0032 D7: this 5-domain write becomes the *inner*
-    // body of `withTenantRLS(effectiveTenantId, async (tx) => …)` —
-    // `SET LOCAL app.current_tenant_id` then the existing order/stock/
-    // loyalty/subscription writes, WITH CHECK blocking cross-tenant
-    // writes. effectiveTenantId is resolved + validated above; only
-    // the RLS wrap is deferred to slice #7 (not done here on purpose).
-    await prisma.$transaction(async (tx) => {
+    await runOrderTx(async (tx) => {
       const address = await tx.address.create({
         data: {
           userId: linkedUserId,
@@ -857,6 +935,7 @@ export async function ensureOrderFromKustomOrder(
           city: addr.city ?? "",
           countryCode: (addr.country ?? "SE").toUpperCase(),
           phone: addr.phone ?? null,
+          tenantId: scopeTenantId,
         },
       });
       const createdOrder = await tx.order.create({
@@ -884,6 +963,7 @@ export async function ensureOrderFromKustomOrder(
           shippingAddressId: address.id,
           billingAddressId: address.id,
           legacySource: null,
+          tenantId: scopeTenantId,
           items: {
             create: resolved.map((r) => ({
               productId: r.productId,
@@ -894,6 +974,7 @@ export async function ensureOrderFromKustomOrder(
               quantity: r.quantity,
               unitPrice: r.unitPrice,
               totalPrice: r.totalPrice,
+              tenantId: scopeTenantId,
             })),
           },
         },
@@ -922,6 +1003,7 @@ export async function ensureOrderFromKustomOrder(
           userId: redeemUserId,
           points: redeemedPoints,
           tx,
+          tenantId: scopeTenantId,
         });
       }
       // First-delivery subscription: create the Subscription + line
@@ -936,16 +1018,19 @@ export async function ensureOrderFromKustomOrder(
           firstOrderId: createdOrder.id,
           shippingAddressId: address.id,
           billingAddressId: address.id,
+          tenantId: scopeTenantId,
         });
       }
     });
   } catch (err) {
     // Unique constraint on paymentReference → a concurrent call (webhook
     // race / double redirect) created it first. Treat as success.
-    const raced = await prisma.order.findFirst({
-      where: { paymentReference },
-      select: { orderNumber: true },
-    });
+    const raced = await readScoped((tx) =>
+      tx.order.findFirst({
+        where: { paymentReference },
+        select: { orderNumber: true },
+      })
+    );
     if (raced) {
       return {
         ok: true,
@@ -968,10 +1053,12 @@ export async function ensureOrderFromKustomOrder(
   }
 
   try {
-    const created = await prisma.order.findFirst({
-      where: { paymentReference },
-      select: { id: true },
-    });
+    const created = await readScoped((tx) =>
+      tx.order.findFirst({
+        where: { paymentReference },
+        select: { id: true },
+      })
+    );
     if (created) {
       // Points burn now happens inside the order transaction (above).
       // Earn is safe post-commit and idempotent per order.
@@ -1043,10 +1130,14 @@ export async function ensureOrderFromKustomOrder(
       try {
         const label = await fetchOrderLabel({ orderNumber, trackingNumber });
         if (label.ok && label.labelPdfUrl) {
-          await prisma.order.updateMany({
-            where: { paymentReference, labelPdfUrl: null },
-            data: { labelPdfUrl: label.labelPdfUrl },
-          });
+          // External HTTP (fetchOrderLabel) already completed OUTSIDE
+          // any tx; only the owned-model write is scoped (ADR 0032 D7).
+          await readScoped((tx) =>
+            tx.order.updateMany({
+              where: { paymentReference, labelPdfUrl: null },
+              data: { labelPdfUrl: label.labelPdfUrl },
+            })
+          );
         } else if (!label.ok) {
           console.warn(
             `[kustom-confirm] fraktsedel prefetch failed for ${orderNumber}: ${label.error}`
