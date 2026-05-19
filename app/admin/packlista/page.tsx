@@ -1,5 +1,5 @@
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { PacklistaControls } from "@/components/admin/packlista-controls";
 import { PacklistaOrderCard } from "@/components/admin/packlista-order-card";
 
@@ -46,24 +46,26 @@ export default async function PacklistaPage({ searchParams }: RouteParams) {
     dateFilter = { gte: dayStart, lt: dayEnd };
   }
 
-  const orders = await prisma.order.findMany({
-    where: {
-      status: "PAID",
-      legacySource: null,
-      ...(dateFilter ? { createdAt: dateFilter } : {}),
-    },
-    // Oldest first — warehouse packs FIFO so the customer who's
-    // waited longest ships first.
-    orderBy: { createdAt: "asc" },
-    include: {
-      items: {
-        include: {
-          product: { select: { slug: true, imageUrl: true } },
-        },
+  const orders = await hostTenantScope((tx) =>
+    tx.order.findMany({
+      where: {
+        status: "PAID",
+        legacySource: null,
+        ...(dateFilter ? { createdAt: dateFilter } : {}),
       },
-      shippingAddress: true,
-    },
-  });
+      // Oldest first — warehouse packs FIFO so the customer who's
+      // waited longest ships first.
+      orderBy: { createdAt: "asc" },
+      include: {
+        items: {
+          include: {
+            product: { select: { slug: true, imageUrl: true } },
+          },
+        },
+        shippingAddress: true,
+      },
+    })
+  );
 
   const totalLines = orders.reduce((s, o) => s + o.items.length, 0);
   const dayLabel = dateStr ? dateFmt.format(new Date(`${dateStr}T00:00:00Z`)) : null;

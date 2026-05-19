@@ -7,7 +7,7 @@ import { ShipmentControls } from "@/components/admin/shipment-controls";
 import { OrderStatusUpdate } from "@/components/admin/order-status-update";
 import { CopyButton } from "@/components/admin/copy-button";
 import { formatPriceSEK } from "@/lib/format";
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 
 const dateFmt = new Intl.DateTimeFormat("sv-SE", {
   year: "numeric",
@@ -23,27 +23,29 @@ export default async function AdminOrderDetail({
   params: Promise<{ orderNumber: string }>;
 }) {
   const { orderNumber } = await params;
-  const order = await prisma.order.findUnique({
-    where: { orderNumber },
-    include: {
-      items: {
-        select: {
-          id: true,
-          productName: true,
-          productSku: true,
-          quantity: true,
-          unitPrice: true,
-          totalPrice: true,
-          product: { select: { slug: true, imageUrl: true } },
+  const order = await hostTenantScope((tx) =>
+    tx.order.findUnique({
+      where: { orderNumber },
+      include: {
+        items: {
+          select: {
+            id: true,
+            productName: true,
+            productSku: true,
+            quantity: true,
+            unitPrice: true,
+            totalPrice: true,
+            product: { select: { slug: true, imageUrl: true } },
+          },
         },
+        user: {
+          select: { id: true, email: true, name: true, firstName: true, lastName: true },
+        },
+        shippingAddress: true,
+        billingAddress: true,
       },
-      user: {
-        select: { id: true, email: true, name: true, firstName: true, lastName: true },
-      },
-      shippingAddress: true,
-      billingAddress: true,
-    },
-  });
+    })
+  );
   if (!order) notFound();
 
   const addressLines = order.shippingAddress

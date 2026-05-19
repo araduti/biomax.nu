@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { currentSeason, seasons } from "@/lib/seasons";
 
@@ -25,9 +25,11 @@ export const dynamic = "force-dynamic";
  * highest priority wins live.
  */
 export default async function HeroListPage() {
-  const heros = await prisma.homepageHero.findMany({
-    orderBy: [{ status: "asc" }, { priority: "desc" }, { updatedAt: "desc" }],
-  });
+  const heros = await hostTenantScope((tx) =>
+    tx.homepageHero.findMany({
+      orderBy: [{ status: "asc" }, { priority: "desc" }, { updatedAt: "desc" }],
+    })
+  );
   const now = new Date();
   const seasonNow = currentSeason(now);
 

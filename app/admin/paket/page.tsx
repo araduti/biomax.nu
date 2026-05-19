@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { BundleCreateForm } from "@/components/admin/bundle-create-form";
 
@@ -7,14 +7,19 @@ export const metadata = { title: "Paket" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminBundlesPage() {
-  const bundles = await prisma.bundle.findMany({
-    orderBy: [{ active: "desc" }, { position: "asc" }, { createdAt: "desc" }],
-    include: { _count: { select: { items: true } } },
-  });
-  const allProducts = await prisma.product.findMany({
-    where: { status: "PUBLISHED" },
-    select: { slug: true, name: true },
-    orderBy: { name: "asc" },
+  const { bundles, allProducts } = await hostTenantScope(async (tx) => {
+    const [bundles, allProducts] = await Promise.all([
+      tx.bundle.findMany({
+        orderBy: [{ active: "desc" }, { position: "asc" }, { createdAt: "desc" }],
+        include: { _count: { select: { items: true } } },
+      }),
+      tx.product.findMany({
+        where: { status: "PUBLISHED" },
+        select: { slug: true, name: true },
+        orderBy: { name: "asc" },
+      }),
+    ]);
+    return { bundles, allProducts };
   });
 
   return (

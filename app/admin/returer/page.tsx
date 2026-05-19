@@ -1,5 +1,5 @@
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { formatPriceSEK } from "@/lib/format";
 import { ReturnAdminRow } from "@/components/admin/return-admin-row";
 
@@ -39,17 +39,19 @@ const STATUS_TONE = {
  * All mutations call into lib/orders/return-actions which audit-logs.
  */
 export default async function AdminReturnsPage() {
-  const returns = await prisma.return.findMany({
-    orderBy: [{ status: "asc" }, { createdAt: "desc" }],
-    include: {
-      order: { select: { orderNumber: true, email: true, totalAmount: true } },
-      items: {
-        include: {
-          orderItem: { select: { productName: true } },
+  const returns = await hostTenantScope((tx) =>
+    tx.return.findMany({
+      orderBy: [{ status: "asc" }, { createdAt: "desc" }],
+      include: {
+        order: { select: { orderNumber: true, email: true, totalAmount: true } },
+        items: {
+          include: {
+            orderItem: { select: { productName: true } },
+          },
         },
       },
-    },
-  });
+    })
+  );
 
   return (
     <>

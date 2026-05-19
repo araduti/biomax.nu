@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { HeroForm } from "@/components/admin/hero-form";
 
@@ -11,7 +11,9 @@ export default async function EditHeroPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const hero = await prisma.homepageHero.findUnique({ where: { id } });
+  const hero = await hostTenantScope((tx) =>
+    tx.homepageHero.findUnique({ where: { id } })
+  );
   if (!hero) notFound();
 
   return (

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { getAllIngredients } from "@/lib/knowledge/ingredients";
 
@@ -8,10 +8,12 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminIngredientPinsIndexPage() {
   const ingredients = getAllIngredients();
-  const pinCounts = await prisma.ingredientPin.groupBy({
-    by: ["ingredientSlug"],
-    _count: { _all: true },
-  });
+  const pinCounts = await hostTenantScope((tx) =>
+    tx.ingredientPin.groupBy({
+      by: ["ingredientSlug"],
+      _count: { _all: true },
+    })
+  );
   const countBySlug = new Map(
     pinCounts.map((r) => [r.ingredientSlug, r._count._all])
   );

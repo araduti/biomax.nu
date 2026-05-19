@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { formatPriceSEK } from "@/lib/format";
 import { PrintButton } from "@/components/admin/print-button";
 
@@ -40,24 +40,26 @@ export default async function AdminOrderInvoice({
   params: Promise<{ orderNumber: string }>;
 }) {
   const { orderNumber } = await params;
-  const order = await prisma.order.findUnique({
-    where: { orderNumber },
-    include: {
-      items: {
-        select: {
-          id: true,
-          productName: true,
-          productSku: true,
-          variantLabel: true,
-          quantity: true,
-          unitPrice: true,
-          totalPrice: true,
+  const order = await hostTenantScope((tx) =>
+    tx.order.findUnique({
+      where: { orderNumber },
+      include: {
+        items: {
+          select: {
+            id: true,
+            productName: true,
+            productSku: true,
+            variantLabel: true,
+            quantity: true,
+            unitPrice: true,
+            totalPrice: true,
+          },
         },
+        shippingAddress: true,
+        billingAddress: true,
       },
-      shippingAddress: true,
-      billingAddress: true,
-    },
-  });
+    })
+  );
   if (!order) notFound();
 
   const billing = order.billingAddress ?? order.shippingAddress;

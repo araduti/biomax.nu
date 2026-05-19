@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { formatPriceSEK } from "@/lib/format";
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { SeoHealthDot } from "@/components/admin/seo-health-dot";
 import { AdminStatusPill } from "@/components/admin/admin-status-pill";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
@@ -87,42 +87,44 @@ export default async function AdminProductsPage({
     ];
   }
 
-  const [products, statusGroups, healthGroups, total] = await Promise.all([
-    prisma.product.findMany({
-      where,
-      orderBy: [{ status: "asc" }, { totalSales: "desc" }],
-      select: {
-        id: true,
-        slug: true,
-        sku: true,
-        name: true,
-        imageUrl: true,
-        price: true,
-        stock: true,
-        manageStock: true,
-        lowStockThreshold: true,
-        totalSales: true,
-        status: true,
-        // Persisted on product save (see lib/admin/post-save-sync.ts).
-        // Lets the list render the health dot without re-fetching
-        // longDescription + ingredientList JSON for every row.
-        seoHealthLevel: true,
-        categories: { select: { name: true }, take: 1 },
-      },
-    }),
-    // Per-filter counts — render the chip badges without re-querying.
-    // GroupBy stays cheap; we're paying for the data we're already
-    // showing.
-    prisma.product.groupBy({
-      by: ["status"],
-      _count: { _all: true },
-    }),
-    prisma.product.groupBy({
-      by: ["seoHealthLevel"],
-      _count: { _all: true },
-    }),
-    prisma.product.count(),
-  ]);
+  const [products, statusGroups, healthGroups, total] = await hostTenantScope((tx) =>
+    Promise.all([
+      tx.product.findMany({
+        where,
+        orderBy: [{ status: "asc" }, { totalSales: "desc" }],
+        select: {
+          id: true,
+          slug: true,
+          sku: true,
+          name: true,
+          imageUrl: true,
+          price: true,
+          stock: true,
+          manageStock: true,
+          lowStockThreshold: true,
+          totalSales: true,
+          status: true,
+          // Persisted on product save (see lib/admin/post-save-sync.ts).
+          // Lets the list render the health dot without re-fetching
+          // longDescription + ingredientList JSON for every row.
+          seoHealthLevel: true,
+          categories: { select: { name: true }, take: 1 },
+        },
+      }),
+      // Per-filter counts — render the chip badges without re-querying.
+      // GroupBy stays cheap; we're paying for the data we're already
+      // showing.
+      tx.product.groupBy({
+        by: ["status"],
+        _count: { _all: true },
+      }),
+      tx.product.groupBy({
+        by: ["seoHealthLevel"],
+        _count: { _all: true },
+      }),
+      tx.product.count(),
+    ])
+  );
 
   const countByStatus = new Map<ProductStatus, number>();
   for (const g of statusGroups) countByStatus.set(g.status, g._count._all);

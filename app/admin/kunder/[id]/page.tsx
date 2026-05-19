@@ -3,6 +3,7 @@ import Link from "next/link";
 import { OrderStatusBadge } from "@/components/admin/order-status-badge";
 import { formatPriceSEK } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { GdprActions } from "@/components/admin/gdpr-actions";
 import { CustomerRoleControl } from "@/components/admin/customer-role-control";
 import { requireTenantRole } from "@/lib/admin/guard";
@@ -35,21 +36,23 @@ export default async function AdminCustomerDetail({
   });
   if (!user) notFound();
 
-  const orders = await prisma.order.findMany({
-    where: {
-      OR: [{ userId: user.id }, { email: user.email.toLowerCase() }],
-    },
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      orderNumber: true,
-      status: true,
-      totalAmount: true,
-      createdAt: true,
-      legacySource: true,
-      _count: { select: { items: true } },
-    },
-  });
+  const orders = await hostTenantScope((tx) =>
+    tx.order.findMany({
+      where: {
+        OR: [{ userId: user.id }, { email: user.email.toLowerCase() }],
+      },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        orderNumber: true,
+        status: true,
+        totalAmount: true,
+        createdAt: true,
+        legacySource: true,
+        _count: { select: { items: true } },
+      },
+    })
+  );
   const lifetime = orders.reduce(
     (sum, o) => sum + parseFloat(o.totalAmount.toString()),
     0

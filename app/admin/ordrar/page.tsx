@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { OrdrarList } from "@/components/admin/ordrar-list";
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import type { OrderStatus, Prisma } from "@prisma/client";
 
 /**
@@ -64,35 +64,37 @@ export default async function AdminOrdersPage({
     ];
   }
 
-  const [orders, total, perFilterCounts] = await Promise.all([
-    prisma.order.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      take: 60,
-      select: {
-        id: true,
-        orderNumber: true,
-        email: true,
-        status: true,
-        totalAmount: true,
-        createdAt: true,
-        legacySource: true,
-        _count: { select: { items: true } },
-      },
-    }),
-    prisma.order.count({ where }),
-    // Per-filter totals for the tab counters. Two parallel queries:
-    // status grouping for the non-legacy bucket + a single count for
-    // the archive bucket.
+  const [orders, total, perFilterCounts] = await hostTenantScope((tx) =>
     Promise.all([
-      prisma.order.groupBy({
-        by: ["status"],
-        where: { legacySource: null },
-        _count: { _all: true },
+      tx.order.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        take: 60,
+        select: {
+          id: true,
+          orderNumber: true,
+          email: true,
+          status: true,
+          totalAmount: true,
+          createdAt: true,
+          legacySource: true,
+          _count: { select: { items: true } },
+        },
       }),
-      prisma.order.count({ where: { legacySource: { not: null } } }),
-    ]),
-  ]);
+      tx.order.count({ where }),
+      // Per-filter totals for the tab counters. Two parallel queries:
+      // status grouping for the non-legacy bucket + a single count for
+      // the archive bucket.
+      Promise.all([
+        tx.order.groupBy({
+          by: ["status"],
+          where: { legacySource: null },
+          _count: { _all: true },
+        }),
+        tx.order.count({ where: { legacySource: { not: null } } }),
+      ]),
+    ])
+  );
 
   const [statusGroups, archiveCount] = perFilterCounts;
   const countByStatus = new Map<OrderStatus, number>();

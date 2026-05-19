@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { CategoryCreateForm } from "@/components/admin/category-create-form";
 
@@ -7,15 +7,17 @@ export const metadata = { title: "Kategorier" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminCategoriesPage() {
-  const categories = await prisma.category.findMany({
-    orderBy: { name: "asc" },
-    select: {
-      slug: true,
-      name: true,
-      description: true,
-      _count: { select: { products: true } },
-    },
-  });
+  const categories = await hostTenantScope((tx) =>
+    tx.category.findMany({
+      orderBy: { name: "asc" },
+      select: {
+        slug: true,
+        name: true,
+        description: true,
+        _count: { select: { products: true } },
+      },
+    })
+  );
 
   return (
     <>

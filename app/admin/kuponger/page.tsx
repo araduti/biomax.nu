@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { CouponCreateForm } from "@/components/admin/coupon-create-form";
 
@@ -21,20 +21,22 @@ function describeDiscount(c: {
 }
 
 export default async function AdminCouponsPage() {
-  const coupons = await prisma.coupon.findMany({
-    orderBy: [{ active: "desc" }, { createdAt: "desc" }],
-    select: {
-      code: true,
-      description: true,
-      discountPercent: true,
-      discountAmount: true,
-      startsAt: true,
-      expiresAt: true,
-      active: true,
-      maxUses: true,
-      usedCount: true,
-    },
-  });
+  const coupons = await hostTenantScope((tx) =>
+    tx.coupon.findMany({
+      orderBy: [{ active: "desc" }, { createdAt: "desc" }],
+      select: {
+        code: true,
+        description: true,
+        discountPercent: true,
+        discountAmount: true,
+        startsAt: true,
+        expiresAt: true,
+        active: true,
+        maxUses: true,
+        usedCount: true,
+      },
+    })
+  );
 
   const activeCount = coupons.filter((c) => c.active).length;
 

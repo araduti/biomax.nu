@@ -11,7 +11,7 @@ import {
   type PinnedProduct,
 } from "@/components/admin/related-products-editor";
 import { ProductGscBlock } from "@/components/admin/product-gsc-block";
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import {
   EMPTY_INGREDIENT_LIST,
   parseIngredientList,
@@ -40,38 +40,44 @@ export default async function AdminProductEditPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const product = await prisma.product.findUnique({
-    where: { slug },
-    include: {
-      categories: { select: { name: true, slug: true } },
-      variants: { orderBy: { position: "asc" } },
-    },
-  });
+  const product = await hostTenantScope((tx) =>
+    tx.product.findUnique({
+      where: { slug },
+      include: {
+        categories: { select: { name: true, slug: true } },
+        variants: { orderBy: { position: "asc" } },
+      },
+    })
+  );
   if (!product) notFound();
 
-  // All categories for the multiselect — exclude the synthetic "uncategorized"
-  // bucket so editors can't intentionally re-route a product into it.
-  const allCategories = await prisma.category.findMany({
-    where: { slug: { not: "uncategorized" } },
-    select: { slug: true, name: true },
-    orderBy: { name: "asc" },
-  });
-
-  // Editor-pinned cross-sells, ordered by descending score so the editor sees
-  // the same order the public page renders.
-  const pinnedRows = await prisma.productCrossSell.findMany({
-    where: { sourceProductId: product.id },
-    orderBy: { score: "desc" },
-    select: {
-      targetProduct: {
+  const { allCategories, pinnedRows } = await hostTenantScope(async (tx) => {
+    const [allCategories, pinnedRows] = await Promise.all([
+      // All categories for the multiselect — exclude the synthetic "uncategorized"
+      // bucket so editors can't intentionally re-route a product into it.
+      tx.category.findMany({
+        where: { slug: { not: "uncategorized" } },
+        select: { slug: true, name: true },
+        orderBy: { name: "asc" },
+      }),
+      // Editor-pinned cross-sells, ordered by descending score so the editor sees
+      // the same order the public page renders.
+      tx.productCrossSell.findMany({
+        where: { sourceProductId: product.id },
+        orderBy: { score: "desc" },
         select: {
-          slug: true,
-          name: true,
-          imageUrl: true,
-          categories: { select: { name: true }, take: 1 },
+          targetProduct: {
+            select: {
+              slug: true,
+              name: true,
+              imageUrl: true,
+              categories: { select: { name: true }, take: 1 },
+            },
+          },
         },
-      },
-    },
+      }),
+    ]);
+    return { allCategories, pinnedRows };
   });
   const initialPinned: PinnedProduct[] = pinnedRows.map((r) => ({
     slug: r.targetProduct.slug,

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { ReviewModerationRow } from "@/components/admin/review-moderation-row";
 import type { ReviewStatus } from "@prisma/client";
@@ -30,10 +30,34 @@ export default async function AdminReviewsPage({
   const activeTab = TABS.find((t) => t.id === tab)!;
   const where = activeTab.status ? { status: activeTab.status } : {};
 
-  // Tab counts — single grouped query keeps the badge numbers cheap.
-  const counts = await prisma.review.groupBy({
-    by: ["status"],
-    _count: { status: true },
+  const { counts, reviews } = await hostTenantScope(async (tx) => {
+    const [counts, reviews] = await Promise.all([
+      // Tab counts — single grouped query keeps the badge numbers cheap.
+      tx.review.groupBy({
+        by: ["status"],
+        _count: { status: true },
+      }),
+      tx.review.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        take: 100,
+        select: {
+          id: true,
+          rating: true,
+          title: true,
+          body: true,
+          authorName: true,
+          verified: true,
+          status: true,
+          storeResponse: true,
+          storeRespondedAt: true,
+          createdAt: true,
+          product: { select: { slug: true, name: true } },
+          user: { select: { name: true, email: true } },
+        },
+      }),
+    ]);
+    return { counts, reviews };
   });
   const countByStatus: Record<string, number> = {};
   let total = 0;
@@ -41,26 +65,6 @@ export default async function AdminReviewsPage({
     countByStatus[c.status] = c._count.status;
     total += c._count.status;
   }
-
-  const reviews = await prisma.review.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
-    take: 100,
-    select: {
-      id: true,
-      rating: true,
-      title: true,
-      body: true,
-      authorName: true,
-      verified: true,
-      status: true,
-      storeResponse: true,
-      storeRespondedAt: true,
-      createdAt: true,
-      product: { select: { slug: true, name: true } },
-      user: { select: { name: true, email: true } },
-    },
-  });
 
   return (
     <>

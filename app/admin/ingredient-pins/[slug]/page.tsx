@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { getIngredient } from "@/lib/knowledge/ingredients";
 import {
@@ -20,20 +20,22 @@ export default async function AdminIngredientPinPage({
   const ing = getIngredient(slug);
   if (!ing) notFound();
 
-  const pins = await prisma.ingredientPin.findMany({
-    where: { ingredientSlug: ing.slug },
-    orderBy: { position: "asc" },
-    select: {
-      product: {
-        select: {
-          slug: true,
-          name: true,
-          imageUrl: true,
-          categories: { select: { name: true }, take: 1 },
+  const pins = await hostTenantScope((tx) =>
+    tx.ingredientPin.findMany({
+      where: { ingredientSlug: ing.slug },
+      orderBy: { position: "asc" },
+      select: {
+        product: {
+          select: {
+            slug: true,
+            name: true,
+            imageUrl: true,
+            categories: { select: { name: true }, take: 1 },
+          },
         },
       },
-    },
-  });
+    })
+  );
   const initialPinned: PinnedProduct[] = pins.map((p) => ({
     slug: p.product.slug,
     name: p.product.name,

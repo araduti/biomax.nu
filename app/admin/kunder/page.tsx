@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Prisma } from "@prisma/client";
 import { formatPriceSEK } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 
 const dateFmt = new Intl.DateTimeFormat("sv-SE", {
@@ -53,15 +54,17 @@ export default async function AdminCustomersPage({
   // Compute lifetime spend per customer in one go for the visible list
   const userIds = customers.map((c) => c.id);
   const emails = customers.map((c) => c.email.toLowerCase());
-  const orders = await prisma.order.findMany({
-    where: {
-      OR: [
-        { userId: { in: userIds } },
-        { email: { in: emails } },
-      ],
-    },
-    select: { userId: true, email: true, totalAmount: true },
-  });
+  const orders = await hostTenantScope((tx) =>
+    tx.order.findMany({
+      where: {
+        OR: [
+          { userId: { in: userIds } },
+          { email: { in: emails } },
+        ],
+      },
+      select: { userId: true, email: true, totalAmount: true },
+    })
+  );
   const lifetimeByUser = new Map<string, number>();
   for (const c of customers) {
     const total = orders

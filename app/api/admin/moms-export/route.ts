@@ -15,7 +15,7 @@
  */
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { requireTenantRole } from "@/lib/admin/guard";
 import { audit } from "@/lib/admin/audit";
 
@@ -63,24 +63,26 @@ export async function GET(req: Request) {
   const toDate = new Date(`${parsed.data.to}T00:00:00Z`);
   toDate.setUTCDate(toDate.getUTCDate() + 1); // inclusive
 
-  const orders = await prisma.order.findMany({
-    where: {
-      status: { in: ["PAID", "FULFILLED"] },
-      createdAt: { gte: fromDate, lt: toDate },
-    },
-    orderBy: { createdAt: "asc" },
-    select: {
-      orderNumber: true,
-      createdAt: true,
-      currency: true,
-      subtotal: true,
-      shippingAmount: true,
-      taxAmount: true,
-      taxRateBp: true,
-      totalAmount: true,
-      status: true,
-    },
-  });
+  const orders = await hostTenantScope((tx) =>
+    tx.order.findMany({
+      where: {
+        status: { in: ["PAID", "FULFILLED"] },
+        createdAt: { gte: fromDate, lt: toDate },
+      },
+      orderBy: { createdAt: "asc" },
+      select: {
+        orderNumber: true,
+        createdAt: true,
+        currency: true,
+        subtotal: true,
+        shippingAmount: true,
+        taxAmount: true,
+        taxRateBp: true,
+        totalAmount: true,
+        status: true,
+      },
+    })
+  );
 
   // Detail rows.
   const rows: string[] = [];

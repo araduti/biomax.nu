@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { BundleEditForm } from "@/components/admin/bundle-edit-form";
 
@@ -13,22 +13,26 @@ export default async function AdminBundleEditPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const bundle = await prisma.bundle.findUnique({
-    where: { slug },
-    include: {
-      items: {
-        orderBy: { position: "asc" },
-        include: { product: { select: { slug: true, name: true } } },
-      },
-    },
+  const { bundle, allProducts } = await hostTenantScope(async (tx) => {
+    const [bundle, allProducts] = await Promise.all([
+      tx.bundle.findUnique({
+        where: { slug },
+        include: {
+          items: {
+            orderBy: { position: "asc" },
+            include: { product: { select: { slug: true, name: true } } },
+          },
+        },
+      }),
+      tx.product.findMany({
+        where: { status: "PUBLISHED" },
+        select: { slug: true, name: true },
+        orderBy: { name: "asc" },
+      }),
+    ]);
+    return { bundle, allProducts };
   });
   if (!bundle) notFound();
-
-  const allProducts = await prisma.product.findMany({
-    where: { status: "PUBLISHED" },
-    select: { slug: true, name: true },
-    orderBy: { name: "asc" },
-  });
 
   return (
     <>

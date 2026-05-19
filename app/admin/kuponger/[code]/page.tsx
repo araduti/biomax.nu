@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { CouponEditForm } from "@/components/admin/coupon-edit-form";
 
@@ -12,20 +12,22 @@ export default async function AdminCouponEditPage({
   params: Promise<{ code: string }>;
 }) {
   const { code } = await params;
-  const coupon = await prisma.coupon.findUnique({
-    where: { code: code.toUpperCase() },
-    select: {
-      code: true,
-      description: true,
-      discountPercent: true,
-      discountAmount: true,
-      startsAt: true,
-      expiresAt: true,
-      active: true,
-      maxUses: true,
-      usedCount: true,
-    },
-  });
+  const coupon = await hostTenantScope((tx) =>
+    tx.coupon.findUnique({
+      where: { code: code.toUpperCase() },
+      select: {
+        code: true,
+        description: true,
+        discountPercent: true,
+        discountAmount: true,
+        startsAt: true,
+        expiresAt: true,
+        active: true,
+        maxUses: true,
+        usedCount: true,
+      },
+    })
+  );
   if (!coupon) notFound();
 
   return (

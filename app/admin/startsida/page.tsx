@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { HomepageBlocksEditor } from "@/components/admin/homepage-blocks-editor";
 import { DEFAULT_BLOCKS } from "@/lib/homepage/blocks";
@@ -8,9 +8,11 @@ export const metadata = { title: "Startsidan" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminHomepagePage() {
-  const blocks = await prisma.homepageBlock.findMany({
-    orderBy: { position: "asc" },
-  });
+  const blocks = await hostTenantScope((tx) =>
+    tx.homepageBlock.findMany({
+      orderBy: { position: "asc" },
+    })
+  );
 
   return (
     <>

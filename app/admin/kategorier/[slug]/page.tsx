@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { CategoryEditForm } from "@/components/admin/category-edit-form";
 
@@ -13,22 +13,26 @@ export default async function AdminCategoryEditPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const category = await prisma.category.findUnique({
-    where: { slug },
-    select: {
-      slug: true,
-      name: true,
-      description: true,
-      _count: { select: { products: true } },
-    },
+  const { category, products } = await hostTenantScope(async (tx) => {
+    const [category, products] = await Promise.all([
+      tx.category.findUnique({
+        where: { slug },
+        select: {
+          slug: true,
+          name: true,
+          description: true,
+          _count: { select: { products: true } },
+        },
+      }),
+      tx.product.findMany({
+        where: { categories: { some: { slug } } },
+        select: { slug: true, name: true, status: true },
+        orderBy: { name: "asc" },
+      }),
+    ]);
+    return { category, products };
   });
   if (!category) notFound();
-
-  const products = await prisma.product.findMany({
-    where: { categories: { some: { slug } } },
-    select: { slug: true, name: true, status: true },
-    orderBy: { name: "asc" },
-  });
 
   return (
     <>
