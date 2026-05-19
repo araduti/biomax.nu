@@ -88,6 +88,7 @@ export function Platform2faSetup({ email }: { email: string }) {
               på plattformsadmin).
             </p>
             <input
+              suppressHydrationWarning
               type="password"
               placeholder="Lösenord"
               value={password}
@@ -124,6 +125,7 @@ export function Platform2faSetup({ email }: { email: string }) {
               </details>
             ) : null}
             <input
+              suppressHydrationWarning
               inputMode="numeric"
               placeholder="6-siffrig kod"
               value={code}

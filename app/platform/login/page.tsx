@@ -95,6 +95,7 @@ export default function PlatformLogin() {
         {step === "creds" ? (
           <>
             <input
+              suppressHydrationWarning
               type="email"
               required
               placeholder="E-post"
@@ -103,6 +104,7 @@ export default function PlatformLogin() {
               style={inp}
             />
             <input
+              suppressHydrationWarning
               type="password"
               required
               placeholder="Lösenord"
@@ -117,6 +119,7 @@ export default function PlatformLogin() {
         ) : (
           <>
             <input
+              suppressHydrationWarning
               inputMode="numeric"
               autoFocus
               required
