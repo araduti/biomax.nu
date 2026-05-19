@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
 import { currentTenant } from "@/lib/tenant";
 import { withTenantRLS } from "@/lib/tenant/rls";
 import { TopBar } from "@/components/site/top-bar";
@@ -167,13 +166,16 @@ export default async function ProductPage({
   searchParams?: Promise<{ recensioner?: string }>;
 }) {
   const { slug } = await params;
+  const { id: tenantId } = await currentTenant();
   const product = await getProduct(slug);
   if (!product) {
     // Slug may have been renamed — check the redirect table before 404.
-    const hit = await prisma.redirect.findUnique({
-      where: { fromPath: `/produkter/${slug}` },
-      select: { toPath: true },
-    });
+    const hit = await withTenantRLS(tenantId, (tx) =>
+      tx.redirect.findUnique({
+        where: { fromPath: `/produkter/${slug}` },
+        select: { toPath: true },
+      })
+    );
     if (hit) redirect(hit.toPath);
     notFound();
   }
@@ -184,15 +186,17 @@ export default async function ProductPage({
   // Editor-pinned cross-sells take priority. Order is `score DESC` (newest pin
   // gets the highest score in the action). Falls back to category-based
   // auto-pick when no pins exist.
-  const pinned = await prisma.productCrossSell.findMany({
-    where: { sourceProductId: product.id },
-    orderBy: { score: "desc" },
-    select: {
-      targetProduct: {
-        include: { categories: { select: { name: true }, take: 1 } },
+  const pinned = await withTenantRLS(tenantId, (tx) =>
+    tx.productCrossSell.findMany({
+      where: { sourceProductId: product.id },
+      orderBy: { score: "desc" },
+      select: {
+        targetProduct: {
+          include: { categories: { select: { name: true }, take: 1 } },
+        },
       },
-    },
-  });
+    })
+  );
   const pinnedProducts = pinned
     .map((p) => p.targetProduct)
     .filter((p) => isProductAvailable(p));
