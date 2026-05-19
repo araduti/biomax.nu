@@ -124,7 +124,13 @@ export async function buildKlarnaPayload(
   discount?: CheckoutDiscount | null,
   /** Pre-fill for logged-in customers. Kustom shows these in the
    *  iframe pre-filled but still editable; omit for guests. */
-  billingAddress?: KlarnaAddress | null
+  billingAddress?: KlarnaAddress | null,
+  /** Per-tenant push-webhook token (ADR 0034 D5). Appended to
+   *  merchant_urls.push so the unsigned Kustom v3 push can be
+   *  authenticated *and* the receiver can resolve the tenant by token.
+   *  Defaults to the global env secret (tenant zero / single-tenant
+   *  unchanged). Omitted from the URL when null/empty (dev/stub). */
+  pushToken: string | null = process.env.KLARNA_WEBHOOK_SECRET ?? null
 ): Promise<KlarnaCreateOrderPayload> {
   const productLines = lines.map((l) => buildLine(l, baseURL));
   const productAmount = productLines.reduce((s, l) => s + l.total_amount, 0);
@@ -222,9 +228,7 @@ export async function buildKlarnaPayload(
       // a secret query param is the documented mitigation). Omitted
       // when unset so dev/stub keeps working.
       push: `${baseURL}/api/webhooks/klarna?klarna_order_id={checkout.order.id}${
-        process.env.KLARNA_WEBHOOK_SECRET
-          ? `&token=${encodeURIComponent(process.env.KLARNA_WEBHOOK_SECRET)}`
-          : ""
+        pushToken ? `&token=${encodeURIComponent(pushToken)}` : ""
       }`,
     },
   };

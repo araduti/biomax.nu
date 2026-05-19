@@ -2,75 +2,43 @@ import type {
   KlarnaCreateOrderPayload,
   KlarnaOrder,
 } from "./types";
+import {
+  envCredentials,
+  type ResolvedPaymentCredentials,
+} from "./credentials";
 
 /**
- * Klarna Checkout v3 API client.
+ * Kustom (formerly Klarna) Checkout v3 API client.
  *
  * Two modes:
- *  - **Real**: when `KLARNA_USERNAME` + `KLARNA_PASSWORD` are set in env.
- *    Hits the configured `KLARNA_API_URL` (defaults to playground).
- *  - **Stub**: when creds are missing. Returns a fake order with a marker
- *    HTML snippet so the checkout flow works end-to-end during scaffolding
- *    (Phase 3C). Flip to real by setting the env vars in `.env.local`.
+ *  - **Real**: credentials present (per-tenant store, ADR 0034, or the
+ *    env fallback for tenant zero). Hits the resolved API host.
+ *  - **Stub**: creds missing → a fake order with a marker HTML snippet
+ *    so the checkout flow works end-to-end during scaffolding. Flip to
+ *    real by onboarding a tenant credential or setting the env vars.
  *
- * The boundary between modes is a single function — `isKlarnaConfigured()`.
- * Call sites don't need to know which mode they're in.
+ * The mode boundary is a single predicate — `isKlarnaConfigured()` —
+ * unchanged from the ADR 0009 contract; call sites don't care which
+ * mode they're in.
+ *
+ * Per-tenant credentials (ADR 0034): every exported call takes an
+ * optional resolved-credentials object. Omitted ⇒ `envCredentials()`
+ * (single-tenant behaviour, byte-for-byte). Callers with a tenant
+ * context (checkout, the push webhook) resolve per-tenant creds via
+ * `lib/klarna/credentials.ts` and pass them in. The ADR 0020 footgun
+ * guard now lives on the resolved `baseUrl` (env path) in that module.
  */
 
-// ADR 0020: prefer the Kustom test-ground creds; fall back to the
-// legacy Klarna Checkout v3 vars so pre-Kustom setups keep working.
-// The boundary stays a single function (`isKlarnaConfigured()`) — call
-// sites don't care which credential set is in play.
-/**
- * Resolve the API base URL.
- *
- * Footgun guard (ADR 0020): the legacy Klarna host (`api.klarna.com`)
- * does NOT run the Kustom Shipping Assistant. If Kustom creds are set
- * we must talk to a Kustom host — never silently fall back to a Klarna
- * host, which produces a working checkout with NO PostNord/KSA options
- * and a "still using Klarna endpoints" warning in the portal. So when
- * Kustom creds are present, KUSTOM_API_URL is required and must be a
- * kustom.co host; we fail loudly instead of degrading silently.
- */
-function resolveBaseUrl(): string {
-  const usingKustom = Boolean(process.env.KUSTOM_API_KEY_ID);
-  if (usingKustom) {
-    const url = process.env.KUSTOM_API_URL;
-    if (!url) {
-      throw new Error(
-        "KUSTOM_API_KEY_ID is set but KUSTOM_API_URL is not. Set it to " +
-          "the Kustom host (playground: https://api.playground.kustom.co, " +
-          "production: https://api.kustom.co) — the Klarna host does not " +
-          "run Kustom Shipping Assistant."
-      );
-    }
-    if (/klarna\.com/i.test(url)) {
-      throw new Error(
-        `KUSTOM_API_URL points at a Klarna host (${url}). Kustom ` +
-          "Shipping Assistant only runs on api(.playground).kustom.co."
-      );
-    }
-    return url;
-  }
-  return (
-    process.env.KLARNA_API_URL ?? "https://api.playground.klarna.com"
-  );
+export function isKlarnaConfigured(
+  creds: ResolvedPaymentCredentials = envCredentials()
+): boolean {
+  return creds.configured;
 }
 
-function credentials(): { user: string; pass: string } {
-  const user = process.env.KUSTOM_API_KEY_ID ?? process.env.KLARNA_USERNAME;
-  const pass = process.env.KUSTOM_API_PASSWORD ?? process.env.KLARNA_PASSWORD;
-  return { user: user ?? "", pass: pass ?? "" };
-}
-
-export function isKlarnaConfigured(): boolean {
-  const { user, pass } = credentials();
-  return Boolean(user && pass);
-}
-
-function authHeader(): string {
-  const { user, pass } = credentials();
-  return `Basic ${Buffer.from(`${user}:${pass}`).toString("base64")}`;
+function authHeader(creds: ResolvedPaymentCredentials): string {
+  return `Basic ${Buffer.from(
+    `${creds.apiKeyId}:${creds.apiSecret}`
+  ).toString("base64")}`;
 }
 
 /**
@@ -78,14 +46,15 @@ function authHeader(): string {
  * in our checkout page.
  */
 export async function createKlarnaOrder(
-  payload: KlarnaCreateOrderPayload
+  payload: KlarnaCreateOrderPayload,
+  creds: ResolvedPaymentCredentials = envCredentials()
 ): Promise<KlarnaOrder> {
-  if (!isKlarnaConfigured()) return createStubOrder(payload);
+  if (!isKlarnaConfigured(creds)) return createStubOrder(payload);
 
-  const res = await fetch(`${resolveBaseUrl()}/checkout/v3/orders`, {
+  const res = await fetch(`${creds.baseUrl}/checkout/v3/orders`, {
     method: "POST",
     headers: {
-      Authorization: authHeader(),
+      Authorization: authHeader(creds),
       "Content-Type": "application/json",
       Accept: "application/json",
     },
@@ -108,15 +77,16 @@ export async function createKlarnaOrder(
  */
 export async function updateKustomOrder(
   orderId: string,
-  payload: KlarnaCreateOrderPayload
+  payload: KlarnaCreateOrderPayload,
+  creds: ResolvedPaymentCredentials = envCredentials()
 ): Promise<void> {
-  if (!isKlarnaConfigured()) return;
+  if (!isKlarnaConfigured(creds)) return;
   const res = await fetch(
-    `${resolveBaseUrl()}/checkout/v3/orders/${encodeURIComponent(orderId)}`,
+    `${creds.baseUrl}/checkout/v3/orders/${encodeURIComponent(orderId)}`,
     {
       method: "POST",
       headers: {
-        Authorization: authHeader(),
+        Authorization: authHeader(creds),
         "Content-Type": "application/json",
         Accept: "application/json",
       },
@@ -134,15 +104,23 @@ export async function updateKustomOrder(
  * Fetch a Klarna order by ID. Used by the confirmation page after the
  * customer is redirected back from Klarna with the order_id in the URL.
  */
-export async function getKlarnaOrder(orderId: string): Promise<KlarnaOrder> {
-  if (!isKlarnaConfigured()) {
+export async function getKlarnaOrder(
+  orderId: string,
+  creds: ResolvedPaymentCredentials = envCredentials()
+): Promise<KlarnaOrder> {
+  if (!isKlarnaConfigured(creds)) {
     throw new Error(
       "getKlarnaOrder called in stub mode — confirmation flow uses our own DB."
     );
   }
   const res = await fetch(
-    `${resolveBaseUrl()}/checkout/v3/orders/${encodeURIComponent(orderId)}`,
-    { headers: { Authorization: authHeader(), Accept: "application/json" } }
+    `${creds.baseUrl}/checkout/v3/orders/${encodeURIComponent(orderId)}`,
+    {
+      headers: {
+        Authorization: authHeader(creds),
+        Accept: "application/json",
+      },
+    }
   );
   if (!res.ok) {
     const body = await res.text();
@@ -155,11 +133,14 @@ export async function getKlarnaOrder(orderId: string): Promise<KlarnaOrder> {
  * Acknowledge an order — tells Klarna we've successfully recorded it.
  * Called after we've created our internal Order record.
  */
-export async function acknowledgeKlarnaOrder(orderId: string): Promise<void> {
-  if (!isKlarnaConfigured()) return;
+export async function acknowledgeKlarnaOrder(
+  orderId: string,
+  creds: ResolvedPaymentCredentials = envCredentials()
+): Promise<void> {
+  if (!isKlarnaConfigured(creds)) return;
   const res = await fetch(
-    `${resolveBaseUrl()}/ordermanagement/v1/orders/${encodeURIComponent(orderId)}/acknowledge`,
-    { method: "POST", headers: { Authorization: authHeader() } }
+    `${creds.baseUrl}/ordermanagement/v1/orders/${encodeURIComponent(orderId)}/acknowledge`,
+    { method: "POST", headers: { Authorization: authHeader(creds) } }
   );
   if (!res.ok && res.status !== 204) {
     const body = await res.text();
@@ -181,11 +162,17 @@ export type KustomOmOrder = {
 };
 
 export async function getKustomOmOrder(
-  orderId: string
+  orderId: string,
+  creds: ResolvedPaymentCredentials = envCredentials()
 ): Promise<KustomOmOrder> {
   const res = await fetch(
-    `${resolveBaseUrl()}/ordermanagement/v1/orders/${encodeURIComponent(orderId)}`,
-    { headers: { Authorization: authHeader(), Accept: "application/json" } }
+    `${creds.baseUrl}/ordermanagement/v1/orders/${encodeURIComponent(orderId)}`,
+    {
+      headers: {
+        Authorization: authHeader(creds),
+        Accept: "application/json",
+      },
+    }
   );
   if (!res.ok) {
     const body = await res.text();
@@ -215,14 +202,15 @@ export async function getKustomOmOrder(
  */
 export async function captureKlarnaOrder(
   orderId: string,
-  capturedAmountOre: number
+  capturedAmountOre: number,
+  creds: ResolvedPaymentCredentials = envCredentials()
 ): Promise<{ ok: true; alreadyCaptured: boolean }> {
-  if (!isKlarnaConfigured()) {
+  if (!isKlarnaConfigured(creds)) {
     // Stub mode: nothing to charge. Treat as a successful no-op.
     return { ok: true, alreadyCaptured: true };
   }
 
-  const om = await getKustomOmOrder(orderId);
+  const om = await getKustomOmOrder(orderId, creds);
   if (om.status === "CANCELLED" || om.status === "EXPIRED") {
     const sv = om.status === "CANCELLED" ? "annullerad" : "utgången";
     throw new Error(
@@ -238,11 +226,11 @@ export async function captureKlarnaOrder(
   }
 
   const res = await fetch(
-    `${resolveBaseUrl()}/ordermanagement/v1/orders/${encodeURIComponent(orderId)}/captures`,
+    `${creds.baseUrl}/ordermanagement/v1/orders/${encodeURIComponent(orderId)}/captures`,
     {
       method: "POST",
       headers: {
-        Authorization: authHeader(),
+        Authorization: authHeader(creds),
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ captured_amount: capturedAmountOre }),
@@ -263,11 +251,12 @@ export async function captureKlarnaOrder(
  * throw so the caller refunds instead of silently doing nothing.
  */
 export async function cancelKlarnaOrder(
-  orderId: string
+  orderId: string,
+  creds: ResolvedPaymentCredentials = envCredentials()
 ): Promise<{ ok: true; noop: boolean }> {
-  if (!isKlarnaConfigured()) return { ok: true, noop: true };
+  if (!isKlarnaConfigured(creds)) return { ok: true, noop: true };
 
-  const om = await getKustomOmOrder(orderId);
+  const om = await getKustomOmOrder(orderId, creds);
   if (om.status === "CANCELLED" || om.status === "EXPIRED") {
     return { ok: true, noop: true };
   }
@@ -277,10 +266,10 @@ export async function cancelKlarnaOrder(
     );
   }
   const res = await fetch(
-    `${resolveBaseUrl()}/ordermanagement/v1/orders/${encodeURIComponent(orderId)}/cancel`,
+    `${creds.baseUrl}/ordermanagement/v1/orders/${encodeURIComponent(orderId)}/cancel`,
     {
       method: "POST",
-      headers: { Authorization: authHeader() },
+      headers: { Authorization: authHeader(creds) },
       cache: "no-store",
     }
   );
@@ -298,11 +287,12 @@ export async function cancelKlarnaOrder(
  */
 export async function refundKlarnaOrder(
   orderId: string,
-  refundAmountOre: number
+  refundAmountOre: number,
+  creds: ResolvedPaymentCredentials = envCredentials()
 ): Promise<{ ok: true; noop: boolean }> {
-  if (!isKlarnaConfigured()) return { ok: true, noop: true };
+  if (!isKlarnaConfigured(creds)) return { ok: true, noop: true };
 
-  const om = await getKustomOmOrder(orderId);
+  const om = await getKustomOmOrder(orderId, creds);
   if (om.captured_amount <= 0) {
     throw new Error(
       "Inget belopp är debiterat — annullera ordern i stället för att återbetala."
@@ -310,11 +300,11 @@ export async function refundKlarnaOrder(
   }
   const amount = Math.min(refundAmountOre, om.captured_amount);
   const res = await fetch(
-    `${resolveBaseUrl()}/ordermanagement/v1/orders/${encodeURIComponent(orderId)}/refunds`,
+    `${creds.baseUrl}/ordermanagement/v1/orders/${encodeURIComponent(orderId)}/refunds`,
     {
       method: "POST",
       headers: {
-        Authorization: authHeader(),
+        Authorization: authHeader(creds),
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ refunded_amount: amount }),
