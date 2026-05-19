@@ -47,6 +47,17 @@ export function proxy(req: NextRequest) {
 }
 
 export const config = {
-  // Run on app routes; skip static assets + Next internals.
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)"],
+  // Run on app routes; skip Next internals + genuine static assets
+  // ONLY. The previous blanket `.*\\..*` excluded EVERY dotted path,
+  // so tenant-scoped data/SEO routes (sitemap.xml, robots.txt,
+  // llms.txt, feeds/*.xml) bypassed tenant resolution and served
+  // tenant-zero (biomax) to every host — a cross-tenant content leak
+  // (ADR 0032). Exclude only static-asset file extensions; keep the
+  // dotted data routes flowing through tenant resolution.
+  // Excludes ONLY static-asset extensions. txt / xml / json are
+  // deliberately NOT excluded — sitemap.xml, robots.txt, llms.txt,
+  // feeds/*.xml are tenant-scoped and must resolve a tenant.
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:js|mjs|css|map|png|jpe?g|gif|svg|ico|webp|avif|woff2?|ttf|eot)$).*)",
+  ],
 };
