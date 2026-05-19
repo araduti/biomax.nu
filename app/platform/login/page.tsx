@@ -13,6 +13,8 @@ export default function PlatformLogin() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
+  const [step, setStep] = useState<"creds" | "2fa">("creds");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,13 +22,39 @@ export default function PlatformLogin() {
     e.preventDefault();
     setPending(true);
     setError(null);
-    const { error } = await platformAuthClient.signIn.email({
+    const { data, error } = await platformAuthClient.signIn.email({
       email,
       password,
     });
     setPending(false);
     if (error) {
       setError(error.message ?? "Inloggning misslyckades.");
+      return;
+    }
+    // 2FA-enabled admin → Better Auth signals a 2FA challenge instead
+    // of a completed session (ADR 0031, mandatory 2FA).
+    if ((data as { twoFactorRedirect?: boolean })?.twoFactorRedirect) {
+      setStep("2fa");
+      return;
+    }
+    router.push("/platform");
+    router.refresh();
+  }
+
+  async function onVerify(e: React.FormEvent) {
+    e.preventDefault();
+    if (!/^\d{6}$/.test(code)) {
+      setError("Ange den sexsiffriga koden.");
+      return;
+    }
+    setPending(true);
+    setError(null);
+    const { error } = await platformAuthClient.twoFactor.verifyTotp({
+      code,
+    });
+    setPending(false);
+    if (error) {
+      setError(error.message ?? "Koden stämde inte.");
       return;
     }
     router.push("/platform");
@@ -45,7 +73,7 @@ export default function PlatformLogin() {
       }}
     >
       <form
-        onSubmit={onSubmit}
+        onSubmit={step === "creds" ? onSubmit : onVerify}
         style={{
           width: 340,
           background: "#15315a",
@@ -60,27 +88,48 @@ export default function PlatformLogin() {
           KORG · PLATTFORM
         </p>
         <p style={{ margin: "0 0 8px", fontSize: 13, opacity: 0.7 }}>
-          Ampliosoft-administratör
+          {step === "creds"
+            ? "Ampliosoft-administratör"
+            : "Tvåfaktor — ange koden från din app"}
         </p>
-        <input
-          type="email"
-          required
-          placeholder="E-post"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          style={inp}
-        />
-        <input
-          type="password"
-          required
-          placeholder="Lösenord"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          style={inp}
-        />
-        <button type="submit" disabled={pending} style={btn}>
-          {pending ? "Loggar in…" : "Logga in"}
-        </button>
+        {step === "creds" ? (
+          <>
+            <input
+              type="email"
+              required
+              placeholder="E-post"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              style={inp}
+            />
+            <input
+              type="password"
+              required
+              placeholder="Lösenord"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              style={inp}
+            />
+            <button type="submit" disabled={pending} style={btn}>
+              {pending ? "Loggar in…" : "Logga in"}
+            </button>
+          </>
+        ) : (
+          <>
+            <input
+              inputMode="numeric"
+              autoFocus
+              required
+              placeholder="6-siffrig kod"
+              value={code}
+              onChange={(e) => setCode(e.target.value.trim())}
+              style={inp}
+            />
+            <button type="submit" disabled={pending} style={btn}>
+              {pending ? "Verifierar…" : "Verifiera"}
+            </button>
+          </>
+        )}
         {error && (
           <p style={{ color: "#ff9a8a", fontSize: 13, margin: 0 }}>
             {error}

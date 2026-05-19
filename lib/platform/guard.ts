@@ -27,6 +27,36 @@ export type PlatformActor = {
   platformRole: "SUPERADMIN" | "SUPPORT";
 };
 
+/**
+ * Lighter gate for the 2FA-enrolment page only: platform host +
+ * platform session + PlatformAdmin row, but NOT the 2FA requirement
+ * (this is the page where 2FA gets set up — gating it on 2FA would
+ * loop). Everything else uses requirePlatformAdmin.
+ */
+export const requirePlatformSession = cache(
+  async (): Promise<PlatformActor & { twoFactorEnabled: boolean }> => {
+    const h = await headers();
+    if (h.get(PLATFORM_HOST_HEADER) !== "1") notFound();
+    const session = await platformAuth.api.getSession({ headers: h });
+    if (!session?.user) redirect("/platform/login");
+    const dbUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        email: true,
+        twoFactorEnabled: true,
+        platformAdmin: { select: { platformRole: true } },
+      },
+    });
+    if (!dbUser?.platformAdmin) notFound();
+    return {
+      userId: session.user.id,
+      email: dbUser.email,
+      platformRole: dbUser.platformAdmin.platformRole,
+      twoFactorEnabled: dbUser.twoFactorEnabled,
+    };
+  }
+);
+
 export const requirePlatformAdmin = cache(
   async (): Promise<PlatformActor> => {
     const h = await headers();
@@ -50,7 +80,8 @@ export const requirePlatformAdmin = cache(
 
     if (!dbUser?.platformAdmin) notFound();
     if (!dbUser.twoFactorEnabled) {
-      redirect("/platform/login?krav=2fa");
+      // Mandatory 2FA (ADR 0031) — send to enrolment, not login.
+      redirect("/platform/2fa");
     }
 
     return {
