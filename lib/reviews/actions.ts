@@ -3,7 +3,6 @@
 import { z } from "zod";
 import type { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/prisma";
 import { tenantScope } from "@/lib/tenant/db";
 import { currentTenant } from "@/lib/tenant";
 import { currentUser } from "@/lib/session";
@@ -156,44 +155,52 @@ async function isVerifiedPurchase(
 
 // ── Admin moderation ─────────────────────────────────────────────
 
-import { requireAdmin } from "@/lib/admin/guard";
+import { requireTenantRole } from "@/lib/admin/guard";
 
 export type ModerateResult = { ok: true } | { ok: false; error: string };
 
 export async function approveReview(id: string): Promise<ModerateResult> {
-  await requireAdmin();
-  const row = await prisma.review.update({
-    where: { id },
-    data: { status: "APPROVED" },
-    select: { product: { select: { slug: true } } },
-  });
+  const { tenantId } = await requireTenantRole("admin");
+  const row = await tenantScope(tenantId, (tx) =>
+    tx.review.update({
+      where: { id },
+      data: { status: "APPROVED" },
+      select: { product: { select: { slug: true } } },
+    })
+  );
   revalidatePath("/admin/recensioner");
   revalidatePath(`/produkter/${row.product.slug}`);
   return { ok: true };
 }
 
 export async function rejectReview(id: string): Promise<ModerateResult> {
-  await requireAdmin();
-  const row = await prisma.review.update({
-    where: { id },
-    data: { status: "REJECTED" },
-    select: { product: { select: { slug: true } } },
-  });
+  const { tenantId } = await requireTenantRole("admin");
+  const row = await tenantScope(tenantId, (tx) =>
+    tx.review.update({
+      where: { id },
+      data: { status: "REJECTED" },
+      select: { product: { select: { slug: true } } },
+    })
+  );
   revalidatePath("/admin/recensioner");
   revalidatePath(`/produkter/${row.product.slug}`);
   return { ok: true };
 }
 
 export async function deleteReview(id: string): Promise<ModerateResult> {
-  await requireAdmin();
-  const row = await prisma.review.findUnique({
-    where: { id },
-    select: { product: { select: { slug: true } } },
+  const { tenantId } = await requireTenantRole("admin");
+  const slug = await tenantScope(tenantId, async (tx) => {
+    const row = await tx.review.findUnique({
+      where: { id },
+      select: { product: { select: { slug: true } } },
+    });
+    if (!row) return null;
+    await tx.review.delete({ where: { id } });
+    return row.product.slug;
   });
-  if (!row) return { ok: false, error: "Recensionen hittades inte." };
-  await prisma.review.delete({ where: { id } });
+  if (!slug) return { ok: false, error: "Recensionen hittades inte." };
   revalidatePath("/admin/recensioner");
-  revalidatePath(`/produkter/${row.product.slug}`);
+  revalidatePath(`/produkter/${slug}`);
   return { ok: true };
 }
 
@@ -201,16 +208,18 @@ export async function setStoreResponse(
   id: string,
   response: string
 ): Promise<ModerateResult> {
-  await requireAdmin();
+  const { tenantId } = await requireTenantRole("admin");
   const trimmed = response.trim();
-  const row = await prisma.review.update({
-    where: { id },
-    data: {
-      storeResponse: trimmed || null,
-      storeRespondedAt: trimmed ? new Date() : null,
-    },
-    select: { product: { select: { slug: true } } },
-  });
+  const row = await tenantScope(tenantId, (tx) =>
+    tx.review.update({
+      where: { id },
+      data: {
+        storeResponse: trimmed || null,
+        storeRespondedAt: trimmed ? new Date() : null,
+      },
+      select: { product: { select: { slug: true } } },
+    })
+  );
   revalidatePath("/admin/recensioner");
   revalidatePath(`/produkter/${row.product.slug}`);
   return { ok: true };

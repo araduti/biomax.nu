@@ -2,8 +2,7 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/prisma";
-import { tenantScope } from "@/lib/tenant/db";
+import { tenantScope, hostTenantScope } from "@/lib/tenant/db";
 import { currentTenant } from "@/lib/tenant";
 import { sendTransactional } from "@/lib/email/client";
 import { stockBackInStockEmail } from "@/lib/email/templates";
@@ -89,45 +88,53 @@ export async function fanoutStockNotifications(productId: string): Promise<{
   sent: number;
   errors: { email: string; error: string }[];
 }> {
-  const product = await prisma.product.findUnique({
-    where: { id: productId },
-    select: {
-      id: true,
-      slug: true,
-      name: true,
-      stock: true,
-      manageStock: true,
-      status: true,
-      variants: {
-        select: { stock: true, manageStock: true },
+  // Reads scoped to the Host-resolved tenant (callers are admin server
+  // actions). Email I/O stays OUTSIDE the RLS transaction — a tx held
+  // open across network sends would hit Prisma's tx timeout.
+  const data = await hostTenantScope(async (tx) => {
+    const product = await tx.product.findUnique({
+      where: { id: productId },
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        stock: true,
+        manageStock: true,
+        status: true,
+        variants: {
+          select: { stock: true, manageStock: true },
+        },
       },
-    },
+    });
+    if (!product) return null;
+    if (product.status !== "PUBLISHED") return null;
+
+    // Availability: a product has stock if EITHER the parent row has
+    // stock (single-SKU products) OR any variant has stock (variant
+    // products ignore the parent.stock value — `resolveVariants()`
+    // treats <2 variants as variantless, matching the public-page logic).
+    const variantInStock =
+      product.variants.length >= 2 &&
+      product.variants.some((v) => !v.manageStock || v.stock > 0);
+    const parentInStock = !product.manageStock || product.stock > 0;
+    const anythingInStock =
+      product.variants.length >= 2 ? variantInStock : parentInStock;
+    if (!anythingInStock) return null;
+
+    const pending = await tx.stockNotificationRequest.findMany({
+      where: { productId, fulfilledAt: null },
+      orderBy: { createdAt: "asc" },
+      take: FANOUT_BATCH,
+      select: { id: true, email: true },
+    });
+    return { product, pending };
   });
-  if (!product) return { sent: 0, errors: [] };
-  if (product.status !== "PUBLISHED") return { sent: 0, errors: [] };
 
-  // Availability: a product has stock if EITHER the parent row has stock
-  // (single-SKU products) OR any variant has stock (variant products
-  // ignore the parent.stock value — `resolveVariants()` treats <2 variants
-  // as variantless, matching the public-page logic).
-  const variantInStock =
-    product.variants.length >= 2 &&
-    product.variants.some((v) => !v.manageStock || v.stock > 0);
-  const parentInStock = !product.manageStock || product.stock > 0;
-  const anythingInStock =
-    product.variants.length >= 2 ? variantInStock : parentInStock;
-  if (!anythingInStock) return { sent: 0, errors: [] };
+  if (!data || data.pending.length === 0) return { sent: 0, errors: [] };
+  const { product, pending } = data;
 
-  const pending = await prisma.stockNotificationRequest.findMany({
-    where: { productId, fulfilledAt: null },
-    orderBy: { createdAt: "asc" },
-    take: FANOUT_BATCH,
-    select: { id: true, email: true },
-  });
-  if (pending.length === 0) return { sent: 0, errors: [] };
-
-  let sent = 0;
   const errors: { email: string; error: string }[] = [];
+  const fulfilledIds: string[] = [];
 
   for (const r of pending) {
     const tpl = stockBackInStockEmail({
@@ -147,21 +154,28 @@ export async function fanoutStockNotifications(productId: string): Promise<{
       errors.push({ email: r.email, error: result.error });
       continue;
     }
-    await prisma.stockNotificationRequest.update({
-      where: { id: r.id },
-      data: { fulfilledAt: new Date() },
-    });
-    sent++;
+    fulfilledIds.push(r.id);
   }
 
-  return { sent, errors };
+  if (fulfilledIds.length > 0) {
+    await hostTenantScope((tx) =>
+      tx.stockNotificationRequest.updateMany({
+        where: { id: { in: fulfilledIds } },
+        data: { fulfilledAt: new Date() },
+      })
+    );
+  }
+
+  return { sent: fulfilledIds.length, errors };
 }
 
 /** Count pending requests — used by admin to show "X kunder väntar". */
 export async function pendingStockNotificationCount(
   productId: string
 ): Promise<number> {
-  return prisma.stockNotificationRequest.count({
-    where: { productId, fulfilledAt: null },
-  });
+  return hostTenantScope((tx) =>
+    tx.stockNotificationRequest.count({
+      where: { productId, fulfilledAt: null },
+    })
+  );
 }
