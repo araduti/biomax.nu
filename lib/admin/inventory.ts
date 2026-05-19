@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { getLowStockDefault } from "@/lib/site/settings";
 
 export type InventoryRow = {
@@ -50,30 +50,32 @@ export type InventorySnapshot = {
 export async function getInventory(): Promise<InventorySnapshot> {
   const threshold = await getLowStockDefault();
 
-  const products = await prisma.product.findMany({
-    where: { status: "PUBLISHED" },
-    select: {
-      id: true,
-      slug: true,
-      sku: true,
-      name: true,
-      stock: true,
-      manageStock: true,
-      lowStockThreshold: true,
-      imageUrl: true,
-      variants: {
-        select: {
-          id: true,
-          sku: true,
-          label: true,
-          stock: true,
-          manageStock: true,
+  const products = await hostTenantScope((tx) =>
+    tx.product.findMany({
+      where: { status: "PUBLISHED" },
+      select: {
+        id: true,
+        slug: true,
+        sku: true,
+        name: true,
+        stock: true,
+        manageStock: true,
+        lowStockThreshold: true,
+        imageUrl: true,
+        variants: {
+          select: {
+            id: true,
+            sku: true,
+            label: true,
+            stock: true,
+            manageStock: true,
+          },
+          orderBy: { position: "asc" },
         },
-        orderBy: { position: "asc" },
       },
-    },
-    orderBy: { name: "asc" },
-  });
+      orderBy: { name: "asc" },
+    })
+  );
 
   const rows: InventoryRow[] = [];
   for (const p of products) {

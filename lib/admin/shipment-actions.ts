@@ -2,8 +2,8 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "./guard";
+import { requireTenantRole } from "./guard";
+import { tenantScope } from "@/lib/tenant/db";
 import { audit } from "./audit";
 import { cuidSchema, fail } from "@/lib/validation/shared";
 import { fetchOrderLabel } from "@/lib/postnord/booking";
@@ -30,20 +30,23 @@ export type ShipmentActionResult =
 export async function printOrderLabel(
   raw: unknown
 ): Promise<ShipmentActionResult> {
-  const admin = await requireAdmin();
+  const actor = await requireTenantRole("admin");
+  const { tenantId } = actor;
   const parsed = LabelSchema.safeParse(raw);
   if (!parsed.success) return fail(parsed.error);
 
-  const order = await prisma.order.findUnique({
-    where: { id: parsed.data.orderId },
-    select: {
-      id: true,
-      orderNumber: true,
-      status: true,
-      trackingNumber: true,
-      labelPdfUrl: true,
-    },
-  });
+  const order = await tenantScope(tenantId, (tx) =>
+    tx.order.findUnique({
+      where: { id: parsed.data.orderId },
+      select: {
+        id: true,
+        orderNumber: true,
+        status: true,
+        trackingNumber: true,
+        labelPdfUrl: true,
+      },
+    })
+  );
   if (!order) return { ok: false, error: "Ordern hittades inte." };
   if (order.status !== "PAID" && order.status !== "FULFILLED") {
     return {
@@ -69,12 +72,14 @@ export async function printOrderLabel(
   if (!result.ok) return result;
 
   if (result.labelPdfUrl) {
-    await prisma.order.update({
-      where: { id: order.id },
-      data: { labelPdfUrl: result.labelPdfUrl },
-    });
+    await tenantScope(tenantId, (tx) =>
+      tx.order.update({
+        where: { id: order.id },
+        data: { labelPdfUrl: result.labelPdfUrl },
+      })
+    );
     await audit({
-      actorId: admin.id,
+      actorId: actor.userId,
       action: "order.print-label",
       entityType: "Order",
       entityId: order.id,
@@ -97,20 +102,23 @@ export async function printOrderLabel(
 export async function markFulfilled(
   raw: unknown
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  const admin = await requireAdmin();
+  const actor = await requireTenantRole("admin");
+  const { tenantId } = actor;
   const parsed = FulfillSchema.safeParse(raw);
   if (!parsed.success) return fail(parsed.error);
 
-  const order = await prisma.order.findUnique({
-    where: { id: parsed.data.orderId },
-    select: {
-      id: true,
-      orderNumber: true,
-      status: true,
-      paymentReference: true,
-      totalAmount: true,
-    },
-  });
+  const order = await tenantScope(tenantId, (tx) =>
+    tx.order.findUnique({
+      where: { id: parsed.data.orderId },
+      select: {
+        id: true,
+        orderNumber: true,
+        status: true,
+        paymentReference: true,
+        totalAmount: true,
+      },
+    })
+  );
   if (!order) return { ok: false, error: "Ordern hittades inte." };
   if (order.status !== "PAID") {
     return {
@@ -146,13 +154,15 @@ export async function markFulfilled(
     }
   }
 
-  await prisma.order.update({
-    where: { id: order.id },
-    data: { status: "FULFILLED" },
-  });
+  await tenantScope(tenantId, (tx) =>
+    tx.order.update({
+      where: { id: order.id },
+      data: { status: "FULFILLED" },
+    })
+  );
 
   await audit({
-    actorId: admin.id,
+    actorId: actor.userId,
     action: "order.fulfill",
     entityType: "Order",
     entityId: order.id,

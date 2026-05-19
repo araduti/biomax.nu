@@ -2,8 +2,8 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "./guard";
+import { requireTenantRole } from "./guard";
+import { tenantScope } from "@/lib/tenant/db";
 import { audit } from "./audit";
 import { cuidSchema, fail } from "@/lib/validation/shared";
 import {
@@ -42,15 +42,18 @@ export type InventoryResult = { ok: true } | { ok: false; error: string };
 export async function setProductStock(
   raw: unknown
 ): Promise<InventoryResult> {
-  const admin = await requireAdmin();
+  const actor = await requireTenantRole("admin");
+  const { tenantId } = actor;
   const parsed = SetProductStock.safeParse(raw);
   if (!parsed.success) return fail(parsed.error);
   const { productId, stock } = parsed.data;
 
-  const existing = await prisma.product.findUnique({
-    where: { id: productId },
-    select: { slug: true, stock: true, manageStock: true, status: true },
-  });
+  const existing = await tenantScope(tenantId, (tx) =>
+    tx.product.findUnique({
+      where: { id: productId },
+      select: { slug: true, stock: true, manageStock: true, status: true },
+    })
+  );
   if (!existing) return { ok: false, error: "Produkten hittades inte." };
 
   const wasOutOfStock =
@@ -59,12 +62,14 @@ export async function setProductStock(
     existing.status === "PUBLISHED";
 
   try {
-    await prisma.product.update({
-      where: { id: productId },
-      data: { stock },
-    });
+    await tenantScope(tenantId, (tx) =>
+      tx.product.update({
+        where: { id: productId },
+        data: { stock },
+      })
+    );
     await audit({
-      actorId: admin.id,
+      actorId: actor.userId,
       action: "inventory.product-stock-update",
       entityType: "Product",
       entityId: productId,
@@ -99,29 +104,32 @@ export async function setProductStock(
 export async function setVariantStock(
   raw: unknown
 ): Promise<InventoryResult> {
-  const admin = await requireAdmin();
+  const actor = await requireTenantRole("admin");
+  const { tenantId } = actor;
   const parsed = SetVariantStock.safeParse(raw);
   if (!parsed.success) return fail(parsed.error);
   const { variantId, stock } = parsed.data;
 
-  const existing = await prisma.productVariant.findUnique({
-    where: { id: variantId },
-    select: {
-      label: true,
-      stock: true,
-      manageStock: true,
-      product: {
-        select: {
-          id: true,
-          slug: true,
-          status: true,
-          variants: {
-            select: { id: true, stock: true, manageStock: true },
+  const existing = await tenantScope(tenantId, (tx) =>
+    tx.productVariant.findUnique({
+      where: { id: variantId },
+      select: {
+        label: true,
+        stock: true,
+        manageStock: true,
+        product: {
+          select: {
+            id: true,
+            slug: true,
+            status: true,
+            variants: {
+              select: { id: true, stock: true, manageStock: true },
+            },
           },
         },
       },
-    },
-  });
+    })
+  );
   if (!existing) return { ok: false, error: "Varianten hittades inte." };
 
   // Pre-transition aggregate: was the parent product effectively
@@ -135,12 +143,14 @@ export async function setVariantStock(
     );
 
   try {
-    await prisma.productVariant.update({
-      where: { id: variantId },
-      data: { stock },
-    });
+    await tenantScope(tenantId, (tx) =>
+      tx.productVariant.update({
+        where: { id: variantId },
+        data: { stock },
+      })
+    );
     await audit({
-      actorId: admin.id,
+      actorId: actor.userId,
       action: "inventory.variant-stock-update",
       entityType: "ProductVariant",
       entityId: variantId,

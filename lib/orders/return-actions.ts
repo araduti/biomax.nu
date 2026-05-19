@@ -140,8 +140,9 @@ export async function requestReturn(raw: unknown): Promise<ReturnActionResult> {
 
 // ─── Admin actions ───────────────────────────────────────────────
 
-import { requireAdmin } from "@/lib/admin/guard";
+import { requireTenantRole } from "@/lib/admin/guard";
 import { audit } from "@/lib/admin/audit";
+import { tenantScope } from "@/lib/tenant/db";
 
 const ModerateSchema = z.object({
   returnId: cuidSchema,
@@ -152,26 +153,29 @@ const ModerateSchema = z.object({
 export async function moderateReturn(
   raw: unknown
 ): Promise<ReturnActionResult> {
-  const admin = await requireAdmin();
+  const actor = await requireTenantRole("admin");
   const parsed = ModerateSchema.safeParse(raw);
   if (!parsed.success) return fail(parsed.error);
 
-  const existing = await prisma.return.findUnique({
-    where: { id: parsed.data.returnId },
-    select: { id: true, returnNumber: true, status: true },
+  const existing = await tenantScope(actor.tenantId, async (tx) => {
+    const row = await tx.return.findUnique({
+      where: { id: parsed.data.returnId },
+      select: { id: true, returnNumber: true, status: true },
+    });
+    if (!row) return null;
+    await tx.return.update({
+      where: { id: row.id },
+      data: {
+        status: parsed.data.action,
+        internalNote: parsed.data.internalNote ?? undefined,
+      },
+    });
+    return row;
   });
   if (!existing) return { ok: false, error: "Returen hittades inte." };
 
-  await prisma.return.update({
-    where: { id: existing.id },
-    data: {
-      status: parsed.data.action,
-      internalNote: parsed.data.internalNote ?? undefined,
-    },
-  });
-
   await audit({
-    actorId: admin.id,
+    actorId: actor.userId,
     action: `return.${parsed.data.action.toLowerCase()}`,
     entityType: "Return",
     entityId: existing.id,
@@ -188,83 +192,100 @@ const RecordRefundSchema = z.object({
 });
 
 export async function recordRefund(raw: unknown): Promise<ReturnActionResult> {
-  const admin = await requireAdmin();
+  const actor = await requireTenantRole("admin");
   const parsed = RecordRefundSchema.safeParse(raw);
   if (!parsed.success) return fail(parsed.error);
 
-  const existing = await prisma.return.findUnique({
-    where: { id: parsed.data.returnId },
-    select: {
-      id: true,
-      returnNumber: true,
-      orderId: true,
-      order: { select: { status: true } },
-      items: {
+  // Pre-read + the atomic refund/restock/order-flip multi-write all run
+  // inside one tenantScope so the seam's transaction (ADR 0032 D7) is
+  // the outer tx — RLS-isolated, atomic across return/order/stock.
+  type RefundOutcome =
+    | { kind: "missing" }
+    | { kind: "badState"; status: string }
+    | { kind: "ok"; returnId: string; returnNumber: string };
+  const outcome = await tenantScope(
+    actor.tenantId,
+    async (tx): Promise<RefundOutcome> => {
+      const existing = await tx.return.findUnique({
+        where: { id: parsed.data.returnId },
         select: {
-          quantity: true,
-          orderItem: {
-            select: { productId: true, variantId: true },
+          id: true,
+          returnNumber: true,
+          orderId: true,
+          order: { select: { status: true } },
+          items: {
+            select: {
+              quantity: true,
+              orderItem: {
+                select: { productId: true, variantId: true },
+              },
+            },
           },
         },
-      },
-    },
-  });
-  if (!existing) return { ok: false, error: "Returen hittades inte." };
+      });
+      if (!existing) return { kind: "missing" };
 
-  // State-machine guard: only PAID/FULFILLED orders may move to
-  // REFUNDED. Without this an admin could refund a CANCELLED order
-  // (already settled at Kustom) or double-refund a REFUNDED one.
-  if (
-    existing.order.status !== "REFUNDED" &&
-    !canTransitionOrder(existing.order.status, "REFUNDED")
-  ) {
+      // State-machine guard: only PAID/FULFILLED orders may move to
+      // REFUNDED. Without this an admin could refund a CANCELLED order
+      // (already settled at Kustom) or double-refund a REFUNDED one.
+      if (
+        existing.order.status !== "REFUNDED" &&
+        !canTransitionOrder(existing.order.status, "REFUNDED")
+      ) {
+        return { kind: "badState", status: existing.order.status };
+      }
+
+      // Idempotency guard: only the transition INTO refunded restocks.
+      // A second recordRefund() call (or admin double-click) matches
+      // zero rows here and skips the restock — stock is never doubled.
+      const claim = await tx.return.updateMany({
+        where: { id: existing.id, status: { not: "REFUNDED" } },
+        data: {
+          status: "REFUNDED",
+          refundAmount: parsed.data.refundAmount,
+          refundReference: parsed.data.refundReference,
+          refundedAt: new Date(),
+        },
+      });
+
+      if (claim.count === 1) {
+        // Return the physical units to inventory. Without this, refunded
+        // stock is lost from on-hand counts forever (phantom shrinkage).
+        await restockReturnedItems(
+          tx,
+          existing.items.map((it) => ({
+            productId: it.orderItem.productId,
+            variantId: it.orderItem.variantId,
+            quantity: it.quantity,
+          }))
+        );
+      }
+
+      // Mark the parent order REFUNDED only when this return fully
+      // covers it. For v1 we just flip — admins can use partial-refund
+      // refs in the reference field to disambiguate.
+      await tx.order.update({
+        where: { id: existing.orderId },
+        data: { status: "REFUNDED" },
+      });
+
+      return { kind: "ok", returnId: existing.id, returnNumber: existing.returnNumber };
+    }
+  );
+
+  if (outcome.kind === "missing")
+    return { ok: false, error: "Returen hittades inte." };
+  if (outcome.kind === "badState")
     return {
       ok: false,
-      error: `Ordern är i status ${existing.order.status} och kan inte återbetalas.`,
+      error: `Ordern är i status ${outcome.status} och kan inte återbetalas.`,
     };
-  }
-
-  await prisma.$transaction(async (tx) => {
-    // Idempotency guard: only the transition INTO refunded restocks.
-    // A second recordRefund() call (or admin double-click) matches
-    // zero rows here and skips the restock — stock is never doubled.
-    const claim = await tx.return.updateMany({
-      where: { id: existing.id, status: { not: "REFUNDED" } },
-      data: {
-        status: "REFUNDED",
-        refundAmount: parsed.data.refundAmount,
-        refundReference: parsed.data.refundReference,
-        refundedAt: new Date(),
-      },
-    });
-
-    if (claim.count === 1) {
-      // Return the physical units to inventory. Without this, refunded
-      // stock is lost from on-hand counts forever (phantom shrinkage).
-      await restockReturnedItems(
-        tx,
-        existing.items.map((it) => ({
-          productId: it.orderItem.productId,
-          variantId: it.orderItem.variantId,
-          quantity: it.quantity,
-        }))
-      );
-    }
-
-    // Mark the parent order REFUNDED only when this return fully covers
-    // it. For v1 we just flip — admins can use partial-refund refs in
-    // the reference field to disambiguate.
-    await tx.order.update({
-      where: { id: existing.orderId },
-      data: { status: "REFUNDED" },
-    });
-  });
 
   await audit({
-    actorId: admin.id,
+    actorId: actor.userId,
     action: "return.refunded",
     entityType: "Return",
-    entityId: existing.id,
+    entityId: outcome.returnId,
     diff: {
       amount: parsed.data.refundAmount,
       reference: parsed.data.refundReference,
@@ -272,5 +293,5 @@ export async function recordRefund(raw: unknown): Promise<ReturnActionResult> {
   });
   revalidatePath("/admin/returer");
   revalidatePath(`/admin/ordrar`);
-  return { ok: true, returnNumber: existing.returnNumber };
+  return { ok: true, returnNumber: outcome.returnNumber };
 }

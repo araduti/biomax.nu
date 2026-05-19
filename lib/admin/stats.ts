@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { getLowStockDefault } from "@/lib/site/settings";
 
 /**
@@ -47,80 +48,9 @@ export async function getDashboardStats() {
 
   const lowStockThreshold = await getLowStockDefault();
 
-  const [
-    paidOrdersThisMonth,
-    paidOrdersPrevMonth,
-    paidOrdersToday,
-    revenueThisMonth,
-    revenuePrevMonth,
-    revenueTodayAgg,
-    revenueSameWeekdayLastWeekAgg,
-    newCustomers,
-    newCustomersPrev,
-    repurchaseGroups,
-    lowStockSingleSku,
-    lowStockVariants,
-    recentOrders,
-  ] = await Promise.all([
-    prisma.order.count({
-      where: {
-        status: { in: ["PAID", "FULFILLED"] },
-        createdAt: { gte: startOfMonth },
-        legacySource: null,
-      },
-    }),
-    prisma.order.count({
-      where: {
-        status: { in: ["PAID", "FULFILLED"] },
-        createdAt: { gte: startOfPrevMonth, lte: endOfPrevMonth },
-        legacySource: null,
-      },
-    }),
-    // Orders today — denominator for the Plausible conversion KPI.
-    prisma.order.count({
-      where: {
-        status: { in: ["PAID", "FULFILLED"] },
-        createdAt: { gte: startOfToday },
-        legacySource: null,
-      },
-    }),
-    prisma.order.aggregate({
-      where: {
-        status: { in: ["PAID", "FULFILLED"] },
-        createdAt: { gte: startOfMonth },
-        legacySource: null,
-      },
-      _sum: { totalAmount: true },
-    }),
-    prisma.order.aggregate({
-      where: {
-        status: { in: ["PAID", "FULFILLED"] },
-        createdAt: { gte: startOfPrevMonth, lte: endOfPrevMonth },
-        legacySource: null,
-      },
-      _sum: { totalAmount: true },
-    }),
-    // Hero — today's revenue and the same weekday last week.
-    prisma.order.aggregate({
-      where: {
-        status: { in: ["PAID", "FULFILLED"] },
-        createdAt: { gte: startOfToday },
-        legacySource: null,
-      },
-      _sum: { totalAmount: true },
-    }),
-    prisma.order.aggregate({
-      where: {
-        status: { in: ["PAID", "FULFILLED"] },
-        createdAt: {
-          gte: startOfSameWeekdayLastWeek,
-          lte: endOfSameWeekdayLastWeek,
-        },
-        legacySource: null,
-      },
-      _sum: { totalAmount: true },
-    }),
-    // New customers — rolling 30 d vs the prior 30 d (delta).
+  // User is non-owned (auth/identity) — runs on `prisma`. Everything
+  // else is tenant-owned and goes through the RLS-scoped tx.
+  const [newCustomers, newCustomersPrev] = await Promise.all([
     prisma.user.count({
       where: { role: "customer", createdAt: { gte: start30 } },
     }),
@@ -130,71 +60,171 @@ export async function getDashboardStats() {
         createdAt: { gte: start60, lt: start30 },
       },
     }),
-    // Repurchase rate (rolling 90 d) — orders grouped by customer so we
-    // can count "≥2 orders" vs "≥1 order" without N+1 queries.
-    prisma.order.groupBy({
-      by: ["userId"],
-      where: {
-        status: { in: ["PAID", "FULFILLED"] },
-        createdAt: { gte: start90 },
-        legacySource: null,
-      },
-      _count: { _all: true },
-    }),
-    // Low stock — single-SKU products only (no variants).
-    prisma.product.findMany({
-      where: {
-        status: "PUBLISHED",
-        manageStock: true,
-        stock: { lte: lowStockThreshold },
-        variants: { none: {} },
-      },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        stock: true,
-        sku: true,
-      },
-      orderBy: { stock: "asc" },
-      take: 8,
-    }),
-    // Low stock — variant rows that breach threshold, with parent
-    // product joined for display. We split this query because the
-    // variant + parent product lookup is structurally different from
-    // single-SKU products and the alternative (a wide OR clause) is
-    // harder to reason about.
-    prisma.productVariant.findMany({
-      where: {
-        manageStock: true,
-        stock: { lte: lowStockThreshold },
-        product: { status: "PUBLISHED" },
-      },
-      select: {
-        id: true,
-        label: true,
-        sku: true,
-        stock: true,
-        product: { select: { name: true, slug: true } },
-      },
-      orderBy: { stock: "asc" },
-      take: 8,
-    }),
-    prisma.order.findMany({
-      where: { legacySource: null },
-      orderBy: { createdAt: "desc" },
-      take: 5,
-      select: {
-        id: true,
-        orderNumber: true,
-        email: true,
-        status: true,
-        totalAmount: true,
-        createdAt: true,
-        _count: { select: { items: true } },
-      },
-    }),
   ]);
+
+  const {
+    paidOrdersThisMonth,
+    paidOrdersPrevMonth,
+    paidOrdersToday,
+    revenueThisMonth,
+    revenuePrevMonth,
+    revenueTodayAgg,
+    revenueSameWeekdayLastWeekAgg,
+    repurchaseGroups,
+    lowStockSingleSku,
+    lowStockVariants,
+    recentOrders,
+  } = await hostTenantScope(async (tx) => {
+    const [
+      paidOrdersThisMonth,
+      paidOrdersPrevMonth,
+      paidOrdersToday,
+      revenueThisMonth,
+      revenuePrevMonth,
+      revenueTodayAgg,
+      revenueSameWeekdayLastWeekAgg,
+      repurchaseGroups,
+      lowStockSingleSku,
+      lowStockVariants,
+      recentOrders,
+    ] = await Promise.all([
+      tx.order.count({
+        where: {
+          status: { in: ["PAID", "FULFILLED"] },
+          createdAt: { gte: startOfMonth },
+          legacySource: null,
+        },
+      }),
+      tx.order.count({
+        where: {
+          status: { in: ["PAID", "FULFILLED"] },
+          createdAt: { gte: startOfPrevMonth, lte: endOfPrevMonth },
+          legacySource: null,
+        },
+      }),
+      // Orders today — denominator for the Plausible conversion KPI.
+      tx.order.count({
+        where: {
+          status: { in: ["PAID", "FULFILLED"] },
+          createdAt: { gte: startOfToday },
+          legacySource: null,
+        },
+      }),
+      tx.order.aggregate({
+        where: {
+          status: { in: ["PAID", "FULFILLED"] },
+          createdAt: { gte: startOfMonth },
+          legacySource: null,
+        },
+        _sum: { totalAmount: true },
+      }),
+      tx.order.aggregate({
+        where: {
+          status: { in: ["PAID", "FULFILLED"] },
+          createdAt: { gte: startOfPrevMonth, lte: endOfPrevMonth },
+          legacySource: null,
+        },
+        _sum: { totalAmount: true },
+      }),
+      // Hero — today's revenue and the same weekday last week.
+      tx.order.aggregate({
+        where: {
+          status: { in: ["PAID", "FULFILLED"] },
+          createdAt: { gte: startOfToday },
+          legacySource: null,
+        },
+        _sum: { totalAmount: true },
+      }),
+      tx.order.aggregate({
+        where: {
+          status: { in: ["PAID", "FULFILLED"] },
+          createdAt: {
+            gte: startOfSameWeekdayLastWeek,
+            lte: endOfSameWeekdayLastWeek,
+          },
+          legacySource: null,
+        },
+        _sum: { totalAmount: true },
+      }),
+      // Repurchase rate (rolling 90 d) — orders grouped by customer so we
+      // can count "≥2 orders" vs "≥1 order" without N+1 queries.
+      tx.order.groupBy({
+        by: ["userId"],
+        where: {
+          status: { in: ["PAID", "FULFILLED"] },
+          createdAt: { gte: start90 },
+          legacySource: null,
+        },
+        _count: { _all: true },
+      }),
+      // Low stock — single-SKU products only (no variants).
+      tx.product.findMany({
+        where: {
+          status: "PUBLISHED",
+          manageStock: true,
+          stock: { lte: lowStockThreshold },
+          variants: { none: {} },
+        },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          stock: true,
+          sku: true,
+        },
+        orderBy: { stock: "asc" },
+        take: 8,
+      }),
+      // Low stock — variant rows that breach threshold, with parent
+      // product joined for display. We split this query because the
+      // variant + parent product lookup is structurally different from
+      // single-SKU products and the alternative (a wide OR clause) is
+      // harder to reason about.
+      tx.productVariant.findMany({
+        where: {
+          manageStock: true,
+          stock: { lte: lowStockThreshold },
+          product: { status: "PUBLISHED" },
+        },
+        select: {
+          id: true,
+          label: true,
+          sku: true,
+          stock: true,
+          product: { select: { name: true, slug: true } },
+        },
+        orderBy: { stock: "asc" },
+        take: 8,
+      }),
+      tx.order.findMany({
+        where: { legacySource: null },
+        orderBy: { createdAt: "desc" },
+        take: 5,
+        select: {
+          id: true,
+          orderNumber: true,
+          email: true,
+          status: true,
+          totalAmount: true,
+          createdAt: true,
+          _count: { select: { items: true } },
+        },
+      }),
+    ]);
+    return {
+      paidOrdersThisMonth,
+      paidOrdersPrevMonth,
+      paidOrdersToday,
+      revenueThisMonth,
+      revenuePrevMonth,
+      revenueTodayAgg,
+      revenueSameWeekdayLastWeekAgg,
+      repurchaseGroups,
+      lowStockSingleSku,
+      lowStockVariants,
+      recentOrders,
+    };
+  });
 
   // Normalise both low-stock sources into one display list. Sort by
   // stock ascending so the most-urgent zero rows surface first; cap
@@ -274,14 +304,16 @@ export async function getDailyMetrics(days = 30): Promise<{
   start.setDate(start.getDate() - (days - 1));
   start.setHours(0, 0, 0, 0);
 
-  const rows = await prisma.order.findMany({
-    where: {
-      status: { in: ["PAID", "FULFILLED"] },
-      createdAt: { gte: start },
-      legacySource: null,
-    },
-    select: { totalAmount: true, createdAt: true },
-  });
+  const rows = await hostTenantScope((tx) =>
+    tx.order.findMany({
+      where: {
+        status: { in: ["PAID", "FULFILLED"] },
+        createdAt: { gte: start },
+        legacySource: null,
+      },
+      select: { totalAmount: true, createdAt: true },
+    })
+  );
 
   // Bucket into one slot per day so the sparkline has a regular
   // x-spacing (key = yyyy-mm-dd in local time).
@@ -336,27 +368,30 @@ export async function getPackQueue(take = 8): Promise<{
     status: "PAID" as const,
     legacySource: null,
   };
-  const [rows, total] = await Promise.all([
-    prisma.order.findMany({
-      where,
-      orderBy: { createdAt: "asc" },
-      take,
-      select: {
-        id: true,
-        orderNumber: true,
-        email: true,
-        status: true,
-        paymentProvider: true,
-        totalAmount: true,
-        createdAt: true,
-        shippingAddress: { select: { fullName: true } },
-        user: {
-          select: { firstName: true, lastName: true, name: true },
+  const { rows, total } = await hostTenantScope(async (tx) => {
+    const [rows, total] = await Promise.all([
+      tx.order.findMany({
+        where,
+        orderBy: { createdAt: "asc" },
+        take,
+        select: {
+          id: true,
+          orderNumber: true,
+          email: true,
+          status: true,
+          paymentProvider: true,
+          totalAmount: true,
+          createdAt: true,
+          shippingAddress: { select: { fullName: true } },
+          user: {
+            select: { firstName: true, lastName: true, name: true },
+          },
         },
-      },
-    }),
-    prisma.order.count({ where }),
-  ]);
+      }),
+      tx.order.count({ where }),
+    ]);
+    return { rows, total };
+  });
 
   const oldest = rows[0]?.createdAt ?? null;
   const oldestAgeHours = oldest
@@ -418,60 +453,62 @@ export async function getBestSellers(
   const start = new Date(now - days * 86_400_000);
   const prevStart = new Date(now - 2 * days * 86_400_000);
 
-  async function unitsByProduct(gte: Date, lt?: Date) {
-    const grouped = await prisma.orderItem.groupBy({
-      by: ["productId"],
-      where: {
-        productId: { not: null },
-        order: {
-          status: { in: ["PAID", "FULFILLED"] },
-          legacySource: null,
-          createdAt: lt ? { gte, lt } : { gte },
+  return hostTenantScope(async (tx) => {
+    async function unitsByProduct(gte: Date, lt?: Date) {
+      const grouped = await tx.orderItem.groupBy({
+        by: ["productId"],
+        where: {
+          productId: { not: null },
+          order: {
+            status: { in: ["PAID", "FULFILLED"] },
+            legacySource: null,
+            createdAt: lt ? { gte, lt } : { gte },
+          },
         },
-      },
-      _sum: { quantity: true },
-    });
-    const m = new Map<string, number>();
-    for (const g of grouped) {
-      if (g.productId) m.set(g.productId, g._sum.quantity ?? 0);
+        _sum: { quantity: true },
+      });
+      const m = new Map<string, number>();
+      for (const g of grouped) {
+        if (g.productId) m.set(g.productId, g._sum.quantity ?? 0);
+      }
+      return m;
     }
-    return m;
-  }
 
-  const [current, prior] = await Promise.all([
-    unitsByProduct(start),
-    unitsByProduct(prevStart, start),
-  ]);
+    const [current, prior] = await Promise.all([
+      unitsByProduct(start),
+      unitsByProduct(prevStart, start),
+    ]);
 
-  const ranked = [...current.entries()]
-    .map(([productId, units]) => ({ productId, units }))
-    .sort((a, b) => b.units - a.units)
-    .slice(0, take);
-  if (ranked.length === 0) return [];
+    const ranked = [...current.entries()]
+      .map(([productId, units]) => ({ productId, units }))
+      .sort((a, b) => b.units - a.units)
+      .slice(0, take);
+    if (ranked.length === 0) return [];
 
-  const products = await prisma.product.findMany({
-    where: { id: { in: ranked.map((r) => r.productId) } },
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      categories: { select: { name: true }, take: 1 },
-    },
-  });
-  const pById = new Map(products.map((p) => [p.id, p]));
+    const products = await tx.product.findMany({
+      where: { id: { in: ranked.map((r) => r.productId) } },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        categories: { select: { name: true }, take: 1 },
+      },
+    });
+    const pById = new Map(products.map((p) => [p.id, p]));
 
-  return ranked.map((r) => {
-    const p = pById.get(r.productId);
-    const prev = prior.get(r.productId) ?? 0;
-    const deltaPct =
-      prev > 0 ? Math.round(((r.units - prev) / prev) * 100) : null;
-    return {
-      productId: r.productId,
-      name: p?.name ?? "Okänd produkt",
-      slug: p?.slug ?? null,
-      category: p?.categories[0]?.name ?? null,
-      units: r.units,
-      deltaPct,
-    };
+    return ranked.map((r) => {
+      const p = pById.get(r.productId);
+      const prev = prior.get(r.productId) ?? 0;
+      const deltaPct =
+        prev > 0 ? Math.round(((r.units - prev) / prev) * 100) : null;
+      return {
+        productId: r.productId,
+        name: p?.name ?? "Okänd produkt",
+        slug: p?.slug ?? null,
+        category: p?.categories[0]?.name ?? null,
+        units: r.units,
+        deltaPct,
+      };
+    });
   });
 }

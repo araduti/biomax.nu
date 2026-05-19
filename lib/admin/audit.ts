@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
 import { headers } from "next/headers";
+import { tenantScope } from "@/lib/tenant/db";
+import { currentTenant } from "@/lib/tenant";
 
 /**
  * Append-only admin-action logger.
@@ -45,19 +46,26 @@ async function detectIp(): Promise<string | null> {
 export async function audit(entry: AuditEntry): Promise<void> {
   try {
     const ip = await detectIp();
-    await prisma.adminAuditEntry.create({
-      data: {
-        actorId: entry.actorId ?? null,
-        action: entry.action,
-        entityType: entry.entityType ?? null,
-        entityId: entry.entityId ?? null,
-        diff:
-          entry.diff === undefined || entry.diff === null
-            ? Prisma.DbNull
-            : (entry.diff as Prisma.InputJsonValue),
-        ip,
-      },
-    });
+    // Audit always runs from a tenant-scoped admin request (Host
+    // present); scope + stamp the write so the entry is RLS-isolated
+    // to the acting tenant.
+    const { id: tenantId } = await currentTenant();
+    await tenantScope(tenantId, (tx) =>
+      tx.adminAuditEntry.create({
+        data: {
+          actorId: entry.actorId ?? null,
+          action: entry.action,
+          entityType: entry.entityType ?? null,
+          entityId: entry.entityId ?? null,
+          diff:
+            entry.diff === undefined || entry.diff === null
+              ? Prisma.DbNull
+              : (entry.diff as Prisma.InputJsonValue),
+          ip,
+          tenantId,
+        },
+      })
+    );
   } catch (err) {
     console.error("[audit] write failed:", err);
   }

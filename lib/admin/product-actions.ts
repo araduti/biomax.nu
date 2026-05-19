@@ -1,8 +1,8 @@
 "use server";
 
 import { bumpTag, productCacheTag, productListCacheTag } from "@/lib/cache/tags";
-import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "./guard";
+import { requireTenantRole } from "./guard";
+import { tenantScope } from "@/lib/tenant/db";
 import { audit } from "./audit";
 import type { ProductStatus } from "@prisma/client";
 import {
@@ -59,12 +59,15 @@ export type ProductUpdateResult =
 export async function updateProduct(
   input: ProductUpdateInput
 ): Promise<ProductUpdateResult> {
-  const admin = await requireAdmin();
+  const actor = await requireTenantRole("admin");
+  const { tenantId } = actor;
 
-  const existing = await prisma.product.findUnique({
-    where: { slug: input.slug },
-    select: { id: true, stock: true, manageStock: true, status: true },
-  });
+  const existing = await tenantScope(tenantId, (tx) =>
+    tx.product.findUnique({
+      where: { slug: input.slug },
+      select: { id: true, stock: true, manageStock: true, status: true },
+    })
+  );
   if (!existing) return { ok: false, error: "Produkten hittades inte." };
 
   const data: Record<string, unknown> = {};
@@ -272,10 +275,12 @@ export async function updateProduct(
   }
 
   try {
-    await prisma.product.update({
-      where: { id: existing.id },
-      data: { ...data, ...categorySet },
-    });
+    await tenantScope(tenantId, (tx) =>
+      tx.product.update({
+        where: { id: existing.id },
+        data: { ...data, ...categorySet },
+      })
+    );
   } catch (err) {
     console.error("updateProduct failed:", err);
     return { ok: false, error: "Kunde inte spara ändringarna." };
@@ -310,20 +315,22 @@ export async function updateProduct(
   // Post-save derivations: recompute SEO health + resolved ingredient join.
   // Both read the freshly-updated row, both are best-effort (errors logged
   // but never block the admin save).
-  const refreshed = await prisma.product.findUnique({
-    where: { id: existing.id },
-    select: {
-      id: true,
-      seoTitle: true,
-      seoDescription: true,
-      seoFocusKw: true,
-      shortDescription: true,
-      longDescription: true,
-      ingredientList: true,
-      usage: true,
-      warnings: true,
-    },
-  });
+  const refreshed = await tenantScope(tenantId, (tx) =>
+    tx.product.findUnique({
+      where: { id: existing.id },
+      select: {
+        id: true,
+        seoTitle: true,
+        seoDescription: true,
+        seoFocusKw: true,
+        shortDescription: true,
+        longDescription: true,
+        ingredientList: true,
+        usage: true,
+        warnings: true,
+      },
+    })
+  );
   if (refreshed) {
     await Promise.all([
       syncSeoHealth(refreshed),
@@ -342,7 +349,7 @@ export async function updateProduct(
   // already a partial diff. Productname/slug pulled from input for the
   // human-readable column in the admin log view.
   await audit({
-    actorId: admin.id,
+    actorId: actor.userId,
     action: "product.update",
     entityType: "Product",
     entityId: existing.id,

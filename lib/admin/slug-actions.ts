@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "./guard";
+import { requireTenantRole } from "./guard";
+import { tenantScope } from "@/lib/tenant/db";
 
 export type RenameSlugResult =
   | { ok: true; slug: string }
@@ -20,7 +20,7 @@ export async function renameProductSlug(
   oldSlug: string,
   newSlug: string
 ): Promise<RenameSlugResult> {
-  await requireAdmin();
+  const { tenantId } = await requireTenantRole("admin");
   const next = newSlug.trim().toLowerCase();
   if (!SLUG_RE.test(next))
     return {
@@ -29,50 +29,61 @@ export async function renameProductSlug(
     };
   if (next === oldSlug) return { ok: true, slug: oldSlug };
 
-  const existing = await prisma.product.findUnique({
-    where: { slug: oldSlug },
-    select: { id: true },
-  });
-  if (!existing) return { ok: false, error: "Produkten hittades inte." };
-
-  const collision = await prisma.product.findUnique({
-    where: { slug: next },
-    select: { id: true },
-  });
-  if (collision) return { ok: false, error: "Slug används redan." };
-
   const oldPath = `/produkter/${oldSlug}`;
   const newPath = `/produkter/${next}`;
 
+  type RenameOutcome =
+    | { kind: "missing" }
+    | { kind: "collision" }
+    | { kind: "ok" };
+  let outcome: RenameOutcome;
   try {
-    await prisma.$transaction([
-      prisma.product.update({
+    outcome = await tenantScope(tenantId, async (tx): Promise<RenameOutcome> => {
+      const existing = await tx.product.findUnique({
+        where: { slug: oldSlug },
+        select: { id: true },
+      });
+      if (!existing) return { kind: "missing" };
+
+      const collision = await tx.product.findUnique({
+        where: { slug: next },
+        select: { id: true },
+      });
+      if (collision) return { kind: "collision" };
+
+      await tx.product.update({
         where: { id: existing.id },
         data: { slug: next },
-      }),
+      });
       // Drop a possibly stale redirect that pointed *into* the new slug —
       // prevents redirect chains.
-      prisma.redirect.deleteMany({ where: { fromPath: newPath } }),
-      prisma.redirect.upsert({
+      await tx.redirect.deleteMany({ where: { fromPath: newPath } });
+      await tx.redirect.upsert({
         where: { fromPath: oldPath },
         create: {
           fromPath: oldPath,
           toPath: newPath,
           reason: "slug-rename",
+          tenantId,
         },
         update: { toPath: newPath, reason: "slug-rename" },
-      }),
+      });
       // Any redirects that previously targeted oldPath should now hop
       // straight to newPath (collapse the chain).
-      prisma.redirect.updateMany({
+      await tx.redirect.updateMany({
         where: { toPath: oldPath },
         data: { toPath: newPath },
-      }),
-    ]);
+      });
+      return { kind: "ok" };
+    });
   } catch (err) {
     console.error("renameProductSlug failed:", err);
     return { ok: false, error: "Kunde inte byta slug." };
   }
+  if (outcome.kind === "missing")
+    return { ok: false, error: "Produkten hittades inte." };
+  if (outcome.kind === "collision")
+    return { ok: false, error: "Slug används redan." };
 
   revalidatePath(oldPath);
   revalidatePath(newPath);

@@ -7,8 +7,8 @@ import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
 import sharp from "sharp";
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "./guard";
+import { requireTenantRole } from "./guard";
+import { tenantScope } from "@/lib/tenant/db";
 import {
   searchUnsplashPhotos as _searchUnsplash,
   triggerDownload as _triggerDownload,
@@ -55,7 +55,7 @@ export type HeroPhotoUploadResult =
 export async function uploadHeroPhoto(
   formData: FormData
 ): Promise<HeroPhotoUploadResult> {
-  await requireAdmin();
+  await requireTenantRole("admin");
 
   const file = formData.get("file");
   if (!(file instanceof File)) {
@@ -303,7 +303,7 @@ export async function adminSearchUnsplash(
   query: string,
   page = 1
 ): Promise<UnsplashSearchResponse> {
-  await requireAdmin();
+  await requireTenantRole("admin");
   if (!isUnsplashConfigured()) {
     return { ok: true, configured: false, result: null };
   }
@@ -324,7 +324,7 @@ export async function adminSearchUnsplash(
 export async function adminTrackUnsplashDownload(
   downloadLocation: string
 ): Promise<{ ok: true }> {
-  await requireAdmin();
+  await requireTenantRole("admin");
   void _triggerDownload(downloadLocation);
   return { ok: true };
 }
@@ -340,7 +340,7 @@ export type LocalHeroPhoto = {
  * reuse past photos without re-uploading.
  */
 export async function listLocalHeroPhotos(): Promise<LocalHeroPhoto[]> {
-  await requireAdmin();
+  await requireTenantRole("admin");
   try {
     if (!existsSync(HERO_DIR)) return [];
     const entries = await readdir(HERO_DIR);
@@ -433,20 +433,25 @@ function validate(input: HeroFormInput): string | null {
 export async function saveHero(
   input: HeroFormInput
 ): Promise<HeroSaveResult> {
-  await requireAdmin();
+  const { tenantId } = await requireTenantRole("admin");
   const error = validate(input);
   if (error) return { ok: false, error };
 
   // Snapshot the existing row's photoUrl so we can (a) skip re-mirroring
   // an unchanged URL on every edit, and (b) clean up the old mirrored
-  // file if the editor swapped to a new photo.
+  // file if the editor swapped to a new photo. Read in its own scope so
+  // we don't hold a tenant transaction open across the (slow, network)
+  // mirror fetch below.
   let previousPhotoUrl: string | null = null;
   if (input.id) {
-    const existing = await prisma.homepageHero.findUnique({
-      where: { id: input.id },
-      select: { photoUrl: true },
+    const heroId = input.id;
+    previousPhotoUrl = await tenantScope(tenantId, async (tx) => {
+      const existing = await tx.homepageHero.findUnique({
+        where: { id: heroId },
+        select: { photoUrl: true },
+      });
+      return existing?.photoUrl ?? null;
     });
-    previousPhotoUrl = existing?.photoUrl ?? null;
   }
 
   let photoUrl = input.photoUrl.trim();
@@ -485,21 +490,26 @@ export async function saveHero(
     status: input.status,
   };
 
+  let createdId: string | null;
   try {
-    if (input.id) {
-      await prisma.homepageHero.update({
-        where: { id: input.id },
-        data,
+    createdId = await tenantScope(tenantId, async (tx) => {
+      if (input.id) {
+        await tx.homepageHero.update({ where: { id: input.id }, data });
+        return null;
+      }
+      const created = await tx.homepageHero.create({
+        data: { ...data, tenantId },
       });
-    } else {
-      const created = await prisma.homepageHero.create({ data });
-      revalidatePath("/");
-      revalidatePath("/admin/startsida/hero");
-      return { ok: true, id: created.id };
-    }
+      return created.id;
+    });
   } catch (err) {
     console.error("[admin hero] save failed:", err);
     return { ok: false, error: "Kunde inte spara." };
+  }
+  if (createdId) {
+    revalidatePath("/");
+    revalidatePath("/admin/startsida/hero");
+    return { ok: true, id: createdId };
   }
 
   // If we just replaced a previously-mirrored file with a new one,
@@ -522,9 +532,11 @@ export async function setHeroStatus(
   id: string,
   status: HeroStatus
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  await requireAdmin();
+  const { tenantId } = await requireTenantRole("admin");
   try {
-    await prisma.homepageHero.update({ where: { id }, data: { status } });
+    await tenantScope(tenantId, (tx) =>
+      tx.homepageHero.update({ where: { id }, data: { status } })
+    );
   } catch (err) {
     console.error("[admin hero] status update failed:", err);
     return { ok: false, error: "Kunde inte uppdatera status." };
@@ -537,28 +549,32 @@ export async function setHeroStatus(
 export async function deleteHero(
   id: string
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  await requireAdmin();
+  const { tenantId } = await requireTenantRole("admin");
   // Best-effort delete of uploaded file. Don't fail the DB delete if
   // unlink throws — the row going away is what matters.
+  let deletedPhotoUrl: string | null;
   try {
-    const row = await prisma.homepageHero.findUnique({
-      where: { id },
-      select: { photoUrl: true },
+    deletedPhotoUrl = await tenantScope(tenantId, async (tx) => {
+      const row = await tx.homepageHero.findUnique({
+        where: { id },
+        select: { photoUrl: true },
+      });
+      await tx.homepageHero.delete({ where: { id } });
+      return row?.photoUrl ?? null;
     });
-    await prisma.homepageHero.delete({ where: { id } });
-    if (row?.photoUrl?.startsWith("/uploads/hero/")) {
-      const path = join("public", row.photoUrl);
-      if (existsSync(path)) {
-        try {
-          await unlink(path);
-        } catch {
-          /* ignore */
-        }
-      }
-    }
   } catch (err) {
     console.error("[admin hero] delete failed:", err);
     return { ok: false, error: "Kunde inte ta bort." };
+  }
+  if (deletedPhotoUrl?.startsWith("/uploads/hero/")) {
+    const path = join("public", deletedPhotoUrl);
+    if (existsSync(path)) {
+      try {
+        await unlink(path);
+      } catch {
+        /* ignore */
+      }
+    }
   }
   revalidatePath("/");
   revalidatePath("/admin/startsida/hero");

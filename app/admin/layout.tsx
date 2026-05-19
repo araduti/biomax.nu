@@ -30,7 +30,7 @@ export default async function AdminLayout({
   // Parallel-fetch action counts so the sidebar can render chips next
   // to "Ordrar / Returer / Recensioner / Lager". Cached 60 s — every
   // admin page renders the sidebar, so the badge cost is amortised.
-  const badges = await getAdminBadges();
+  const badges = await getAdminBadges(admin.tenantId);
   const integrations = getIntegrationStatus();
 
   return (

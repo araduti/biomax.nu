@@ -9,7 +9,7 @@
  *   - getKeywordCoverage(): which pages own which aiKeyword
  *   - getContentDepth(): per-page editorial depth signals
  */
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { stripHtml } from "@/lib/sanitize";
 import { parseIngredientList } from "@/lib/products/ingredient-list";
 import { buildProductFaq } from "@/lib/products/faq";
@@ -31,7 +31,7 @@ export type SchemaReport = {
 };
 
 export async function validateSchema(): Promise<SchemaReport[]> {
-  const products = await prisma.product.findMany({
+  const products = await hostTenantScope((tx) => tx.product.findMany({
     where: { status: "PUBLISHED" },
     select: {
       slug: true,
@@ -48,7 +48,7 @@ export async function validateSchema(): Promise<SchemaReport[]> {
       warnings: true,
       seoFaqJson: true,
     },
-  });
+  }));
 
   const reports: SchemaReport[] = [];
 
@@ -134,7 +134,7 @@ export type Cannibalisation = {
 };
 
 export async function detectCannibalisation(): Promise<Cannibalisation[]> {
-  const products = await prisma.product.findMany({
+  const products = await hostTenantScope((tx) => tx.product.findMany({
     where: { status: "PUBLISHED" },
     select: {
       slug: true,
@@ -142,7 +142,7 @@ export async function detectCannibalisation(): Promise<Cannibalisation[]> {
       seoFocusKw: true,
       aiKeywords: true,
     },
-  });
+  }));
 
   const focusBuckets = new Map<string, { url: string; name: string }[]>();
   const aiBuckets = new Map<string, { url: string; name: string }[]>();
@@ -194,14 +194,14 @@ export type KeywordCoverage = {
 };
 
 export async function getKeywordCoverage(): Promise<KeywordCoverage> {
-  const products = await prisma.product.findMany({
+  const products = await hostTenantScope((tx) => tx.product.findMany({
     where: { status: "PUBLISHED" },
     select: {
       slug: true,
       name: true,
       aiKeywords: true,
     },
-  });
+  }));
 
   const buckets = new Map<string, { url: string; name: string }[]>();
   let productsWithKeywords = 0;
@@ -254,7 +254,7 @@ export type ContentDepthRow = {
 };
 
 export async function getContentDepth(): Promise<ContentDepthRow[]> {
-  const products = await prisma.product.findMany({
+  const products = await hostTenantScope((tx) => tx.product.findMany({
     where: { status: "PUBLISHED" },
     select: {
       slug: true,
@@ -267,7 +267,7 @@ export async function getContentDepth(): Promise<ContentDepthRow[]> {
       seoFaqJson: true,
       galleryUrls: true,
     },
-  });
+  }));
 
   const rows: ContentDepthRow[] = [];
 

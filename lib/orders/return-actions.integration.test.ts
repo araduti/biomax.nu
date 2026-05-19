@@ -6,7 +6,15 @@ import { prisma, resetDb } from "@/test/integration/db";
 // REAL so the idempotency + guard fixes are genuinely exercised.
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/admin/guard", () => ({
-  requireAdmin: vi.fn(async () => ({ id: "admin_test_user" })),
+  requireTenantRole: vi.fn(async () => ({
+    userId: "admintestuser",
+    email: "admin@test",
+    name: null,
+    firstName: null,
+    tenantId: "ttesttenant0",
+    organizationId: "otestorg0",
+    role: "admin" as const,
+  })),
 }));
 vi.mock("@/lib/admin/audit", () => ({ audit: vi.fn(async () => {}) }));
 vi.mock("@/lib/session", () => ({ currentUser: vi.fn(async () => null) }));

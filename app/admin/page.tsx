@@ -31,11 +31,11 @@ const eyebrowDateFmt = new Intl.DateTimeFormat("sv-SE", {
 });
 
 export default async function AdminOverview() {
-  const [admin, s, badges, pack, bestSellers, daily, visits] =
+  const admin = await requireTenantRole("admin");
+  const [s, badges, pack, bestSellers, daily, visits] =
     await Promise.all([
-      requireTenantRole("admin"),
       getDashboardStats(),
-      getAdminBadges(),
+      getAdminBadges(admin.tenantId),
       getPackQueue(8),
       getBestSellers(7, 4),
       getDailyMetrics(30),

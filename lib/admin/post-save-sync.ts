@@ -12,7 +12,8 @@
  * never propagate to the caller. The admin save is the source of truth;
  * a stale derivation surface fixes itself on the next edit.
  */
-import { prisma } from "@/lib/prisma";
+import { tenantScope } from "@/lib/tenant/db";
+import { currentTenant } from "@/lib/tenant";
 import { getSeoHealth, type SeoHealthLevel as Level } from "@/lib/admin/seo-health";
 import { parseIngredientList } from "@/lib/products/ingredient-list";
 import { findIngredient } from "@/lib/knowledge/ingredients";
@@ -43,10 +44,13 @@ type ProductForSync = {
 export async function syncSeoHealth(p: ProductForSync): Promise<void> {
   try {
     const health = getSeoHealth(p);
-    await prisma.product.update({
-      where: { id: p.id },
-      data: { seoHealthLevel: LEVEL_TO_PRISMA[health.level] },
-    });
+    const { id: tenantId } = await currentTenant();
+    await tenantScope(tenantId, (tx) =>
+      tx.product.update({
+        where: { id: p.id },
+        data: { seoHealthLevel: LEVEL_TO_PRISMA[health.level] },
+      })
+    );
   } catch (err) {
     console.error("[post-save] syncSeoHealth failed:", err);
   }
@@ -75,8 +79,11 @@ export async function syncProductIngredients(p: {
 
     // Replace-all semantics: simpler + correct under removals. The table
     // is small (a few ingredient slugs per product) so deleteMany+createMany
-    // is well within Prisma's comfort zone.
-    await prisma.$transaction(async (tx) => {
+    // is well within Prisma's comfort zone. Stamp tenantId on every new
+    // row (mirrors lib/admin/audit.ts) so RLS isolates the join rows to
+    // the acting tenant.
+    const { id: tenantId } = await currentTenant();
+    await tenantScope(tenantId, async (tx) => {
       await tx.productIngredient.deleteMany({
         where: { productId: p.id },
       });
@@ -85,6 +92,7 @@ export async function syncProductIngredients(p: {
           data: Array.from(slugs).map((ingredientSlug) => ({
             productId: p.id,
             ingredientSlug,
+            tenantId,
           })),
           skipDuplicates: true,
         });

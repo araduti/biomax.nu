@@ -17,8 +17,8 @@
  *     for products without variants, OR if *any* variant matches that
  *     for products with variants.
  */
-import { unstable_cache } from "next/cache";
-import { prisma } from "@/lib/prisma";
+import { tenantCache } from "@/lib/tenant/cache";
+import { tenantScope } from "@/lib/tenant/db";
 import { getLowStockDefault } from "@/lib/site/settings";
 
 export type AdminBadges = {
@@ -28,62 +28,63 @@ export type AdminBadges = {
   productsLowStock: number;
 };
 
-async function countLowStockProducts(threshold: number): Promise<number> {
-  // Products without variants — straightforward.
-  const singleSku = await prisma.product.count({
-    where: {
-      status: "PUBLISHED",
-      manageStock: true,
-      stock: { lte: threshold },
-      variants: { none: {} },
-    },
-  });
-
-  // Products with variants — count distinct parents that have at least
-  // one variant under threshold. We could do this with a groupBy on the
-  // variant table; the cleaner path is to count products that have a
-  // matching variant.
-  const variantHits = await prisma.product.count({
-    where: {
-      status: "PUBLISHED",
-      variants: {
-        some: { manageStock: true, stock: { lte: threshold } },
-      },
-    },
-  });
-
-  return singleSku + variantHits;
-}
-
-async function compute(): Promise<AdminBadges> {
+async function compute(tenantId: string): Promise<AdminBadges> {
   const threshold = await getLowStockDefault();
-  const [ordersToPack, returnsToProcess, reviewsToModerate, productsLowStock] =
-    await Promise.all([
-      prisma.order.count({
+  return tenantScope(tenantId, async (tx) => {
+    const [
+      ordersToPack,
+      returnsToProcess,
+      reviewsToModerate,
+      lowStockSingleSku,
+      lowStockVariant,
+    ] = await Promise.all([
+      tx.order.count({
         where: {
           status: "PAID",
-          // Exclude legacy WordPress imports — they're PAID-equivalent in
-          // the source data but represent already-fulfilled history.
+          // Exclude legacy WordPress imports — they're PAID-equivalent
+          // in the source data but represent already-fulfilled history.
           legacySource: null,
         },
       }),
-      prisma.return.count({ where: { status: "REQUESTED" } }),
-      prisma.review.count({ where: { status: "PENDING" } }),
-      countLowStockProducts(threshold),
+      tx.return.count({ where: { status: "REQUESTED" } }),
+      tx.review.count({ where: { status: "PENDING" } }),
+      // Products without variants — straightforward.
+      tx.product.count({
+        where: {
+          status: "PUBLISHED",
+          manageStock: true,
+          stock: { lte: threshold },
+          variants: { none: {} },
+        },
+      }),
+      // Products with variants — count distinct parents with at least
+      // one variant under threshold.
+      tx.product.count({
+        where: {
+          status: "PUBLISHED",
+          variants: {
+            some: { manageStock: true, stock: { lte: threshold } },
+          },
+        },
+      }),
     ]);
-  return {
-    ordersToPack,
-    returnsToProcess,
-    reviewsToModerate,
-    productsLowStock,
-  };
+    return {
+      ordersToPack,
+      returnsToProcess,
+      reviewsToModerate,
+      productsLowStock: lowStockSingleSku + lowStockVariant,
+    };
+  });
 }
 
 /**
- * Cached for 60 s and tagged so admin actions can invalidate explicitly
- * if they ever need a fresh badge before the TTL.
+ * Per-tenant cached for 60 s and tenant-tagged so one tenant's admin
+ * edit never busts another tenant's badge cache (ADR 0032 D4). Pass the
+ * tenant id from the admin guard (`requireTenantRole().tenantId`).
  */
-export const getAdminBadges = unstable_cache(compute, ["admin-badges"], {
-  revalidate: 60,
-  tags: ["admin-badges"],
-});
+export function getAdminBadges(tenantId: string): Promise<AdminBadges> {
+  return tenantCache(tenantId, () => compute(tenantId), ["admin-badges"], {
+    revalidate: 60,
+    tags: ["admin-badges"],
+  })();
+}

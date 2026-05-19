@@ -3,8 +3,8 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "./guard";
+import { requireTenantRole } from "./guard";
+import { tenantScope } from "@/lib/tenant/db";
 import { SETTING_KEYS } from "@/lib/site/settings";
 import { bumpTag, siteSettingsCacheTag } from "@/lib/cache/tags";
 import { fail } from "@/lib/validation/shared";
@@ -25,7 +25,7 @@ export async function updateShippingRules(input: {
   flatSek: number;
   freeThresholdSek: number | null;
 }): Promise<SettingsResult> {
-  await requireAdmin();
+  const { tenantId } = await requireTenantRole("admin");
   if (!Number.isInteger(input.flatSek) || input.flatSek < 0)
     return { ok: false, error: "Ogiltig fraktavgift." };
   if (
@@ -35,17 +35,18 @@ export async function updateShippingRules(input: {
     return { ok: false, error: "Ogiltig fri-frakt-tröskel." };
 
   try {
-    await prisma.$transaction([
-      prisma.siteSetting.upsert({
+    await tenantScope(tenantId, async (tx) => {
+      await tx.siteSetting.upsert({
         where: { key: SETTING_KEYS.shippingFlatSek },
         create: {
           key: SETTING_KEYS.shippingFlatSek,
           value: input.flatSek,
           description: "Standard fraktavgift i SEK.",
+          tenantId,
         },
         update: { value: input.flatSek },
-      }),
-      prisma.siteSetting.upsert({
+      });
+      await tx.siteSetting.upsert({
         where: { key: SETTING_KEYS.freeShippingThresholdSek },
         create: {
           key: SETTING_KEYS.freeShippingThresholdSek,
@@ -54,6 +55,7 @@ export async function updateShippingRules(input: {
               ? Prisma.JsonNull
               : input.freeThresholdSek,
           description: "Subtotal i SEK som ger fri frakt. NULL = aldrig.",
+          tenantId,
         },
         update: {
           value:
@@ -61,8 +63,8 @@ export async function updateShippingRules(input: {
               ? Prisma.JsonNull
               : input.freeThresholdSek,
         },
-      }),
-    ]);
+      });
+    });
   } catch (err) {
     console.error("updateShippingRules failed:", err);
     return { ok: false, error: "Kunde inte spara." };
@@ -77,20 +79,23 @@ export async function updateShippingRules(input: {
 export async function updateLowStockDefault(
   value: number
 ): Promise<SettingsResult> {
-  await requireAdmin();
+  const { tenantId } = await requireTenantRole("admin");
   if (!Number.isInteger(value) || value < 0)
     return { ok: false, error: "Ogiltigt värde." };
 
   try {
-    await prisma.siteSetting.upsert({
-      where: { key: SETTING_KEYS.lowStockDefault },
-      create: {
-        key: SETTING_KEYS.lowStockDefault,
-        value,
-        description: "Sajt-standard för &quot;Få kvar&quot;-tröskel.",
-      },
-      update: { value },
-    });
+    await tenantScope(tenantId, (tx) =>
+      tx.siteSetting.upsert({
+        where: { key: SETTING_KEYS.lowStockDefault },
+        create: {
+          key: SETTING_KEYS.lowStockDefault,
+          value,
+          description: "Sajt-standard för &quot;Få kvar&quot;-tröskel.",
+          tenantId,
+        },
+        update: { value },
+      })
+    );
   } catch (err) {
     console.error("updateLowStockDefault failed:", err);
     return { ok: false, error: "Kunde inte spara." };
@@ -110,7 +115,7 @@ export async function updateLowStockDefault(
 export async function updateWarehouseAlertEmails(
   raw: unknown
 ): Promise<SettingsResult> {
-  await requireAdmin();
+  const { tenantId } = await requireTenantRole("admin");
   const parsed = WarehouseEmailsSchema.safeParse(raw);
   if (!parsed.success) return fail(parsed.error);
 
@@ -125,15 +130,18 @@ export async function updateWarehouseAlertEmails(
   }
 
   try {
-    await prisma.siteSetting.upsert({
-      where: { key: SETTING_KEYS.warehouseAlertEmails },
-      create: {
-        key: SETTING_KEYS.warehouseAlertEmails,
-        value: cleaned.join(","),
-        description: "Mottagare av dagligt lagerlarmsmejl (kommaseparerad lista).",
-      },
-      update: { value: cleaned.join(",") },
-    });
+    await tenantScope(tenantId, (tx) =>
+      tx.siteSetting.upsert({
+        where: { key: SETTING_KEYS.warehouseAlertEmails },
+        create: {
+          key: SETTING_KEYS.warehouseAlertEmails,
+          value: cleaned.join(","),
+          description: "Mottagare av dagligt lagerlarmsmejl (kommaseparerad lista).",
+          tenantId,
+        },
+        update: { value: cleaned.join(",") },
+      })
+    );
   } catch (err) {
     console.error("updateWarehouseAlertEmails failed:", err);
     return { ok: false, error: "Kunde inte spara." };
@@ -152,7 +160,7 @@ export async function updateWarehouseAlertEmails(
 export async function updateTrustpilotSummary(
   raw: unknown
 ): Promise<SettingsResult> {
-  await requireAdmin();
+  const { tenantId } = await requireTenantRole("admin");
   const parsed = TrustpilotSchema.safeParse(raw);
   if (!parsed.success) return fail(parsed.error);
 
@@ -181,41 +189,44 @@ export async function updateTrustpilotSummary(
   }
 
   try {
-    await prisma.$transaction([
-      prisma.siteSetting.upsert({
+    await tenantScope(tenantId, async (tx) => {
+      await tx.siteSetting.upsert({
         where: { key: SETTING_KEYS.trustpilotRating },
         create: {
           key: SETTING_KEYS.trustpilotRating,
           value: rating === null ? Prisma.JsonNull : rating,
           description: "Trustpilot-betyg (0–5). NULL = visa CTA-variant utan siffra.",
+          tenantId,
         },
         update: {
           value: rating === null ? Prisma.JsonNull : rating,
         },
-      }),
-      prisma.siteSetting.upsert({
+      });
+      await tx.siteSetting.upsert({
         where: { key: SETTING_KEYS.trustpilotReviewCount },
         create: {
           key: SETTING_KEYS.trustpilotReviewCount,
           value: reviewCount === null ? Prisma.JsonNull : reviewCount,
           description: "Antal Trustpilot-omdömen. NULL = dölj siffran.",
+          tenantId,
         },
         update: {
           value: reviewCount === null ? Prisma.JsonNull : reviewCount,
         },
-      }),
-      prisma.siteSetting.upsert({
+      });
+      await tx.siteSetting.upsert({
         where: { key: SETTING_KEYS.trustpilotProfileUrl },
         create: {
           key: SETTING_KEYS.trustpilotProfileUrl,
           value: profileUrl || "https://se.trustpilot.com/review/biomax.nu",
           description: "URL till Biomax Trustpilot-profil.",
+          tenantId,
         },
         update: {
           value: profileUrl || "https://se.trustpilot.com/review/biomax.nu",
         },
-      }),
-    ]);
+      });
+    });
   } catch (err) {
     console.error("updateTrustpilotSummary failed:", err);
     return { ok: false, error: "Kunde inte spara." };

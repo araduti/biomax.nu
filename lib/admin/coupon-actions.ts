@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "./guard";
+import { requireTenantRole } from "./guard";
+import { tenantScope } from "@/lib/tenant/db";
 
 const CODE_RE = /^[A-Z0-9_-]{3,40}$/;
 
@@ -59,80 +59,89 @@ function validateInput(
 }
 
 export async function createCoupon(input: CouponInput): Promise<CouponResult> {
-  await requireAdmin();
+  const { tenantId } = await requireTenantRole("admin");
   const v = validateInput(input, true);
   if (!v.ok) return v;
   const code = input.code.trim().toUpperCase();
 
-  const collision = await prisma.coupon.findUnique({
-    where: { code },
-    select: { id: true },
-  });
-  if (collision) return { ok: false, error: "Kod används redan." };
-
+  let collided: boolean;
   try {
-    await prisma.coupon.create({
-      data: {
-        code,
-        description: input.description?.trim() || null,
-        discountPercent:
-          input.discountPercent != null && input.discountPercent > 0
-            ? input.discountPercent
-            : null,
-        discountAmount:
-          input.discountAmount && parseFloat(input.discountAmount) > 0
-            ? parseFloat(input.discountAmount)
-            : null,
-        startsAt: input.startsAt ?? null,
-        expiresAt: input.expiresAt ?? null,
-        active: input.active ?? true,
-        maxUses: input.maxUses ?? null,
-      },
+    collided = await tenantScope(tenantId, async (tx) => {
+      const collision = await tx.coupon.findUnique({
+        where: { code },
+        select: { id: true },
+      });
+      if (collision) return true;
+      await tx.coupon.create({
+        data: {
+          code,
+          description: input.description?.trim() || null,
+          discountPercent:
+            input.discountPercent != null && input.discountPercent > 0
+              ? input.discountPercent
+              : null,
+          discountAmount:
+            input.discountAmount && parseFloat(input.discountAmount) > 0
+              ? parseFloat(input.discountAmount)
+              : null,
+          startsAt: input.startsAt ?? null,
+          expiresAt: input.expiresAt ?? null,
+          active: input.active ?? true,
+          maxUses: input.maxUses ?? null,
+          tenantId,
+        },
+      });
+      return false;
     });
   } catch (err) {
     console.error("createCoupon failed:", err);
     return { ok: false, error: "Kunde inte skapa rabattkoden." };
   }
+  if (collided) return { ok: false, error: "Kod används redan." };
 
   revalidatePath("/admin/kuponger");
   return { ok: true, code };
 }
 
 export async function updateCoupon(input: CouponInput): Promise<CouponResult> {
-  await requireAdmin();
+  const { tenantId } = await requireTenantRole("admin");
   const v = validateInput(input, false);
   if (!v.ok) return v;
   const code = input.code.trim().toUpperCase();
 
-  const existing = await prisma.coupon.findUnique({
-    where: { code },
-    select: { id: true },
-  });
-  if (!existing) return { ok: false, error: "Koden hittades inte." };
-
+  let missing: boolean;
   try {
-    await prisma.coupon.update({
-      where: { id: existing.id },
-      data: {
-        description: input.description?.trim() || null,
-        discountPercent:
-          input.discountPercent != null && input.discountPercent > 0
-            ? input.discountPercent
-            : null,
-        discountAmount:
-          input.discountAmount && parseFloat(input.discountAmount) > 0
-            ? parseFloat(input.discountAmount)
-            : null,
-        startsAt: input.startsAt ?? null,
-        expiresAt: input.expiresAt ?? null,
-        active: input.active ?? true,
-        maxUses: input.maxUses ?? null,
-      },
+    missing = await tenantScope(tenantId, async (tx) => {
+      const existing = await tx.coupon.findUnique({
+        where: { code },
+        select: { id: true },
+      });
+      if (!existing) return true;
+      await tx.coupon.update({
+        where: { id: existing.id },
+        data: {
+          description: input.description?.trim() || null,
+          discountPercent:
+            input.discountPercent != null && input.discountPercent > 0
+              ? input.discountPercent
+              : null,
+          discountAmount:
+            input.discountAmount && parseFloat(input.discountAmount) > 0
+              ? parseFloat(input.discountAmount)
+              : null,
+          startsAt: input.startsAt ?? null,
+          expiresAt: input.expiresAt ?? null,
+          active: input.active ?? true,
+          maxUses: input.maxUses ?? null,
+        },
+      });
+      return false;
     });
   } catch (err) {
     console.error("updateCoupon failed:", err);
     return { ok: false, error: "Kunde inte spara rabattkoden." };
   }
+  if (missing) return { ok: false, error: "Koden hittades inte." };
 
   revalidatePath("/admin/kuponger");
   return { ok: true, code };
@@ -141,25 +150,36 @@ export async function updateCoupon(input: CouponInput): Promise<CouponResult> {
 export async function deleteCoupon(
   code: string
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  await requireAdmin();
-  const existing = await prisma.coupon.findUnique({
-    where: { code },
-    select: { id: true, usedCount: true },
-  });
-  if (!existing) return { ok: false, error: "Koden hittades inte." };
-  if (existing.usedCount > 0)
+  const { tenantId } = await requireTenantRole("admin");
+
+  type DelOutcome =
+    | { kind: "missing" }
+    | { kind: "used" }
+    | { kind: "ok" };
+  let outcome: DelOutcome;
+  try {
+    outcome = await tenantScope(tenantId, async (tx): Promise<DelOutcome> => {
+      const existing = await tx.coupon.findUnique({
+        where: { code },
+        select: { id: true, usedCount: true },
+      });
+      if (!existing) return { kind: "missing" };
+      if (existing.usedCount > 0) return { kind: "used" };
+      await tx.coupon.delete({ where: { id: existing.id } });
+      return { kind: "ok" };
+    });
+  } catch (err) {
+    console.error("deleteCoupon failed:", err);
+    return { ok: false, error: "Kunde inte ta bort koden." };
+  }
+  if (outcome.kind === "missing")
+    return { ok: false, error: "Koden hittades inte." };
+  if (outcome.kind === "used")
     return {
       ok: false,
       error:
         "Koden har redan använts — avaktivera istället så historiken bevaras.",
     };
-
-  try {
-    await prisma.coupon.delete({ where: { id: existing.id } });
-  } catch (err) {
-    console.error("deleteCoupon failed:", err);
-    return { ok: false, error: "Kunde inte ta bort koden." };
-  }
 
   revalidatePath("/admin/kuponger");
   return { ok: true };

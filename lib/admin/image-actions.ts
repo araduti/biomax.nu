@@ -5,8 +5,8 @@ import { existsSync } from "node:fs";
 import { join, extname } from "node:path";
 import { bumpTag, productCacheTag, productListCacheTag } from "@/lib/cache/tags";
 import sharp from "sharp";
-import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "./guard";
+import { requireTenantRole } from "./guard";
+import { tenantScope } from "@/lib/tenant/db";
 
 const SIZE = 1000;
 const PRODUCT_DIR = "public/products";
@@ -39,7 +39,7 @@ export type ImageUploadResult =
 export async function uploadProductImage(
   formData: FormData
 ): Promise<ImageUploadResult> {
-  await requireAdmin();
+  const { tenantId } = await requireTenantRole("admin");
 
   const file = formData.get("file");
   const slug = formData.get("slug");
@@ -63,10 +63,12 @@ export async function uploadProductImage(
     };
   }
 
-  const product = await prisma.product.findUnique({
-    where: { slug },
-    select: { id: true, imageUrl: true },
-  });
+  const product = await tenantScope(tenantId, (tx) =>
+    tx.product.findUnique({
+      where: { slug },
+      select: { id: true, imageUrl: true },
+    })
+  );
   if (!product) return { ok: false, error: "Produkten hittades inte." };
 
   // Read + normalize
@@ -102,10 +104,12 @@ export async function uploadProductImage(
 
   // Update DB
   try {
-    await prisma.product.update({
-      where: { id: product.id },
-      data: { imageUrl: newUrl },
-    });
+    await tenantScope(tenantId, (tx) =>
+      tx.product.update({
+        where: { id: product.id },
+        data: { imageUrl: newUrl },
+      })
+    );
   } catch (err) {
     console.error("[admin] db update failed:", err);
     // Roll back the file write
@@ -154,7 +158,7 @@ export async function uploadProductImage(
 export async function uploadGalleryImage(
   formData: FormData
 ): Promise<ImageUploadResult> {
-  await requireAdmin();
+  const { tenantId } = await requireTenantRole("admin");
 
   const file = formData.get("file");
   const slug = formData.get("slug");
@@ -178,10 +182,12 @@ export async function uploadGalleryImage(
     };
   }
 
-  const product = await prisma.product.findUnique({
-    where: { slug },
-    select: { id: true, galleryUrls: true },
-  });
+  const product = await tenantScope(tenantId, (tx) =>
+    tx.product.findUnique({
+      where: { slug },
+      select: { id: true, galleryUrls: true },
+    })
+  );
   if (!product) return { ok: false, error: "Produkten hittades inte." };
   if (product.galleryUrls.length >= 12) {
     return {
@@ -221,10 +227,12 @@ export async function uploadGalleryImage(
   const newUrl = `/products/${filename}`;
 
   try {
-    await prisma.product.update({
-      where: { id: product.id },
-      data: { galleryUrls: { push: newUrl } },
-    });
+    await tenantScope(tenantId, (tx) =>
+      tx.product.update({
+        where: { id: product.id },
+        data: { galleryUrls: { push: newUrl } },
+      })
+    );
   } catch (err) {
     console.error("[admin] db gallery append failed:", err);
     try {
@@ -253,16 +261,18 @@ export async function setGalleryUrls(
   slug: string,
   urls: string[]
 ): Promise<GalleryMutationResult> {
-  await requireAdmin();
+  const { tenantId } = await requireTenantRole("admin");
 
   if (typeof slug !== "string" || !slug) {
     return { ok: false, error: "Produktslug saknas." };
   }
 
-  const product = await prisma.product.findUnique({
-    where: { slug },
-    select: { id: true, galleryUrls: true },
-  });
+  const product = await tenantScope(tenantId, (tx) =>
+    tx.product.findUnique({
+      where: { slug },
+      select: { id: true, galleryUrls: true },
+    })
+  );
   if (!product) return { ok: false, error: "Produkten hittades inte." };
 
   // Dedupe + sanity cap on input.
@@ -280,10 +290,12 @@ export async function setGalleryUrls(
   const dropped = product.galleryUrls.filter((u) => !seen.has(u));
 
   try {
-    await prisma.product.update({
-      where: { id: product.id },
-      data: { galleryUrls: cleaned },
-    });
+    await tenantScope(tenantId, (tx) =>
+      tx.product.update({
+        where: { id: product.id },
+        data: { galleryUrls: cleaned },
+      })
+    );
   } catch (err) {
     console.error("[admin] gallery set failed:", err);
     return { ok: false, error: "Kunde inte spara galleriet." };

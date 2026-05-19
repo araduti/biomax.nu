@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "./guard";
+import { requireTenantRole } from "./guard";
+import { tenantScope } from "@/lib/tenant/db";
 import type { OrderStatus } from "@prisma/client";
 import { VALID_ORDER_TRANSITIONS } from "@/lib/orders/status";
 import {
@@ -82,17 +82,24 @@ export async function updateOrderStatus(
   orderNumber: string,
   next: OrderStatus
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  await requireAdmin();
-  const order = await prisma.order.findUnique({
-    where: { orderNumber },
-    select: {
-      id: true,
-      status: true,
-      paymentReference: true,
-      paymentProvider: true,
-      totalAmount: true,
-    },
-  });
+  const { tenantId } = await requireTenantRole("admin");
+
+  // Pre-read scope: load the order before any external IO (Kustom
+  // settlement / capture). We deliberately do NOT hold a tx across the
+  // network call to Kustom — that would pin a DB connection through a
+  // potentially slow HTTP round-trip.
+  const order = await tenantScope(tenantId, (tx) =>
+    tx.order.findUnique({
+      where: { orderNumber },
+      select: {
+        id: true,
+        status: true,
+        paymentReference: true,
+        paymentProvider: true,
+        totalAmount: true,
+      },
+    })
+  );
   if (!order) return { ok: false, error: "Order hittades inte." };
 
   const allowed = VALID_TRANSITIONS[order.status];
@@ -138,10 +145,12 @@ export async function updateOrderStatus(
     }
   }
 
-  await prisma.order.update({
-    where: { id: order.id },
-    data: { status: next },
-  });
+  await tenantScope(tenantId, (tx) =>
+    tx.order.update({
+      where: { id: order.id },
+      data: { status: next },
+    })
+  );
 
   // Familjen Biomax — reverse earned points on cancel/refund. Helper is
   // idempotent (`already-reversed` → no-op) so admins flipping the same
@@ -178,20 +187,22 @@ export async function bulkUpdateOrderStatus(
   orderNumbers: string[],
   next: OrderStatus
 ): Promise<{ ok: true; updated: number; skipped: number }> {
-  await requireAdmin();
+  const { tenantId } = await requireTenantRole("admin");
   if (orderNumbers.length === 0) return { ok: true, updated: 0, skipped: 0 };
 
-  const orders = await prisma.order.findMany({
-    where: { orderNumber: { in: orderNumbers } },
-    select: {
-      id: true,
-      orderNumber: true,
-      status: true,
-      paymentReference: true,
-      paymentProvider: true,
-      totalAmount: true,
-    },
-  });
+  const orders = await tenantScope(tenantId, (tx) =>
+    tx.order.findMany({
+      where: { orderNumber: { in: orderNumbers } },
+      select: {
+        id: true,
+        orderNumber: true,
+        status: true,
+        paymentReference: true,
+        paymentProvider: true,
+        totalAmount: true,
+      },
+    })
+  );
 
   let updated = 0;
   let skipped = 0;
@@ -227,10 +238,12 @@ export async function bulkUpdateOrderStatus(
         continue;
       }
     }
-    await prisma.order.update({
-      where: { id: o.id },
-      data: { status: next },
-    });
+    await tenantScope(tenantId, (tx) =>
+      tx.order.update({
+        where: { id: o.id },
+        data: { status: next },
+      })
+    );
     updated++;
 
     if (next === "CANCELLED" || next === "REFUNDED") {

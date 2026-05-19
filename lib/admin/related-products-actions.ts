@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "./guard";
+import { requireTenantRole } from "./guard";
+import { tenantScope } from "@/lib/tenant/db";
 import { publicProductWhere } from "@/lib/products/availability";
 
 const MAX_RELATED = 6;
@@ -18,28 +18,30 @@ export async function searchProductsForRelated(
   sourceSlug: string,
   query: string
 ): Promise<RelatedSearchResult[]> {
-  await requireAdmin();
+  const { tenantId } = await requireTenantRole("admin");
   const q = query.trim();
   if (q.length < 2) return [];
 
-  const rows = await prisma.product.findMany({
-    where: {
-      ...publicProductWhere(),
-      slug: { not: sourceSlug },
-      OR: [
-        { name: { contains: q, mode: "insensitive" } },
-        { sku: { contains: q, mode: "insensitive" } },
-      ],
-    },
-    select: {
-      slug: true,
-      name: true,
-      imageUrl: true,
-      categories: { select: { name: true }, take: 1 },
-    },
-    orderBy: { totalSales: "desc" },
-    take: 12,
-  });
+  const rows = await tenantScope(tenantId, (tx) =>
+    tx.product.findMany({
+      where: {
+        ...publicProductWhere(),
+        slug: { not: sourceSlug },
+        OR: [
+          { name: { contains: q, mode: "insensitive" } },
+          { sku: { contains: q, mode: "insensitive" } },
+        ],
+      },
+      select: {
+        slug: true,
+        name: true,
+        imageUrl: true,
+        categories: { select: { name: true }, take: 1 },
+      },
+      orderBy: { totalSales: "desc" },
+      take: 12,
+    })
+  );
   return rows.map((r) => ({
     slug: r.slug,
     name: r.name,
@@ -61,13 +63,7 @@ export async function setRelatedProducts(
   sourceSlug: string,
   targetSlugs: string[]
 ): Promise<SetRelatedResult> {
-  await requireAdmin();
-
-  const source = await prisma.product.findUnique({
-    where: { slug: sourceSlug },
-    select: { id: true },
-  });
-  if (!source) return { ok: false, error: "Produkten hittades inte." };
+  const { tenantId } = await requireTenantRole("admin");
 
   const cleaned: string[] = [];
   const seen = new Set<string>();
@@ -78,38 +74,50 @@ export async function setRelatedProducts(
     if (cleaned.length >= MAX_RELATED) break;
   }
 
-  const targets = cleaned.length
-    ? await prisma.product.findMany({
-        where: { slug: { in: cleaned } },
-        select: { id: true, slug: true },
-      })
-    : [];
-  const idBySlug = new Map(targets.map((t) => [t.slug, t.id]));
-  const finalSlugs = cleaned.filter((s) => idBySlug.has(s));
-
+  type SetOutcome =
+    | { kind: "missing" }
+    | { kind: "ok"; finalSlugs: string[] };
+  let outcome: SetOutcome;
   try {
-    await prisma.$transaction([
-      prisma.productCrossSell.deleteMany({
+    outcome = await tenantScope(tenantId, async (tx): Promise<SetOutcome> => {
+      const source = await tx.product.findUnique({
+        where: { slug: sourceSlug },
+        select: { id: true },
+      });
+      if (!source) return { kind: "missing" };
+
+      const targets = cleaned.length
+        ? await tx.product.findMany({
+            where: { slug: { in: cleaned } },
+            select: { id: true, slug: true },
+          })
+        : [];
+      const idBySlug = new Map(targets.map((t) => [t.slug, t.id]));
+      const finalSlugs = cleaned.filter((s) => idBySlug.has(s));
+
+      await tx.productCrossSell.deleteMany({
         where: { sourceProductId: source.id },
-      }),
-      ...(finalSlugs.length
-        ? [
-            prisma.productCrossSell.createMany({
-              data: finalSlugs.map((slug, i) => ({
-                sourceProductId: source.id,
-                targetProductId: idBySlug.get(slug)!,
-                score: 100 - i,
-              })),
-            }),
-          ]
-        : []),
-    ]);
+      });
+      if (finalSlugs.length) {
+        await tx.productCrossSell.createMany({
+          data: finalSlugs.map((slug, i) => ({
+            sourceProductId: source.id,
+            targetProductId: idBySlug.get(slug)!,
+            score: 100 - i,
+            tenantId,
+          })),
+        });
+      }
+      return { kind: "ok", finalSlugs };
+    });
   } catch (err) {
     console.error("setRelatedProducts failed:", err);
     return { ok: false, error: "Kunde inte spara relaterade produkter." };
   }
+  if (outcome.kind === "missing")
+    return { ok: false, error: "Produkten hittades inte." };
 
   revalidatePath(`/produkter/${sourceSlug}`);
   revalidatePath(`/admin/produkter/${sourceSlug}`);
-  return { ok: true, relatedSlugs: finalSlugs };
+  return { ok: true, relatedSlugs: outcome.finalSlugs };
 }

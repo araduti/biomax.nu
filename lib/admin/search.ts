@@ -1,7 +1,8 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "./guard";
+import { requireTenantRole } from "./guard";
+import { tenantScope } from "@/lib/tenant/db";
 
 /**
  * Global admin search — backs the Cmd-K dialog in the admin topbar.
@@ -37,7 +38,7 @@ export type AdminSearchResponse = {
 };
 
 export async function adminSearch(rawQuery: string): Promise<AdminSearchResponse> {
-  await requireAdmin();
+  const { tenantId } = await requireTenantRole("admin");
 
   const q = rawQuery.trim();
   // Empty query — caller should render a hint state, but be defensive.
@@ -46,35 +47,43 @@ export async function adminSearch(rawQuery: string): Promise<AdminSearchResponse
   // Order matters: products are the most-edited surface, then orders
   // (admin's daily packlista), then customers. The dialog renders in
   // this order, capped at 5 per group so the list stays scannable.
-  const [products, orders, customers] = await Promise.all([
-    prisma.product.findMany({
-      where: {
-        OR: [
-          { name: { contains: q, mode: "insensitive" } },
-          { slug: { contains: q, mode: "insensitive" } },
-          { sku: { contains: q, mode: "insensitive" } },
-        ],
-      },
-      orderBy: { updatedAt: "desc" },
-      take: 5,
-      select: { slug: true, name: true, sku: true, status: true, imageUrl: true },
-    }),
-    prisma.order.findMany({
-      where: {
-        OR: [
-          { orderNumber: { contains: q, mode: "insensitive" } },
-          { email: { contains: q, mode: "insensitive" } },
-        ],
-      },
-      orderBy: { createdAt: "desc" },
-      take: 5,
-      select: {
-        orderNumber: true,
-        email: true,
-        status: true,
-        createdAt: true,
-      },
-    }),
+  // Product + Order are tenant-owned → through the seam. User is NOT an
+  // owned model (platform-level identity) → stays on `prisma`.
+  const ownedReads = tenantScope(tenantId, async (tx) =>
+    Promise.all([
+      tx.product.findMany({
+        where: {
+          OR: [
+            { name: { contains: q, mode: "insensitive" } },
+            { slug: { contains: q, mode: "insensitive" } },
+            { sku: { contains: q, mode: "insensitive" } },
+          ],
+        },
+        orderBy: { updatedAt: "desc" },
+        take: 5,
+        select: { slug: true, name: true, sku: true, status: true, imageUrl: true },
+      }),
+      tx.order.findMany({
+        where: {
+          OR: [
+            { orderNumber: { contains: q, mode: "insensitive" } },
+            { email: { contains: q, mode: "insensitive" } },
+          ],
+        },
+        orderBy: { createdAt: "desc" },
+        take: 5,
+        select: {
+          orderNumber: true,
+          email: true,
+          status: true,
+          createdAt: true,
+        },
+      }),
+    ])
+  );
+
+  const [[products, orders], customers] = await Promise.all([
+    ownedReads,
     prisma.user.findMany({
       where: {
         role: "customer",

@@ -13,7 +13,7 @@
  *
  * All four are computed from data we already have — no external calls.
  */
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import {
   getAllIngredients,
   findIngredient,
@@ -47,10 +47,12 @@ export type UnmatchedIngredient = {
 };
 
 export async function getUnmatchedIngredients(): Promise<UnmatchedIngredient[]> {
-  const products = await prisma.product.findMany({
-    where: { status: "PUBLISHED" },
-    select: { slug: true, name: true, ingredientList: true },
-  });
+  const products = await hostTenantScope((tx) =>
+    tx.product.findMany({
+      where: { status: "PUBLISHED" },
+      select: { slug: true, name: true, ingredientList: true },
+    })
+  );
 
   const buckets = new Map<string, UnmatchedIngredient>();
   for (const p of products) {
@@ -87,17 +89,19 @@ export type ThinFaqProduct = {
 };
 
 export async function getThinFaqProducts(): Promise<ThinFaqProduct[]> {
-  const products = await prisma.product.findMany({
-    where: { status: "PUBLISHED" },
-    select: {
-      slug: true,
-      name: true,
-      usage: true,
-      warnings: true,
-      ingredientList: true,
-      seoFaqJson: true,
-    },
-  });
+  const products = await hostTenantScope((tx) =>
+    tx.product.findMany({
+      where: { status: "PUBLISHED" },
+      select: {
+        slug: true,
+        name: true,
+        usage: true,
+        warnings: true,
+        ingredientList: true,
+        seoFaqJson: true,
+      },
+    })
+  );
 
   const out: ThinFaqProduct[] = [];
   for (const p of products) {
@@ -124,10 +128,12 @@ export type OrphanMonograph = {
 export async function getOrphanMonographs(): Promise<OrphanMonograph[]> {
   // Pull every published product's ingredient list once, build a lowercased
   // name set, then check each registry entry against it.
-  const products = await prisma.product.findMany({
-    where: { status: "PUBLISHED" },
-    select: { ingredientList: true },
-  });
+  const products = await hostTenantScope((tx) =>
+    tx.product.findMany({
+      where: { status: "PUBLISHED" },
+      select: { ingredientList: true },
+    })
+  );
 
   const used = new Set<string>();
   for (const p of products) {

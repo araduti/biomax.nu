@@ -1,8 +1,8 @@
 "use server";
 
 import { bumpTag, productCacheTag, productListCacheTag } from "@/lib/cache/tags";
-import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "./guard";
+import { requireTenantRole } from "./guard";
+import { tenantScope } from "@/lib/tenant/db";
 
 export type VariantInput = {
   /** Existing variant ID to update; omit when creating. */
@@ -35,23 +35,7 @@ export async function setProductVariants(
   productSlug: string,
   variants: VariantInput[]
 ): Promise<VariantsBulkResult> {
-  await requireAdmin();
-  const product = await prisma.product.findUnique({
-    where: { slug: productSlug },
-    select: {
-      id: true,
-      status: true,
-      variants: { select: { id: true, stock: true, manageStock: true } },
-    },
-  });
-  if (!product) return { ok: false, error: "Produkten hittades inte." };
-
-  // Snapshot pre-state so we can fire the back-in-stock fanout when this
-  // save flips the product from "all variants empty" → "at least one in
-  // stock". Mirrors the equivalent transition check in updateProduct().
-  const beforeAnyInStock =
-    product.variants.length > 0 &&
-    product.variants.some((v) => !v.manageStock || v.stock > 0);
+  const { tenantId } = await requireTenantRole("admin");
 
   // Validate each row before doing anything mutative.
   for (const v of variants) {
@@ -87,30 +71,56 @@ export async function setProductVariants(
   const ownIds = new Set(
     variants.filter((v) => v.id).map((v) => v.id!)
   );
-  const conflicts = await prisma.productVariant.findMany({
-    where: {
-      sku: { in: incomingSkus },
-      id: { notIn: Array.from(ownIds) },
-    },
-    select: { sku: true },
-  });
-  if (conflicts.length > 0)
-    return {
-      ok: false,
-      error: `SKU används redan av andra produkter: ${conflicts.map((c) => c.sku).join(", ")}`,
-    };
 
-  const keepIds = new Set(variants.filter((v) => v.id).map((v) => v.id!));
-  const toDelete = product.variants
-    .map((v) => v.id)
-    .filter((id) => !keepIds.has(id));
-
+  type SaveOutcome =
+    | { kind: "missing" }
+    | { kind: "conflict"; skus: string[] }
+    | {
+        kind: "ok";
+        productId: string;
+        status: string;
+        beforeAnyInStock: boolean;
+      };
+  let outcome: SaveOutcome;
   try {
-    await prisma.$transaction([
-      ...toDelete.map((id) =>
-        prisma.productVariant.delete({ where: { id } })
-      ),
-      ...variants.map((v, position) => {
+    outcome = await tenantScope(tenantId, async (tx): Promise<SaveOutcome> => {
+      const product = await tx.product.findUnique({
+        where: { slug: productSlug },
+        select: {
+          id: true,
+          status: true,
+          variants: { select: { id: true, stock: true, manageStock: true } },
+        },
+      });
+      if (!product) return { kind: "missing" };
+
+      // Snapshot pre-state so we can fire the back-in-stock fanout when
+      // this save flips the product from "all variants empty" → "at
+      // least one in stock". Mirrors the transition check in updateProduct().
+      const beforeAnyInStock =
+        product.variants.length > 0 &&
+        product.variants.some((v) => !v.manageStock || v.stock > 0);
+
+      const conflicts = await tx.productVariant.findMany({
+        where: {
+          sku: { in: incomingSkus },
+          id: { notIn: Array.from(ownIds) },
+        },
+        select: { sku: true },
+      });
+      if (conflicts.length > 0)
+        return { kind: "conflict", skus: conflicts.map((c) => c.sku) };
+
+      const keepIds = new Set(variants.filter((v) => v.id).map((v) => v.id!));
+      const toDelete = product.variants
+        .map((v) => v.id)
+        .filter((id) => !keepIds.has(id));
+
+      for (const id of toDelete) {
+        await tx.productVariant.delete({ where: { id } });
+      }
+      for (let position = 0; position < variants.length; position++) {
+        const v = variants[position];
         const data = {
           productId: product.id,
           sku: v.sku.trim(),
@@ -125,20 +135,34 @@ export async function setProductVariants(
           manageStock: v.manageStock,
           weight: v.weight && v.weight !== "" ? parseFloat(v.weight) : null,
           isDefault: v.isDefault,
+          tenantId,
         };
         if (v.id) {
-          return prisma.productVariant.update({
-            where: { id: v.id },
-            data,
-          });
+          await tx.productVariant.update({ where: { id: v.id }, data });
+        } else {
+          await tx.productVariant.create({ data });
         }
-        return prisma.productVariant.create({ data });
-      }),
-    ]);
+      }
+
+      return {
+        kind: "ok",
+        productId: product.id,
+        status: product.status,
+        beforeAnyInStock,
+      };
+    });
   } catch (err) {
     console.error("setProductVariants failed:", err);
     return { ok: false, error: "Kunde inte spara varianterna." };
   }
+
+  if (outcome.kind === "missing")
+    return { ok: false, error: "Produkten hittades inte." };
+  if (outcome.kind === "conflict")
+    return {
+      ok: false,
+      error: `SKU används redan av andra produkter: ${outcome.skus.join(", ")}`,
+    };
 
   // Stock-notify fanout: if any variant just went 0 → positive AND the
   // product is published, fire pending notifications. Soft-fails — a
@@ -146,12 +170,16 @@ export async function setProductVariants(
   const afterAnyInStock =
     variants.length > 0 &&
     variants.some((v) => !v.manageStock || v.stock > 0);
-  if (!beforeAnyInStock && afterAnyInStock && product.status === "PUBLISHED") {
+  if (
+    !outcome.beforeAnyInStock &&
+    afterAnyInStock &&
+    outcome.status === "PUBLISHED"
+  ) {
     try {
       const { fanoutStockNotifications } = await import(
         "@/lib/stock-notifications/actions"
       );
-      const result = await fanoutStockNotifications(product.id);
+      const result = await fanoutStockNotifications(outcome.productId);
       if (result.sent > 0) {
         console.log(
           `[stock-notify] fanned out ${result.sent} mails for ${productSlug} (variant transition)`

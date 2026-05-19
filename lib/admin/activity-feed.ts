@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 
 /**
  * Recent admin activity for the dashboard's "Senaste aktivitet"-strip.
@@ -76,41 +77,49 @@ async function resolveEntities(
     else if (r.entityType === "ProductVariant") variantIds.add(r.entityId);
   }
 
-  const [products, users, orders, returns, variants] = await Promise.all([
-    productIds.size > 0
-      ? prisma.product.findMany({
-          where: { id: { in: [...productIds] } },
-          select: { id: true, slug: true, name: true },
-        })
-      : [],
+  // Tenant-owned entities (product/order/return/productVariant) run
+  // inside a single RLS-scoped tx. User is non-owned (auth/identity)
+  // and stays on `prisma`.
+  const [users, { products, orders, returns, variants }] = await Promise.all([
     userIds.size > 0
       ? prisma.user.findMany({
           where: { id: { in: [...userIds] } },
           select: { id: true, email: true, name: true },
         })
-      : [],
-    orderIds.size > 0
-      ? prisma.order.findMany({
-          where: { id: { in: [...orderIds] } },
-          select: { id: true, orderNumber: true },
-        })
-      : [],
-    returnIds.size > 0
-      ? prisma.return.findMany({
-          where: { id: { in: [...returnIds] } },
-          select: { id: true, returnNumber: true },
-        })
-      : [],
-    variantIds.size > 0
-      ? prisma.productVariant.findMany({
-          where: { id: { in: [...variantIds] } },
-          select: {
-            id: true,
-            label: true,
-            product: { select: { slug: true, name: true } },
-          },
-        })
-      : [],
+      : Promise.resolve([] as Array<{ id: string; email: string; name: string | null }>),
+    hostTenantScope(async (tx) => {
+      const [products, orders, returns, variants] = await Promise.all([
+        productIds.size > 0
+          ? tx.product.findMany({
+              where: { id: { in: [...productIds] } },
+              select: { id: true, slug: true, name: true },
+            })
+          : [],
+        orderIds.size > 0
+          ? tx.order.findMany({
+              where: { id: { in: [...orderIds] } },
+              select: { id: true, orderNumber: true },
+            })
+          : [],
+        returnIds.size > 0
+          ? tx.return.findMany({
+              where: { id: { in: [...returnIds] } },
+              select: { id: true, returnNumber: true },
+            })
+          : [],
+        variantIds.size > 0
+          ? tx.productVariant.findMany({
+              where: { id: { in: [...variantIds] } },
+              select: {
+                id: true,
+                label: true,
+                product: { select: { slug: true, name: true } },
+              },
+            })
+          : [],
+      ]);
+      return { products, orders, returns, variants };
+    }),
   ]);
 
   const out = new Map<string, { label: string; href: string }>();
@@ -143,23 +152,27 @@ async function resolveEntities(
 }
 
 export async function getRecentActivity(limit = 8): Promise<ActivityRow[]> {
-  const rows = await prisma.adminAuditEntry.findMany({
-    orderBy: { createdAt: "desc" },
-    take: limit,
-    select: {
-      id: true,
-      createdAt: true,
-      action: true,
-      entityType: true,
-      entityId: true,
-      actorId: true,
-    },
-  });
+  const rows = await hostTenantScope((tx) =>
+    tx.adminAuditEntry.findMany({
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      select: {
+        id: true,
+        createdAt: true,
+        action: true,
+        entityType: true,
+        entityId: true,
+        actorId: true,
+      },
+    })
+  );
   if (rows.length === 0) return [];
 
   const actorIds = [
     ...new Set(rows.map((r) => r.actorId).filter((x): x is string => !!x)),
   ];
+  // User is non-owned — stays on `prisma`. `resolveEntities` handles the
+  // tenant-owned lookups inside its own scoped tx.
   const [actors, entities] = await Promise.all([
     actorIds.length > 0
       ? prisma.user.findMany({
