@@ -25,13 +25,14 @@
  *
  * Reference: https://support.google.com/merchants/answer/7052112
  */
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { publicProductWhere } from "@/lib/products/availability";
 import { stripHtml } from "@/lib/sanitize";
 
 export const runtime = "nodejs";
-// Daily revalidation matches Merchant Center's typical fetch cadence.
-export const revalidate = 86400;
+// Multi-tenant (ADR 0032 D4): path-keyed route ISR would serve one
+// tenant's feed to another (route cache keyed by URL, not Host).
+export const dynamic = "force-dynamic";
 
 const SITE = "https://www.biomax.nu";
 
@@ -52,24 +53,26 @@ function escapeXml(s: string): string {
 }
 
 export async function GET() {
-  const products = await prisma.product.findMany({
-    where: { ...publicProductWhere(), price: { gt: 0 } },
-    orderBy: { totalSales: "desc" },
-    select: {
-      slug: true,
-      sku: true,
-      name: true,
-      shortDescription: true,
-      longDescription: true,
-      imageUrl: true,
-      galleryUrls: true,
-      price: true,
-      compareAtPrice: true,
-      stock: true,
-      manageStock: true,
-      weight: true,
-    },
-  });
+  const products = await hostTenantScope((tx) =>
+    tx.product.findMany({
+      where: { ...publicProductWhere(), price: { gt: 0 } },
+      orderBy: { totalSales: "desc" },
+      select: {
+        slug: true,
+        sku: true,
+        name: true,
+        shortDescription: true,
+        longDescription: true,
+        imageUrl: true,
+        galleryUrls: true,
+        price: true,
+        compareAtPrice: true,
+        stock: true,
+        manageStock: true,
+        weight: true,
+      },
+    })
+  );
 
   const now = new Date().toUTCString();
 

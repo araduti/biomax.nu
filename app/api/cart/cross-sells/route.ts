@@ -13,7 +13,7 @@
  */
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { publicProductWhere } from "@/lib/products/availability";
 import { cuidSchema } from "@/lib/validation/shared";
 
@@ -44,25 +44,27 @@ export async function GET(req: Request) {
 
   // Editor-pinned suggestions ordered by score per source product. Dedupe
   // by target id across all source products, drop any already in cart.
-  const rows = await prisma.productCrossSell.findMany({
-    where: {
-      sourceProductId: { in: cartIds },
-      targetProduct: { ...publicProductWhere() },
-    },
-    orderBy: { score: "desc" },
-    select: {
-      targetProduct: {
-        select: {
-          id: true,
-          slug: true,
-          name: true,
-          shortDescription: true,
-          imageUrl: true,
-          price: true,
+  const rows = await hostTenantScope((tx) =>
+    tx.productCrossSell.findMany({
+      where: {
+        sourceProductId: { in: cartIds },
+        targetProduct: { ...publicProductWhere() },
+      },
+      orderBy: { score: "desc" },
+      select: {
+        targetProduct: {
+          select: {
+            id: true,
+            slug: true,
+            name: true,
+            shortDescription: true,
+            imageUrl: true,
+            price: true,
+          },
         },
       },
-    },
-  });
+    })
+  );
 
   const seen = new Set<string>();
   const products: Array<{

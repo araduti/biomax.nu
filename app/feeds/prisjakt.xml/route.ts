@@ -17,12 +17,14 @@
  *      https://www.biomax.nu/feeds/prisjakt.xml as the data feed.
  *   3. Daily fetch is the default cadence.
  */
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { publicProductWhere } from "@/lib/products/availability";
 import { stripHtml } from "@/lib/sanitize";
 
 export const runtime = "nodejs";
-export const revalidate = 86400;
+// Multi-tenant (ADR 0032 D4): path-keyed route ISR would serve one
+// tenant's feed to another (route cache keyed by URL, not Host).
+export const dynamic = "force-dynamic";
 
 const SITE = "https://www.biomax.nu";
 
@@ -36,22 +38,24 @@ function escapeXml(s: string): string {
 }
 
 export async function GET() {
-  const products = await prisma.product.findMany({
-    where: { ...publicProductWhere(), price: { gt: 0 } },
-    orderBy: { totalSales: "desc" },
-    select: {
-      slug: true,
-      sku: true,
-      name: true,
-      shortDescription: true,
-      imageUrl: true,
-      price: true,
-      stock: true,
-      manageStock: true,
-      weight: true,
-      categories: { select: { name: true }, take: 1 },
-    },
-  });
+  const products = await hostTenantScope((tx) =>
+    tx.product.findMany({
+      where: { ...publicProductWhere(), price: { gt: 0 } },
+      orderBy: { totalSales: "desc" },
+      select: {
+        slug: true,
+        sku: true,
+        name: true,
+        shortDescription: true,
+        imageUrl: true,
+        price: true,
+        stock: true,
+        manageStock: true,
+        weight: true,
+        categories: { select: { name: true }, take: 1 },
+      },
+    })
+  );
 
   const items = products
     .map((p) => {
