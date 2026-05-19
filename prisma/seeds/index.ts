@@ -40,6 +40,10 @@ async function main() {
   // Tenants must always exist (Korg) — independent of the admin gate.
   const { seedTenants } = await import("./tenants");
   await seedTenants();
+  // Per-tenant payment credentials — env-seeded for tenant zero,
+  // idempotent, skipped when env has no creds (ADR 0034 D4/D6).
+  const { seedPaymentCredentials } = await import("./payment-credentials");
+  await seedPaymentCredentials();
   // Platform admins — env-gated, idempotent (ADR 0031 D5).
   const { seedPlatformAdmins } = await import("./platform");
   await seedPlatformAdmins();
