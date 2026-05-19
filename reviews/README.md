@@ -14,6 +14,7 @@ Eight specialist agents independently reviewed the codebase and project directio
 | [QA & testing](2026-05-18-qa-testing.md) | qa-expert | High-quality but sparse; no CI gate |
 | [Accessibility](2026-05-18-accessibility.md) | accessibility-tester | ~70–75% AA; interactive gaps |
 | [UI / design system](2026-05-18-ui-design-system.md) | ui-designer | Coherent, maturing |
+| [Marketing skills review](2026-05-19-marketing-skills-review.md) | 40 marketing skills (Copilot chat modes) | Strong foundation; concentrated 30-day queue across CRO/SEO/email |
 
 ## Overall
 
