@@ -10,7 +10,9 @@ Quickbutik — sorts feature gaps into gated downstream ADRs)
 **Foundation:** ADR 0028 (multi-tenant architecture/coupling),
 ADR 0029 (hosting & multi-provider HA — NUC is disqualifying for SaaS),
 ADR 0030 (architecture changes + modular-monolith vs microservices),
-ADR 0031 (authority planes & RBAC — platform/tenant/customer)
+ADR 0031 (authority planes & RBAC — platform/tenant/customer),
+ADR 0032 (data-access enforcement model — RLS fail-safe + enforced seam),
+ADR 0033 (blast-radius / noisy-neighbour / DR / tenant move-out)
 **Related:** ADR 0001 (tech stack), ADR 0003 (auth), ADR 0004/0009/0020/0021
 (Kustom payments + shipping), ADR 0017 (PostNord), ADR 0023–0025 (GDPR),
 ADR 0022 (preview/staging)
