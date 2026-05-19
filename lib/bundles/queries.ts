@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 
 export type BundleSummary = {
   id: string;
@@ -67,26 +67,28 @@ function hydrate(b: {
 
 /** All active bundles, in position order — for /paket and homepage rail. */
 export async function getActiveBundles(): Promise<BundleSummary[]> {
-  const rows = await prisma.bundle.findMany({
-    where: { active: true },
-    orderBy: [{ position: "asc" }, { createdAt: "desc" }],
-    include: {
-      items: {
-        orderBy: { position: "asc" },
-        include: {
-          product: {
-            select: {
-              id: true,
-              slug: true,
-              name: true,
-              imageUrl: true,
-              price: true,
+  const rows = await hostTenantScope((tx) =>
+    tx.bundle.findMany({
+      where: { active: true },
+      orderBy: [{ position: "asc" }, { createdAt: "desc" }],
+      include: {
+        items: {
+          orderBy: { position: "asc" },
+          include: {
+            product: {
+              select: {
+                id: true,
+                slug: true,
+                name: true,
+                imageUrl: true,
+                price: true,
+              },
             },
           },
         },
       },
-    },
-  });
+    })
+  );
   return rows.map(hydrate);
 }
 
@@ -94,54 +96,58 @@ export async function getActiveBundles(): Promise<BundleSummary[]> {
 export async function getBundlesForProduct(
   productId: string
 ): Promise<BundleSummary[]> {
-  const rows = await prisma.bundle.findMany({
-    where: {
-      active: true,
-      items: { some: { productId } },
-    },
-    orderBy: [{ position: "asc" }, { createdAt: "desc" }],
-    take: 3,
-    include: {
-      items: {
-        orderBy: { position: "asc" },
-        include: {
-          product: {
-            select: {
-              id: true,
-              slug: true,
-              name: true,
-              imageUrl: true,
-              price: true,
+  const rows = await hostTenantScope((tx) =>
+    tx.bundle.findMany({
+      where: {
+        active: true,
+        items: { some: { productId } },
+      },
+      orderBy: [{ position: "asc" }, { createdAt: "desc" }],
+      take: 3,
+      include: {
+        items: {
+          orderBy: { position: "asc" },
+          include: {
+            product: {
+              select: {
+                id: true,
+                slug: true,
+                name: true,
+                imageUrl: true,
+                price: true,
+              },
             },
           },
         },
       },
-    },
-  });
+    })
+  );
   return rows.map(hydrate);
 }
 
 export async function getBundleBySlug(
   slug: string
 ): Promise<BundleSummary | null> {
-  const row = await prisma.bundle.findUnique({
-    where: { slug },
-    include: {
-      items: {
-        orderBy: { position: "asc" },
-        include: {
-          product: {
-            select: {
-              id: true,
-              slug: true,
-              name: true,
-              imageUrl: true,
-              price: true,
+  const row = await hostTenantScope((tx) =>
+    tx.bundle.findUnique({
+      where: { slug },
+      include: {
+        items: {
+          orderBy: { position: "asc" },
+          include: {
+            product: {
+              select: {
+                id: true,
+                slug: true,
+                name: true,
+                imageUrl: true,
+                price: true,
+              },
             },
           },
         },
       },
-    },
-  });
+    })
+  );
   return row ? hydrate(row) : null;
 }

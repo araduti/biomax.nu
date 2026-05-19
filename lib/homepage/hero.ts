@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { currentSeason, seasons, type Season, type SeasonMeta } from "@/lib/seasons";
 
 /**
@@ -24,33 +24,35 @@ export async function getActiveHero(now: Date = new Date()): Promise<SeasonMeta>
 
   // One round-trip: pull every published row that *could* be active.
   // Cheap (handful of rows) and lets us do the rank + tie-break in JS.
-  const rows = await prisma.homepageHero.findMany({
-    where: {
-      status: "PUBLISHED",
-      OR: [
-        { season: { equals: dbSeason(season) } },
-        {
-          AND: [
-            { season: null },
-            // Date-window: startsAt ≤ now AND endsAt ≥ now (either nullable).
-            {
-              OR: [
-                { startsAt: null },
-                { startsAt: { lte: now } },
-              ],
-            },
-            {
-              OR: [
-                { endsAt: null },
-                { endsAt: { gte: now } },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-    orderBy: [{ priority: "desc" }, { updatedAt: "desc" }],
-  });
+  const rows = await hostTenantScope((tx) =>
+    tx.homepageHero.findMany({
+      where: {
+        status: "PUBLISHED",
+        OR: [
+          { season: { equals: dbSeason(season) } },
+          {
+            AND: [
+              { season: null },
+              // Date-window: startsAt ≤ now AND endsAt ≥ now (either nullable).
+              {
+                OR: [
+                  { startsAt: null },
+                  { startsAt: { lte: now } },
+                ],
+              },
+              {
+                OR: [
+                  { endsAt: null },
+                  { endsAt: { gte: now } },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      orderBy: [{ priority: "desc" }, { updatedAt: "desc" }],
+    })
+  );
 
   // Even with a season match, the row's date window — if both set —
   // must include `now`. Filter that here so the DB query stayed simple.

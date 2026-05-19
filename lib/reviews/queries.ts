@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import type { ReviewStatus } from "@prisma/client";
 
 /**
@@ -11,11 +11,13 @@ export async function getMyReviewForProduct(
   userId: string,
   productId: string
 ): Promise<{ status: ReviewStatus; createdAt: Date } | null> {
-  return prisma.review.findFirst({
-    where: { userId, productId },
-    orderBy: { createdAt: "desc" },
-    select: { status: true, createdAt: true },
-  });
+  return hostTenantScope((tx) =>
+    tx.review.findFirst({
+      where: { userId, productId },
+      orderBy: { createdAt: "desc" },
+      select: { status: true, createdAt: true },
+    })
+  );
 }
 
 export type PublicReview = {
@@ -51,28 +53,30 @@ export async function getProductReviews(
   limit = 20,
   goalFilter: string | null = null
 ): Promise<PublicReview[]> {
-  const rows = await prisma.review.findMany({
-    where: {
-      productId,
-      status: "APPROVED",
-      ...(goalFilter ? { reviewerGoal: goalFilter } : {}),
-    },
-    orderBy: { createdAt: "desc" },
-    take: limit,
-    select: {
-      id: true,
-      rating: true,
-      title: true,
-      body: true,
-      verified: true,
-      authorName: true,
-      createdAt: true,
-      storeResponse: true,
-      storeRespondedAt: true,
-      reviewerGoal: true,
-      user: { select: { name: true } },
-    },
-  });
+  const rows = await hostTenantScope((tx) =>
+    tx.review.findMany({
+      where: {
+        productId,
+        status: "APPROVED",
+        ...(goalFilter ? { reviewerGoal: goalFilter } : {}),
+      },
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      select: {
+        id: true,
+        rating: true,
+        title: true,
+        body: true,
+        verified: true,
+        authorName: true,
+        createdAt: true,
+        storeResponse: true,
+        storeRespondedAt: true,
+        reviewerGoal: true,
+        user: { select: { name: true } },
+      },
+    })
+  );
   return rows.map((r) => ({
     id: r.id,
     rating: r.rating,
@@ -94,16 +98,18 @@ export async function getProductReviews(
 export async function getReviewGoalCounts(
   productId: string
 ): Promise<Array<{ goal: string; count: number }>> {
-  const rows = await prisma.review.groupBy({
-    by: ["reviewerGoal"],
-    where: {
-      productId,
-      status: "APPROVED",
-      reviewerGoal: { not: null },
-    },
-    _count: { reviewerGoal: true },
-    orderBy: { _count: { reviewerGoal: "desc" } },
-  });
+  const rows = await hostTenantScope((tx) =>
+    tx.review.groupBy({
+      by: ["reviewerGoal"],
+      where: {
+        productId,
+        status: "APPROVED",
+        reviewerGoal: { not: null },
+      },
+      _count: { reviewerGoal: true },
+      orderBy: { _count: { reviewerGoal: "desc" } },
+    })
+  );
   return rows
     .map((r) => ({
       goal: r.reviewerGoal ?? "",
@@ -120,11 +126,13 @@ export async function getReviewGoalCounts(
 export async function getProductRating(
   productId: string
 ): Promise<ReviewAggregate> {
-  const grouped = await prisma.review.groupBy({
-    by: ["rating"],
-    where: { productId, status: "APPROVED" },
-    _count: { rating: true },
-  });
+  const grouped = await hostTenantScope((tx) =>
+    tx.review.groupBy({
+      by: ["rating"],
+      where: { productId, status: "APPROVED" },
+      _count: { rating: true },
+    })
+  );
 
   const histogram: [number, number, number, number, number] = [0, 0, 0, 0, 0];
   let count = 0;
@@ -170,29 +178,31 @@ export async function getGoalReviewsForProducts(
   minBodyChars = 60
 ): Promise<GoalReviewQuote[]> {
   if (productIds.length === 0) return [];
-  const rows = await prisma.review.findMany({
-    where: {
-      productId: { in: productIds },
-      reviewerGoal: goalSlug,
-      status: "APPROVED",
-    },
-    orderBy: { createdAt: "desc" },
-    take: limit * 4,
-    select: {
-      id: true,
-      rating: true,
-      title: true,
-      body: true,
-      verified: true,
-      authorName: true,
-      createdAt: true,
-      storeResponse: true,
-      storeRespondedAt: true,
-      reviewerGoal: true,
-      user: { select: { name: true } },
-      product: { select: { slug: true, name: true } },
-    },
-  });
+  const rows = await hostTenantScope((tx) =>
+    tx.review.findMany({
+      where: {
+        productId: { in: productIds },
+        reviewerGoal: goalSlug,
+        status: "APPROVED",
+      },
+      orderBy: { createdAt: "desc" },
+      take: limit * 4,
+      select: {
+        id: true,
+        rating: true,
+        title: true,
+        body: true,
+        verified: true,
+        authorName: true,
+        createdAt: true,
+        storeResponse: true,
+        storeRespondedAt: true,
+        reviewerGoal: true,
+        user: { select: { name: true } },
+        product: { select: { slug: true, name: true } },
+      },
+    })
+  );
   return rows
     .filter((r) => (r.body ?? "").trim().length >= minBodyChars)
     .slice(0, limit)
@@ -217,12 +227,14 @@ export async function getRatingsByProductIds(
   productIds: string[]
 ): Promise<Map<string, { count: number; average: number }>> {
   if (productIds.length === 0) return new Map();
-  const rows = await prisma.review.groupBy({
-    by: ["productId"],
-    where: { productId: { in: productIds }, status: "APPROVED" },
-    _count: { rating: true },
-    _avg: { rating: true },
-  });
+  const rows = await hostTenantScope((tx) =>
+    tx.review.groupBy({
+      by: ["productId"],
+      where: { productId: { in: productIds }, status: "APPROVED" },
+      _count: { rating: true },
+      _avg: { rating: true },
+    })
+  );
   const out = new Map<string, { count: number; average: number }>();
   for (const r of rows) {
     out.set(r.productId, {

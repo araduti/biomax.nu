@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { DEFAULT_BLOCKS, type Block, type BlockKind } from "./blocks";
 
 /**
@@ -7,11 +7,13 @@ import { DEFAULT_BLOCKS, type Block, type BlockKind } from "./blocks";
  * page identical to the pre-curation baseline until an editor flips it.
  */
 export async function getHomepageBlocks(): Promise<Block[]> {
-  const rows = await prisma.homepageBlock.findMany({
-    where: { active: true },
-    orderBy: { position: "asc" },
-    select: { kind: true, payload: true, position: true, active: true },
-  });
+  const rows = await hostTenantScope((tx) =>
+    tx.homepageBlock.findMany({
+      where: { active: true },
+      orderBy: { position: "asc" },
+      select: { kind: true, payload: true, position: true, active: true },
+    })
+  );
 
   if (rows.length === 0) {
     return DEFAULT_BLOCKS.filter((b) => b.active);
