@@ -1,6 +1,7 @@
-import { unstable_cache } from "next/cache";
 import { cache } from "react";
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
+import { tenantCache } from "@/lib/tenant/cache";
+import { currentTenant } from "@/lib/tenant";
 import { siteSettingsCacheTag } from "@/lib/cache/tags";
 
 /**
@@ -40,10 +41,12 @@ const DEFAULTS: Record<SettingKey, unknown> = {
 };
 
 async function readRaw(key: SettingKey): Promise<unknown> {
-  const row = await prisma.siteSetting.findUnique({
-    where: { key },
-    select: { value: true },
-  });
+  const row = await hostTenantScope((tx) =>
+    tx.siteSetting.findUnique({
+      where: { key },
+      select: { value: true },
+    })
+  );
   return row?.value ?? DEFAULTS[key];
 }
 
@@ -67,10 +70,12 @@ async function getShippingRulesUncached(): Promise<ShippingRules> {
     // Read the raw row separately so we can distinguish "row exists with
     // value null" (= no free shipping ever) from "row doesn't exist"
     // (= use the default).
-    prisma.siteSetting.findUnique({
-      where: { key: SETTING_KEYS.freeShippingThresholdSek },
-      select: { value: true },
-    }),
+    hostTenantScope((tx) =>
+      tx.siteSetting.findUnique({
+        where: { key: SETTING_KEYS.freeShippingThresholdSek },
+        select: { value: true },
+      })
+    ),
   ]);
   let freeThresholdSek: number | null;
   if (thresholdRow === null) {
@@ -93,12 +98,15 @@ async function getShippingRulesUncached(): Promise<ShippingRules> {
  * serves it from cache between admin saves instead of hitting the DB
  * on every page render. Invalidated by `updateShippingRules`.
  */
-export const getShippingRules = cache((): Promise<ShippingRules> =>
-  unstable_cache(getShippingRulesUncached, ["site:shipping-rules"], {
-    tags: [siteSettingsCacheTag()],
-    revalidate: 3600,
-  })()
-);
+export const getShippingRules = cache(async (): Promise<ShippingRules> => {
+  const tenant = await currentTenant();
+  return tenantCache(
+    tenant.id,
+    getShippingRulesUncached,
+    ["site:shipping-rules"],
+    { tags: [siteSettingsCacheTag()], revalidate: 3600 }
+  )();
+});
 
 export async function getLowStockDefault(): Promise<number> {
   return asInt(await readRaw(SETTING_KEYS.lowStockDefault), 5);
@@ -158,19 +166,24 @@ async function getTrustpilotSummaryUncached(): Promise<TrustpilotSummary> {
  * on every ISR revalidation; the numbers are admin-written, not
  * per-request. Invalidated by `updateTrustpilotSummary`.
  */
-export const getTrustpilotSummary = cache((): Promise<TrustpilotSummary> =>
-  unstable_cache(getTrustpilotSummaryUncached, ["site:trustpilot"], {
-    tags: [siteSettingsCacheTag()],
-    revalidate: 3600,
-  })()
-);
+export const getTrustpilotSummary = cache(async (): Promise<TrustpilotSummary> => {
+  const tenant = await currentTenant();
+  return tenantCache(
+    tenant.id,
+    getTrustpilotSummaryUncached,
+    ["site:trustpilot"],
+    { tags: [siteSettingsCacheTag()], revalidate: 3600 }
+  )();
+});
 
 /** Bulk read used by the admin settings page so all keys round-trip in one query. */
 export async function getAllSettings(): Promise<Record<SettingKey, unknown>> {
-  const rows = await prisma.siteSetting.findMany({
-    where: { key: { in: Object.values(SETTING_KEYS) } },
-    select: { key: true, value: true },
-  });
+  const rows = await hostTenantScope((tx) =>
+    tx.siteSetting.findMany({
+      where: { key: { in: Object.values(SETTING_KEYS) } },
+      select: { key: true, value: true },
+    })
+  );
   const byKey = new Map(rows.map((r) => [r.key, r.value]));
   const out = {} as Record<SettingKey, unknown>;
   for (const key of Object.values(SETTING_KEYS)) {

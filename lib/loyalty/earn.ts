@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { ensureAccount } from "./account";
 import { postTransaction } from "./ledger";
 import { pointsFromKr } from "./constants";
@@ -20,32 +20,35 @@ export async function awardOrderPoints(orderId: string): Promise<{
   awarded: number;
   reason: "ok" | "already-awarded" | "guest" | "zero-total" | "not-found";
 }> {
-  const order = await prisma.order.findUnique({
-    where: { id: orderId },
-    select: {
-      id: true,
-      userId: true,
-      totalAmount: true,
-      loyaltyPointsAwarded: true,
-      orderNumber: true,
-    },
-  });
-  if (!order) return { awarded: 0, reason: "not-found" };
-  if (!order.userId) return { awarded: 0, reason: "guest" };
-  if (order.loyaltyPointsAwarded !== null) {
-    return { awarded: order.loyaltyPointsAwarded, reason: "already-awarded" };
-  }
+  return hostTenantScope(async (tx) => {
+    const order = await tx.order.findUnique({
+      where: { id: orderId },
+      select: {
+        id: true,
+        userId: true,
+        totalAmount: true,
+        loyaltyPointsAwarded: true,
+        orderNumber: true,
+      },
+    });
+    if (!order) return { awarded: 0, reason: "not-found" as const };
+    if (!order.userId) return { awarded: 0, reason: "guest" as const };
+    if (order.loyaltyPointsAwarded !== null) {
+      return {
+        awarded: order.loyaltyPointsAwarded,
+        reason: "already-awarded" as const,
+      };
+    }
 
-  const totalKr = parseFloat(order.totalAmount.toString());
-  const points = pointsFromKr(totalKr);
-  if (points <= 0) return { awarded: 0, reason: "zero-total" };
+    const totalKr = parseFloat(order.totalAmount.toString());
+    const points = pointsFromKr(totalKr);
+    if (points <= 0) return { awarded: 0, reason: "zero-total" as const };
 
-  const account = await ensureAccount(order.userId);
+    const account = await ensureAccount(order.userId, { tx });
 
-  await prisma.$transaction(async (tx) => {
     await postTransaction({
       accountId: account.id,
-      userId: order.userId!,
+      userId: order.userId,
       kind: "EARN_ORDER",
       points,
       orderId: order.id,
@@ -56,9 +59,9 @@ export async function awardOrderPoints(orderId: string): Promise<{
       where: { id: order.id },
       data: { loyaltyPointsAwarded: points },
     });
-  });
 
-  return { awarded: points, reason: "ok" };
+    return { awarded: points, reason: "ok" as const };
+  });
 }
 
 /**
@@ -74,77 +77,89 @@ export async function reverseOrderPoints(orderId: string): Promise<{
   burnRefunded: number;
   reason: "ok" | "nothing-to-reverse" | "not-found";
 }> {
-  const order = await prisma.order.findUnique({
-    where: { id: orderId },
-    select: {
-      id: true,
-      userId: true,
-      orderNumber: true,
-      loyaltyPointsAwarded: true,
-      loyaltyPointsRedeemed: true,
-    },
-  });
-  if (!order) {
-    return { earnReversed: 0, burnRefunded: 0, reason: "not-found" };
-  }
-  if (
-    !order.userId ||
-    (!order.loyaltyPointsAwarded && !order.loyaltyPointsRedeemed)
-  ) {
-    return { earnReversed: 0, burnRefunded: 0, reason: "nothing-to-reverse" };
-  }
+  return hostTenantScope(async (tx) => {
+    const order = await tx.order.findUnique({
+      where: { id: orderId },
+      select: {
+        id: true,
+        userId: true,
+        orderNumber: true,
+        loyaltyPointsAwarded: true,
+        loyaltyPointsRedeemed: true,
+      },
+    });
+    if (!order) {
+      return { earnReversed: 0, burnRefunded: 0, reason: "not-found" as const };
+    }
+    if (
+      !order.userId ||
+      (!order.loyaltyPointsAwarded && !order.loyaltyPointsRedeemed)
+    ) {
+      return {
+        earnReversed: 0,
+        burnRefunded: 0,
+        reason: "nothing-to-reverse" as const,
+      };
+    }
 
-  const account = await prisma.loyaltyAccount.findUnique({
-    where: { userId: order.userId },
-    select: { id: true },
-  });
-  if (!account) {
-    return { earnReversed: 0, burnRefunded: 0, reason: "nothing-to-reverse" };
-  }
-
-  let earnReversed = 0;
-  let burnRefunded = 0;
-
-  // Reverse the earn (debit)
-  if (order.loyaltyPointsAwarded) {
-    const already = await prisma.loyaltyTransaction.findFirst({
-      where: { orderId: order.id, kind: "REVERSAL" },
+    const account = await tx.loyaltyAccount.findUnique({
+      where: { userId: order.userId },
       select: { id: true },
     });
-    if (!already) {
-      await postTransaction({
-        accountId: account.id,
-        userId: order.userId,
-        kind: "REVERSAL",
-        points: -order.loyaltyPointsAwarded,
-        orderId: order.id,
-        description: `Återförd — order ${order.orderNumber}`,
-      });
-      earnReversed = order.loyaltyPointsAwarded;
+    if (!account) {
+      return {
+        earnReversed: 0,
+        burnRefunded: 0,
+        reason: "nothing-to-reverse" as const,
+      };
     }
-  }
 
-  // Refund the burn (credit). Posted as an ADJUST_ADMIN row tagged
-  // with the orderId — we don't have a dedicated "burn-refund" kind,
-  // and ADJUST with description carries enough audit weight. Idempotent
-  // via the same kind+orderId guard.
-  if (order.loyaltyPointsRedeemed) {
-    const already = await prisma.loyaltyTransaction.findFirst({
-      where: { orderId: order.id, kind: "ADJUST_ADMIN" },
-      select: { id: true },
-    });
-    if (!already) {
-      await postTransaction({
-        accountId: account.id,
-        userId: order.userId,
-        kind: "ADJUST_ADMIN",
-        points: order.loyaltyPointsRedeemed,
-        orderId: order.id,
-        description: `Återbetalda poäng — order ${order.orderNumber}`,
+    let earnReversed = 0;
+    let burnRefunded = 0;
+
+    // Reverse the earn (debit)
+    if (order.loyaltyPointsAwarded) {
+      const already = await tx.loyaltyTransaction.findFirst({
+        where: { orderId: order.id, kind: "REVERSAL" },
+        select: { id: true },
       });
-      burnRefunded = order.loyaltyPointsRedeemed;
+      if (!already) {
+        await postTransaction({
+          accountId: account.id,
+          userId: order.userId,
+          kind: "REVERSAL",
+          points: -order.loyaltyPointsAwarded,
+          orderId: order.id,
+          description: `Återförd — order ${order.orderNumber}`,
+          tx,
+        });
+        earnReversed = order.loyaltyPointsAwarded;
+      }
     }
-  }
 
-  return { earnReversed, burnRefunded, reason: "ok" };
+    // Refund the burn (credit). Posted as an ADJUST_ADMIN row tagged
+    // with the orderId — we don't have a dedicated "burn-refund" kind,
+    // and ADJUST with description carries enough audit weight. Idempotent
+    // via the same kind+orderId guard.
+    if (order.loyaltyPointsRedeemed) {
+      const already = await tx.loyaltyTransaction.findFirst({
+        where: { orderId: order.id, kind: "ADJUST_ADMIN" },
+        select: { id: true },
+      });
+      if (!already) {
+        await postTransaction({
+          accountId: account.id,
+          userId: order.userId,
+          kind: "ADJUST_ADMIN",
+          points: order.loyaltyPointsRedeemed,
+          orderId: order.id,
+          description: `Återbetalda poäng — order ${order.orderNumber}`,
+          tx,
+        });
+        burnRefunded = order.loyaltyPointsRedeemed;
+      }
+    }
+
+    return { earnReversed, burnRefunded, reason: "ok" as const };
+  });
 }

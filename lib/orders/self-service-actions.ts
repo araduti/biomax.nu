@@ -2,7 +2,8 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
+import type { Prisma } from "@prisma/client";
 import { currentUser } from "@/lib/session";
 import { cuidSchema, postalCodeSchema, fail } from "@/lib/validation/shared";
 
@@ -39,8 +40,12 @@ const CancelOrderSchema = z.object({
 
 export type OrderActionResult = { ok: true } | { ok: false; error: string };
 
-async function loadOwnedOrder(orderId: string, userId: string) {
-  return prisma.order.findFirst({
+async function loadOwnedOrder(
+  tx: Prisma.TransactionClient,
+  orderId: string,
+  userId: string
+) {
+  return tx.order.findFirst({
     where: { id: orderId, userId },
     include: { items: true, shippingAddress: true },
   });
@@ -61,34 +66,41 @@ export async function updateShippingAddress(
   const user = await currentUser();
   if (!user) return { ok: false, error: "Logga in först." };
 
-  const order = await loadOwnedOrder(parsed.data.orderId, user.id);
-  if (!order) return { ok: false, error: "Ordern hittades inte." };
-  if (order.status !== "PAID") {
-    return {
-      ok: false,
-      error:
-        "Adressen kan bara ändras innan paketet packats. Hör av dig till kontakt@biomax.nu så hjälper vi till.",
-    };
-  }
-
   try {
-    const newAddress = await prisma.address.create({
-      data: {
-        userId: user.id,
-        fullName: parsed.data.fullName,
-        street: parsed.data.street,
-        postalCode: parsed.data.postalCode,
-        city: parsed.data.city,
-        countryCode: "SE",
-        phone: parsed.data.phone || null,
-      },
+    const result = await hostTenantScope(async (tx) => {
+      const order = await loadOwnedOrder(tx, parsed.data.orderId, user.id);
+      if (!order) {
+        return { ok: false as const, error: "Ordern hittades inte." };
+      }
+      if (order.status !== "PAID") {
+        return {
+          ok: false as const,
+          error:
+            "Adressen kan bara ändras innan paketet packats. Hör av dig till kontakt@biomax.nu så hjälper vi till.",
+        };
+      }
+      const newAddress = await tx.address.create({
+        data: {
+          userId: user.id,
+          fullName: parsed.data.fullName,
+          street: parsed.data.street,
+          postalCode: parsed.data.postalCode,
+          city: parsed.data.city,
+          countryCode: "SE",
+          phone: parsed.data.phone || null,
+        },
+      });
+      await tx.order.update({
+        where: { id: order.id },
+        data: { shippingAddressId: newAddress.id },
+      });
+      return { ok: true as const, orderNumber: order.orderNumber };
     });
-    await prisma.order.update({
-      where: { id: order.id },
-      data: { shippingAddressId: newAddress.id },
-    });
-    revalidatePath(`/konto/ordrar/${order.orderNumber}`);
-    return { ok: true };
+    if (result.ok) {
+      revalidatePath(`/konto/ordrar/${result.orderNumber}`);
+      return { ok: true };
+    }
+    return result;
   } catch (err) {
     console.error("updateShippingAddress failed:", err);
     return { ok: false, error: "Kunde inte uppdatera adressen." };
@@ -108,18 +120,19 @@ export async function cancelOrder(raw: unknown): Promise<OrderActionResult> {
   const user = await currentUser();
   if (!user) return { ok: false, error: "Logga in först." };
 
-  const order = await loadOwnedOrder(parsed.data.orderId, user.id);
-  if (!order) return { ok: false, error: "Ordern hittades inte." };
-  if (order.status !== "PAID") {
-    return {
-      ok: false,
-      error:
-        "Ordern kan inte längre avbrytas via självservice. Kontakta oss på kontakt@biomax.nu.",
-    };
-  }
-
   try {
-    await prisma.$transaction(async (tx) => {
+    const result = await hostTenantScope(async (tx) => {
+      const order = await loadOwnedOrder(tx, parsed.data.orderId, user.id);
+      if (!order) {
+        return { ok: false as const, error: "Ordern hittades inte." };
+      }
+      if (order.status !== "PAID") {
+        return {
+          ok: false as const,
+          error:
+            "Ordern kan inte längre avbrytas via självservice. Kontakta oss på kontakt@biomax.nu.",
+        };
+      }
       await tx.order.update({
         where: { id: order.id },
         data: {
@@ -142,9 +155,13 @@ export async function cancelOrder(raw: unknown): Promise<OrderActionResult> {
           });
         }
       }
+      return { ok: true as const, orderNumber: order.orderNumber };
     });
-    revalidatePath(`/konto/ordrar/${order.orderNumber}`);
-    return { ok: true };
+    if (result.ok) {
+      revalidatePath(`/konto/ordrar/${result.orderNumber}`);
+      return { ok: true };
+    }
+    return result;
   } catch (err) {
     console.error("cancelOrder failed:", err);
     return { ok: false, error: "Kunde inte avbryta ordern." };

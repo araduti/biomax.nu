@@ -3,7 +3,7 @@
 import crypto from "node:crypto";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { currentUser } from "@/lib/session";
 import { cuidSchema, fail } from "@/lib/validation/shared";
 import { restockReturnedItems } from "@/lib/checkout/stock";
@@ -62,76 +62,89 @@ export async function requestReturn(raw: unknown): Promise<ReturnActionResult> {
   const user = await currentUser();
   if (!user) return { ok: false, error: "Logga in först." };
 
-  const order = await prisma.order.findFirst({
-    where: { id: parsed.data.orderId, userId: user.id },
-    include: { items: true, returns: true },
-  });
-  if (!order) return { ok: false, error: "Ordern hittades inte." };
-
-  if (order.status !== "FULFILLED" && order.status !== "PAID") {
-    return {
-      ok: false,
-      error: "Endast levererade beställningar kan returneras.",
-    };
-  }
-
-  // Window check — use updatedAt as the "delivered" approximation until
-  // PostNord webhooks (Phase C) give us a real delivery timestamp.
-  const ageMs = Date.now() - order.updatedAt.getTime();
-  const ageDays = ageMs / (24 * 3600 * 1000);
-  if (ageDays > RETURN_WINDOW_DAYS) {
-    return {
-      ok: false,
-      error: `Returfönstret på ${RETURN_WINDOW_DAYS} dagar har passerats. Hör av dig om du behöver hjälp ändå.`,
-    };
-  }
-
-  // Validate every line — quantity ≤ ordered AND not already in an
-  // active return for this order.
-  const lineByOrderItemId = new Map(order.items.map((i) => [i.id, i]));
-  const activeReturnedQty = new Map<string, number>();
-  for (const r of order.returns) {
-    if (r.status === "REJECTED") continue; // rejected lines free up qty
-    // We'd need to load ReturnItem rows here to be precise — skipping
-    // the per-line subtraction for v1; admin reviews on REQUESTED.
-  }
-
-  for (const rl of parsed.data.items) {
-    const orderLine = lineByOrderItemId.get(rl.orderItemId);
-    if (!orderLine || orderLine.orderId !== order.id) {
-      return { ok: false, error: "Ogiltig orderrad i returen." };
-    }
-    if (rl.quantity > orderLine.quantity) {
-      return {
-        ok: false,
-        error: `Du kan inte returnera fler än du beställt av "${orderLine.productName}".`,
-      };
-    }
-    activeReturnedQty.set(
-      rl.orderItemId,
-      (activeReturnedQty.get(rl.orderItemId) ?? 0) + rl.quantity
-    );
-  }
-
-  const returnNumber = generateReturnNumber();
   try {
-    await prisma.return.create({
-      data: {
-        returnNumber,
-        orderId: order.id,
-        userId: user.id,
-        reason: parsed.data.reason || null,
-        items: {
-          create: parsed.data.items.map((it) => ({
-            orderItemId: it.orderItemId,
-            quantity: it.quantity,
-          })),
+    const result = await hostTenantScope(async (tx) => {
+      const order = await tx.order.findFirst({
+        where: { id: parsed.data.orderId, userId: user.id },
+        include: { items: true, returns: true },
+      });
+      if (!order) {
+        return { ok: false as const, error: "Ordern hittades inte." };
+      }
+
+      if (order.status !== "FULFILLED" && order.status !== "PAID") {
+        return {
+          ok: false as const,
+          error: "Endast levererade beställningar kan returneras.",
+        };
+      }
+
+      // Window check — use updatedAt as the "delivered" approximation until
+      // PostNord webhooks (Phase C) give us a real delivery timestamp.
+      const ageMs = Date.now() - order.updatedAt.getTime();
+      const ageDays = ageMs / (24 * 3600 * 1000);
+      if (ageDays > RETURN_WINDOW_DAYS) {
+        return {
+          ok: false as const,
+          error: `Returfönstret på ${RETURN_WINDOW_DAYS} dagar har passerats. Hör av dig om du behöver hjälp ändå.`,
+        };
+      }
+
+      // Validate every line — quantity ≤ ordered AND not already in an
+      // active return for this order.
+      const lineByOrderItemId = new Map(order.items.map((i) => [i.id, i]));
+      const activeReturnedQty = new Map<string, number>();
+      for (const r of order.returns) {
+        if (r.status === "REJECTED") continue; // rejected lines free up qty
+        // We'd need to load ReturnItem rows here to be precise — skipping
+        // the per-line subtraction for v1; admin reviews on REQUESTED.
+      }
+
+      for (const rl of parsed.data.items) {
+        const orderLine = lineByOrderItemId.get(rl.orderItemId);
+        if (!orderLine || orderLine.orderId !== order.id) {
+          return { ok: false as const, error: "Ogiltig orderrad i returen." };
+        }
+        if (rl.quantity > orderLine.quantity) {
+          return {
+            ok: false as const,
+            error: `Du kan inte returnera fler än du beställt av "${orderLine.productName}".`,
+          };
+        }
+        activeReturnedQty.set(
+          rl.orderItemId,
+          (activeReturnedQty.get(rl.orderItemId) ?? 0) + rl.quantity
+        );
+      }
+
+      const returnNumber = generateReturnNumber();
+      await tx.return.create({
+        data: {
+          returnNumber,
+          orderId: order.id,
+          userId: user.id,
+          reason: parsed.data.reason || null,
+          items: {
+            create: parsed.data.items.map((it) => ({
+              orderItemId: it.orderItemId,
+              quantity: it.quantity,
+            })),
+          },
         },
-      },
+      });
+      return {
+        ok: true as const,
+        returnNumber,
+        orderNumber: order.orderNumber,
+      };
     });
-    revalidatePath(`/konto/ordrar/${order.orderNumber}`);
-    revalidatePath("/admin/returer");
-    return { ok: true, returnNumber };
+
+    if (result.ok) {
+      revalidatePath(`/konto/ordrar/${result.orderNumber}`);
+      revalidatePath("/admin/returer");
+      return { ok: true, returnNumber: result.returnNumber };
+    }
+    return result;
   } catch (err) {
     console.error("requestReturn failed:", err);
     return { ok: false, error: "Kunde inte skapa returen." };

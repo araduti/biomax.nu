@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import type { Prisma } from "@prisma/client";
 import { postTransaction } from "./ledger";
 import { WELCOME_BONUS_POINTS, LOYALTY_PROGRAM_NAME } from "./constants";
@@ -17,30 +17,35 @@ export async function ensureAccount(
   userId: string,
   options?: { tx?: Prisma.TransactionClient }
 ) {
-  const client = options?.tx ?? prisma;
-  const existing = await client.loyaltyAccount.findUnique({
-    where: { userId },
-  });
-  if (existing) return existing;
-
-  const account = await client.loyaltyAccount.create({
-    data: { userId },
-  });
-
-  if (WELCOME_BONUS_POINTS > 0) {
-    await postTransaction({
-      accountId: account.id,
-      userId,
-      kind: "BONUS_WELCOME",
-      points: WELCOME_BONUS_POINTS,
-      description: `Välkomstbonus — ${LOYALTY_PROGRAM_NAME}`,
-      tx: options?.tx,
+  // If a caller-supplied tx exists, use it (caller owns the scope).
+  // Otherwise, open a hostTenantScope so RLS still applies.
+  const run = async (client: Prisma.TransactionClient) => {
+    const existing = await client.loyaltyAccount.findUnique({
+      where: { userId },
     });
-    // Re-fetch so the caller sees the post-bonus balance.
-    return client.loyaltyAccount.findUniqueOrThrow({ where: { userId } });
-  }
+    if (existing) return existing;
 
-  return account;
+    const account = await client.loyaltyAccount.create({
+      data: { userId },
+    });
+
+    if (WELCOME_BONUS_POINTS > 0) {
+      await postTransaction({
+        accountId: account.id,
+        userId,
+        kind: "BONUS_WELCOME",
+        points: WELCOME_BONUS_POINTS,
+        description: `Välkomstbonus — ${LOYALTY_PROGRAM_NAME}`,
+        tx: client,
+      });
+      // Re-fetch so the caller sees the post-bonus balance.
+      return client.loyaltyAccount.findUniqueOrThrow({ where: { userId } });
+    }
+
+    return account;
+  };
+
+  return options?.tx ? run(options.tx) : hostTenantScope(run);
 }
 
 /**
@@ -53,9 +58,11 @@ export async function getAccountBalance(userId: string): Promise<{
   lifetimeEarned: number;
   enrolledAt: Date;
 } | null> {
-  const account = await prisma.loyaltyAccount.findUnique({
-    where: { userId },
-    select: { balance: true, lifetimeEarned: true, enrolledAt: true },
-  });
+  const account = await hostTenantScope((tx) =>
+    tx.loyaltyAccount.findUnique({
+      where: { userId },
+      select: { balance: true, lifetimeEarned: true, enrolledAt: true },
+    })
+  );
   return account ?? null;
 }
