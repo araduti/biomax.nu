@@ -20,10 +20,15 @@
  *
  * Schedule (vercel.json): weekly. Auth: Bearer CRON_SECRET
  * (localhost-allowed in dev) — same contract as every /api/cron/* route.
+ *
+ * Tenant scope (sub-slice 3b-2 cron seam): each delete runs inside a
+ * per-tenant tx, so RLS WITH CHECK enforces that one tenant's purge
+ * cannot reach across into another's rows. The summary is aggregated
+ * across all tenants.
  */
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { cronAuthorized } from "@/lib/api/cron-auth";
+import { forEachActiveTenant } from "@/lib/cron/for-each-tenant";
 
 export const runtime = "nodejs";
 
@@ -41,41 +46,32 @@ export async function GET(req: Request) {
   }
 
   const now = Date.now();
-  const cartCutoff = new Date(
-    now - CART_SNAPSHOT_RETENTION_DAYS * 86_400_000
-  );
-  const stockCutoff = new Date(
-    now - STOCK_NOTIFY_RETENTION_DAYS * 86_400_000
-  );
-  const consentCutoff = new Date(
-    now - CONSENT_RETENTION_DAYS * 86_400_000
-  );
+  const cartCutoff = new Date(now - CART_SNAPSHOT_RETENTION_DAYS * 86_400_000);
+  const stockCutoff = new Date(now - STOCK_NOTIFY_RETENTION_DAYS * 86_400_000);
+  const consentCutoff = new Date(now - CONSENT_RETENTION_DAYS * 86_400_000);
 
-  try {
-    const [cartSnapshots, stockNotifications, consentEvents] =
-      await Promise.all([
-        prisma.cartSnapshot.deleteMany({
-          where: { createdAt: { lt: cartCutoff } },
-        }),
-        prisma.stockNotificationRequest.deleteMany({
-          where: { createdAt: { lt: stockCutoff } },
-        }),
-        prisma.consentEvent.deleteMany({
-          where: { createdAt: { lt: consentCutoff } },
-        }),
-      ]);
+  let cartSnapshotsDeleted = 0;
+  let stockNotificationsDeleted = 0;
+  let consentEventsDeleted = 0;
 
-    return NextResponse.json({
-      ok: true,
-      cartSnapshotsDeleted: cartSnapshots.count,
-      stockNotificationsDeleted: stockNotifications.count,
-      consentEventsDeleted: consentEvents.count,
-    });
-  } catch (err) {
-    console.error("[data-retention] failed:", err);
-    return NextResponse.json(
-      { ok: false, error: (err as Error).message },
-      { status: 500 }
-    );
-  }
+  const summary = await forEachActiveTenant("data-retention", async (tx) => {
+    const [cartSnapshots, stockNotifications, consentEvents] = await Promise.all([
+      tx.cartSnapshot.deleteMany({ where: { createdAt: { lt: cartCutoff } } }),
+      tx.stockNotificationRequest.deleteMany({
+        where: { createdAt: { lt: stockCutoff } },
+      }),
+      tx.consentEvent.deleteMany({ where: { createdAt: { lt: consentCutoff } } }),
+    ]);
+    cartSnapshotsDeleted += cartSnapshots.count;
+    stockNotificationsDeleted += stockNotifications.count;
+    consentEventsDeleted += consentEvents.count;
+  });
+
+  return NextResponse.json({
+    ok: summary.failed === 0,
+    tenants: summary,
+    cartSnapshotsDeleted,
+    stockNotificationsDeleted,
+    consentEventsDeleted,
+  });
 }

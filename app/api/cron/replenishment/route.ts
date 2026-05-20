@@ -9,13 +9,14 @@
  *
  * Schedule (vercel.json): daily 08:00 UTC.
  * Auth: Bearer CRON_SECRET.
- * Throughput: 200 reminders per invocation.
+ * Throughput: 200 reminders per invocation, **per tenant** (sub-slice
+ * 3b-2 cron tenant seam).
  */
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { sendTransactional } from "@/lib/email/client";
 import { replenishmentReminderEmail } from "@/lib/email/templates";
 import { cronAuthorized } from "@/lib/api/cron-auth";
+import { forEachActiveTenant } from "@/lib/cron/for-each-tenant";
 
 export const runtime = "nodejs";
 
@@ -42,13 +43,11 @@ function estimateSupplyDays(productName: string, quantity: number): number | nul
 
   let days: number;
   if (unit === "tuggtabletter") {
-    days = count / 3; // typical 2-before-each-meal × ~3 meals = 6/day, but
-                      // most DGL is 2 before main meal only → 2/day. Split
-                      // the difference at 3/day.
+    days = count / 3;
   } else if (unit === "g" || unit === "ml") {
-    days = 60; // generic powder/liquid placeholder
+    days = 60;
   } else {
-    days = count; // kapslar / tabletter — assume 1/day default
+    days = count;
   }
   return Math.round(days * quantity);
 }
@@ -58,101 +57,111 @@ export async function GET(req: Request) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
 
   const now = new Date();
+  let totalSent = 0;
+  let totalCandidates = 0;
+  let totalEvaluated = 0;
+  const mailErrors: { tenant: string; email: string; error: string }[] = [];
 
-  // Pre-fetch unsubscribed emails for suppression.
-  const unsubRows = await prisma.newsletterSubscriber.findMany({
-    where: { unsubscribedAt: { not: null } },
-    select: { email: true },
-  });
-  const unsubSet = new Set(unsubRows.map((r) => r.email.toLowerCase()));
+  const summary = await forEachActiveTenant(
+    "replenishment",
+    async (tx, tenant) => {
+      // Pre-fetch unsubscribed emails for suppression — per tenant.
+      const unsubRows = await tx.newsletterSubscriber.findMany({
+        where: { unsubscribedAt: { not: null } },
+        select: { email: true },
+      });
+      const unsubSet = new Set(unsubRows.map((r) => r.email.toLowerCase()));
 
-  // Candidate window: FULFILLED orders 14–120 days old (covers
-  // [supplyDays - 7 ± 3] for typical 21-day to 113-day supply ranges).
-  const minAge = new Date(now);
-  minAge.setUTCDate(minAge.getUTCDate() - 120);
-  const maxAge = new Date(now);
-  maxAge.setUTCDate(maxAge.getUTCDate() - 14);
+      // Candidate window: FULFILLED orders 14–120 days old.
+      const minAge = new Date(now);
+      minAge.setUTCDate(minAge.getUTCDate() - 120);
+      const maxAge = new Date(now);
+      maxAge.setUTCDate(maxAge.getUTCDate() - 14);
 
-  const candidates = await prisma.orderItem.findMany({
-    where: {
-      replenishmentSentAt: null,
-      order: {
-        status: "FULFILLED",
-        updatedAt: { gte: minAge, lte: maxAge },
-      },
-      productId: { not: null },
-      product: { status: "PUBLISHED" },
-    },
-    take: BATCH * 4, // over-fetch; the per-item time-window filter is in JS
-    select: {
-      id: true,
-      productName: true,
-      quantity: true,
-      order: {
-        select: {
-          email: true,
-          updatedAt: true,
-          user: { select: { name: true } },
+      const candidates = await tx.orderItem.findMany({
+        where: {
+          replenishmentSentAt: null,
+          order: {
+            status: "FULFILLED",
+            updatedAt: { gte: minAge, lte: maxAge },
+          },
+          productId: { not: null },
+          product: { status: "PUBLISHED" },
         },
-      },
-      product: { select: { slug: true, name: true } },
+        take: BATCH * 4,
+        select: {
+          id: true,
+          productName: true,
+          quantity: true,
+          order: {
+            select: {
+              email: true,
+              updatedAt: true,
+              user: { select: { name: true } },
+            },
+          },
+          product: { select: { slug: true, name: true } },
+        },
+      });
+
+      totalCandidates += candidates.length;
+      let sentThisTenant = 0;
+
+      for (const ci of candidates) {
+        if (sentThisTenant >= BATCH) break;
+        if (!ci.product) continue;
+        if (unsubSet.has(ci.order.email.toLowerCase())) continue;
+
+        totalEvaluated++;
+        const supplyDays = estimateSupplyDays(ci.productName, ci.quantity);
+        if (supplyDays === null) continue;
+
+        const fulfilledAt = ci.order.updatedAt;
+        const elapsed = Math.floor(
+          (now.getTime() - fulfilledAt.getTime()) / (24 * 3600 * 1000)
+        );
+        const reminderAt = supplyDays - LEAD_DAYS;
+        if (Math.abs(elapsed - reminderAt) > WINDOW_DAYS) continue;
+
+        const daysRemaining = Math.max(1, supplyDays - elapsed);
+        const firstName = ci.order.user?.name?.split(/\s+/)[0] ?? null;
+
+        const tpl = replenishmentReminderEmail({
+          customerFirstName: firstName,
+          product: { name: ci.product.name, slug: ci.product.slug },
+          daysRemaining,
+        });
+
+        const r = await sendTransactional({
+          to: { email: ci.order.email, name: ci.order.user?.name ?? undefined },
+          subject: tpl.subject,
+          preheader: tpl.preheader,
+          html: tpl.html,
+          text: tpl.text,
+          category: "replenishment",
+          customId: `replenishment:${ci.id}`,
+        });
+        if (!r.ok) {
+          mailErrors.push({ tenant: tenant.slug, email: ci.order.email, error: r.error });
+          continue;
+        }
+        await tx.orderItem.update({
+          where: { id: ci.id },
+          data: { replenishmentSentAt: now },
+        });
+        sentThisTenant++;
+        totalSent++;
+      }
     },
-  });
-
-  let sent = 0;
-  const errors: { email: string; error: string }[] = [];
-  let evaluated = 0;
-
-  for (const ci of candidates) {
-    if (sent >= BATCH) break;
-    if (!ci.product) continue;
-    if (unsubSet.has(ci.order.email.toLowerCase())) continue;
-
-    evaluated++;
-    const supplyDays = estimateSupplyDays(ci.productName, ci.quantity);
-    if (supplyDays === null) continue;
-
-    const fulfilledAt = ci.order.updatedAt;
-    const elapsed = Math.floor(
-      (now.getTime() - fulfilledAt.getTime()) / (24 * 3600 * 1000)
-    );
-    const reminderAt = supplyDays - LEAD_DAYS;
-    if (Math.abs(elapsed - reminderAt) > WINDOW_DAYS) continue;
-
-    const daysRemaining = Math.max(1, supplyDays - elapsed);
-    const firstName = ci.order.user?.name?.split(/\s+/)[0] ?? null;
-
-    const tpl = replenishmentReminderEmail({
-      customerFirstName: firstName,
-      product: { name: ci.product.name, slug: ci.product.slug },
-      daysRemaining,
-    });
-
-    const r = await sendTransactional({
-      to: { email: ci.order.email, name: ci.order.user?.name ?? undefined },
-      subject: tpl.subject,
-      preheader: tpl.preheader,
-      html: tpl.html,
-      text: tpl.text,
-      category: "replenishment",
-      customId: `replenishment:${ci.id}`,
-    });
-    if (!r.ok) {
-      errors.push({ email: ci.order.email, error: r.error });
-      continue;
-    }
-    await prisma.orderItem.update({
-      where: { id: ci.id },
-      data: { replenishmentSentAt: now },
-    });
-    sent++;
-  }
+    { txTimeoutMs: 120_000 }
+  );
 
   return NextResponse.json({
     ok: true,
-    candidates: candidates.length,
-    evaluated,
-    sent,
-    errors,
+    tenants: summary,
+    candidates: totalCandidates,
+    evaluated: totalEvaluated,
+    sent: totalSent,
+    errors: mailErrors,
   });
 }

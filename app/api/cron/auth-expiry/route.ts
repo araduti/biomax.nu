@@ -13,13 +13,19 @@
  * captured/cancelled/expired orders don't raise false alarms.
  *
  * Schedule (vercel.json): daily. Auth: Bearer CRON_SECRET.
+ *
+ * Tenant scope (sub-slice 3b-2 cron seam): runs once per ACTIVE tenant;
+ * the alert recipients (warehouse_alert_emails SiteSetting) and the
+ * Order rows are both tenant-owned. Kustom credentials are also
+ * per-tenant (3b-3e); each tenant's iteration is wrapped via
+ * runWithTenantContext so getKustomOmOrder resolves the right secret.
  */
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { sendTransactional } from "@/lib/email/client";
 import { cronAuthorized } from "@/lib/api/cron-auth";
-import { getWarehouseAlertEmails } from "@/lib/site/settings";
 import { getKustomOmOrder, isKlarnaConfigured } from "@/lib/klarna/client";
+import { forEachActiveTenant } from "@/lib/cron/for-each-tenant";
+import { runWithTenantContext } from "@/lib/tenant/context";
 
 export const runtime = "nodejs";
 
@@ -42,84 +48,112 @@ export async function GET(req: Request) {
     Date.now() - AUTH_EXPIRY_WARN_DAYS * 24 * 60 * 60 * 1000
   );
 
-  // PAID = authorised but not captured (capture happens at FULFILLED).
-  const candidates = await prisma.order.findMany({
-    where: {
-      status: "PAID",
-      paymentProvider: "KLARNA",
-      paymentReference: { not: null },
-      createdAt: { lt: cutoff },
-    },
-    select: {
-      orderNumber: true,
-      paymentReference: true,
-      totalAmount: true,
-      createdAt: true,
-    },
-    orderBy: { createdAt: "asc" },
-  });
+  let totalCandidates = 0;
+  let totalAtRisk = 0;
+  let totalSent = 0;
+  const mailErrors: { tenant: string; email: string; error: string }[] = [];
 
-  const stale = candidates.filter(
-    (o) => o.paymentReference && !o.paymentReference.startsWith("stub-")
-  );
+  const summary = await forEachActiveTenant(
+    "auth-expiry",
+    async (tx, tenant) => {
+      // PAID = authorised but not captured (capture happens at FULFILLED).
+      const candidates = await tx.order.findMany({
+        where: {
+          status: "PAID",
+          paymentProvider: "KLARNA",
+          paymentReference: { not: null },
+          createdAt: { lt: cutoff },
+        },
+        select: {
+          orderNumber: true,
+          paymentReference: true,
+          totalAmount: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: "asc" },
+      });
 
-  // Confirm against Kustom — only still-AUTHORIZED orders are at risk.
-  const atRisk: {
-    orderNumber: string;
-    total: string;
-    ageDays: number;
-  }[] = [];
-  for (const o of stale) {
-    try {
-      const om = await getKustomOmOrder(o.paymentReference!);
-      if (om.status === "AUTHORIZED" || om.captured_amount === 0) {
-        if (om.status === "CANCELLED" || om.status === "EXPIRED") continue;
-        atRisk.push({
-          orderNumber: o.orderNumber,
-          total: o.totalAmount.toString(),
-          ageDays: Math.floor(
-            (Date.now() - o.createdAt.getTime()) / 86_400_000
-          ),
-        });
-      }
-    } catch (err) {
-      console.error(
-        `[auth-expiry] OM read failed for ${o.orderNumber}`,
-        err
+      const stale = candidates.filter(
+        (o) => o.paymentReference && !o.paymentReference.startsWith("stub-")
       );
-    }
-  }
+      totalCandidates += stale.length;
 
-  if (atRisk.length === 0) {
-    return NextResponse.json({
-      ok: true,
-      candidates: stale.length,
-      atRisk: 0,
-    });
-  }
+      // Confirm against Kustom — only still-AUTHORIZED orders are at risk.
+      // Each Kustom call resolves per-tenant credentials via the ALS
+      // context (ADR 0028 / 3b-3e).
+      const atRisk: {
+        orderNumber: string;
+        total: string;
+        ageDays: number;
+      }[] = [];
+      await runWithTenantContext(tenant.id, async () => {
+        for (const o of stale) {
+          try {
+            const om = await getKustomOmOrder(o.paymentReference!);
+            if (om.status === "AUTHORIZED" || om.captured_amount === 0) {
+              if (om.status === "CANCELLED" || om.status === "EXPIRED") continue;
+              atRisk.push({
+                orderNumber: o.orderNumber,
+                total: o.totalAmount.toString(),
+                ageDays: Math.floor(
+                  (Date.now() - o.createdAt.getTime()) / 86_400_000
+                ),
+              });
+            }
+          } catch (err) {
+            console.error(
+              `[auth-expiry] OM read failed for ${o.orderNumber}`,
+              err
+            );
+          }
+        }
+      });
 
-  const recipients = await getWarehouseAlertEmails();
-  if (recipients.length === 0) {
-    return NextResponse.json({
-      ok: true,
-      atRisk: atRisk.length,
-      skipped: "warehouse_alert_emails not configured",
-    });
-  }
+      totalAtRisk += atRisk.length;
+      if (atRisk.length === 0) return;
 
-  const lines = atRisk.map(
-    (r) =>
-      `  · ${r.orderNumber} — ${r.total} kr, ${r.ageDays} dagar gammal (ej skickad)`
-  );
-  const text = [
-    `Betalningar som snart förfaller — ${atRisk.length} order${atRisk.length === 1 ? "" : "s"} är godkända men inte debiterade.`,
-    "Skicka (debiterar) eller annullera dem innan reservationen löper ut.",
-    "",
-    ...lines,
-    "",
-    "Hantera ordrar: https://www.biomax.nu/admin/ordrar",
-  ].join("\n");
-  const html = `
+      // Read warehouse_alert_emails via the per-tenant tx so the
+      // SiteSetting row is RLS-scoped (the shared getWarehouseAlertEmails
+      // helper still uses an out-of-scope prisma.* read pending its own
+      // migration to the seam; inlining here keeps THIS cron strictly
+      // tenant-isolated without forcing that wider refactor).
+      const settingRow = await tx.siteSetting.findUnique({
+        where: { key: "warehouse_alert_emails" },
+        select: { value: true },
+      });
+      const recipients =
+        typeof settingRow?.value === "string"
+          ? settingRow.value
+              .split(",")
+              .map((e) => e.trim().toLowerCase())
+              .filter((e) => e.includes("@"))
+          : [];
+      if (recipients.length === 0) {
+        console.warn(
+          JSON.stringify({
+            cronName: "auth-expiry",
+            tenantId: tenant.id,
+            slug: tenant.slug,
+            skipped: "warehouse_alert_emails not configured",
+            atRisk: atRisk.length,
+          })
+        );
+        return;
+      }
+
+      const lines = atRisk.map(
+        (r) =>
+          `  · ${r.orderNumber} — ${r.total} kr, ${r.ageDays} dagar gammal (ej skickad)`
+      );
+      const text = [
+        `Betalningar som snart förfaller — ${atRisk.length} order${atRisk.length === 1 ? "" : "s"} är godkända men inte debiterade.`,
+        "Skicka (debiterar) eller annullera dem innan reservationen löper ut.",
+        "",
+        ...lines,
+        "",
+        "Hantera ordrar: https://www.biomax.nu/admin/ordrar",
+      ].join("\n");
+      const html = `
 <div style="font-family:Helvetica,Arial,sans-serif;color:#1F2530;line-height:1.55;">
   <p style="margin:0 0 12px;font-size:14px;"><strong>Betalningar som snart förfaller</strong> — ${atRisk.length} order är godkända men inte debiterade.</p>
   <p style="margin:0 0 12px;font-size:13px;color:#525860;">Skicka ordern (debiterar betalningen) eller annullera den innan reservationen löper ut.</p>
@@ -136,27 +170,29 @@ export async function GET(req: Request) {
   </p>
 </div>`.trim();
 
-  let sent = 0;
-  const errors: { email: string; error: string }[] = [];
-  for (const email of recipients) {
-    const r = await sendTransactional({
-      to: { email },
-      subject: `Betalningar förfaller snart: ${atRisk.length} order ej debiterad`,
-      html,
-      text,
-      category: "auth-expiry-alert",
-      customId: `auth-expiry:${new Date().toISOString().slice(0, 10)}`,
-    });
-    if (!r.ok) errors.push({ email, error: r.error });
-    else sent++;
-  }
+      for (const email of recipients) {
+        const r = await sendTransactional({
+          to: { email },
+          subject: `Betalningar förfaller snart: ${atRisk.length} order ej debiterad`,
+          html,
+          text,
+          category: "auth-expiry-alert",
+          customId: `auth-expiry:${tenant.slug}:${new Date().toISOString().slice(0, 10)}`,
+        });
+        if (!r.ok) mailErrors.push({ tenant: tenant.slug, email, error: r.error });
+        else totalSent++;
+      }
+    },
+    { txTimeoutMs: 120_000 }
+  );
 
   return NextResponse.json({
     ok: true,
-    candidates: stale.length,
-    atRisk: atRisk.length,
-    sent,
-    errors,
+    tenants: summary,
+    candidates: totalCandidates,
+    atRisk: totalAtRisk,
+    sent: totalSent,
+    errors: mailErrors,
   });
 }
 
