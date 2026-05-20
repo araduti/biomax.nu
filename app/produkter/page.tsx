@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
-import { currentTenant } from "@/lib/tenant";
-import { withTenantRLS } from "@/lib/tenant/rls";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { publicProductWhere } from "@/lib/products/availability";
 import { TopBar } from "@/components/site/top-bar";
 import { Header } from "@/components/site/header";
@@ -95,15 +93,11 @@ export default async function ProductsIndex({
       ? ([{ publishedAt: "desc" as const }, { createdAt: "desc" as const }])
       : ([{ totalSales: "desc" as const }]);
 
-  // Korg 3b-3 Product pilot: this listing's product read goes through
-  // the tenant RLS seam (withTenantRLS → SET LOCAL app.current_tenant_id
-  // → FORCE RLS policy on "Product"). Proves end-to-end isolation on
-  // one path. Other Product accessors stay unwrapped for now; the
-  // transitional policy is permissive when the GUC is unset so they
-  // keep working until each is migrated.
-  const tenant = await currentTenant();
-  const [products, categories] = await Promise.all([
-    withTenantRLS(tenant.id, (tx) =>
+  // Korg 3b-2 #3d: both reads go through the tenant RLS seam
+  // (hostTenantScope → SET LOCAL app.current_tenant_id → FORCE RLS).
+  // One transaction = one GUC set; both queries see the same scoped view.
+  const [products, categories] = await hostTenantScope((tx) =>
+    Promise.all([
       tx.product.findMany({
         where: { ...publicProductWhere(), price: { gt: 0 } },
         orderBy,
@@ -119,30 +113,30 @@ export default async function ProductsIndex({
           totalSales: true,
           categories: { select: { name: true }, take: 1 },
         },
-      })
-    ),
-    prisma.category.findMany({
-      where: {
-        slug: { not: "uncategorized" },
-        // Hide empty categories using the SAME visibility rule the listing
-        // uses below, otherwise a category with only DRAFT or scheduled
-        // products would still appear in the filter row.
-        products: { some: { ...publicProductWhere(), price: { gt: 0 } } },
-      },
-      select: {
-        slug: true,
-        name: true,
-        // Count the same products the listing actually renders, so the
-        // "3" on the chip can never disagree with the grid below.
-        _count: {
-          select: {
-            products: { where: { ...publicProductWhere(), price: { gt: 0 } } },
+      }),
+      tx.category.findMany({
+        where: {
+          slug: { not: "uncategorized" },
+          // Hide empty categories using the SAME visibility rule the listing
+          // uses below, otherwise a category with only DRAFT or scheduled
+          // products would still appear in the filter row.
+          products: { some: { ...publicProductWhere(), price: { gt: 0 } } },
+        },
+        select: {
+          slug: true,
+          name: true,
+          // Count the same products the listing actually renders, so the
+          // "3" on the chip can never disagree with the grid below.
+          _count: {
+            select: {
+              products: { where: { ...publicProductWhere(), price: { gt: 0 } } },
+            },
           },
         },
-      },
-      orderBy: { name: "asc" },
-    }),
-  ]);
+        orderBy: { name: "asc" },
+      }),
+    ])
+  );
 
   // "Sale" needs field-to-field comparison (compareAtPrice > price). Prisma's
   // where filters don't do that, so we fetch with compareAtPrice present and

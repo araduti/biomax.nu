@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Display, Eyebrow } from "@/components/ui/typography";
 import { ButtonLink } from "@/components/ui/button";
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { currentUser } from "@/lib/session";
 
 export const metadata: Metadata = {
@@ -12,10 +12,12 @@ export const metadata: Metadata = {
 
 export default async function AddressesPage() {
   const user = (await currentUser())!;
-  const addresses = await prisma.address.findMany({
-    where: { userId: user.id },
-    orderBy: { updatedAt: "desc" },
-  });
+  const addresses = await hostTenantScope((tx) =>
+    tx.address.findMany({
+      where: { userId: user.id },
+      orderBy: { updatedAt: "desc" },
+    })
+  );
 
   return (
     <>

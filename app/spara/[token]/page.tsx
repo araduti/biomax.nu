@@ -7,7 +7,7 @@ import { Header } from "@/components/site/header";
 import { Footer } from "@/components/site/footer";
 import { Display, Eyebrow } from "@/components/ui/typography";
 import { formatPriceSEK } from "@/lib/format";
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { OrderStatusBadge } from "@/components/admin/order-status-badge";
 
 export const metadata: Metadata = {
@@ -38,17 +38,19 @@ export default async function TrackOrderPage({ params }: RouteParams) {
   const { token } = await params;
   if (!token || token.length < 16) notFound();
 
-  const order = await prisma.order.findUnique({
-    where: { trackingToken: token },
-    include: {
-      items: {
-        include: {
-          product: { select: { slug: true, imageUrl: true } },
+  const order = await hostTenantScope((tx) =>
+    tx.order.findUnique({
+      where: { trackingToken: token },
+      include: {
+        items: {
+          include: {
+            product: { select: { slug: true, imageUrl: true } },
+          },
         },
+        shippingAddress: true,
       },
-      shippingAddress: true,
-    },
-  });
+    })
+  );
   if (!order) notFound();
 
   const fulfilled = order.status === "FULFILLED";

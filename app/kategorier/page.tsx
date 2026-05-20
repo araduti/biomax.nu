@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { TopBar } from "@/components/site/top-bar";
 import { Header } from "@/components/site/header";
 import { Footer } from "@/components/site/footer";
@@ -22,19 +22,21 @@ export const metadata: Metadata = {
 };
 
 export default async function CategoriesIndex() {
-  const categories = await prisma.category.findMany({
-    where: {
-      slug: { not: "uncategorized" },
-      products: { some: publicProductWhere() },
-    },
-    select: {
-      id: true,
-      slug: true,
-      name: true,
-      _count: { select: { products: { where: publicProductWhere() } } },
-    },
-    orderBy: { name: "asc" },
-  });
+  const categories = await hostTenantScope((tx) =>
+    tx.category.findMany({
+      where: {
+        slug: { not: "uncategorized" },
+        products: { some: publicProductWhere() },
+      },
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        _count: { select: { products: { where: publicProductWhere() } } },
+      },
+      orderBy: { name: "asc" },
+    })
+  );
 
   const crumbs = [
     { label: "Hem", href: "/" },

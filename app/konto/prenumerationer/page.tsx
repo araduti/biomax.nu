@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { currentUser } from "@/lib/session";
 import { Display, Eyebrow } from "@/components/ui/typography";
 import { formatPriceSEK } from "@/lib/format";
@@ -13,20 +13,22 @@ export default async function SubscriptionsPage() {
   const user = await currentUser();
   if (!user) return null;
 
-  const subs = await prisma.subscription.findMany({
-    where: { userId: user.id },
-    orderBy: [{ status: "asc" }, { createdAt: "desc" }],
-    include: {
-      shippingAddress: { select: { fullName: true, street: true, city: true } },
-      lines: {
-        include: {
-          product: {
-            select: { slug: true, name: true, imageUrl: true, variants: { select: { id: true, label: true, price: true } } },
+  const subs = await hostTenantScope((tx) =>
+    tx.subscription.findMany({
+      where: { userId: user.id },
+      orderBy: [{ status: "asc" }, { createdAt: "desc" }],
+      include: {
+        shippingAddress: { select: { fullName: true, street: true, city: true } },
+        lines: {
+          include: {
+            product: {
+              select: { slug: true, name: true, imageUrl: true, variants: { select: { id: true, label: true, price: true } } },
+            },
           },
         },
       },
-    },
-  });
+    })
+  );
 
   return (
     <>
