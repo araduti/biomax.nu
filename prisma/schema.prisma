@@ -240,6 +240,7 @@ model Category {
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -349,6 +350,7 @@ model Product {
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -379,6 +381,7 @@ model ProductIngredient {
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -424,6 +427,7 @@ model ProductVariant {
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -442,6 +446,7 @@ model ProductCrossSell {
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -480,6 +485,7 @@ model Review {
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -500,6 +506,7 @@ model BlogCategory {
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -528,6 +535,7 @@ model BlogPost {
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -633,6 +641,7 @@ model Order {
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -682,6 +691,7 @@ model OrderItem {
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -709,6 +719,7 @@ model Address {
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -724,6 +735,7 @@ model Wishlist {
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -741,6 +753,7 @@ model WishlistProduct {
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -762,6 +775,7 @@ model Coupon {
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -779,6 +793,7 @@ model SiteSetting {
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -809,6 +824,7 @@ model NewsletterSubscriber {
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -840,6 +856,7 @@ model CartSnapshot {
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -868,6 +885,7 @@ model Bundle {
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -886,6 +904,7 @@ model BundleItem {
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -912,6 +931,7 @@ model IngredientPin {
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -939,6 +959,7 @@ model HomepageBlock {
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -962,6 +983,7 @@ model StockNotificationRequest {
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -1118,6 +1140,7 @@ model Redirect {
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -1153,6 +1176,7 @@ model AdminAuditEntry {
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -1207,6 +1231,7 @@ model ConsentEvent {
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -1265,6 +1290,7 @@ model Subscription {
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -1298,6 +1324,7 @@ model SubscriptionLine {
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -1343,6 +1370,7 @@ model Return {
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -1369,6 +1397,7 @@ model ReturnItem {
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -1439,6 +1468,7 @@ model HomepageHero {
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -1505,6 +1535,7 @@ model LoyaltyAccount {
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -1541,6 +1572,7 @@ model LoyaltyTransaction {
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -1565,6 +1597,48 @@ model Tenant {
   /// Per-tenant payment connection (ADR 0034 D1). 1:1, optional:
   /// tenant zero (biomax) falls back to env until the row is seeded.
   paymentCredential TenantPaymentCredential?
+
+  /// Back-relations for the 32 owned models (ADR 0028 D1). Declared
+  /// explicitly so the DB-level FK constraints (ON DELETE CASCADE)
+  /// stay in sync with `prisma/schema.prisma` — without this block,
+  /// `prisma migrate dev` auto-generates a "drop FKs" drift correction
+  /// and silently deletes referential integrity. In practice the app
+  /// accesses owned data via the tenant seam (lib/tenant/db.ts), not
+  /// via `tenant.products` — these accessors exist so Prisma's schema
+  /// diff stays empty.
+  addresses                  Address[]
+  adminAuditEntries          AdminAuditEntry[]
+  blogCategories             BlogCategory[]
+  blogPosts                  BlogPost[]
+  bundles                    Bundle[]
+  bundleItems                BundleItem[]
+  cartSnapshots              CartSnapshot[]
+  categories                 Category[]
+  consentEvents              ConsentEvent[]
+  coupons                    Coupon[]
+  homepageBlocks             HomepageBlock[]
+  homepageHeroes             HomepageHero[]
+  ingredientPins             IngredientPin[]
+  loyaltyAccounts            LoyaltyAccount[]
+  loyaltyTransactions        LoyaltyTransaction[]
+  newsletterSubscribers      NewsletterSubscriber[]
+  orders                     Order[]
+  orderItems                 OrderItem[]
+  products                   Product[]
+  productCrossSells          ProductCrossSell[]
+  productIngredients         ProductIngredient[]
+  productVariants            ProductVariant[]
+  redirects                  Redirect[]
+  returns                    Return[]
+  returnItems                ReturnItem[]
+  reviews                    Review[]
+  siteSettings               SiteSetting[]
+  stockNotificationRequests  StockNotificationRequest[]
+  subscriptions              Subscription[]
+  subscriptionLines          SubscriptionLine[]
+  wishlists                  Wishlist[]
+  wishlistProducts           WishlistProduct[]
+
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
