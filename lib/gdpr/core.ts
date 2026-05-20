@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 
 /**
  * Single GDPR implementation shared by the admin actions
@@ -22,36 +22,42 @@ export type UserExport = { filename: string; payload: string };
 export async function buildUserExport(
   userId: string
 ): Promise<UserExport | null> {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    include: {
-      addresses: true,
-      orders: {
-        include: {
-          items: true,
-          shippingAddress: true,
-          billingAddress: true,
+  const result = await hostTenantScope(async (tx) => {
+    const user = await tx.user.findUnique({
+      where: { id: userId },
+      include: {
+        addresses: true,
+        orders: {
+          include: {
+            items: true,
+            shippingAddress: true,
+            billingAddress: true,
+          },
         },
+        reviews: true,
+        subscriptions: { include: { lines: true } },
+        wishlist: { include: { items: true } },
       },
-      reviews: true,
-      subscriptions: { include: { lines: true } },
-      wishlist: { include: { items: true } },
-    },
-  });
-  if (!user) return null;
+    });
+    if (!user) return null;
 
-  // Rows without a userId FK are keyed on email.
-  const [newsletter, stockNotifications, cartSnapshots, consentEvents] =
-    await Promise.all([
-      prisma.newsletterSubscriber.findUnique({
-        where: { email: user.email },
-      }),
-      prisma.stockNotificationRequest.findMany({
-        where: { email: user.email },
-      }),
-      prisma.cartSnapshot.findMany({ where: { email: user.email } }),
-      prisma.consentEvent.findMany({ where: { userId: user.id } }),
-    ]);
+    // Rows without a userId FK are keyed on email.
+    const [newsletter, stockNotifications, cartSnapshots, consentEvents] =
+      await Promise.all([
+        tx.newsletterSubscriber.findUnique({
+          where: { email: user.email },
+        }),
+        tx.stockNotificationRequest.findMany({
+          where: { email: user.email },
+        }),
+        tx.cartSnapshot.findMany({ where: { email: user.email } }),
+        tx.consentEvent.findMany({ where: { userId: user.id } }),
+      ]);
+    return { user, newsletter, stockNotifications, cartSnapshots, consentEvents };
+  });
+  if (!result) return null;
+  const { user, newsletter, stockNotifications, cartSnapshots, consentEvents } =
+    result;
 
   const payload = JSON.stringify(
     {
@@ -88,19 +94,26 @@ export type AnonymizeResult =
 export async function anonymizeUser(
   userId: string
 ): Promise<AnonymizeResult> {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { id: true, email: true },
-  });
-  if (!user) return { ok: false, error: "Kunden hittades inte." };
-
-  // Sentinel email keeps the FK valid while leaking nothing identifiable.
-  const anonEmail = `anonymized-${user.id}@anonymized.biomax.nu`;
-  const now = new Date();
-
   try {
-    await prisma.$transaction([
-      prisma.user.update({
+    // One hostTenantScope transaction — SET LOCAL app.current_tenant_id
+    // → FORCE RLS applies to every owned-table write. The pre-read of
+    // User (non-owned, auth plane) and the writes to User / Session /
+    // Account share the same tx so the whole 7-model erase remains
+    // atomic across owned + non-owned tables (Article 17 mandate).
+    return await hostTenantScope(async (tx) => {
+      const user = await tx.user.findUnique({
+        where: { id: userId },
+        select: { id: true, email: true },
+      });
+      if (!user) {
+        return { ok: false as const, error: "Kunden hittades inte." };
+      }
+
+      // Sentinel email keeps the FK valid while leaking nothing identifiable.
+      const anonEmail = `anonymized-${user.id}@anonymized.biomax.nu`;
+      const now = new Date();
+
+      await tx.user.update({
         where: { id: user.id },
         data: {
           email: anonEmail,
@@ -113,13 +126,13 @@ export async function anonymizeUser(
           // to false plus the sentinel email makes the account unreachable.
           emailVerified: false,
         },
-      }),
-      prisma.address.deleteMany({ where: { userId: user.id } }),
-      prisma.review.updateMany({
+      });
+      await tx.address.deleteMany({ where: { userId: user.id } });
+      await tx.review.updateMany({
         where: { userId: user.id },
         data: { authorName: "Anonym kund", body: "", title: null },
-      }),
-      prisma.subscription.updateMany({
+      });
+      await tx.subscription.updateMany({
         where: { userId: user.id, status: { in: ["ACTIVE", "PAUSED"] } },
         data: {
           status: "CANCELLED",
@@ -127,27 +140,28 @@ export async function anonymizeUser(
           cancellationReason: "GDPR-anonymisering",
           email: anonEmail,
         },
-      }),
-      prisma.subscription.updateMany({
+      });
+      await tx.subscription.updateMany({
         where: { userId: user.id, status: "CANCELLED" },
         data: { email: anonEmail },
-      }),
-      prisma.newsletterSubscriber.updateMany({
+      });
+      await tx.newsletterSubscriber.updateMany({
         where: { email: user.email },
         data: { email: anonEmail, unsubscribedAt: now },
-      }),
-      prisma.stockNotificationRequest.deleteMany({
+      });
+      await tx.stockNotificationRequest.deleteMany({
         where: { email: user.email },
-      }),
-      prisma.cartSnapshot.deleteMany({ where: { email: user.email } }),
-      prisma.order.updateMany({
+      });
+      await tx.cartSnapshot.deleteMany({ where: { email: user.email } });
+      await tx.order.updateMany({
         where: { userId: user.id },
         data: { email: anonEmail },
-      }),
-      prisma.session.deleteMany({ where: { userId: user.id } }),
-      prisma.account.deleteMany({ where: { userId: user.id } }),
-    ]);
-    return { ok: true, previousEmail: user.email };
+      });
+      await tx.session.deleteMany({ where: { userId: user.id } });
+      await tx.account.deleteMany({ where: { userId: user.id } });
+
+      return { ok: true as const, previousEmail: user.email };
+    });
   } catch (err) {
     console.error("anonymizeUser failed:", err);
     return { ok: false, error: "Kunde inte anonymisera kunden." };
