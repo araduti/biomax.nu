@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import {
   enforceRateLimit,
   BREVO_WEBHOOK_RULE,
 } from "@/lib/security/rate-limit";
+import { forEachActiveTenant } from "@/lib/cron/for-each-tenant";
 
 /**
  * Brevo transactional + marketing event webhook.
@@ -28,6 +28,26 @@ import {
  * NewsletterSubscriber row even for transactional-only addresses so
  * every lifecycle suppression check (`unsubscribedAt IS NULL`) covers
  * them.
+ *
+ * Tenant scope (sub-slice 3b-2 cron seam): Brevo delivers an email-only
+ * event with no tenant identifier (the same address may exist in
+ * multiple tenants' lists). We therefore broadcast the suppression
+ * across every ACTIVE tenant via `forEachActiveTenant`: each tenant's
+ * RLS-scoped upsert is independent and idempotent. Wasteful in the
+ * many-tenant limit but correct; until Brevo's webhook URL can carry a
+ * tenant slug (e.g. `/api/webhooks/brevo/<slug>` or a per-tenant
+ * sender domain in Brevo config), broadcast is the only safe option.
+ *
+ * TODO(3b-2 follow-up): once each tenant has its own Brevo sender
+ * domain / dedicated webhook URL, route by URL path (or by reverse
+ * domain → tenant lookup) and drop the broadcast.
+ *
+ * NB: `NewsletterSubscriber.email` is currently a *global* @unique in
+ * the Prisma schema (pre-strict-isolation). With a single ACTIVE
+ * tenant (biomax) this is fine: only that tenant's row matches and
+ * gets updated. Once a second tenant becomes ACTIVE and the schema
+ * flips to composite (tenantId, email) @@unique, the per-tenant
+ * upsert below remains correct without further changes.
  */
 export const runtime = "nodejs";
 
@@ -107,7 +127,9 @@ export async function POST(req: Request) {
   // Normalise to an array up front.
   const events = Array.isArray(payload) ? payload : [payload];
 
-  let suppressed = 0;
+  // Filter to suppress-worthy events with a parseable email; everything
+  // else is counted as ignored and not broadcast.
+  const suppressTargets: { event: BrevoEvent; email: string }[] = [];
   let ignored = 0;
   for (const evt of events) {
     if (!evt || typeof evt !== "object") {
@@ -125,36 +147,50 @@ export async function POST(req: Request) {
       ignored++;
       continue;
     }
-
-    try {
-      // Upsert: covers both newsletter subscribers and transactional-only
-      // customers (cart-snapshot recipients, order-confirmation recipients).
-      // We default locale + source so the row remains a valid lifecycle
-      // record even if it was never an explicit signup.
-      await prisma.newsletterSubscriber.upsert({
-        where: { email },
-        update: {
-          unsubscribedAt: new Date(),
-        },
-        create: {
-          email,
-          locale: "sv-SE",
-          source: `brevo-webhook:${event}`,
-          consentedAt: new Date(),
-          unsubscribedAt: new Date(),
-        },
-      });
-      suppressed++;
-    } catch (err) {
-      // Soft-fail per event so one bad row doesn't poison the whole batch.
-      console.error(`[brevo-webhook] upsert failed for ${email}:`, err);
-    }
+    suppressTargets.push({ event, email });
   }
+
+  let suppressed = 0;
+  const summary = await forEachActiveTenant(
+    "webhooks/brevo",
+    async (tx) => {
+      const stamp = new Date();
+      for (const { event, email } of suppressTargets) {
+        try {
+          // Upsert: covers both newsletter subscribers and
+          // transactional-only customers (cart-snapshot recipients,
+          // order-confirmation recipients). We default locale + source
+          // so the row remains a valid lifecycle record even if it was
+          // never an explicit signup.
+          await tx.newsletterSubscriber.upsert({
+            where: { email },
+            update: {
+              unsubscribedAt: stamp,
+            },
+            create: {
+              email,
+              locale: "sv-SE",
+              source: `brevo-webhook:${event}`,
+              consentedAt: stamp,
+              unsubscribedAt: stamp,
+            },
+          });
+          suppressed++;
+        } catch (err) {
+          // Soft-fail per event so one bad row doesn't poison the
+          // whole batch.
+          console.error(`[brevo-webhook] upsert failed for ${email}:`, err);
+        }
+      }
+    },
+    { txTimeoutMs: 60_000 }
+  );
 
   return NextResponse.json({
     ok: true,
     received: events.length,
     suppressed,
     ignored,
+    tenants: summary,
   });
 }
