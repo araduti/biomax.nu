@@ -9,6 +9,7 @@
  */
 import { JWT } from "google-auth-library";
 import { prisma } from "@/lib/prisma";
+import { forEachActiveTenant } from "@/lib/cron/for-each-tenant";
 import { isGscConfigured } from "@/lib/integrations/gsc";
 
 const API_URL =
@@ -113,9 +114,16 @@ export async function inspectAllSitePages(): Promise<{
   inspected: number;
   failed: number;
 }> {
-  const products = await prisma.product.findMany({
-    where: { status: "PUBLISHED" },
-    select: { slug: true },
+  // Per-tenant product read; URL set still composed from the single
+  // GSC_PROPERTY for now (single-property GSC integration is a known
+  // limit — flagged for the multi-tenant SEO call).
+  const products: { slug: string }[] = [];
+  await forEachActiveTenant("gsc-index-coverage", async (tx) => {
+    const rows = await tx.product.findMany({
+      where: { status: "PUBLISHED" },
+      select: { slug: true },
+    });
+    products.push(...rows);
   });
   const property = process.env.GSC_PROPERTY!;
   // GSC_PROPERTY is the verified site URL (with trailing slash). Strip the

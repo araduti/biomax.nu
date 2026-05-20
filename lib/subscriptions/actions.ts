@@ -2,7 +2,6 @@
 
 import { z } from "zod";
 import type { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
 import { tenantScope } from "@/lib/tenant/db";
 import { currentTenant } from "@/lib/tenant";
 import { currentUser } from "@/lib/session";
@@ -96,17 +95,20 @@ export async function resolveSubscriptionTarget(
   const input = parsed.data;
   const quantity = input.quantity ?? 1;
 
-  const product = await prisma.product.findUnique({
-    where: { id: input.productId },
-    select: {
-      id: true,
-      name: true,
-      sku: true,
-      price: true,
-      status: true,
-      variants: { select: { id: true, sku: true, price: true } },
-    },
-  });
+  const tenant = await currentTenant();
+  const product = await tenantScope(tenant.id, (tx) =>
+    tx.product.findUnique({
+      where: { id: input.productId },
+      select: {
+        id: true,
+        name: true,
+        sku: true,
+        price: true,
+        status: true,
+        variants: { select: { id: true, sku: true, price: true } },
+      },
+    })
+  );
   if (!product || product.status !== "PUBLISHED") {
     return { ok: false, error: "Produkten är inte tillgänglig för prenumeration." };
   }

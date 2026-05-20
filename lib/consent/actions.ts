@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { headers } from "next/headers";
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import { currentUser } from "@/lib/session";
 import { CONSENT_POLICY_VERSION } from "./constants";
 
@@ -49,18 +49,20 @@ export async function recordConsent(raw: unknown): Promise<void> {
       /* headers unavailable — log without forensic fields */
     }
 
-    await prisma.consentEvent.create({
-      data: {
-        subjectKey,
-        userId: user?.id ?? null,
-        analytics,
-        marketing,
-        policyVersion: CONSENT_POLICY_VERSION,
-        source,
-        ip,
-        userAgent,
-      },
-    });
+    await hostTenantScope((tx) =>
+      tx.consentEvent.create({
+        data: {
+          subjectKey,
+          userId: user?.id ?? null,
+          analytics,
+          marketing,
+          policyVersion: CONSENT_POLICY_VERSION,
+          source,
+          ip,
+          userAgent,
+        },
+      })
+    );
   } catch (err) {
     console.error("[consent] log write failed:", err);
   }

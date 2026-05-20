@@ -2,7 +2,6 @@
 
 import crypto from "node:crypto";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
 import { tenantScope } from "@/lib/tenant/db";
 import { currentTenant } from "@/lib/tenant";
 import { emailSchema, cuidSchema } from "@/lib/validation/shared";
@@ -184,10 +183,15 @@ export async function upsertCartSnapshot(raw: unknown): Promise<void> {
 export async function markCartRecovered(email: string): Promise<void> {
   const e = email.trim().toLowerCase();
   if (!e) return;
-  await prisma.cartSnapshot
-    .updateMany({
-      where: { email: e, recoveredAt: null },
-      data: { recoveredAt: new Date() },
-    })
-    .catch(() => {});
+  try {
+    const tenant = await currentTenant();
+    await tenantScope(tenant.id, (tx) =>
+      tx.cartSnapshot.updateMany({
+        where: { email: e, recoveredAt: null },
+        data: { recoveredAt: new Date() },
+      })
+    );
+  } catch {
+    /* best-effort */
+  }
 }

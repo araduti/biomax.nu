@@ -94,6 +94,10 @@ export async function resolvePaymentCredentialsForTenant(
 ): Promise<ResolvedPaymentCredentials> {
   if (!tenantId) return envCredentials();
 
+  // ADR 0034 D2: TenantPaymentCredential is the dispatch table that the
+  // webhook resolves the tenant FROM, so it is deliberately read OUTSIDE
+  // the ADR 0032 tenant seam. Bootstrap argument — see file header.
+  // eslint-disable-next-line no-restricted-syntax
   const row = await prisma.tenantPaymentCredential.findUnique({
     where: { tenantId },
   });
@@ -130,6 +134,8 @@ export async function resolveTenantByWebhookToken(
   token: string
 ): Promise<{ tenantId: string; creds: ResolvedPaymentCredentials } | null> {
   if (!token) return null;
+  // ADR 0034 D2: dispatch read — see file header.
+  // eslint-disable-next-line no-restricted-syntax
   const rows = await prisma.tenantPaymentCredential.findMany({
     where: { webhookSecretEnc: { not: null } },
   });

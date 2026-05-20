@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { hostTenantScope } from "@/lib/tenant/db";
 import type { LoyaltyTxKind } from "@prisma/client";
 
 /**
@@ -19,19 +19,21 @@ export async function getAccountHistory(
   userId: string,
   limit = 50
 ): Promise<LoyaltyHistoryRow[]> {
-  const rows = await prisma.loyaltyTransaction.findMany({
-    where: { userId },
-    orderBy: { createdAt: "desc" },
-    take: limit,
-    select: {
-      id: true,
-      kind: true,
-      points: true,
-      description: true,
-      createdAt: true,
-      order: { select: { orderNumber: true } },
-    },
-  });
+  const rows = await hostTenantScope((tx) =>
+    tx.loyaltyTransaction.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      select: {
+        id: true,
+        kind: true,
+        points: true,
+        description: true,
+        createdAt: true,
+        order: { select: { orderNumber: true } },
+      },
+    })
+  );
   return rows.map((r) => ({
     id: r.id,
     kind: r.kind,
