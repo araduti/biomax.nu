@@ -32,18 +32,28 @@ const eslintConfig = defineConfig([
     },
   },
   {
-    // ── Korg tenant data-access enforcement (ADR 0032 D2/D4) ──
-    // Direct `prisma.<ownedModel>` and raw `unstable_cache` for tenant
-    // data must go through the seam (lib/tenant/db.ts → withTenantRLS)
-    // and lib/tenant/cache.ts. Property names are the exact Prisma
-    // camelCase accessors of the 32 tenant-owned models — User /
-    // Session / Account / Tenant / PlatformAdmin / Organization /
-    // telemetry are intentionally NOT listed (not tenant-scoped).
+    // ── Korg tenant data-access enforcement (ADR 0032 D2/D4) +
+    //    Zod v4 only (ADR 0035) ──
     //
-    // WARNING for now: the 3b-3d migration backlog is intentionally
-    // visible (eslint exits 0 on warnings → CI not blocked). The 3b-2
-    // lock-down flips both to "error" once every domain routes through
-    // the seam — that is the CI guarantee.
+    // Both rule families live in one block because ESLint flat-config
+    // resolves `no-restricted-syntax` by last-matching-block-wins (the
+    // selector arrays do not merge across blocks). Splitting them
+    // silently neutered whichever was declared first for any file
+    // matched by both — exactly the trap that hid the tenant rule
+    // until the cron-tenant slice surfaced it.
+    //
+    // Korg tenant rule: direct `prisma.<ownedModel>` and raw
+    // `unstable_cache` for tenant data must go through the seam
+    // (lib/tenant/db.ts → withTenantRLS) and lib/tenant/cache.ts.
+    // Property names are the exact Prisma camelCase accessors of the
+    // 32 tenant-owned models — User / Session / Account / Tenant /
+    // PlatformAdmin / Organization / telemetry are intentionally NOT
+    // listed (not tenant-scoped).
+    //
+    // Severity: tenant selectors are `warn` so the 3b-2 migration
+    // backlog stays visible (CI not blocked). The lock-down (#3f)
+    // flips them to `error`. Zod selectors are already `error` —
+    // they catch zero callsites today and must stay zero.
     files: ["app/**/*.{ts,tsx}", "lib/**/*.{ts,tsx}"],
     ignores: [
       "lib/tenant/**",
@@ -54,11 +64,38 @@ const eslintConfig = defineConfig([
     rules: {
       "no-restricted-syntax": [
         "warn",
+        // ── Korg tenant seam (ADR 0032 D2) ──
         {
           selector:
-            "MemberExpression[object.name='prisma'][property.name=/^(category|product|productIngredient|productVariant|productCrossSell|review|blogCategory|blogPost|order|orderItem|address|wishlist|wishlistProduct|coupon|siteSetting|newsletterSubscriber|cartSnapshot|bundle|bundleItem|ingredientPin|homepageBlock|stockNotificationRequest|consentEvent|subscription|subscriptionLine|return|returnItem|homepageHero|loyaltyAccount|loyaltyTransaction|redirect|adminAuditEntry)$/]",
+            "MemberExpression[object.name='prisma'][property.name=/^(category|product|productIngredient|productVariant|productCrossSell|review|blogCategory|blogPost|order|orderItem|address|wishlist|wishlistProduct|coupon|siteSetting|newsletterSubscriber|cartSnapshot|bundle|bundleItem|ingredientPin|homepageBlock|stockNotificationRequest|consentEvent|subscription|subscriptionLine|return|returnItem|homepageHero|loyaltyAccount|loyaltyTransaction|redirect|adminAuditEntry|tenantPaymentCredential)$/]",
           message:
             "Tenant-owned model accessed directly on `prisma`. Route it through lib/tenant/db.ts (tenantScope/currentTenantScope/hostTenantScope). ADR 0032 D2.",
+        },
+        // ── Zod v4 only (ADR 0035) ──
+        // NOTE: the tenant-rule severity above is `warn`. ESLint
+        // applies one severity per rule entry, so the Zod selectors
+        // inherit `warn` here even though we want them at `error`.
+        // CI catches them via the dedicated Zod block below (same
+        // selector list, scoped to all *.ts/*.tsx, severity error)
+        // — duplication is intentional to satisfy both severities
+        // without flat-config rule-replacement collisions.
+        {
+          selector:
+            "CallExpression[callee.type='MemberExpression'][callee.property.name=/^(email|url|uuid|cuid|cuid2|ulid|nanoid|emoji|ipv4|ipv6|cidr|base64|base64url|datetime|date|time|duration)$/][callee.object.type='CallExpression'][callee.object.callee.type='MemberExpression'][callee.object.callee.object.name='z'][callee.object.callee.property.name='string']",
+          message:
+            "Zod v3 string-method format is banned. Use the top-level constructor (z.email(), z.uuid(), z.iso.datetime(), …). ADR 0035.",
+        },
+        {
+          selector:
+            "CallExpression[callee.type='MemberExpression'][callee.property.name='passthrough'][arguments.length=0]",
+          message:
+            "z.object().passthrough() is v3 surface. Use z.looseObject({…}) (ADR 0035).",
+        },
+        {
+          selector:
+            "Property[key.name='errorMap'][computed=false][shorthand=false]",
+          message:
+            "`errorMap:` is v3 schema-options surface. Use the v4 `error:` function/string (ADR 0035).",
         },
       ],
       "no-restricted-imports": [
@@ -77,32 +114,44 @@ const eslintConfig = defineConfig([
     },
   },
   {
-    // ── Zod v4 only (ADR 0035) ──
-    // The dep is already pinned to ^4 in package.json; this guard
-    // stops copy-pasted v3 snippets from re-entering. Each message
-    // points at the canonical v4 replacement.
+    // ── Zod v4 only (ADR 0035), error severity, repo-wide ──
+    //
+    // Mirrors the Zod selectors in the block above at `error`
+    // severity. The combined block scopes them to app/** + lib/**
+    // at `warn` (because tenant selectors share that severity).
+    // This block catches everything else (scripts/, components/,
+    // prisma/seeds/, ...) AND elevates the same Zod selectors to
+    // hard-fail CI inside app/ + lib/.
+    //
+    // ESLint flat-config behaviour we're relying on: when two blocks
+    // both declare `no-restricted-syntax`, the LATER block's array
+    // wins entirely for files matched by both — so the tenant-seam
+    // selector here would be dropped. We DON'T re-declare the tenant
+    // selector at error severity because the lock-down (#3f) will
+    // do that as one atomic change, not in this slice.
     files: ["**/*.{ts,tsx}"],
-    ignores: ["**/*.test.ts", "**/*.integration.test.ts"],
+    ignores: [
+      "app/**",
+      "lib/**",
+      "**/*.test.ts",
+      "**/*.integration.test.ts",
+    ],
     rules: {
       "no-restricted-syntax": [
         "error",
         {
-          // z.string().email() / .url() / .uuid() / .cuid() / … — v3
-          // string-method format constructors.
           selector:
             "CallExpression[callee.type='MemberExpression'][callee.property.name=/^(email|url|uuid|cuid|cuid2|ulid|nanoid|emoji|ipv4|ipv6|cidr|base64|base64url|datetime|date|time|duration)$/][callee.object.type='CallExpression'][callee.object.callee.type='MemberExpression'][callee.object.callee.object.name='z'][callee.object.callee.property.name='string']",
           message:
             "Zod v3 string-method format is banned. Use the top-level constructor (z.email(), z.uuid(), z.iso.datetime(), …). ADR 0035.",
         },
         {
-          // .passthrough() — v3 object mode; v4 uses z.looseObject({}).
           selector:
             "CallExpression[callee.type='MemberExpression'][callee.property.name='passthrough'][arguments.length=0]",
           message:
             "z.object().passthrough() is v3 surface. Use z.looseObject({…}) (ADR 0035).",
         },
         {
-          // errorMap: …  — v3 schema-options key; v4 uses `error:`.
           selector:
             "Property[key.name='errorMap'][computed=false][shorthand=false]",
           message:
