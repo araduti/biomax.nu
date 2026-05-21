@@ -1,10 +1,14 @@
 # ADR 0036 — Consolidated Bill of Materials (Kine Platform Stack)
 
-**Date:** 2026-05-21
-**Status:** **Proposed** — meta-ADR. The tables below are the
+**Date:** 2026-05-21 (revised: monorepo decision + #15 landing + #16
+audit linkage + repo-rename resolution)
+**Status:** **Accepted** — meta-ADR. The tables below are the
 single-page snapshot of every layer of the Kine stack. Each row
 either cites the authoritative ADR or marks itself as a future-ADR
-forcing function. Does not override any prior ADR.
+forcing function. Does not override any prior ADR. §5 (monorepo
+layout + bootstrap approach) was elevated from Proposed → Accepted
+on 2026-05-21 and is now the binding structure for the kine repo
+bootstrap.
 **Related:** ADR 0002 (deployment), ADR 0003 (own the auth stack),
 ADR 0007 (design system), ADR 0010 (email/Brevo), ADR 0013
 (observability), ADR 0014 (Google Search Console), ADR 0017
@@ -56,7 +60,7 @@ suggestion is superseded.
 |---|---|---|
 | Database | Postgres (17 in Kine dev / 18 in Watchtower — version pin alignment is open) | ADR 0029 D4 |
 | HA | Self-managed Patroni from day one; no managed DBaaS | ADR 0029 D4 |
-| Migration role split | `DATABASE_MIGRATE_URL` (DDL + BYPASSRLS) vs `DATABASE_URL` (DML, RLS-bound) | ADR 0032 (in prod) |
+| Migration role split | `DATABASE_URL` (DDL + BYPASSRLS, Prisma CLI only) vs `APP_DATABASE_URL` → `kine_app` (DML, NOSUPERUSER NOBYPASSRLS, RLS-bound) — **APP_DATABASE_URL mandatory at runtime, no fallback** | ADR 0032 / #3f (in prod 2026-05-21) |
 | ORM | Prisma 7 + `@prisma/adapter-pg` | in prod |
 | Prisma self-heal | `lib/prisma.ts` — Prisma 7 / Turbopack dev-server fix | in prod (see `AGENTS.md`) |
 | Connection pooling | PgBouncer transaction mode (planned) | this ADR |
@@ -71,7 +75,7 @@ suggestion is superseded.
 
 | Concern | Choice | Owning ADR |
 |---|---|---|
-| Tenancy model | Single schema + `tenantId` on owned models + RLS | ADR 0028 D1 / ADR 0032 |
+| Tenancy model | Single schema + `tenantId NOT NULL` on 32 owned models + 16 composite uniques + strict RLS (no permissive clause) | ADR 0028 D1 / ADR 0032 / #3e + #3f (in prod 2026-05-21) |
 | Tenant resolution | Host parsed at Next 16 Proxy (`proxy.ts`), forwarded as `x-kine-tenant`, resolved via `currentTenant()` React.cache | ADR 0028 D3 |
 | Data-access seam | All owned reads/writes via `lib/tenant/db.ts`; ESLint-enforced | ADR 0032 D2 |
 | Tenant-aware cache | `tenantCache()` from `lib/tenant/cache.ts`; `unstable_cache` forbidden | ADR 0032 D4 |
@@ -89,7 +93,7 @@ suggestion is superseded.
 | Edge | Next 16 Proxy (`proxy.ts`) → tenant by Host | ADR 0028 D3 (in prod) |
 | Runtime | Node.js 22 LTS | in prod |
 | Language | TypeScript 5.6, `strict` + `noUncheckedIndexedAccess` + ES2022 target | this ADR (TS upgrade gaps from current) |
-| Linter | ESLint with tenant-seam `no-restricted-syntax` + `no-restricted-imports` rules | ADR 0032 (in prod, `warn` → `error` planned) |
+| Linter | ESLint with tenant-seam `no-restricted-syntax` + `no-restricted-imports` rules at **error** severity | ADR 0032 (in prod — `warn` → `error` shipped 2026-05-21 with the strict-RLS flip, #3f) |
 | Package manager | pnpm 9 + workspaces; `.npmrc` hoists `*prisma*` for self-heal | **future ADR (D-monorepo)** |
 | Validation | Zod v4 only (no v3 surface) | ADR 0035 |
 | RPC layer | tRPC (merchant admin ↔ packages, console ↔ packages, AI agent tools) — Server Actions stay for storefront forms | **future ADR (D-rpc)** |
@@ -99,7 +103,33 @@ suggestion is superseded.
 
 ---
 
-## 5. Monorepo layout (proposed — `D-monorepo` ADR pending)
+## 5. Monorepo layout (decided 2026-05-21 — `D-monorepo` ADR formalises)
+
+**Bootstrap decision (2026-05-21):** Kine ships as a **fresh repo** at
+`github.com/ampliosoft/kine` with **empty git history** — no
+`biomax.nu` commits brought across. The monorepo layout below is the
+day-1 structure; the platform code is cherry-picked / re-authored from
+`biomax.nu` directly into the right `packages/*` and `apps/*`
+locations, never as a top-level dump that then gets refactored. Biomax
+content (seeds, symptoms registry, knowledge base, ingredient
+monographs, hand-written pages) lands as `tenants/biomax/` overlay
+data + a `plugins/biomax-rockland/` first-party plugin — Biomax is a
+tenant of Kine from the first commit.
+
+**Why fresh, not fork:** the platform repo is the public asset that
+sells the platform. It carries the audit history of Kine's
+architecture, not a Swedish supplements shop's WordPress migration.
+Biomax's git history stays in `biomax.nu` as the heritage repo + the
+working tree for #22 (implementing #16 audit decisions before
+extraction).
+
+**Why monorepo from day 1, not progressive split:** the package
+boundaries below are already enforced in `biomax.nu` via the tenant
+seam (`lib/tenant/*`), Zod-v4 lint blocks, and the `no-restricted-*`
+ESLint rules. Re-collapsing into a single app for the bootstrap and
+re-splitting later would re-introduce exactly the cross-cutting
+imports the seam exists to prevent. The layout is the architecture.
+
 
 ```
 apps/
@@ -146,10 +176,44 @@ secrets/                   SOPS + age, encrypted at rest
 docs/adr/                  This ADR set
 ```
 
-**First extraction:** `@kine/db` (today's `lib/prisma.ts` + `lib/tenant/*`).
-**Hard prerequisite to `@kine/auth-storefront`:** un-`biomax`-ify
-`lib/auth.ts` (cookie prefix, TOTP issuer, `baseURL` fallback,
-loyalty auto-enrol).
+**Tenant overlay shape:**
+
+```
+tenants/
+  biomax/
+    seed.ts                  Categories, products, ingredients (from biomax.nu seeds)
+    content/                 Hand-written marketing pages, blog posts, knowledge base
+    theme/tokens.json        Forest-green Biomax brand tokens
+    branding/                Logos, OG images
+    config.ts                Domain, payment-credential refs, feature flags
+```
+
+Tenant overlays are **data + config only**, never code paths. Anything
+a tenant overlay would want to "patch" in app code must be lifted into
+a `plugins/<plugin-name>/` first-party plugin (see
+`plugins/biomax-rockland/` for the canonical pattern — Rockland®
+sub-brand product-card variants, vendor-locked ingredient pages, the
+symptoms registry).
+
+**Extraction sequence from `biomax.nu`:**
+
+1. `@kine/db` — `lib/prisma.ts` + `lib/tenant/*` (the seam). First
+   because every other package depends on it.
+2. `@kine/core` — domain types, value objects, errors (currently
+   scattered across `lib/products/`, `lib/orders/`, `lib/cart/`).
+3. `@kine/auth` — Better Auth × 2 (storefront + console). **Hard
+   prerequisite:** un-`biomax`-ify `lib/auth.ts` (cookie prefix,
+   TOTP issuer, `baseURL` fallback, loyalty auto-enrol) — flagged in
+   #16 audit, executed in #22 before extraction.
+4. `@kine/tenancy` — tenant lifecycle, domains, plans, branding
+   (currently `lib/tenant/lifecycle.ts` + onboarding routes).
+5. `@kine/shop` — catalog + commerce + marketing as one domain
+   package (cohesion > pkg count at this scale).
+6. `@kine/payments` — interface + Klarna/Kustom adapter; Stripe
+   Connect + Swish adapters land here in their own ADRs.
+7. Everything else in any order — they're independent leaves.
+
+The first 4 are the critical path; the rest can be parallelised.
 
 ---
 
@@ -311,7 +375,12 @@ existing first:
 
 | Marker | Substrate | Why a separate ADR |
 |---|---|---|
-| **D-monorepo** | §5 layout, pnpm workspaces, package extraction sequence | Touches every file; rename `biomax.nu` → `kine` |
+| **D-monorepo** | §5 layout, pnpm workspaces, package extraction sequence | Fresh repo (no rename); cherry-pick order matters; needs CODEOWNERS + import-graph enforcement |
+| **D-industry-packs** | Industry-aware platform (supplements / jewelry / apparel / coffee) — symptoms registry, feeds, knowledge-base shape vary per industry | #16 audit Finding 1, 4; supplements ships first as `plugins/industry-supplements/` |
+| **D-cms** | Block-based CMS for tenant marketing pages (TipTap or Lexical) — replaces biomax's hand-written `app/(content)/*` | #16 audit OQ9; biomax content migrates *into* the CMS, not extracted as code |
+| **D-feed-system** | Per-tenant configurable product feeds (Google Shopping, Prisjakt, Meta Catalog) — adapter pattern + per-tenant field mapping | #16 audit Finding 5 |
+| **D-theme-evolution** | 3-tier theming: token-only (Start) → block overrides (Växa) → sandboxed custom CSS + visual builder (Plus, Webflow-level) | #16 audit OQ4 — user explicitly cited Webflow ecommerce parity |
+| **D-loyalty-platform** | Loyalty as configurable per-tenant feature (point rules, tiers, expiry, redemption) — not biomax-hardcoded | #16 audit; current `lib/loyalty/*` is biomax-shaped |
 | **D-queue** | §2 pg-boss vs Watchtower's Inngest | Conscious divergence; needs why-not-Inngest analysis |
 | **D-rpc** | §4 tRPC + Server Actions split | Divergence from "all-Server-Actions"; AI tool surface dependency |
 | **D-ai** | §7 AI substrate + embeddings choice | Cost, vendor lock-in, cross-tenant isolation rules |
@@ -333,9 +402,15 @@ existing first:
   number across Ampliosoft.
 - pg-boss vs Inngest — `D-queue` ADR.
 - Embeddings model — `D-ai` ADR.
-- Repo rename `biomax.nu` → `kine` — `package.json:2` still reads
-  `"name": "biomax.nu"`. Mechanical, but CI / image tags / Sentry
-  project names need sequencing.
+- ~~Repo rename `biomax.nu` → `kine`~~ — **resolved 2026-05-21**:
+  no rename. `biomax.nu` stays as the heritage / tenant-content
+  working tree; `github.com/ampliosoft/kine` is a fresh repo with
+  empty history. CI / image tags / Sentry project names get created
+  fresh on the kine side, never renamed. Biomax keeps its existing
+  CI + Sentry until the cutover at GTM Gate 2.
+- kine.se domain — purchased 2026-05-21. admin.kine.se reserved for
+  platform plane (ADR 0031); shop.kine.se / app.kine.se reserved for
+  future onboarding flow.
 - HA tier ↔ SLA tier ↔ price tier ↔ §12 pricing — one decision,
   needs a single GTM ADR.
 
@@ -349,3 +424,7 @@ existing first:
   and corrected in §1.
 - `docs/infra/kine-hosting-plan.md`, `docs/infra/kine-infra-shapes.md`
   — cited by ADR 0029 for the concrete substrate ladder.
+- `docs/platform-extraction-audit.md` — #16 audit (2026-05-21);
+  58 findings + OQs resolved drive the 5 new D-* ADRs above.
+- Slice #15 commit (`3002cd9`, 2026-05-21) — irreversible RLS flip,
+  the data layer is the architecture now.
