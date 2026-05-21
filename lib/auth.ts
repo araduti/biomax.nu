@@ -94,7 +94,18 @@ export const auth = betterAuth({
           }
         })(),
       ]
-    : [process.env.BETTER_AUTH_URL ?? "https://www.biomax.nu"],
+    // #22.2 / #16 audit: no hardcoded tenant URL. BETTER_AUTH_URL is
+    // required in production (no fallback). biomax.nu sets it to
+    // https://www.biomax.nu in deploy env. The kine extraction will
+    // resolve this per-tenant at @kine/auth construction time.
+    : [
+        process.env.BETTER_AUTH_URL ??
+          (() => {
+            throw new Error(
+              "BETTER_AUTH_URL is not set. Required in production — see lib/auth.ts (#22.2)."
+            );
+          })(),
+      ],
 
   emailAndPassword: {
     enabled: true,
@@ -138,7 +149,12 @@ export const auth = betterAuth({
   },
 
   advanced: {
-    cookiePrefix: "biomax",
+    // #22.2 / #16 audit: cookie prefix is env-driven, not hardcoded.
+    // biomax.nu sets AUTH_COOKIE_PREFIX=biomax to preserve existing
+    // session cookies; changing this invalidates every logged-in user.
+    // In the extracted kine repo this becomes per-deploy (storefront
+    // plane uses "kinesf" / platform plane uses "kineadm" per ADR 0031).
+    cookiePrefix: process.env.AUTH_COOKIE_PREFIX ?? "kinesf",
   },
 
   // Brute-force / credential-stuffing throttle on the auth paths
@@ -175,8 +191,8 @@ export const auth = betterAuth({
     }),
   },
 
-  // Auto-enroll every new customer into Familjen Biomax with a welcome
-  // bonus. Loyalty enrolment is the default, not an opt-in — customers
+  // Auto-enroll every new customer into the tenant's loyalty program
+  // with a welcome bonus. Loyalty enrolment is the default, not an opt-in — customers
   // who never want to use points just ignore the balance. Better Auth
   // fires `user.create.after` immediately after the user row is committed,
   // so the loyalty account creation is in a follow-up transaction. If it
@@ -204,7 +220,12 @@ export const auth = betterAuth({
   // for the code. Backup codes are one-shot.
   plugins: [
     twoFactor({
-      issuer: "Biomax",
+      // #22.2 / #16 audit: TOTP issuer (the label shown in authenticator
+      // apps like Google Authenticator / 1Password) is env-driven, not
+      // hardcoded. biomax.nu sets AUTH_TOTP_ISSUER=Biomax. In the
+      // extracted kine repo this becomes per-tenant — the tenant's
+      // brand name from @kine/tenancy.
+      issuer: process.env.AUTH_TOTP_ISSUER ?? "Kine",
       backupCodeOptions: {
         amount: 10,
         length: 10,
