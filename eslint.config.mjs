@@ -50,10 +50,13 @@ const eslintConfig = defineConfig([
     // PlatformAdmin / Organization / telemetry are intentionally NOT
     // listed (not tenant-scoped).
     //
-    // Severity: tenant selectors are `warn` so the 3b-2 migration
-    // backlog stays visible (CI not blocked). The lock-down (#3f)
-    // flips them to `error`. Zod selectors are already `error` —
-    // they catch zero callsites today and must stay zero.
+    // Severity: ERROR. Post-#3f the strict RLS DB-level enforcement is
+    // live, and the ESLint rule is the static-analysis safety net. Any
+    // direct prisma.<ownedModel> access is rejected at lint time so
+    // future code can't reintroduce un-scoped reads/writes. An inline
+    // disable-next-line directive is permitted for documented dispatch
+    // reads (see ADR 0034 D2 — klarna webhook idempotency, klarna
+    // credentials resolver).
     files: ["app/**/*.{ts,tsx}", "lib/**/*.{ts,tsx}"],
     ignores: [
       "lib/tenant/**",
@@ -63,7 +66,7 @@ const eslintConfig = defineConfig([
     ],
     rules: {
       "no-restricted-syntax": [
-        "warn",
+        "error",
         // ── Kine tenant seam (ADR 0032 D2) ──
         {
           selector:
@@ -99,7 +102,7 @@ const eslintConfig = defineConfig([
         },
       ],
       "no-restricted-imports": [
-        "warn",
+        "error",
         {
           paths: [
             {

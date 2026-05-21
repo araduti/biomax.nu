@@ -31,7 +31,7 @@ import { ReviewForm } from "@/components/reviews/review-form";
 import { currentUser } from "@/lib/session";
 import { isInRoutine } from "@/lib/routine/actions";
 import { cache } from "react";
-import { unstable_cache } from "next/cache";
+import { tenantCache } from "@/lib/tenant/cache";
 import { productCacheTag } from "@/lib/cache/tags";
 
 // Multi-tenant (ADR 0028/0030 D7): tenant-scoped routes must NOT use
@@ -94,12 +94,12 @@ type ProductRow = Awaited<ReturnType<typeof fetchProduct>>;
 
 const getProduct = cache(async (slug: string): Promise<ProductRow> => {
   const tenant = await currentTenant();
-  // Cache key MUST include the tenant (ADR 0028/0030 D7) — a slug-only
-  // key would serve one tenant's product to another (cache poisoning,
-  // defeating RLS at the cache layer).
-  const row = await unstable_cache(
+  // Per ADR 0032 D4: tenantCache() prefixes the cache key + tags with
+  // the tenant ID, making cross-tenant cache poisoning impossible.
+  const row = await tenantCache(
+    tenant.id,
     () => fetchProduct(tenant.id, slug),
-    ["product-by-slug", tenant.id, slug],
+    ["product-by-slug", slug],
     { tags: [productCacheTag(slug)], revalidate: 600 }
   )();
   return rehydrateDates(row);

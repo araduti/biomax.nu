@@ -131,6 +131,21 @@ export async function POST(request: NextRequest) {
   // Idempotency short-circuit: if the order has already moved past PENDING
   // (PAID, FULFILLED, CANCELLED, REFUNDED), this is a retry of a push we
   // already processed. Ack to stop Klarna's retries and return early.
+  //
+  // ADR 0034 D2 dispatch read: this lookup happens BEFORE the tenant is
+  // resolved (the merchant_data marker is parsed AFTER this short-circuit).
+  // The unscoped read is correct here — we need to find ANY tenant's order
+  // matching the payment reference. Post-#3f strict RLS makes this lookup
+  // return 0 rows under kine_app (no tenant GUC set), so the idempotency
+  // shortcut becomes ineffective: duplicate webhooks fall through to the
+  // resolve-tenant + process path. That path is itself idempotent via the
+  // (tenantId, paymentReference) composite unique on Order, so behavior
+  // stays correct — just a small efficiency loss on retries.
+  //
+  // Future cleanup: parse merchant_data first to get tenantId, then run
+  // this lookup inside tenantScope(tenantId). Tracked as a follow-up to
+  // ADR 0034 D2 webhook-dispatch refactor.
+  // eslint-disable-next-line no-restricted-syntax
   const existing = await prisma.order.findFirst({
     where: { paymentReference: klarnaOrderId },
     select: { id: true, status: true },

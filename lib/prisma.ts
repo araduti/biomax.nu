@@ -86,16 +86,21 @@ function loadPrismaClientClass(): typeof PrismaClient {
 
 function createClient(): PrismaClient {
   // Runtime connects as the least-privilege, RLS-enforced role
-  // (APP_DATABASE_URL → kine_app). Falls back to DATABASE_URL (the
-  // privileged/migrate role) when unset, so nothing breaks before the
-  // role split is applied — RLS is simply bypassed until APP_DATABASE_URL
-  // points at kine_app (ADR 0028 D1 / 0029). Prisma CLI/migrations keep
-  // using DATABASE_URL regardless.
-  const runtimeUrl =
-    process.env.APP_DATABASE_URL ?? process.env.DATABASE_URL;
+  // (APP_DATABASE_URL → kine_app, NOSUPERUSER NOBYPASSRLS).
+  //
+  // Post-#3f (the irreversible strict-RLS flip): APP_DATABASE_URL is
+  // mandatory. There is no fallback to DATABASE_URL — that role bypasses
+  // RLS and would silently defeat tenant isolation. Running the app
+  // process without APP_DATABASE_URL set is a configuration error,
+  // not a degraded mode. Prisma CLI/migrations keep using DATABASE_URL
+  // regardless (via prisma.config.ts, which is separate).
+  const runtimeUrl = process.env.APP_DATABASE_URL;
   if (!runtimeUrl) {
     throw new Error(
-      "Neither APP_DATABASE_URL nor DATABASE_URL is set. Check .env.local."
+      "APP_DATABASE_URL is not set. The runtime app must connect as the " +
+        "kine_app role for RLS to enforce tenant isolation (ADR 0028 D1, " +
+        "ADR 0032). Set APP_DATABASE_URL in .env.local — DATABASE_URL " +
+        "fallback was removed in #3f."
     );
   }
   const adapter = new PrismaPg({

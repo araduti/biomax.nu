@@ -250,7 +250,14 @@ export async function getSiteSummary(): Promise<GscSummary | null> {
  * queries are driving traffic to THIS product". Cached for 30 min — GSC
  * data lags ~48h anyway, so anything more aggressive is wasted, and this
  * lets the admin route stay dynamic (no whole-page ISR on a private route).
+ *
+ * GSC integration is single-tenant today (one GSC_PROPERTY env var, biomax-
+ * specific) — the cache key already includes the tenant-distinguishing page
+ * URL (each tenant has its own hostname), so a global cache key is safe even
+ * under strict RLS. When GSC becomes per-tenant (industry-supplements pack),
+ * migrate to tenantCache(). ADR 0032 D4 escape hatch.
  */
+// eslint-disable-next-line no-restricted-imports
 import { unstable_cache } from "next/cache";
 
 async function _getQueriesForPage(
@@ -288,6 +295,13 @@ export async function getQueriesForPage(
   url: string,
   limit = 15
 ): Promise<GscRow[]> {
+  // GSC integration is currently single-tenant — one GSC_PROPERTY env
+  // var (biomax-specific, #16 flagged for per-tenant config in the
+  // industry-supplements pack). The cache key includes `url` which is
+  // tenant-distinguishing by construction (each tenant has its own
+  // hostname), so this is safe even at strict-RLS post-#3f. When the
+  // GSC integration becomes per-tenant, migrate to tenantCache().
+  // eslint-disable-next-line no-restricted-imports
   return unstable_cache(
     () => _getQueriesForPage(url, limit),
     ["gsc:queries-for-page", url, String(limit)],
