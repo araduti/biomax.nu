@@ -1,4 +1,24 @@
 /**
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * INDUSTRY-PACK BOUNDARY (#22.3 / kine ADR 0003) — supplements-only.
+ *
+ * This file is a SUPPLEMENTS-INDUSTRY surface. It does not belong in
+ * the platform codebase. On kine extraction it moves to:
+ *   `kine/plugins/industry-supplements/src/symptoms/`
+ *
+ * Until then, treat as if it were already extracted:
+ *   • Do not import from this module in any code path that is
+ *     intended to live in @kine/* (use the search "no-restricted-
+ *     paths" / ESLint zone below — flag any new violation).
+ *   • Symptom abstractions do not generalise to jewelry / apparel /
+ *     coffee tenants. Adding "industry-aware" branching here is
+ *     wrong; the right answer is a different industry pack.
+ *   • Biomax-specific copy (the "| Biomax" SEO title suffix below)
+ *     is fine here — this IS biomax's plugin in spirit. The
+ *     extraction will replace it with the tenant's brand name from
+ *     @kine/tenancy at render time.
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ *
  * Symptom-based landing-page registry.
  *
  * Each entry powers a dedicated `/hjalp/[slug]` page that addresses an

@@ -1,4 +1,22 @@
 /**
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * EXTRACTION TARGET (#22.4 / kine ADR 0005) — feed-system substrate.
+ *
+ * On kine extraction this route disappears entirely. The replacement
+ * is the @kine/feeds pipeline (channel adapters + per-tenant config +
+ * scheduled generation in apps/worker, output cached in @kine/storage,
+ * served via a 302 redirect from the storefront). See kine ADR 0005.
+ *
+ * Until extraction lands, this route serves biomax's feed inline.
+ * The biomax-specific strings (channel title, description, fixed
+ * SEK 49 shipping rate, "Biomax" brand) are explicitly NOT lifted
+ * to env vars in #22 — that would be a half-step that ADR 0005
+ * supersedes entirely. The hardcoded SITE URL is parametrised
+ * because it's also used by /sitemap.xml / robots.txt and is
+ * universally biomax-free hygiene. Everything else stays as the
+ * frozen biomax-specific version.
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ *
  * Google Merchant Center product feed.
  *
  * Feeds two distinct surfaces from one file:
@@ -34,7 +52,15 @@ export const runtime = "nodejs";
 // tenant's feed to another (route cache keyed by URL, not Host).
 export const dynamic = "force-dynamic";
 
-const SITE = "https://www.biomax.nu";
+// #22.4: site URL is env-driven, not hardcoded. Used by other SEO
+// surfaces too (sitemap.xml, robots.txt, llms.txt). Kine ADR 0005
+// replaces this with a per-tenant resolver via @kine/tenancy.
+const SITE = (process.env.BETTER_AUTH_URL ?? "").replace(/\/$/, "");
+if (!SITE) {
+  // Don't throw at module load — the route is the failing surface.
+  // We'll surface a clear error inside GET() if BETTER_AUTH_URL is
+  // unset and the route is hit.
+}
 
 /**
  * Google's product taxonomy ID for "Health & Beauty > Health Care >
@@ -53,6 +79,12 @@ function escapeXml(s: string): string {
 }
 
 export async function GET() {
+  if (!SITE) {
+    return new Response(
+      "Feed unavailable — BETTER_AUTH_URL is not configured. See app/feeds/google-shopping.xml/route.ts (#22.4).",
+      { status: 503 }
+    );
+  }
   const products = await hostTenantScope((tx) =>
     tx.product.findMany({
       where: { ...publicProductWhere(), price: { gt: 0 } },

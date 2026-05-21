@@ -1,6 +1,19 @@
 import { slugify } from "@/lib/text/slug";
 
 /**
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * INDUSTRY-PACK BOUNDARY (#22.3 / kine ADR 0003) — supplements-only.
+ *
+ * On kine extraction this moves to:
+ *   `kine/plugins/industry-supplements/src/knowledge/`
+ *
+ * Ingredient monographs are a SUPPLEMENTS knowledge primitive. Other
+ * industries have their own knowledge shapes (jewelry → gemstones,
+ * apparel → fits/size charts, coffee → origins/roasts). Do not
+ * generalise this file's shape into @kine/* — the right answer is
+ * the per-industry pack pattern in kine ADR 0003.
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ *
  * Code-based ingredient knowledge registry.
  *
  * Each entry powers (a) a tooltip on the product ingredient table, and

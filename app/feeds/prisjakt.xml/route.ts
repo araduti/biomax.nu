@@ -1,4 +1,9 @@
 /**
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * EXTRACTION TARGET (#22.4 / kine ADR 0005) — see google-shopping
+ * route's header for the full story. Same substrate, same lift.
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ *
  * Prisjakt / PriceRunner product feed.
  *
  * Swedish comparison-shopping engines (Prisjakt is the dominant one,
@@ -26,7 +31,8 @@ export const runtime = "nodejs";
 // tenant's feed to another (route cache keyed by URL, not Host).
 export const dynamic = "force-dynamic";
 
-const SITE = "https://www.biomax.nu";
+// #22.4: env-driven; see google-shopping route's notes.
+const SITE = (process.env.BETTER_AUTH_URL ?? "").replace(/\/$/, "");
 
 function escapeXml(s: string): string {
   return s
@@ -38,6 +44,12 @@ function escapeXml(s: string): string {
 }
 
 export async function GET() {
+  if (!SITE) {
+    return new Response(
+      "Feed unavailable — BETTER_AUTH_URL is not configured. See app/feeds/prisjakt.xml/route.ts (#22.4).",
+      { status: 503 }
+    );
+  }
   const products = await hostTenantScope((tx) =>
     tx.product.findMany({
       where: { ...publicProductWhere(), price: { gt: 0 } },
