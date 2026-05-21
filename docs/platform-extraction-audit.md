@@ -567,3 +567,130 @@ Operational tooling assumes biomax.nu is *the* monitored property. These scripts
 ---
 
 *End of audit.*
+
+---
+
+## REVIEW DECISIONS · 2026-05-21
+
+The first review pass surfaced three findings beyond the original audit and resolved the nine open questions. Recording the calls here so they persist as the binding decisions for the kine repo extraction.
+
+### Additional findings surfaced in review
+
+#### Finding A1 — `lib/symptoms/registry.ts` is industry-specific content
+- **Location:** `lib/symptoms/registry.ts` + every consumer (`/behandlingar/*`, related SEO pages)
+- **Why it's biomax-specific:** Symptoms→ingredient mapping is structurally a *supplements-industry* feature (kosttillskott). A jewelry shop or apparel shop tenant has zero use for it. The seoTitle template ending in `| Biomax` is the surface symptom; the deeper issue is the entire feature shape.
+- **Category proposal:** **INDUSTRY-PACK** (new bucket — see Architectural primitives below)
+- **Reasoning:** Symptoms, dosing, ingredient knowledge, treatments → all belong in a `packages/industry-supplements/` pack that biomax (and future supplement tenants) activate. Platform core ships nothing about symptoms.
+
+#### Finding A2 — Product feeds are not configurable per tenant
+- **Location:** `app/feeds/google-shopping.xml/route.ts`, `app/feeds/prisjakt.xml/route.ts`
+- **Why it's biomax-specific:** Hardcoded field mappings, hardcoded filters, hardcoded feed format choices.
+- **Category proposal:** **PARAMETERIZE → FEED-CONFIG** (extends the PARAMETERIZE bucket with a per-tenant config primitive)
+- **Reasoning:** Each tenant needs their own feed configs (which products, which fields, which feeds enabled). Platform ships standard mappings for Google Shopping / Prisjakt / Meta Commerce / Pinterest as defaults; tenant overrides via admin. Industry packs ship industry-specific defaults (supplements include "Naturlig komplement" pattern; jewelry includes gtin/UPC; etc.).
+
+#### Finding A3 — `DEFAULT_TENANT_SLUG = "biomax"` resolution fallback
+- **Location:** `lib/tenant/host.ts`, propagated through `lib/tenant/index.ts`
+- **Why it's biomax-specific:** Falls back to biomax when host doesn't resolve. Hides multi-tenant bugs in dev and creates a silent tenant-zero contract in prod.
+- **Category proposal:** **DELETE** (no replacement — explicit tenant resolution required)
+- **Reasoning:** Unresolved Host = 404 with clear "no tenant" message. The "default to biomax" pattern is a single-tenant assumption masquerading as a feature.
+
+### OQ resolutions
+
+| OQ | Decision |
+|---|---|
+| **OQ1** | Cookie cutover: forced re-login. Banner explaining "we updated our security" on first visit. No dual-read window. |
+| **OQ2** | `Tenant.primaryColorHex` default: kine-neutral (forest `#1B4332`). Biomax tenant overrides to its existing navy. |
+| **OQ3** | Loyalty = platform feature, per-tenant configurable. Schema: `Tenant.{loyaltyEnabled, loyaltyProgramName, loyaltyPointsPerSek, loyaltyTiers}`. Biomax sets `loyaltyProgramName: "Familjen Biomax"`. ADR: D-loyalty-platform. |
+| **OQ4** | Theme: BOTH build-time tokens AND runtime CSS-var injection AND eventually visual builder. Target = Webflow-level customization. Year-1 ships tokens + CSS-var injection + sandboxed custom CSS. Year-2+ ships visual builder. |
+| **OQ5** | Email templates: server-rendered defaults + per-tenant WYSIWYG overrides. Merge tags + preview. |
+| **OQ6** | Biomax migration scripts (`scripts/import-wordpress.ts`, biomax content seeds) deleted at kine extraction. One-time biomax data migration runs from a biomax-tenant-internal tool, not kine platform code. |
+| **OQ7** | Rockland: remove from platform completely. No `plugins/biomax-rockland/`. Biomax handles their sub-brand within their tenant's CMS. The `app/admin/etiketter/` label tool moves to biomax-internal tooling. |
+| **OQ8** | Symptoms / behandlingar / kunskap: NOT platform-default, NOT biomax-tenant-content, BUT industry-pack content. The supplements industry pack ships these features for supplement tenants. Other industries don't see them. |
+| **OQ9** | Founder narrative, about, FAQ, footer copy: CMS, not biomax seed. Block-based CMS using May-2026 best-in-class tooling (TBD spec). |
+
+### Architectural primitives surfaced by the review
+
+This audit was scoped as "find biomax-specific code in platform layer." The review widened it: several findings imply architectural primitives the platform must ship beyond what was in scope.
+
+#### AP1 — Industry-pack SDK
+
+The platform is industry-aware. Tenants belong to one or more industries. Each industry is a pack that ships data models + UX + content templates + SEO + email + feed defaults specific to that vertical.
+
+```
+packages/industry-pack-sdk/      -- contract (types, registration API, capability flags)
+packages/industry-supplements/   -- biomax + future supplement tenants
+packages/industry-jewelry/       -- future
+packages/industry-apparel/       -- future
+packages/industry-coffee/        -- future
+```
+
+Tenants pick their industry at onboarding; the pack's features activate. Other tenants don't see them. ADR: D-industry-packs.
+
+#### AP2 — Block-based CMS
+
+Per OQ9. All marketing content (homepage, about, FAQ, blog, landing pages, footer copy) lives in a block-based CMS. No content is baked into platform components. Block primitives:
+- `Hero`, `RichText`, `ImageGrid`, `Testimonial`, `FAQList`, `CTA`, `ProductGrid`, `BlockQuote`, `Video`, `Embed`, `Spacer`
+- Industry packs register additional block types (`IngredientSpotlight` for supplements, `CareGuideStep` for jewelry, etc.)
+- May-2026 tooling spec: probably building on top of TipTap or Lexical for the editor, with a structured-block model in DB (Notion/Sanity-style block array). ADR: D-cms.
+
+#### AP3 — Per-tenant feed configuration
+
+Per Finding A2. Feed type × tenant matrix. Standard feed types ship with platform; tenants enable + customize. ADR: D-feeds.
+
+#### AP4 — Theme system, evolution toward Webflow-level
+
+Per OQ4. Three tiers, shipped in order:
+1. **Token-based theming (Y1)**: `Tenant.theme` JSONB with color/font/spacing tokens. Runtime CSS-var injection. Sandboxed custom CSS allowed.
+2. **Block-level visual editor (Y2)**: drag-drop CMS block arrangement, per-block style overrides via UI (no CSS knowledge required).
+3. **Full visual builder (Y2-Y3)**: Webflow-grade canvas with positioning, breakpoints, interactions, animations. Generates clean CSS.
+
+Each tier is forward-compatible with the next. ADR: D-theme-evolution.
+
+#### AP5 — Loyalty as platform feature
+
+Per OQ3. Schema extension on `Tenant`. UI components (points display, redemption UI, tier badge) ship as platform default; tenant disables if not used. ADR: D-loyalty-platform.
+
+### Implication for kine repo bootstrap
+
+The audit's original scope was "extract biomax-specific code from platform layer." The review broadened it: the *platform* itself needs to ship industry-pack SDK, CMS, feed config, and loyalty as platform feature before any tenant other than biomax can meaningfully use it.
+
+Practical sequence for the kine extraction:
+
+1. **Pre-extraction** (in biomax.nu repo, before bootstrap):
+   - Strip Rockland (`app/admin/etiketter/`, label-preview, biomax-rockland marketing components, founder-band Rockland slots) — OQ7
+   - Strip biomax-import scripts — OQ6
+   - Strip symptoms registry / behandlingar / kunskap pages into `lib/_supplements/` (staging area) — OQ8 prep
+   - Remove `DEFAULT_TENANT_SLUG` fallback — Finding A3
+   - Strip biomax marketing copy from `app/page.tsx`, `app/om-oss/page.tsx`, `app/faq/page.tsx`, founder-band, footer "sedan 2001" — OQ9 prep
+
+2. **At kine bootstrap** (`apps/shop/` initial import):
+   - Move `lib/_supplements/` → `packages/industry-supplements/` (separate package)
+   - Move biomax marketing content → biomax tenant's CMS seed
+   - Implement industry-pack SDK as `packages/industry-pack-sdk/`
+   - Implement minimal CMS block model in `prisma/schema.prisma` + `packages/cms/`
+   - Implement tenant theme tokens + CSS-var injection in `packages/theme/`
+   - Implement loyalty as platform feature in `packages/shop/loyalty/`
+
+3. **Year 1 work in kine** (post-bootstrap):
+   - Configurable feed system (`packages/feeds/`)
+   - Email template editor (`packages/mail/templates/`)
+   - Sandboxed custom CSS
+   - Block-level visual editor (CMS UI)
+   - First test of multi-industry: onboard tenant #2 in a different industry (apparel? coffee?) to validate the pack architecture
+
+4. **Year 2**:
+   - Full visual builder (Webflow tier)
+   - 2-3 more industry packs
+   - AI-assisted CMS authoring (Surface 2 in the brainstorm)
+
+This is a year of work for a real team (8-12 people per the brainstorm). The architecture documented here is the *destination*. Year-1 cuts ship the minimum to make that destination credible while having a real, paying biomax-tenant on the platform.
+
+### Cross-cutting observations (extension of the original O1-O7 set)
+
+#### O8 — The platform is now an *enabling* layer, not a *templating* layer
+
+The original audit framed it as "extract biomax-specific code." The OQ resolutions reveal a much stronger framing: the platform ships *primitives* (industry-pack SDK, CMS, theme system, loyalty, feeds, payments). Each tenant *composes* their shop from those primitives. There is no platform-shipped "default supplements template" or "default jewelry template" — the industry packs are activated, not pre-rendered.
+
+#### O9 — Webflow + Shopify + industry-vertical apps converge into one platform
+
+The competitive surface is now: Shopify (commerce engine + apps) + Webflow (visual builder) + Sanity/Notion (CMS) + Mailchimp (email automation) + Stripe (payments). Kine targets all five in one platform. The Year-1 minimum just to be coherent: commerce primitives + industry-pack supplements + minimal CMS + token theme + loyalty + Google Shopping feed + transactional email. Anything less and the platform can't credibly host biomax, let alone N more tenants.
