@@ -226,29 +226,31 @@ model Invitation {
 
 model Category {
   id          String    @id @default(cuid())
-  slug        String    @unique
+  slug        String
   name        String
   description String?
   imageUrl    String?
   seoTitle    String?
   seoDesc     String?
-  legacyWpId  Int?      @unique
+  legacyWpId  Int?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   products    Product[] @relation("product_categories")
   /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
-  tenantId String?
-  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
+  @@unique([tenantId, slug])
+  @@unique([tenantId, legacyWpId])
 }
 
 model Product {
   id               String             @id @default(cuid())
-  sku              String             @unique
-  slug             String             @unique
+  sku              String
+  slug             String
   name             String
   shortDescription String
   longDescription  String
@@ -310,7 +312,7 @@ model Product {
   ogImageUrl       String?
   /** Last editorial review date — drives JSON-LD dateModified for E-E-A-T. */
   dateReviewed     DateTime?
-  legacyWpId       Int?               @unique
+  legacyWpId       Int?
   legacyPermalink  String?
   publishedAt      DateTime?
   /// Scheduled go-live. When set and in the future, the product is treated
@@ -349,10 +351,13 @@ model Product {
   /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
-  tenantId String?
-  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
+  @@unique([tenantId, sku])
+  @@unique([tenantId, slug])
+  @@unique([tenantId, legacyWpId])
 }
 
 /// SEO health classification, matches `lib/admin/seo-health.ts`. Stored on
@@ -380,8 +385,8 @@ model ProductIngredient {
   /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
-  tenantId String?
-  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -400,7 +405,7 @@ model ProductVariant {
   productId       String
   /// Per-variant SKU. Unique across the whole catalogue (not just the parent
   /// product) so we can use it as `g:id` in the Google Shopping feed.
-  sku             String   @unique
+  sku             String
   /// Short customer-facing label — "30 kaps", "90 kaps", "stor",
   /// "smaksatt apelsin". Shown in the variant selector and in cart lines.
   label           String
@@ -426,10 +431,11 @@ model ProductVariant {
   /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
-  tenantId String?
-  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
+  @@unique([tenantId, sku])
 }
 
 model ProductCrossSell {
@@ -445,8 +451,8 @@ model ProductCrossSell {
   /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
-  tenantId String?
-  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -484,8 +490,8 @@ model Review {
   /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
-  tenantId String?
-  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -498,22 +504,23 @@ enum ReviewStatus {
 
 model BlogCategory {
   id          String     @id @default(cuid())
-  slug        String     @unique
+  slug        String
   name        String
   description String?
   posts       BlogPost[]
   /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
-  tenantId String?
-  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
+  @@unique([tenantId, slug])
 }
 
 model BlogPost {
   id               String        @id @default(cuid())
-  slug             String        @unique
+  slug             String
   title            String
   excerpt          String
   content          String
@@ -534,15 +541,16 @@ model BlogPost {
   /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
-  tenantId String?
-  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
+  @@unique([tenantId, slug])
 }
 
 model Order {
   id                 String          @id @default(cuid())
-  orderNumber        String          @unique
+  orderNumber        String
   userId             String?
   email              String
   status             OrderStatus     @default(PENDING)
@@ -551,7 +559,7 @@ model Order {
   /// page + push webhook (or a double redirect) double-creating an
   /// order for the same Kustom order_id. Postgres treats NULLs as
   /// distinct, so legacy/null rows are unaffected.
-  paymentReference   String?         @unique
+  paymentReference   String?
   currency           String          @default("SEK")
   subtotal           Decimal         @db.Decimal(10, 2)
   discountAmount     Decimal         @default(0) @db.Decimal(10, 2)
@@ -566,7 +574,7 @@ model Order {
   shippingAddressId  String?
   billingAddressId   String?
   marketingConsent   Boolean         @default(false)
-  legacyWpId         Int?            @unique
+  legacyWpId         Int?
   legacySource       String?
   /// Timestamp when the post-fulfillment "please review your order" email
   /// was sent. NULL = not yet sent. Cron at /api/cron/review-requests
@@ -640,10 +648,13 @@ model Order {
   /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
-  tenantId String?
-  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
+  @@unique([tenantId, orderNumber])
+  @@unique([tenantId, paymentReference])
+  @@unique([tenantId, legacyWpId])
 }
 
 model OrderItem {
@@ -690,8 +701,8 @@ model OrderItem {
   /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
-  tenantId String?
-  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -718,15 +729,15 @@ model Address {
   /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
-  tenantId String?
-  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
 
 model Wishlist {
   id        String            @id @default(cuid())
-  userId    String            @unique
+  userId    String          @unique
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
   user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -734,8 +745,8 @@ model Wishlist {
   /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
-  tenantId String?
-  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -752,15 +763,15 @@ model WishlistProduct {
   /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
-  tenantId String?
-  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
 
 model Coupon {
   id              String    @id @default(cuid())
-  code            String    @unique
+  code            String
   description     String?
   discountPercent Int?
   discountAmount  Decimal?  @db.Decimal(10, 2)
@@ -774,10 +785,11 @@ model Coupon {
   /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
-  tenantId String?
-  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
+  @@unique([tenantId, code])
 }
 
 /// Key/value site settings — adds new editor-controlled knobs without a
@@ -792,15 +804,15 @@ model SiteSetting {
   /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
-  tenantId String?
-  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
 
 model NewsletterSubscriber {
   id           String   @id @default(cuid())
-  email        String   @unique
+  email        String
   locale       String   @default("sv-SE")
   source       String?
   consentedAt  DateTime @default(now())
@@ -823,10 +835,11 @@ model NewsletterSubscriber {
   /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
-  tenantId String?
-  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
+  @@unique([tenantId, email])
 }
 
 /// Persisted snapshot of an in-progress cart. Used by the abandoned-cart
@@ -855,8 +868,8 @@ model CartSnapshot {
   /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
-  tenantId String?
-  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -867,7 +880,7 @@ model CartSnapshot {
 /// render on /paket and as cross-sells under related products.
 model Bundle {
   id              String       @id @default(cuid())
-  slug            String       @unique
+  slug            String
   name            String
   description     String?
   /// 0–100 — percentage off the sum of member-product prices. 0 = no
@@ -884,10 +897,11 @@ model Bundle {
   /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
-  tenantId String?
-  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
+  @@unique([tenantId, slug])
 }
 
 model BundleItem {
@@ -903,8 +917,8 @@ model BundleItem {
   /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
-  tenantId String?
-  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -930,8 +944,8 @@ model IngredientPin {
   /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
-  tenantId String?
-  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -958,8 +972,8 @@ model HomepageBlock {
   /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
-  tenantId String?
-  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -982,8 +996,8 @@ model StockNotificationRequest {
   /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
-  tenantId String?
-  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -1131,7 +1145,7 @@ model GscSnapshot {
 /// lookup before returning 404. Path values include the leading slash.
 model Redirect {
   id        String   @id @default(cuid())
-  fromPath  String   @unique
+  fromPath  String
   toPath    String
   status    Int      @default(301)
   reason    String?
@@ -1139,10 +1153,11 @@ model Redirect {
   /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
-  tenantId String?
-  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
+  @@unique([tenantId, fromPath])
 }
 
 /// Append-only log of significant admin actions — product/category
@@ -1175,8 +1190,8 @@ model AdminAuditEntry {
   /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
-  tenantId String?
-  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -1230,8 +1245,8 @@ model ConsentEvent {
   /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
-  tenantId String?
-  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -1289,8 +1304,8 @@ model Subscription {
   /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
-  tenantId String?
-  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -1323,8 +1338,8 @@ model SubscriptionLine {
   /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
-  tenantId String?
-  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -1344,7 +1359,7 @@ model SubscriptionLine {
 model Return {
   id               String         @id @default(cuid())
   /// Public-facing return reference, e.g. "BMX-RET-20260513-1234".
-  returnNumber     String         @unique
+  returnNumber     String
   orderId          String
   /// Optional userId — guest orders may still trigger a return via
   /// email-token link.
@@ -1369,10 +1384,11 @@ model Return {
   /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
-  tenantId String?
-  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
+  @@unique([tenantId, returnNumber])
 }
 
 enum ReturnStatus {
@@ -1396,8 +1412,8 @@ model ReturnItem {
   /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
-  tenantId String?
-  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -1467,8 +1483,8 @@ model HomepageHero {
   /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
-  tenantId String?
-  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -1512,7 +1528,7 @@ enum LoyaltyTxKind {
 
 model LoyaltyAccount {
   id              String   @id @default(cuid())
-  userId          String   @unique
+  userId          String          @unique
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   /// Cached balance. Sum of all transactions for this account. Reads
   /// hit this column; writes go through the ledger helper which
@@ -1534,8 +1550,8 @@ model LoyaltyAccount {
   /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
-  tenantId String?
-  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -1571,8 +1587,8 @@ model LoyaltyTransaction {
   /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
-  tenantId String?
-  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
