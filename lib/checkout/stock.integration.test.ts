@@ -18,6 +18,7 @@ async function makeProduct(stock: number, manageStock = true) {
   seq++;
   return prisma.product.create({
     data: {
+      tenantId: "ttesttenant0",
       sku: `SKU-${Date.now()}-${seq}`,
       slug: `slug-${Date.now()}-${seq}`,
       name: "Balans",

@@ -134,7 +134,7 @@ export default async function Home() {
   const fallbackFeatured =
     needs.has("hero") && !editorPicked
       ? await tenantScope(tenantId, (tx) =>
-          tx.product.findUnique({
+          tx.product.findFirst({
             where: { slug: SEASONAL_FALLBACK_SLUG[season] },
             select: { id: true, slug: true, name: true, price: true, imageUrl: true },
           })

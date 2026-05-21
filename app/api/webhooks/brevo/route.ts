@@ -153,7 +153,7 @@ export async function POST(req: Request) {
   let suppressed = 0;
   const summary = await forEachActiveTenant(
     "webhooks/brevo",
-    async (tx) => {
+    async (tx, tenant) => {
       const stamp = new Date();
       for (const { event, email } of suppressTargets) {
         try {
@@ -161,13 +161,15 @@ export async function POST(req: Request) {
           // transactional-only customers (cart-snapshot recipients,
           // order-confirmation recipients). We default locale + source
           // so the row remains a valid lifecycle record even if it was
-          // never an explicit signup.
+          // never an explicit signup. After #3e the unique is composite
+          // (tenantId, email) so the upsert key reflects that.
           await tx.newsletterSubscriber.upsert({
-            where: { email },
+            where: { tenantId_email: { tenantId: tenant.id, email } },
             update: {
               unsubscribedAt: stamp,
             },
             create: {
+              tenantId: tenant.id,
               email,
               locale: "sv-SE",
               source: `brevo-webhook:${event}`,

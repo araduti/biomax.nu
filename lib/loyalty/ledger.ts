@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { currentTenant } from "@/lib/tenant";
 import type { Prisma, LoyaltyTxKind } from "@prisma/client";
 
 /**
@@ -32,9 +33,11 @@ export type PostTransactionInput = {
 };
 
 export async function postTransaction(input: PostTransactionInput) {
+  const { id: tenantId } = await currentTenant();
   const run = async (client: Prisma.TransactionClient) => {
     const row = await client.loyaltyTransaction.create({
       data: {
+        tenantId,
         accountId: input.accountId,
         userId: input.userId,
         kind: input.kind,

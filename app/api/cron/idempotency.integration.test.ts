@@ -26,6 +26,7 @@ describe("subscription renewal claim (P1, cron double-run)", () => {
 
     const sub = await prisma.subscription.create({
       data: {
+        tenantId: "ttesttenant0",
         email: `sub-${Date.now()}-${seq}@example.com`,
         status: "ACTIVE",
         intervalDays: 30,
@@ -62,6 +63,7 @@ describe("Order.paymentReference dedupe (P0, webhook race)", () => {
     const create = (orderNumber: string) =>
       prisma.order.create({
         data: {
+          tenantId: "ttesttenant0",
           orderNumber,
           email: "kund@example.com",
           status: "PAID",

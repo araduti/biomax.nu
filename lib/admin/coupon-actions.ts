@@ -67,7 +67,7 @@ export async function createCoupon(input: CouponInput): Promise<CouponResult> {
   let collided: boolean;
   try {
     collided = await tenantScope(tenantId, async (tx) => {
-      const collision = await tx.coupon.findUnique({
+      const collision = await tx.coupon.findFirst({
         where: { code },
         select: { id: true },
       });
@@ -112,7 +112,7 @@ export async function updateCoupon(input: CouponInput): Promise<CouponResult> {
   let missing: boolean;
   try {
     missing = await tenantScope(tenantId, async (tx) => {
-      const existing = await tx.coupon.findUnique({
+      const existing = await tx.coupon.findFirst({
         where: { code },
         select: { id: true },
       });
@@ -159,7 +159,7 @@ export async function deleteCoupon(
   let outcome: DelOutcome;
   try {
     outcome = await tenantScope(tenantId, async (tx): Promise<DelOutcome> => {
-      const existing = await tx.coupon.findUnique({
+      const existing = await tx.coupon.findFirst({
         where: { code },
         select: { id: true, usedCount: true },
       });

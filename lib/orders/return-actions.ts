@@ -4,6 +4,7 @@ import crypto from "node:crypto";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { hostTenantScope } from "@/lib/tenant/db";
+import { currentTenant } from "@/lib/tenant";
 import { currentUser } from "@/lib/session";
 import { cuidSchema, fail } from "@/lib/validation/shared";
 import { restockReturnedItems } from "@/lib/checkout/stock";
@@ -62,6 +63,7 @@ export async function requestReturn(raw: unknown): Promise<ReturnActionResult> {
   const user = await currentUser();
   if (!user) return { ok: false, error: "Logga in först." };
 
+  const { id: tenantId } = await currentTenant();
   try {
     const result = await hostTenantScope(async (tx) => {
       const order = await tx.order.findFirst({
@@ -120,12 +122,14 @@ export async function requestReturn(raw: unknown): Promise<ReturnActionResult> {
       const returnNumber = generateReturnNumber();
       await tx.return.create({
         data: {
+          tenantId,
           returnNumber,
           orderId: order.id,
           userId: user.id,
           reason: parsed.data.reason || null,
           items: {
             create: parsed.data.items.map((it) => ({
+              tenantId,
               orderItemId: it.orderItemId,
               quantity: it.quantity,
             })),

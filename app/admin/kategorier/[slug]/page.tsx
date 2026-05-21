@@ -15,7 +15,7 @@ export default async function AdminCategoryEditPage({
   const { slug } = await params;
   const { category, products } = await hostTenantScope(async (tx) => {
     const [category, products] = await Promise.all([
-      tx.category.findUnique({
+      tx.category.findFirst({
         where: { slug },
         select: {
           slug: true,

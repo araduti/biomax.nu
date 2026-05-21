@@ -15,7 +15,7 @@ export default async function AdminBundleEditPage({
   const { slug } = await params;
   const { bundle, allProducts } = await hostTenantScope(async (tx) => {
     const [bundle, allProducts] = await Promise.all([
-      tx.bundle.findUnique({
+      tx.bundle.findFirst({
         where: { slug },
         include: {
           items: {

@@ -67,7 +67,7 @@ export async function subscribeToNewsletter(
   }
   try {
     return await tenantScope(tenantId, async (tx) => {
-      const existing = await tx.newsletterSubscriber.findUnique({
+      const existing = await tx.newsletterSubscriber.findFirst({
         where: { email },
         select: { id: true, unsubscribedAt: true },
       });

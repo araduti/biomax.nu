@@ -84,7 +84,7 @@ export async function setProductVariants(
   let outcome: SaveOutcome;
   try {
     outcome = await tenantScope(tenantId, async (tx): Promise<SaveOutcome> => {
-      const product = await tx.product.findUnique({
+      const product = await tx.product.findFirst({
         where: { slug: productSlug },
         select: {
           id: true,

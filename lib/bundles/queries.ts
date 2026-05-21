@@ -129,7 +129,7 @@ export async function getBundleBySlug(
   slug: string
 ): Promise<BundleSummary | null> {
   const row = await hostTenantScope((tx) =>
-    tx.bundle.findUnique({
+    tx.bundle.findFirst({
       where: { slug },
       include: {
         items: {

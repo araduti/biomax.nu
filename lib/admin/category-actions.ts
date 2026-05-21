@@ -26,7 +26,7 @@ export async function createCategory(input: {
 
   try {
     const dup = await tenantScope(tenantId, async (tx) => {
-      const collision = await tx.category.findUnique({
+      const collision = await tx.category.findFirst({
         where: { slug },
         select: { id: true },
       });
@@ -90,14 +90,14 @@ export async function updateCategory(input: {
   let outcome: UpdateOutcome;
   try {
     outcome = await tenantScope(tenantId, async (tx): Promise<UpdateOutcome> => {
-      const existing = await tx.category.findUnique({
+      const existing = await tx.category.findFirst({
         where: { slug: input.slug },
         select: { id: true },
       });
       if (!existing) return { kind: "missing" };
 
       if (nextSlug) {
-        const collision = await tx.category.findUnique({
+        const collision = await tx.category.findFirst({
           where: { slug: nextSlug },
           select: { id: true },
         });
@@ -113,7 +113,7 @@ export async function updateCategory(input: {
         const newPath = `/kategorier/${finalSlug}`;
         await tx.redirect.deleteMany({ where: { fromPath: newPath } });
         await tx.redirect.upsert({
-          where: { fromPath: oldPath },
+          where: { tenantId_fromPath: { tenantId, fromPath: oldPath } },
           create: {
             fromPath: oldPath,
             toPath: newPath,
@@ -159,7 +159,7 @@ export async function deleteCategory(
   let outcome: DelOutcome;
   try {
     outcome = await tenantScope(tenantId, async (tx): Promise<DelOutcome> => {
-      const existing = await tx.category.findUnique({
+      const existing = await tx.category.findFirst({
         where: { slug },
         select: { id: true, _count: { select: { products: true } } },
       });

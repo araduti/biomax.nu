@@ -411,6 +411,8 @@ function fileNameForAttachment(att: WpAttachment, productSlug: string): string {
 // ──────────────────────────────────────────────────────────── main
 
 async function main() {
+  const tenant = await prisma.tenant.findFirstOrThrow({ where: { slug: "biomax" } });
+  const tenantId = tenant.id;
   const xmlPath = resolve(
     process.cwd(),
     process.argv[2] ?? "biomax.WordPress.2026-05-10.xml"
@@ -429,9 +431,10 @@ async function main() {
   console.log(`   ${wpCats.length} product_cat terms found`);
   for (const c of wpCats) {
     await prisma.category.upsert({
-      where: { legacyWpId: c.termId },
+      where: { tenantId_legacyWpId: { tenantId, legacyWpId: c.termId } },
       update: { name: c.name, description: c.description, slug: c.slug },
       create: {
+        tenantId,
         legacyWpId: c.termId,
         slug: c.slug,
         name: c.name,
@@ -508,7 +511,7 @@ async function main() {
       publishedAt: p.publishedAt,
     };
 
-    const existing = await prisma.product.findUnique({
+    const existing = await prisma.product.findFirst({
       where: { legacyWpId: p.postId },
       include: { categories: true },
     });
@@ -528,6 +531,7 @@ async function main() {
       await prisma.product.create({
         data: {
           ...data,
+          tenantId,
           categories: { connect: categoryConnect },
         },
       });
@@ -621,6 +625,7 @@ async function main() {
       const taxAmount = Math.round(o.total * 0.2 * 100) / 100;
       const HISTORICAL_VAT_BP = 2500;
       return {
+        tenantId,
         orderNumber: `WP-${o.postId}`,
         email: o.email ?? "unknown@biomax.nu",
         userId: o.email ? userByEmail.get(o.email) ?? null : null,

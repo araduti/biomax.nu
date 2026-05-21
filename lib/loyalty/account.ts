@@ -1,4 +1,5 @@
 import { hostTenantScope } from "@/lib/tenant/db";
+import { currentTenant } from "@/lib/tenant";
 import type { Prisma } from "@prisma/client";
 import { postTransaction } from "./ledger";
 import { WELCOME_BONUS_POINTS, LOYALTY_PROGRAM_NAME } from "./constants";
@@ -17,6 +18,9 @@ export async function ensureAccount(
   userId: string,
   options?: { tx?: Prisma.TransactionClient }
 ) {
+  // tenantId is required for create (post #3e). Read from the request's
+  // tenant context — works whether the caller supplied a tx or not.
+  const { id: tenantId } = await currentTenant();
   // If a caller-supplied tx exists, use it (caller owns the scope).
   // Otherwise, open a hostTenantScope so RLS still applies.
   const run = async (client: Prisma.TransactionClient) => {
@@ -26,7 +30,7 @@ export async function ensureAccount(
     if (existing) return existing;
 
     const account = await client.loyaltyAccount.create({
-      data: { userId },
+      data: { userId, tenantId },
     });
 
     if (WELCOME_BONUS_POINTS > 0) {

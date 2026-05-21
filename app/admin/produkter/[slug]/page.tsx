@@ -41,7 +41,7 @@ export default async function AdminProductEditPage({
 }) {
   const { slug } = await params;
   const product = await hostTenantScope((tx) =>
-    tx.product.findUnique({
+    tx.product.findFirst({
       where: { slug },
       include: {
         categories: { select: { name: true, slug: true } },

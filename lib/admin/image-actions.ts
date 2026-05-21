@@ -64,7 +64,7 @@ export async function uploadProductImage(
   }
 
   const product = await tenantScope(tenantId, (tx) =>
-    tx.product.findUnique({
+    tx.product.findFirst({
       where: { slug },
       select: { id: true, imageUrl: true },
     })
@@ -183,7 +183,7 @@ export async function uploadGalleryImage(
   }
 
   const product = await tenantScope(tenantId, (tx) =>
-    tx.product.findUnique({
+    tx.product.findFirst({
       where: { slug },
       select: { id: true, galleryUrls: true },
     })
@@ -268,7 +268,7 @@ export async function setGalleryUrls(
   }
 
   const product = await tenantScope(tenantId, (tx) =>
-    tx.product.findUnique({
+    tx.product.findFirst({
       where: { slug },
       select: { id: true, galleryUrls: true },
     })

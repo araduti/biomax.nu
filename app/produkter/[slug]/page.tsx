@@ -80,7 +80,7 @@ async function fetchProduct(tenantId: string, slug: string) {
   // Tenant-isolated read: FORCE RLS on "Product" + SET LOCAL via
   // withTenantRLS → another tenant's slug resolves to null → 404.
   return withTenantRLS(tenantId, (tx) =>
-    tx.product.findUnique({
+    tx.product.findFirst({
       where: { slug },
       include: {
         categories: { select: { id: true, name: true, slug: true } },
@@ -172,7 +172,7 @@ export default async function ProductPage({
     // Slug may have been renamed — check the redirect table before 404.
     const hit = await withTenantRLS(tenantId, (tx) =>
       tx.redirect.findUnique({
-        where: { fromPath: `/produkter/${slug}` },
+        where: { tenantId_fromPath: { tenantId, fromPath: `/produkter/${slug}` } },
         select: { toPath: true },
       })
     );

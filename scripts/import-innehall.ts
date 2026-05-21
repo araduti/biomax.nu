@@ -45,7 +45,7 @@ async function main() {
   let updated = 0;
   let skipped = 0;
   for (const item of data) {
-    const product = await prisma.product.findUnique({
+    const product = await prisma.product.findFirst({
       where: { slug: item.slug },
       select: { id: true },
     });

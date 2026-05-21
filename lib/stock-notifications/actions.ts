@@ -59,7 +59,7 @@ export async function requestStockNotification(raw: unknown): Promise<RequestRes
   }
   try {
     return await tenantScope(tenantId, async (tx) => {
-      const product = await tx.product.findUnique({
+      const product = await tx.product.findFirst({
         where: { slug: parsed.data.productSlug },
         select: { id: true, stock: true, manageStock: true, status: true },
       });
