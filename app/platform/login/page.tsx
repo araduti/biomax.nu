@@ -85,7 +85,7 @@ export default function PlatformLogin() {
         }}
       >
         <p style={{ margin: 0, fontWeight: 700, letterSpacing: ".08em" }}>
-          KORG · PLATTFORM
+          KINE · PLATTFORM
         </p>
         <p style={{ margin: "0 0 8px", fontSize: 13, opacity: 0.7 }}>
           {step === "creds"

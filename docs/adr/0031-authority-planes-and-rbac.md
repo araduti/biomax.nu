@@ -41,9 +41,9 @@ must never be expressible as "a really powerful tenant admin".
 
 | Plane | Subject | Scope | Surface |
 |---|---|---|---|
-| **Platform** | Ampliosoft staff | ALL tenants (cross) | `admin.korg.nu` (separate host) |
-| **Tenant** | merchant staff | exactly one tenant | `{shop}.korg.nu/admin` |
-| **Customer** | shopper | one tenant | `{shop}.korg.nu/konto` |
+| **Platform** | Ampliosoft staff | ALL tenants (cross) | `admin.kine.se` (separate host) |
+| **Tenant** | merchant staff | exactly one tenant | `{shop}.kine.se/admin` |
+| **Customer** | shopper | one tenant | `{shop}.kine.se/konto` |
 
 A user is *either* platform staff *or* tenant staff for a given
 context — never both implicitly. A platform admin is **not** an
@@ -68,7 +68,7 @@ Platform staff are few and high-trust. Model as an explicit
 `support`), **not** a `User.role` value and **not** an org membership.
 Rationale: it must be impossible for a tenant-side role change to ever
 grant platform power, and platform power must be greppable/auditable in
-one table. Surface lives on a **separate host** (`admin.korg.nu`) with
+one table. Surface lives on a **separate host** (`admin.kine.se`) with
 its own guard `requirePlatformAdmin()`. Mandatory 2FA (reuse the
 existing posture in `guard.ts`). `support` is read-mostly + scoped
 actions; `superadmin` is full.
@@ -99,7 +99,7 @@ the single most dangerous capability in the system, so:
    `role=admin`).
 3. Introduce `requirePlatformAdmin()` and `requireTenantRole(min)`;
    migrate `/admin/*` call sites from `requireAdmin()` to
-   `requireTenantRole("admin")`, and stand up `admin.korg.nu` behind
+   `requireTenantRole("admin")`, and stand up `admin.kine.se` behind
    `requirePlatformAdmin()`.
 4. Once all call sites move, `UserRole.admin` is retired (kept only as
    a dead column until a later cleanup migration).
@@ -137,8 +137,8 @@ discipline (ADR 0026 §8 spirit).
 - `PlatformAdmin` as its own table vs a Better Auth "platform org" with
   reserved roles — lean table (D3 rationale); confirm against
   Watchtower's actual platform-side pattern before building.
-- Does `admin.korg.nu` get its own Better Auth instance/cookie domain,
+- Does `admin.kine.se` get its own Better Auth instance/cookie domain,
   or shared session with host-based guard? (Security review before
-  build — cookie scoping across `*.korg.nu` matters.)
+  build — cookie scoping across `*.kine.se` matters.)
 - Sequencing: D2 (org plugin) is shared with the ADR 0028 D1/D2
   increment — build once, together, not twice.

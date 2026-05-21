@@ -6,10 +6,10 @@ import { DEFAULT_TENANT_SLUG, TENANT_HEADER } from "./host";
 export { DEFAULT_TENANT_SLUG, TENANT_HEADER } from "./host";
 
 /**
- * Server-side current tenant (Korg slice 1 — ADR 0026/0028/0030).
+ * Server-side current tenant (Kine slice 1 — ADR 0026/0028/0030).
  *
  * Resolution: `middleware.ts` parsed the Host edge-side and set the
- * `x-korg-tenant` request header; we look the slug up here (Node
+ * `x-kine-tenant` request header; we look the slug up here (Node
  * runtime, prisma allowed). Memoised per request via React.cache so
  * layouts/pages/actions can call it freely.
  *

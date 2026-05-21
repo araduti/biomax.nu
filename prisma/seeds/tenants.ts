@@ -1,5 +1,5 @@
 /**
- * Idempotent tenant seed (Korg slice 1 — ADR 0026 §0).
+ * Idempotent tenant seed (Kine slice 1 — ADR 0026 §0).
  *
  *   - `biomax`  — tenant zero. biomax.nu migrated onto the platform as
  *     customer #1; keeps its existing navy brand. Behaviour unchanged.
@@ -24,7 +24,7 @@ const TENANTS = [
   {
     slug: "demo",
     name: "Demo Butik",
-    tagline: "En andra hyresgäst — för att se Korg flerhyresgäst i dev",
+    tagline: "En andra hyresgäst — för att se Kine flerhyresgäst i dev",
     primaryColorHex: "#7A8B6F",
   },
 ] as const;

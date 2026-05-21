@@ -195,7 +195,7 @@ export default async function RootLayout({
               pointerEvents: "none",
             }}
           >
-            KORG · {tenant.name} ({tenant.slug})
+            KINE · {tenant.name} ({tenant.slug})
           </div>
         )}
       </body>

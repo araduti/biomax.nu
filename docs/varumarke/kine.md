@@ -1,13 +1,13 @@
-# Korg — varumärket i korthet
+# Kine — varumärket i korthet
 
 **Status:** Utkast, syskon till ADR 0026 (Föreslagen). Namnet är
-villkorat av en varumärkeskontroll mot KORG Inc. — se öppna frågor i
+villkorat av en varumärkeskontroll mot KINE Inc. — se öppna frågor i
 ADR 0026.
 **Avsändare:** Ampliosoft AB · **Datum:** 2026-05-18
 
-## Vad Korg är
+## Vad Kine är
 
-Korg är en färdig webbutik för små svenska handlare. En bagare i
+Kine är en färdig webbutik för små svenska handlare. En bagare i
 Kållered registrerar sig och säljer — med Kustom- och Swish-kassa,
 PostNord-etiketter, rätt moms och korrekt bokföring — på en kvart.
 
@@ -16,14 +16,14 @@ En produkt från **Ampliosoft AB**. Biomax HB är kund nummer ett, inte
 
 ## Namnet
 
-- **Korg** är det enda föremål varje svensk kund redan tar i:
+- **Kine** är det enda föremål varje svensk kund redan tar i:
   *"Lägg i korgen."* Det behöver ingen förklaring.
-- **korg.nu** är själva budskapet — det läses *"korg nu"*. Domänen
+- **kine.se** är själva budskapet — det läses *"kine nu"*. Domänen
   säljer produkten.
-- Hör ihop med resten: biomax.nu → korg.nu. `.nu` är en svensk
+- Hör ihop med resten: biomax.nu → kine.se. `.nu` är en svensk
   domän i folkmun, så familjen känns medveten, inte hoptejpad.
 - Dubbeltydigheten bär hela produkten: din **varukorg** och din
-  **butik** är samma ord. "Öppna din Korg" betyder båda.
+  **butik** är samma ord. "Öppna din Kine" betyder båda.
 
 ## Marknaden (kort, med belägg)
 
@@ -54,21 +54,21 @@ Inget av detta får bygga på en halmgubbe. Så här ser det faktiskt ut:
   till slut nedlagd och nödsåld till Shopify. Sensmoral: *svensk plus
   fin produkt är ingen vallgrav* (Tictail hade båda). Det som fällde
   dem var en gratismodell som åt upp marginalen och en svag
-  intäktsmodell. Korg måste ha en vallgrav som inte är "vi är
+  intäktsmodell. Kine måste ha en vallgrav som inte är "vi är
   trevligare", och en prismodell som bär redan från första kund.
 
 ## Vår position
 
-> **Korg — hela vägen in i bokföringen. Inte ännu en svensk
+> **Kine — hela vägen in i bokföringen. Inte ännu en svensk
 > webbutik, utan den enda där momsen och bokföringen redan är klar.**
 
 Vallgraven är inte att vi är svenska — det är de andra också. Den är
-*hur djupt* det svenska går: Korg äger kedjan ända in i
+*hur djupt* det svenska går: Kine äger kedjan ända in i
 bokföringslagen. Order, moms, fraktunderlag och SIE/Fortnox-export
 hänger ihop från början, korrekt arkiverat i sju år, utan en enda app
 att köpa, byrå att blidka eller pappersutskrift. De etablerade är
 gamla och tröga; Shopify är ihoptejpat och har en löpande appnota;
-Korg gör det till plattformens grund — för att vi bara gör det
+Kine gör det till plattformens grund — för att vi bara gör det
 svenska. Vi lägger aldrig till andra valutor, fri temamotor eller
 tilläggsbutik (ADR 0026 §8). Och vi går inte i gratisfällan som
 dödade Tictail: enkel prissättning som bär redan från första butik,
@@ -78,20 +78,20 @@ inte gratis tills marginalen tar slut.
 
 ## Varumärkesarkitektur
 
-`Korg` är huvudnamnet. Funktionerna heter raka svenska ord — inte egna
+`Kine` är huvudnamnet. Funktionerna heter raka svenska ord — inte egna
 undervarumärken med egna logotyper:
 
-- **Korg Kassa** — kassan (Kustom/Klarna/Swish).
-- **Korg Frakt** — PostNords ombud och fraktsedlar.
-- **Korg Moms** — rätt moms, tål ändrade skattesatser.
-- **Korg Bokföring** — underlag som följer bokföringslagen, plus
+- **Kine Kassa** — kassan (Kustom/Klarna/Swish).
+- **Kine Frakt** — PostNords ombud och fraktsedlar.
+- **Kine Moms** — rätt moms, tål ändrade skattesatser.
+- **Kine Bokföring** — underlag som följer bokföringslagen, plus
   export. Kärnan för dataskydd, samtycke och gallring (ADR 0023–0025)
   görs här tillgänglig *för handlaren*, så att hen kan svara sina egna
   kunder.
 
-Avsändare: **Korg** · *en produkt från Ampliosoft AB*.
-Varje butik bor på `{butik}.korg.nu` (egen domän går också bra).
-Internt är biomax.nu `biomax.korg.nu`.
+Avsändare: **Kine** · *en produkt från Ampliosoft AB*.
+Varje butik bor på `{butik}.kine.se` (egen domän går också bra).
+Internt är biomax.nu `biomax.kine.se`.
 
 ## Tonläge
 
@@ -103,18 +103,18 @@ butik.
 
 **Mikrotexter, stund för stund:**
 
-- Knapp vid registrering: **Öppna din Korg**
-- Tom butik, första gången: *Din Korg är tom — precis som en ny butik.
+- Knapp vid registrering: **Öppna din Kine**
+- Tom butik, första gången: *Din Kine är tom — precis som en ny butik.
   Lägg in din första vara så är du igång.*
 - När butiken öppnar: *Din butik är öppen. Börja sälj nu.* ("nu" är
   inte en slump — det är domänen)
 - Inga varor än: *Inga varor än. Det första du säljer börjar här.*
-- När gränsen närmar sig: *Din Korg växer. Dags för nästa steg?* (aldrig
+- När gränsen närmar sig: *Din Kine växer. Dags för nästa steg?* (aldrig
   ett kallt "uppgradera ditt abonnemang")
 - Radera konto / hämta data (dataskydd per butik): samma lugna ton som
   på `/konto/dataskydd`.
 
-## Det här är Korg inte
+## Det här är Kine inte
 
 - Inte global. Bara sv-SE — det är vår nisch, inte en begränsning
   (minne: `project_swedish_only`).
@@ -126,9 +126,9 @@ butik.
 
 ## Att klara av innan extern användning
 
-- **Varumärkeskontrollen mot KORG Inc. är blockerande** (PRV i Sverige
+- **Varumärkeskontrollen mot KINE Inc. är blockerande** (PRV i Sverige
   + EUIPO, Nice-klass 35 och 42). Ha ett reservnamn redo. Ledig domän
   betyder inte ledigt varumärke. (ADR 0026, öppna frågor.)
-- Ordmärke, logotyp, färg och skalet `{butik}.korg.nu` är formgivning
+- Ordmärke, logotyp, färg och skalet `{butik}.kine.se` är formgivning
   som inte är påbörjad — det här dokumentet är position och tonläge,
   inget annat.

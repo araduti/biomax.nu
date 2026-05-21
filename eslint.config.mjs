@@ -32,7 +32,7 @@ const eslintConfig = defineConfig([
     },
   },
   {
-    // ── Korg tenant data-access enforcement (ADR 0032 D2/D4) +
+    // ── Kine tenant data-access enforcement (ADR 0032 D2/D4) +
     //    Zod v4 only (ADR 0035) ──
     //
     // Both rule families live in one block because ESLint flat-config
@@ -42,7 +42,7 @@ const eslintConfig = defineConfig([
     // matched by both — exactly the trap that hid the tenant rule
     // until the cron-tenant slice surfaced it.
     //
-    // Korg tenant rule: direct `prisma.<ownedModel>` and raw
+    // Kine tenant rule: direct `prisma.<ownedModel>` and raw
     // `unstable_cache` for tenant data must go through the seam
     // (lib/tenant/db.ts → withTenantRLS) and lib/tenant/cache.ts.
     // Property names are the exact Prisma camelCase accessors of the
@@ -64,7 +64,7 @@ const eslintConfig = defineConfig([
     rules: {
       "no-restricted-syntax": [
         "warn",
-        // ── Korg tenant seam (ADR 0032 D2) ──
+        // ── Kine tenant seam (ADR 0032 D2) ──
         {
           selector:
             "MemberExpression[object.name='prisma'][property.name=/^(category|product|productIngredient|productVariant|productCrossSell|review|blogCategory|blogPost|order|orderItem|address|wishlist|wishlistProduct|coupon|siteSetting|newsletterSubscriber|cartSnapshot|bundle|bundleItem|ingredientPin|homepageBlock|stockNotificationRequest|consentEvent|subscription|subscriptionLine|return|returnItem|homepageHero|loyaltyAccount|loyaltyTransaction|redirect|adminAuditEntry|tenantPaymentCredential)$/]",

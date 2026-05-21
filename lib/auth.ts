@@ -210,7 +210,7 @@ export const auth = betterAuth({
         length: 10,
       },
     }),
-    // Korg tenant plane (ADR 0031 D2): Organization 1:1 Tenant. The
+    // Kine tenant plane (ADR 0031 D2): Organization 1:1 Tenant. The
     // session's active organization → Tenant (Watchtower pattern;
     // wired into resolution in the tenantId+RLS sub-slice). Org
     // deletion is disabled — tenant lifecycle is a platform action

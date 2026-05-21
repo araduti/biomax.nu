@@ -4,7 +4,7 @@ import crypto from "node:crypto";
  * Symmetric secret sealing for at-rest credentials (ADR 0034 D3).
  *
  * **Dev-grade, on the record.** AES-256-GCM with a KEK read from
- * `KORG_PAYMENT_KEK` (scrypt-stretched to 32 bytes). Production secret
+ * `KINE_PAYMENT_KEK` (scrypt-stretched to 32 bytes). Production secret
  * storage — managed KMS / envelope encryption / rotation / access
  * audit — is owned by ADR 0029 and deferred. What this guarantees
  * *now*: no plaintext payment secret is ever written to the database
@@ -25,34 +25,34 @@ const SCHEME = "v1";
 let warnedFallback = false;
 
 /**
- * Resolve + stretch the KEK. `KORG_PAYMENT_KEK` is preferred; dev/CI
+ * Resolve + stretch the KEK. `KINE_PAYMENT_KEK` is preferred; dev/CI
  * fall back to `BETTER_AUTH_SECRET` (always present) with a single
  * loud warning so local work needs no new env wiring. A hard failure
  * here is correct in prod once ADR 0029 lands — until then the
  * fallback keeps the single-tenant build green.
  */
 function kek(): Buffer {
-  let material = process.env.KORG_PAYMENT_KEK;
+  let material = process.env.KINE_PAYMENT_KEK;
   if (!material) {
     material = process.env.BETTER_AUTH_SECRET;
     if (material && !warnedFallback) {
       warnedFallback = true;
       console.warn(
-        "[secret-box] KORG_PAYMENT_KEK unset — falling back to " +
+        "[secret-box] KINE_PAYMENT_KEK unset — falling back to " +
           "BETTER_AUTH_SECRET (dev-grade, ADR 0034 D3 / ADR 0029). " +
-          "Set KORG_PAYMENT_KEK before any real per-tenant onboarding."
+          "Set KINE_PAYMENT_KEK before any real per-tenant onboarding."
       );
     }
   }
   if (!material) {
     throw new Error(
-      "secret-box: neither KORG_PAYMENT_KEK nor BETTER_AUTH_SECRET is " +
+      "secret-box: neither KINE_PAYMENT_KEK nor BETTER_AUTH_SECRET is " +
         "set — cannot seal/open payment credentials."
     );
   }
   // Fixed salt: this is a single-key dev KEK, not per-secret key
   // derivation; rotation/per-secret keys are the ADR 0029 KMS job.
-  return crypto.scryptSync(material, "korg-payment-kek-v1", 32);
+  return crypto.scryptSync(material, "kine-payment-kek-v1", 32);
 }
 
 /** Seal plaintext → `v1:iv:tag:ct` (base64 segments). */

@@ -7,7 +7,7 @@ import {
 } from "@/lib/tenant/host";
 
 /**
- * Korg tenant resolution (ADR 0028 D3). Next 16 renamed Middleware →
+ * Kine tenant resolution (ADR 0028 D3). Next 16 renamed Middleware →
  * **Proxy** (file must be `proxy.ts`, export `proxy`); the legacy
  * `middleware.ts` convention is deprecated and broke routing here.
  *

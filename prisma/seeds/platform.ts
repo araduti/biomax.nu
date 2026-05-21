@@ -47,8 +47,8 @@ export async function seedPlatformAdmins(): Promise<void> {
     );
     return;
   }
-  const devEmail = "platform@korg.dev";
-  const devPass = process.env.SEED_PLATFORM_ADMIN_PASSWORD ?? "KorgDev!2026";
+  const devEmail = "platform@kine.dev";
+  const devPass = process.env.SEED_PLATFORM_ADMIN_PASSWORD ?? "KineDev!2026";
   let user = await prisma.user.findUnique({
     where: { email: devEmail },
     select: { id: true },
@@ -56,7 +56,7 @@ export async function seedPlatformAdmins(): Promise<void> {
   if (!user) {
     const { platformAuth } = await import("../../lib/auth-platform");
     await platformAuth.api.signUpEmail({
-      body: { email: devEmail, password: devPass, name: "Korg Platform" },
+      body: { email: devEmail, password: devPass, name: "Kine Platform" },
     });
     user = await prisma.user.findUnique({
       where: { email: devEmail },

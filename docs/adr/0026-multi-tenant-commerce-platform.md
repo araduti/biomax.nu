@@ -1,9 +1,9 @@
-# ADR 0026 — Korg: Multi-Tenant Commerce Platform ("Shopify for Swedish mom-and-pop stores")
+# ADR 0026 — Kine: Multi-Tenant Commerce Platform ("Shopify for Swedish mom-and-pop stores")
 
 **Date:** 2026-05-18
 **Status:** Proposed — strategic direction, needs explicit go/no-go before any code
-**Varumärke:** `docs/varumarke/korg.md` (position + tonläge, på svenska)
-**Strategi:** `docs/strategi/korg-gtm-validering.md` (marknadsväg +
+**Varumärke:** `docs/varumarke/kine.md` (position + tonläge, på svenska)
+**Strategi:** `docs/strategi/kine-gtm-validering.md` (marknadsväg +
 bytesutlösar-validering; gates this ADR's Phase 2+)
 **Roadmap:** ADR 0027 (competitive parity & differentiation vs
 Quickbutik — sorts feature gaps into gated downstream ADRs)
@@ -62,7 +62,7 @@ shop is migrated onto the product as tenant #1.
 ### Why this is defensible (the wedge — sharpened)
 
 Not "Swedish" (so are the incumbents). The moat is **how deep the
-Swedish goes** — Korg owns the chain all the way into the books, as
+Swedish goes** — Kine owns the chain all the way into the books, as
 platform foundation, not an app:
 
 - **moms** correct at basis points, per-order, rate-change safe
@@ -92,15 +92,15 @@ scope.
 
 ### 0. Entity, ownership, and product identity
 
-- The platform is an **Ampliosoft AB** product named **Korg**, on
-  **`korg.nu`** (chosen 2026-05-18). The domain doubles as the tagline
-  — *"korg nu"* = "cart now" — and keeps the Ampliosoft `.nu` portfolio
-  (biomax.nu → korg.nu) coherent. *Korg* = "basket," the one object
+- The platform is an **Ampliosoft AB** product named **Kine**, on
+  **`kine.se`** (chosen 2026-05-18). The domain doubles as the tagline
+  — *"kine nu"* = "cart now" — and keeps the Ampliosoft `.nu` portfolio
+  (biomax.nu → kine.se) coherent. *Kine* = "basket," the one object
   every Swedish shopper already touches (*"lägg i korgen"*), so it needs
-  zero explanation to the target merchant. Repo/org scope: `korg`.
-  Merchant shops default to `{shop}.korg.nu`; biomax.nu becomes
-  `biomax.korg.nu` internally (tenant #1). **Commitment is gated on the
-  KORG Inc. trademark clearance — see open questions.**
+  zero explanation to the target merchant. Repo/org scope: `kine`.
+  Merchant shops default to `{shop}.kine.se`; biomax.nu becomes
+  `biomax.kine.se` internally (tenant #1). **Commitment is gated on the
+  KINE Inc. trademark clearance — see open questions.**
 - IP, repository, and any contracts sit with Ampliosoft AB. Biomax HB
   signs the same merchant terms + DPA as every other customer — no
   implicit entitlement, no special-cased code path, no billing
@@ -271,12 +271,12 @@ canary for every step.
   constant constraint.
 
 **Open questions (resolve before go/no-go)**
-- **KORG Inc. trademark clearance (blocking).** Name chosen (Korg,
-  korg.nu) but KORG Inc. is a globally famous mark in musical
+- **KINE Inc. trademark clearance (blocking).** Name chosen (Kine,
+  kine.se) but KINE Inc. is a globally famous mark in musical
   instruments. Need a PRV (Sweden) + EUIPO search in the relevant Nice
   classes (35 retail/marketing services, 42 SaaS) and a confusion-risk
-  read before "Korg" enters merchant terms, branding, or the repo
-  rename. "Korg" is also a plain Swedish common noun ("basket"), which
+  read before "Kine" enters merchant terms, branding, or the repo
+  rename. "Kine" is also a plain Swedish common noun ("basket"), which
   strengthens the position in SE specifically — confirm, don't assume.
   Domain being free ≠ trademark being clear. Must close before Phase 0
   completes; a fallback name should be held in reserve.
@@ -286,7 +286,7 @@ canary for every step.
 - Who owns the processor/DPA legal work, and on what timeline?
 - Pricing/segment + switching trigger validated with real prospective
   merchants, or assumed? **Owned by
-  `docs/strategi/korg-gtm-validering.md`** — its Gate 2 is the go/no-go
+  `docs/strategi/kine-gtm-validering.md`** — its Gate 2 is the go/no-go
   for this ADR's Phase 2+; build order follows validated demand, not
   hope.
 - Is the team resourced to run a SaaS on-call, or is this a

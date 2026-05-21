@@ -2,7 +2,7 @@
 
 **Date:** 2026-05-18
 **Status:** Proposed
-**Related:** ADR 0026 (Korg platform), **ADR 0028** (multi-tenant
+**Related:** ADR 0026 (Kine platform), **ADR 0028** (multi-tenant
 coupling audit + RLS/identity — *the tenancy mechanism lives there;
 this ADR does not restate it*), ADR 0029 (hosting/HA), ADR 0027
 (feature roadmap), memory `reference_watchtower_multitenant`
@@ -122,7 +122,7 @@ first-class surface:
   credentials (ADR 0028 D4).
 - **Suspend / resume**, **export** (reuse the GDPR core, now
   tenant-scoped — ADR 0028), **hard-delete** on offboarding SLA.
-- Onboarding (the `{shop}.korg.nu` shell, ADR 0026 §2) is part of this
+- Onboarding (the `{shop}.kine.se` shell, ADR 0026 §2) is part of this
   surface.
 
 ### D7 — Tenant-scoped caching/ISR (correctness, not optimization)

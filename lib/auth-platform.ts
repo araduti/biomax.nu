@@ -5,12 +5,12 @@ import { prisma } from "./prisma";
 
 /**
  * Platform (Ampliosoft) Better Auth instance — ADR 0031 D3 + the
- * resolved open question: **admin.korg.nu gets its OWN cookie.**
+ * resolved open question: **admin.kine.se gets its OWN cookie.**
  *
  * Separate from the storefront `auth` (lib/auth.ts):
  *   - distinct `cookiePrefix: "korgadm"` so the platform session
  *     cookie never collides with / is never reachable from the
- *     `biomax`-prefixed storefront or any `*.korg.nu` tenant cookie.
+ *     `biomax`-prefixed storefront or any `*.kine.se` tenant cookie.
  *   - **no cross-subdomain cookie domain** — host-scoped to the
  *     platform host only. A stolen tenant/storefront session can never
  *     be a platform session and vice versa.
@@ -61,7 +61,7 @@ export const platformAuth = betterAuth({
 
   plugins: [
     twoFactor({
-      issuer: "Korg Platform",
+      issuer: "Kine Platform",
       backupCodeOptions: { amount: 10, length: 10 },
     }),
   ],

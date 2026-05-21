@@ -5,7 +5,7 @@ import { TenantStatusButton } from "./tenant-status-button";
 import { TenantExportButton } from "./tenant-export-button";
 
 export const metadata: Metadata = {
-  title: "Korg · Plattform",
+  title: "Kine · Plattform",
   robots: { index: false, follow: false },
 };
 
@@ -48,7 +48,7 @@ export default async function PlatformHome() {
       >
         <div>
           <p style={{ margin: 0, fontWeight: 700, letterSpacing: ".1em" }}>
-            KORG · PLATTFORM
+            KINE · PLATTFORM
           </p>
           <p style={{ margin: "4px 0 0", fontSize: 13, opacity: 0.7 }}>
             Ampliosoft AB · {tenants.length} hyresgäst

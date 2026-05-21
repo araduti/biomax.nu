@@ -6,7 +6,7 @@
 Watchtower — see D1).
 **Related:** ADR 0026 (platform), ADR 0027 (feature roadmap),
 ADR 0003 (auth), ADR 0022 (preview env), ADR 0023–0025 (GDPR/consent),
-`docs/strategi/korg-gtm-validering.md` (gates build)
+`docs/strategi/kine-gtm-validering.md` (gates build)
 **Basis:** evidence-based code audit of the single-tenant codebase
 performed 2026-05-18 (two independent passes: data/identity, and
 config/infra).
@@ -93,7 +93,7 @@ The two scariest items below are **not unknowns** — Ampliosoft already
 runs them in production in Watchtower (`/Users/adrian.raduti/watchtower-dev`),
 on the *same* stack (Better Auth + Prisma + `pg.Pool` + Postgres). The
 audit's "RLS infeasible" verdict reasoned about a *naive* session GUC;
-Watchtower solves it. Korg ports this pattern rather than inventing one.
+Watchtower solves it. Kine ports this pattern rather than inventing one.
 
 - **Identity:** Better Auth **`organization` plugin** maps Organization
   1:1 to a Workspace/tenant; `activeOrganizationId` rides in the
@@ -153,7 +153,7 @@ see risks.
 
 ### D3 — Tenant resolution
 
-New `middleware.ts`: resolve tenant from host (`{shop}.korg.nu` /
+New `middleware.ts`: resolve tenant from host (`{shop}.kine.se` /
 custom domain), reject unknown hosts, put `tenantId` into
 `AsyncLocalStorage`. `currentUser()`/`requireAdmin()` validate
 membership of the resolved tenant.
@@ -230,7 +230,7 @@ authorizes. Everything from 2 on is gated by **Gate 2**.
   Product FKs could cross tenants if catalog is shared). Decide before
   schema work; affects RLS policy shape.
 - Reuse Watchtower's `@watchtower/auth` + `@watchtower/db` as shared
-  packages, or fork/port into the Korg repo? (Cross-repo coupling vs
+  packages, or fork/port into the Kine repo? (Cross-repo coupling vs
   duplication — an Ampliosoft-level decision, ADR 0026 §0.)
 - ADR 0026 §1 annotation updated to "RLS via tx-scoped SET LOCAL per
   ADR 0028 D1 (proven in Watchtower)" — done; confirm wording.

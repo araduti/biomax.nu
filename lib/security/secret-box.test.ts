@@ -3,7 +3,7 @@ import { seal, open } from "./secret-box";
 
 describe("secret-box (ADR 0034 D3)", () => {
   beforeAll(() => {
-    process.env.KORG_PAYMENT_KEK = "test-kek-aaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    process.env.KINE_PAYMENT_KEK = "test-kek-aaaaaaaaaaaaaaaaaaaaaaaaaaaa";
   });
 
   it("round-trips a secret", () => {

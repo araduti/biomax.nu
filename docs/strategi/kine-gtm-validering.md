@@ -1,7 +1,7 @@
-# Korg — plan för marknadsväg och validering av bytesutlösare
+# Kine — plan för marknadsväg och validering av bytesutlösare
 
 **Status:** Utkast, syskon till ADR 0026 (Föreslagen) och
-`docs/varumarke/korg.md`. Det här dokumentet är på svenska med flit —
+`docs/varumarke/kine.md`. Det här dokumentet är på svenska med flit —
 det är marknads- och kundarbete, inte teknik (se minnesregeln om att
 tänka på svenska för den svenska produkten).
 **Avsändare:** Ampliosoft AB · **Datum:** 2026-05-18
@@ -24,7 +24,7 @@ disciplinen Tictail saknade.
 
 > Finns det ett tillräckligt stort segment svenska mikrohandlare för
 > vilka momsen-och-bokföringen-redan-gjord är så smärtsamt att de
-> antingen **väljer Korg vid nystart** eller **byter från det de har** —
+> antingen **väljer Kine vid nystart** eller **byter från det de har** —
 > till ett pris som bär enhetsekonomin från första kund?
 
 Allt nedan är till för att besvara den med bevis, inte hopp.
@@ -73,7 +73,7 @@ flöde.
 
 ### Fas 1 — Problemintervjuer (10–15 st, 2–3 veckor)
 "The Mom Test"-disciplin: fråga om *dåtida konkret beteende*, pitcha
-inte, nämn inte Korg. Båda delsegmenten. Spela in, koda smärtor.
+inte, nämn inte Kine. Båda delsegmenten. Spela in, koda smärtor.
 **Mått:** ≥ 60 % nämner bokförings-/momskedjan oombedd som en
 topp-3-smärta. **Stopp om:** under 40 %.
 
@@ -105,7 +105,7 @@ värdelöftet håller och att de betalar för utfallet, inte för mjukvaran.
 | Grind | Passeras av | Låser upp |
 |-------|-------------|-----------|
 | **Grind 1** | Fas 1 + 2: smärtan är topp-3 och har en daterbar utlösare | ADR 0026 fas 1 (Tenant + RLS-spik, biomax som ensam hyresgäst) får börja |
-| **Grind 2** | Fas 3 + 4: prismedvetet intresse + ≥ 3/5 betalande pilothandlare | ADR 0026 fas 2+ (extern onboarding, fakturering) får byggas; namn-/varumärkesgrinden (KORG Inc.) måste också vara klar |
+| **Grind 2** | Fas 3 + 4: prismedvetet intresse + ≥ 3/5 betalande pilothandlare | ADR 0026 fas 2+ (extern onboarding, fakturering) får byggas; namn-/varumärkesgrinden (KINE Inc.) måste också vara klar |
 
 Fas 1-spiken i ADR 0026 (ren teknik, ingen extern kund) får löpa
 parallellt med Fas 0–2 här — den är billig och reversibel. Allt med
@@ -140,7 +140,7 @@ konvertering.
 4. Vad kostar bokföringen dig idag, i kronor och i tid?
 5. Om du fick trolla bort en sak i hela kedjan order-till-bokslut —
    vilken?
-   *(Inga ledande frågor om Korg. Bara deras värld.)*
+   *(Inga ledande frågor om Kine. Bara deras värld.)*
 
 ### Intervjuguide — utlösare
 6. När gjorde det senast riktigt ont? Vad var det som hände just då?

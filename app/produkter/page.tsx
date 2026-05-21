@@ -93,7 +93,7 @@ export default async function ProductsIndex({
       ? ([{ publishedAt: "desc" as const }, { createdAt: "desc" as const }])
       : ([{ totalSales: "desc" as const }]);
 
-  // Korg 3b-2 #3d: both reads go through the tenant RLS seam
+  // Kine 3b-2 #3d: both reads go through the tenant RLS seam
   // (hostTenantScope → SET LOCAL app.current_tenant_id → FORCE RLS).
   // One transaction = one GUC set; both queries see the same scoped view.
   const [products, categories] = await hostTenantScope((tx) =>

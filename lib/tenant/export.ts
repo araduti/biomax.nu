@@ -167,7 +167,7 @@ export async function exportTenant(
 
   const safeSlug = tenant.slug.replace(/[^a-z0-9.-]/gi, "_");
   return {
-    filename: `korg-tenant-${safeSlug}-${new Date()
+    filename: `kine-tenant-${safeSlug}-${new Date()
       .toISOString()
       .slice(0, 10)}.json`,
     payload,

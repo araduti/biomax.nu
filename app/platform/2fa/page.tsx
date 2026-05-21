@@ -4,7 +4,7 @@ import { requirePlatformSession } from "@/lib/platform/guard";
 import { Platform2faSetup } from "./platform-2fa-setup";
 
 export const metadata: Metadata = {
-  title: "Korg · Plattform · 2FA",
+  title: "Kine · Plattform · 2FA",
   robots: { index: false, follow: false },
 };
 

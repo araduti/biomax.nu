@@ -1,16 +1,16 @@
 # ADR 0029 — Hosting & Multi-Provider High Availability (Swedish)
 
 **Date:** 2026-05-18
-**Status:** Proposed — foundational infra. Gated like the rest of Korg
+**Status:** Proposed — foundational infra. Gated like the rest of Kine
 by GTM validation; HA *tier* is bound to the SLA/pricing decision
 (ADR 0026 §7).
 **Related:** ADR 0026 (platform; §"operational burden", §7 billing/SLA),
 ADR 0028 (multi-tenant foundation), ADR 0022 (preview env),
-`docs/strategi/korg-gtm-validering.md`, memory:
+`docs/strategi/kine-gtm-validering.md`, memory:
 `reference_watchtower_multitenant`
-**Build plan:** `docs/infra/korg-hosting-plan.md` (concrete 2-provider
+**Build plan:** `docs/infra/kine-hosting-plan.md` (concrete 2-provider
 Docker+Terraform steps + expansion triggers; provider research)
-**Shapes deep-dive:** `docs/infra/korg-infra-shapes.md` (AWS-parity map,
+**Shapes deep-dive:** `docs/infra/kine-infra-shapes.md` (AWS-parity map,
 4 costed shapes A–D, "Amazon at a fraction" analysis) — D4 below should
 be reconciled to its recommended ladder (B→C→D)
 
@@ -20,7 +20,7 @@ biomax.nu runs on a home **NUC**. So does Watchtower
 (`deploy-watchtower.sh` — "on the Ampliosoft NUC";
 `docker-compose.prod.yml` is a single-host stack: Postgres 18 + Garage
 S3 + Inngest behind a shared Traefik). **There is no existing HA
-hosting pattern to reuse** — this gap is Ampliosoft-wide, not Korg-only.
+hosting pattern to reuse** — this gap is Ampliosoft-wide, not Kine-only.
 
 A single NUC is fine for one shop or an internal tool. It is
 **disqualifying** for a platform whose tenants depend on it for their
@@ -84,7 +84,7 @@ DCs/cities). Selection is by **PeeringDB network strength + plain-VPS
 + Terraform** — *not* managed-Postgres (D4 rejects DBaaS). On the
 PeeringDB pass (2026-05-18) the chosen pair is **GleSYS (primary) +
 Elastx (second)**; Hexabyte demoted to optional cold-DR (no PeeringDB
-IX/facility record). See `docs/infra/korg-hosting-plan.md`.
+IX/facility record). See `docs/infra/kine-hosting-plan.md`.
 
 ### D3 — Topology: stateless multi-provider now, stateful graduated
 
@@ -188,8 +188,8 @@ Gate-2 / first-paying-tenant gated.
   via RIPE Atlas, not provider word.
 - SRE/DBA capability + game-day cadence for day-one self-managed
   Patroni — who owns it (this is the real cost of D4, not the rental).
-- Is hosting a shared Ampliosoft platform decision (Watchtower + Korg
-  on one HA substrate) or Korg-specific? (Ampliosoft-level, ADR 0026 §0.)
+- Is hosting a shared Ampliosoft platform decision (Watchtower + Kine
+  on one HA substrate) or Kine-specific? (Ampliosoft-level, ADR 0026 §0.)
 - Backup/restore drill cadence + who owns the on-call (ADR 0026
   resourcing open question).
 

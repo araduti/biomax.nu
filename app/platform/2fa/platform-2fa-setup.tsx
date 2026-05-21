@@ -75,7 +75,7 @@ export function Platform2faSetup({ email }: { email: string }) {
     <main style={wrap}>
       <div style={card}>
         <p style={{ margin: 0, fontWeight: 700, letterSpacing: ".08em" }}>
-          KORG · PLATTFORM
+          KINE · PLATTFORM
         </p>
         <p style={{ margin: "0 0 4px", fontSize: 13, opacity: 0.7 }}>
           Tvåfaktor krävs · {email}

@@ -1,4 +1,4 @@
-# Per-tenant DR runbook (Korg)
+# Per-tenant DR runbook (Kine)
 
 **Status:** documented procedure, manual ops. Code follows in
 slices.

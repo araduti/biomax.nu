@@ -40,7 +40,7 @@ isolated datastores; shared compute reaches one pod at a time; the
 "shop isolation principle"), with the guarantee in **topology +
 app-level scoping + heavy tooling/tests** — not a per-query DB ACL.
 That model exists to solve *planetary scale* (no single DB holds
-millions of shops) and *platform blast-radius containment*. At Korg's
+millions of shops) and *platform blast-radius containment*. At Kine's
 scale (hundreds–low-thousands of small SE tenants, single region) it
 is massive premature complexity, and notably its per-query safety is
 *weaker* than DB-enforced RLS (a forgotten filter can leak within a

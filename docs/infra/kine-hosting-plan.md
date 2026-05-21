@@ -1,9 +1,9 @@
-# Korg — Hosting Build Plan (2 VPS providers, Docker + Terraform)
+# Kine — Hosting Build Plan (2 VPS providers, Docker + Terraform)
 
 **Status:** Plan, executes ADR 0029 (graduated HA). Gated by GTM (Gate 1
 = biomax-only off-NUC; Gate 2+ = cross-provider before external scale).
 **Related:** ADR 0029 (hosting/HA), ADR 0028 (multi-tenant),
-`docs/strategi/korg-gtm-validering.md`, memory:
+`docs/strategi/kine-gtm-validering.md`, memory:
 `reference_watchtower_multitenant` (Watchtower's single-host
 docker-compose is the starting shape).
 
@@ -87,10 +87,10 @@ Terraform does **not** uniformly manage these. Split honestly:
   Terraform provider needs both); decide SLA tier (Basic/Bronze/**Gold
   99.95%**) — this sets the ceiling for any merchant SLA (ADR 0029 D6).
 - A DNS provider with an API + Terraform provider (for health-checked
-  failover). Domain `korg.nu` (pending trademark, ADR 0026).
+  failover). Domain `kine.se` (pending trademark, ADR 0026).
 - Object storage bucket (Hexabyte) for: Terraform state, Postgres
   WAL/PITR archive, app uploads (ADR 0029 D5).
-- Git repo `korg-infra` (Terraform + compose + cloud-init + runbooks),
+- Git repo `kine-infra` (Terraform + compose + cloud-init + runbooks),
   separate from app repo.
 - A secrets mechanism (SOPS+age, or a small vault).
 
@@ -124,7 +124,7 @@ infra € delta vs managed is modest; the real cost is owning Postgres
 Day-2 ops with no managed safety net — budget the SRE/DBA skill.
 
 ### Phase 0 — Foundations (no prod traffic) — *GTM Gate-1 era*
-1. `korg-infra` repo: Terraform skeleton, remote state in GleSYS
+1. `kine-infra` repo: Terraform skeleton, remote state in GleSYS
    object storage (S3-compat) + lock.
 2. Terraform (`glesys/glesys`): 1 instance, network, security group
    (80/443 + SSH from bastion), object bucket.
@@ -236,7 +236,7 @@ paying tenants (anti-Tictail; ADR 0026/0029).
   thin-transit-only, it stays strictly DR, not a failover target that
   serves live tenant traffic.
 - **Shared Ampliosoft substrate?** Watchtower has the same NUC problem;
-  decide if this infra is shared (Watchtower + Korg) or Korg-only
+  decide if this infra is shared (Watchtower + Kine) or Kine-only
   (ADR 0029 open question / ADR 0026 §0).
 - Nothing here runs ahead of GTM gates; Phase 0–A only until Gate 1,
   cross-provider (B) gated by Gate 2.

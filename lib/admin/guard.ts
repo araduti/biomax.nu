@@ -11,7 +11,7 @@ import { currentTenant } from "@/lib/tenant";
  * Watchtower's multi-workspace switcher). Authorization = "is a member
  * of *this* tenant's Better Auth Organization with a sufficient role".
  * Cross-tenant operation is the SEPARATE platform plane
- * (`lib/platform/guard.ts`, `admin.korg.nu`) — never reachable here.
+ * (`lib/platform/guard.ts`, `admin.kine.se`) — never reachable here.
  *
  * Behaviour (mirrors the pre-tenant requireAdmin so biomax owners see
  * no regression — they were backfilled as biomax org `owner` members):
@@ -45,7 +45,7 @@ export type TenantActor = {
   email: string;
   name: string | null;
   firstName: string | null;
-  /** Korg Tenant.id — the seam scope (tenantScope(tenantId, …)). */
+  /** Kine Tenant.id — the seam scope (tenantScope(tenantId, …)). */
   tenantId: string;
   /** Better Auth Organization.id backing this tenant. */
   organizationId: string;

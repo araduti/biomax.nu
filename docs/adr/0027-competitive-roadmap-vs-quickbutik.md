@@ -3,15 +3,15 @@
 **Date:** 2026-05-18
 **Status:** Proposed — decision matrix. Every "Go" row becomes its own
 ADR when its GTM gate opens; nothing here is approved to build yet.
-**Related:** ADR 0026 (Korg platform), `docs/strategi/korg-gtm-validering.md`
-(gates this), `docs/varumarke/korg.md`, ADR 0019/0020/0021/0022/0023–0025
+**Related:** ADR 0026 (Kine platform), `docs/strategi/kine-gtm-validering.md`
+(gates this), `docs/varumarke/kine.md`, ADR 0019/0020/0021/0022/0023–0025
 **Source:** Quickbutik published pricing matrix, captured 2026-05-18
 (Startup 319 · Standard 795 · Pro 1 249 · Pro Advanced 3 995 kr/mo,
 0 % transaktionsavgift, free migration).
 
 ## How to read this
 
-- **Korg today:** ✅ have · ◐ partial · ❌ none
+- **Kine today:** ✅ have · ◐ partial · ❌ none
 - **Decision:** **Have** (parity, no work) · **Upgrade→Px** ·
   **Build→Px** · **No-Go** (deliberate refusal, documented)
 - **Tier:** P0 wedge (gate 1) · P1 parity-to-switch (gate 2) · P2 later
@@ -25,7 +25,7 @@ ADR when its GTM gate opens; nothing here is approved to build yet.
 
 ## General / platform
 
-| Feature | Quickbutik | Korg today | Decision | Tier·ADR |
+| Feature | Quickbutik | Kine today | Decision | Tier·ADR |
 |---|---|---|---|---|
 | iOS/Android merchant app | All | ❌ | Build | P2·0036 |
 | Physical products | All | ✅ | Have | — |
@@ -51,7 +51,7 @@ ADR when its GTM gate opens; nothing here is approved to build yet.
 
 ## In-store
 
-| Feature | Quickbutik | Korg today | Decision | Tier·ADR |
+| Feature | Quickbutik | Kine today | Decision | Tier·ADR |
 |---|---|---|---|---|
 | Loyalty points | All | ✅ (ADR 0019) | Have | — |
 | Customer-specific pricing | All | ❌ | Build (light, not full B2B) | P2·0038 |
@@ -67,7 +67,7 @@ ADR when its GTM gate opens; nothing here is approved to build yet.
 
 ## Sales-driving
 
-| Feature | Quickbutik | Korg today | Decision | Tier·ADR |
+| Feature | Quickbutik | Kine today | Decision | Tier·ADR |
 |---|---|---|---|---|
 | Gift cards (stored value) | All | ❌ | Build | P1·0034 |
 | Advanced discounts | Standard+ | ◐ (flat coupons) | Upgrade | P1·0034 |
@@ -86,7 +86,7 @@ ADR when its GTM gate opens; nothing here is approved to build yet.
 
 ## Expansion
 
-| Feature | Quickbutik | Korg today | Decision | Tier·ADR |
+| Feature | Quickbutik | Kine today | Decision | Tier·ADR |
 |---|---|---|---|---|
 | Multiple languages | Standard+ | 🚫 | **No-Go** | sv-SE wedge, ADR 0026 §8 |
 | Multiple currencies | Standard+ | 🚫 | **No-Go** | ADR 0026 §8 |
@@ -96,7 +96,7 @@ ADR when its GTM gate opens; nothing here is approved to build yet.
 
 ## Payments
 
-| Feature | Quickbutik | Korg today | Decision | Tier·ADR |
+| Feature | Quickbutik | Kine today | Decision | Tier·ADR |
 |---|---|---|---|---|
 | Klarna Checkout | All | ✅ (Kustom, ADR 0020/21) | Have | — |
 | Swish (e-com + Business) | All | ❌ | Build | **P1·0030** (hard objection) |
@@ -109,7 +109,7 @@ ADR when its GTM gate opens; nothing here is approved to build yet.
 
 ## Shipping & logistics
 
-| Feature | Quickbutik | Korg today | Decision | Tier·ADR |
+| Feature | Quickbutik | Kine today | Decision | Tier·ADR |
 |---|---|---|---|---|
 | PostNord booking | All | ✅ (Kustom-managed, ADR 0020) | Have | — |
 | Bring booking | All | ❌ | Build | P1·0031 |
@@ -126,7 +126,7 @@ ADR when its GTM gate opens; nothing here is approved to build yet.
 
 ## Additional / integrations
 
-| Feature | Quickbutik | Korg today | Decision | Tier·ADR |
+| Feature | Quickbutik | Kine today | Decision | Tier·ADR |
 |---|---|---|---|---|
 | **Fortnox automation** | **Pro only** | ❌ | **Build** | **P0·0028** (the wedge — native, all tiers) |
 | **Visma automation** | **Pro (3rd-party AutomatiseraMera)** | ❌ | **Build** | **P0·0028** (native, not outsourced) |
@@ -143,7 +143,7 @@ ADR when its GTM gate opens; nothing here is approved to build yet.
 
 Quickbutik: email/chat + community + **Swedish phone** all tiers;
 personalised contact, priority, **99.99 % SLA**, dedicated env on Pro
-Advanced. Korg has no support-policy decision yet. Per
+Advanced. Kine has no support-policy decision yet. Per
 `feedback_no_invented_sla`: **do not fabricate response windows or
 staffed hours.** Support tiering + any SLA is an explicit open decision
 (belongs with platform billing, ADR 0026 §7), not an assumed parity.
@@ -152,7 +152,7 @@ staffed hours.** Support tiering + any SLA is an explicit open decision
 
 Multi-language, multi-currency, multi-store, country-specific
 shipping/payment, marketplaces channel, WMS, Printful dropshipping.
-Matching these makes Korg a worse Quickbutik (ADR 0026 §8). Refusal is
+Matching these makes Kine a worse Quickbutik (ADR 0026 §8). Refusal is
 a feature; revisit only with validated demand, never to chase a matrix.
 
 ## Net read

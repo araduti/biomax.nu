@@ -1,8 +1,8 @@
-# Korg — "Amazon infra at a fraction", deep dive on the 4 shapes
+# Kine — "Amazon infra at a fraction", deep dive on the 4 shapes
 
 **Status:** Brainstorm/analysis for ADR 0029. No decision committed —
 input for picking the launch→scale ladder. Researched 2026-05-18.
-**Related:** ADR 0029 (hosting/HA), `docs/infra/korg-hosting-plan.md`,
+**Related:** ADR 0029 (hosting/HA), `docs/infra/kine-hosting-plan.md`,
 ADR 0028 (multi-tenant), ADR 0026 (platform), GTM validation.
 
 Goal stated by the user: **AWS-class capability, fraction of the cost,
@@ -10,9 +10,9 @@ purpose-built for (Swedish) ecommerce.** That is achievable — *because*
 we are single-market (sv-SE wedge): we don't need AWS's global breadth,
 so we don't pay for it.
 
-## AWS → Korg parity map (the heart of "Amazon at a fraction")
+## AWS → Kine parity map (the heart of "Amazon at a fraction")
 
-| AWS service | Korg self-hosted (Swedish) | Cost shape |
+| AWS service | Kine self-hosted (Swedish) | Cost shape |
 |---|---|---|
 | ALB / NLB | Traefik (or HAProxy) on the nodes | included in VPS |
 | EC2 / ECS / Fargate | plain VPS + **Docker Swarm** | GleSYS VPS |
@@ -40,7 +40,7 @@ SeaweedFS. **Bunny.net** beats Cloudflare on the sovereignty wedge
 A *modest but real* AWS production ecommerce (ALB + RDS Multi-AZ +
 2× ECS + CloudFront + ElastiCache) lands ≈ **$400–1,200+/mo**
 (~SEK 4,300–13,000): ALB alone ~$16 floor and ~$250 at real ecommerce
-traffic; Multi-AZ doubles the DB; CloudFront $0.085/GB EU. Korg Shape B
+traffic; Multi-AZ doubles the DB; CloudFront $0.085/GB EU. Kine Shape B
 (below) ≈ **SEK ~1,600 (~€140)**. That is **~¼–⅛ of AWS** — the
 "fraction" is real, with the honest caveats in the last section.
 
@@ -144,7 +144,7 @@ active DB site.
 
 ## What you do NOT get vs AWS — and whether it matters
 
-| Lose vs AWS | Matters for Korg? |
+| Lose vs AWS | Matters for Kine? |
 |---|---|
 | Infinite elastic autoscale | **Mostly no.** Swedish retail load is predictable; pre-provision headroom + Swarm scale + a weekend vertical bump covers Black Friday. True elasticity is for spiky global apps — not a Kållered-shop platform. |
 | Global anycast / 300 PoPs | **No — it's a *win*.** Single-market SE; Bunny EU PoPs are plenty, and keeping data in Sweden is the *wedge*, not a gap. |

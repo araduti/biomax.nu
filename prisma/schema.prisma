@@ -33,7 +33,7 @@ enum UserRole {
   admin
 }
 
-/// Korg multi-tenant lifecycle (ADR 0030 D6). ACTIVE serves traffic;
+/// Kine multi-tenant lifecycle (ADR 0030 D6). ACTIVE serves traffic;
 /// SUSPENDED 402/holds the storefront without deleting data.
 enum TenantStatus {
   ACTIVE
@@ -52,7 +52,7 @@ enum PlatformRole {
 
 /// One row per Ampliosoft operator with cross-tenant authority
 /// (ADR 0031 D3). Hand-picked, never derived from User.role. The
-/// platform admin surface lives on its own host (admin.korg.nu) with
+/// platform admin surface lives on its own host (admin.kine.se) with
 /// its own auth cookie and mandatory 2FA.
 model PlatformAdmin {
   id           String       @id @default(cuid())
@@ -186,7 +186,7 @@ model Organization {
   createdAt DateTime     @default(now())
   members   Member[]
   invitations Invitation[]
-  /// 1:1 link to the Korg tenant this org represents.
+  /// 1:1 link to the Kine tenant this org represents.
   tenant    Tenant?
 
   @@index([slug])
@@ -236,7 +236,7 @@ model Category {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   products    Product[] @relation("product_categories")
-  /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
+  /// Kine tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String
@@ -348,7 +348,7 @@ model Product {
   @@index([status, totalSales])
   @@index([status, publishedAt])
   @@index([status, updatedAt])
-  /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
+  /// Kine tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String
@@ -382,7 +382,7 @@ model ProductIngredient {
 
   @@unique([productId, ingredientSlug])
   @@index([ingredientSlug])
-  /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
+  /// Kine tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String
@@ -428,7 +428,7 @@ model ProductVariant {
   product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId, position])
-  /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
+  /// Kine tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String
@@ -448,7 +448,7 @@ model ProductCrossSell {
   targetProduct   Product  @relation("target_product", fields: [targetProductId], references: [id], onDelete: Cascade)
 
   @@unique([sourceProductId, targetProductId])
-  /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
+  /// Kine tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String
@@ -487,7 +487,7 @@ model Review {
   user       User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([productId, status, createdAt])
-  /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
+  /// Kine tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String
@@ -508,7 +508,7 @@ model BlogCategory {
   name        String
   description String?
   posts       BlogPost[]
-  /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
+  /// Kine tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String
@@ -538,7 +538,7 @@ model BlogPost {
   categoryId       String?
   author           User?         @relation("author_posts", fields: [authorId], references: [id], onDelete: SetNull)
   category         BlogCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
+  /// Kine tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String
@@ -645,7 +645,7 @@ model Order {
   // Review-request cron filters status=FULFILLED AND
   // reviewRequestSentAt IS NULL on every tick.
   @@index([status, reviewRequestSentAt])
-  /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
+  /// Kine tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String
@@ -698,7 +698,7 @@ model OrderItem {
   @@index([productId])
   // Replenishment cron filters replenishmentSentAt IS NULL each run.
   @@index([replenishmentSentAt])
-  /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
+  /// Kine tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String
@@ -726,7 +726,7 @@ model Address {
   subscriptionBillingFor  Subscription[] @relation("subscription_billing_address")
 
   @@index([userId])
-  /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
+  /// Kine tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String
@@ -742,7 +742,7 @@ model Wishlist {
   updatedAt DateTime          @updatedAt
   user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   items     WishlistProduct[]
-  /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
+  /// Kine tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String
@@ -760,7 +760,7 @@ model WishlistProduct {
   product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([wishlistId, productId])
-  /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
+  /// Kine tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String
@@ -782,7 +782,7 @@ model Coupon {
   usedCount       Int       @default(0)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
-  /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
+  /// Kine tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String
@@ -801,7 +801,7 @@ model SiteSetting {
   value       Json
   description String?
   updatedAt   DateTime @updatedAt
-  /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
+  /// Kine tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String
@@ -832,7 +832,7 @@ model NewsletterSubscriber {
   /// Timestamp of the first welcome email — used to gate the delays for
   /// the subsequent stages (day 3, day 7).
   welcomeSeriesStartedAt DateTime?
-  /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
+  /// Kine tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String
@@ -865,7 +865,7 @@ model CartSnapshot {
 
   @@index([email])
   @@index([createdAt])
-  /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
+  /// Kine tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String
@@ -894,7 +894,7 @@ model Bundle {
   items           BundleItem[]
 
   @@index([active, position])
-  /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
+  /// Kine tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String
@@ -914,7 +914,7 @@ model BundleItem {
 
   @@unique([bundleId, productId])
   @@index([bundleId, position])
-  /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
+  /// Kine tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String
@@ -941,7 +941,7 @@ model IngredientPin {
 
   @@unique([ingredientSlug, productId])
   @@index([ingredientSlug, position])
-  /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
+  /// Kine tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String
@@ -969,7 +969,7 @@ model HomepageBlock {
   updatedAt DateTime @updatedAt
 
   @@index([active, position])
-  /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
+  /// Kine tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String
@@ -993,7 +993,7 @@ model StockNotificationRequest {
   @@index([productId, fulfilledAt])
   // Retention purge (ADR 0024) range-scans on age.
   @@index([createdAt])
-  /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
+  /// Kine tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String
@@ -1150,7 +1150,7 @@ model Redirect {
   status    Int      @default(301)
   reason    String?
   createdAt DateTime @default(now())
-  /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
+  /// Kine tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String
@@ -1187,7 +1187,7 @@ model AdminAuditEntry {
   @@index([action, createdAt])
   @@index([entityType, entityId])
   @@index([actorId, createdAt])
-  /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
+  /// Kine tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String
@@ -1242,7 +1242,7 @@ model ConsentEvent {
   @@index([subjectKey, createdAt])
   @@index([userId, createdAt])
   @@index([createdAt])
-  /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
+  /// Kine tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String
@@ -1301,7 +1301,7 @@ model Subscription {
 
   @@index([status, nextOrderAt])
   @@index([userId])
-  /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
+  /// Kine tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String
@@ -1335,7 +1335,7 @@ model SubscriptionLine {
 
   @@unique([subscriptionId, productId, variantId])
   @@index([productId])
-  /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
+  /// Kine tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String
@@ -1381,7 +1381,7 @@ model Return {
   @@index([orderId])
   @@index([userId])
   @@index([status, createdAt])
-  /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
+  /// Kine tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String
@@ -1409,7 +1409,7 @@ model ReturnItem {
   orderItem    OrderItem  @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
 
   @@unique([returnId, orderItemId])
-  /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
+  /// Kine tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String
@@ -1480,7 +1480,7 @@ model HomepageHero {
   @@index([status])
   @@index([season])
   @@index([startsAt, endsAt])
-  /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
+  /// Kine tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String
@@ -1547,7 +1547,7 @@ model LoyaltyAccount {
   transactions    LoyaltyTransaction[]
 
   @@index([lastActivityAt])
-  /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
+  /// Kine tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String
@@ -1584,7 +1584,7 @@ model LoyaltyTransaction {
   @@index([accountId, createdAt])
   @@index([userId, createdAt])
   @@index([orderId])
-  /// Korg tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
+  /// Kine tenant scope (ADR 0028 D1 / 0030 D2). Nullable in 3b-1
   /// (additive backfill to tenant zero); NOT NULL + composite
   /// uniques + RLS land in 3b-2/3b-3.
   tenantId String
@@ -1593,13 +1593,13 @@ model LoyaltyTransaction {
   @@index([tenantId])
 }
 
-/// Korg tenant (ADR 0026/0028/0030). One row per merchant shop.
+/// Kine tenant (ADR 0026/0028/0030). One row per merchant shop.
 /// biomax.nu is tenant zero (slug "biomax"); legally + architecturally
 /// just a tenant (ADR 0026 §0). Slice 1: identity/branding only —
 /// tenantId on owned models + RLS lands in the ADR 0028 D1 increment.
 model Tenant {
   id              String       @id @default(cuid())
-  /// Subdomain label: {slug}.korg.nu. Lowercase, DNS-safe.
+  /// Subdomain label: {slug}.kine.se. Lowercase, DNS-safe.
   slug            String       @unique
   name            String
   tagline         String?

@@ -37,7 +37,7 @@ try {
 }
 
 async function main() {
-  // Tenants must always exist (Korg) — independent of the admin gate.
+  // Tenants must always exist (Kine) — independent of the admin gate.
   const { seedTenants } = await import("./tenants");
   await seedTenants();
   // Per-tenant payment credentials — env-seeded for tenant zero,

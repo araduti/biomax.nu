@@ -25,7 +25,7 @@ finding #4 lists `lib/klarna/client.ts` `credentials()` /
 merchant account for the whole process. ADR 0026 §4 makes the target
 state a hard line, not a nicety: **each merchant connects their own
 Kustom/Klarna account**; the platform orchestrates and never holds or
-routes funds (this keeps Korg out of PSP / money-transmission scope).
+routes funds (this keeps Kine out of PSP / money-transmission scope).
 
 Two distinct problems must be solved together:
 
@@ -84,7 +84,7 @@ The stored format is self-describing — `v<scheme>:<iv>:<tag>:<ct>`,
 base64 segments — so the decrypt path is chosen by the stored value,
 not by config, which makes a future re-key a data migration rather
 than a code fork. `encVersion = 1` ("dev AES-GCM, KEK from env"). The
-KEK is read from `KORG_PAYMENT_KEK` (32+ bytes, scrypt-stretched);
+KEK is read from `KINE_PAYMENT_KEK` (32+ bytes, scrypt-stretched);
 **dev-only fallback** to `BETTER_AUTH_SECRET` with a single loud
 `console.warn` so local/CI keep working without new env wiring.
 

@@ -3,8 +3,8 @@
  * Node imports here — `middleware.ts` runs on the edge runtime.
  *
  * Mapping (ADR 0026 §2):
- *   {slug}.korg.nu          → slug
- *   www.korg.nu / korg.nu   → tenant zero ("biomax")
+ *   {slug}.kine.se          → slug
+ *   www.kine.se / kine.se   → tenant zero ("biomax")
  *   {slug}.localhost:PORT   → slug          (dev)
  *   localhost / 127.0.0.1   → tenant zero   (dev, behaviour unchanged)
  *
@@ -14,24 +14,24 @@
  */
 
 export const DEFAULT_TENANT_SLUG = "biomax";
-export const TENANT_HEADER = "x-korg-tenant";
+export const TENANT_HEADER = "x-kine-tenant";
 /** Set to "1" by middleware when the request is on the platform host
- *  (admin.korg.nu / admin.localhost) — ADR 0031. The platform surface
+ *  (admin.kine.se / admin.localhost) — ADR 0031. The platform surface
  *  is gated on this; a tenant host can never reach it. */
-export const PLATFORM_HOST_HEADER = "x-korg-platform-host";
+export const PLATFORM_HOST_HEADER = "x-kine-platform-host";
 export const PLATFORM_HOST_LABEL = "admin";
 
-/** True when the Host is the platform host (admin.korg.nu or, in dev,
+/** True when the Host is the platform host (admin.kine.se or, in dev,
  *  admin.localhost[:port]). Edge-safe. */
 export function isPlatformHost(host: string | null | undefined): boolean {
   if (!host) return false;
   const hostname = host.split(":")[0].trim().toLowerCase();
   const parts = hostname.split(".");
-  // admin.localhost (dev) | admin.korg.nu (prod)
+  // admin.localhost (dev) | admin.kine.se (prod)
   if (parts[0] !== PLATFORM_HOST_LABEL) return false;
   return (
     (parts.length === 2 && parts[1] === "localhost") ||
-    (parts.length >= 3 && parts.slice(-2).join(".") === "korg.nu")
+    (parts.length >= 3 && parts.slice(-2).join(".") === "kine.se")
   );
 }
 
@@ -48,13 +48,13 @@ export function tenantSlugFromHost(host: string | null | undefined): string {
   if (parts.length === 2 && parts[1] === "localhost") {
     return normalize(parts[0]);
   }
-  // {slug}.korg.nu (3+ labels) — apex/www → tenant zero
+  // {slug}.kine.se (3+ labels) — apex/www → tenant zero
   if (parts.length >= 3) {
     const sub = parts[0];
     if (sub === "www" || sub === "") return DEFAULT_TENANT_SLUG;
     return normalize(sub);
   }
-  // apex korg.nu or anything unrecognised → tenant zero
+  // apex kine.se or anything unrecognised → tenant zero
   return DEFAULT_TENANT_SLUG;
 }
 

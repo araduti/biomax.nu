@@ -125,7 +125,7 @@ function constantTimeEquals(a: string, b: string): boolean {
  * Webhook bootstrap signal (ADR 0034 D5, step 2): match a push
  * `?token=` against per-tenant `webhookSecretEnc`. Needs no Host and
  * no prior Kustom API call. Linear scan + unseal is acceptable at
- * Korg's scale (hundreds–low-thousands of tenants); revisit if that
+ * Kine's scale (hundreds–low-thousands of tenants); revisit if that
  * assumption changes. Returns the resolved credentials + tenantId, or
  * null when no per-tenant token matches (caller falls back to env /
  * tenant zero — single-tenant unchanged).

@@ -2,7 +2,7 @@
 
 **Date:** 2026-05-21
 **Status:** Audit complete · awaiting human decisions
-**Scope:** Read-only scan of `feat/korg-multi-tenant` @ `c126cb0` (audit branch `claude/korg-3-16-platform-extraction-audit`).
+**Scope:** Read-only scan of `feat/kine-multi-tenant` @ `c126cb0` (audit branch `claude/kine-3-16-platform-extraction-audit`).
 **Author:** automated agent (slice #16)
 
 ## Executive summary
@@ -40,9 +40,9 @@ For each pattern in slice §"Scope of search", a `grep -rn` was run across `app/
 - **Location:** `lib/auth.ts:141`
 - **Pattern:** `cookiePrefix: "biomax",`
 - **Current behavior:** All storefront sessions, cart, 2FA cookies are prefixed `biomax`. The platform plane (`lib/auth-platform.ts`) already uses the parameterised `korgadm` prefix.
-- **Why it's biomax-specific:** Storefront cookie prefix is a *platform-plane* concern (one storefront cookie shape across all tenants on `*.korg.nu`); hardcoding `biomax` ties cookie naming to tenant #1.
+- **Why it's biomax-specific:** Storefront cookie prefix is a *platform-plane* concern (one storefront cookie shape across all tenants on `*.kine.se`); hardcoding `biomax` ties cookie naming to tenant #1.
 - **Category proposal:** PARAMETERIZE
-- **Reasoning:** Should be a platform constant (e.g. `"korg"`) — every tenant shares one Better Auth instance + one cookie prefix. Distinct from per-tenant branding.
+- **Reasoning:** Should be a platform constant (e.g. `"kine"`) — every tenant shares one Better Auth instance + one cookie prefix. Distinct from per-tenant branding.
 - **Open questions:** Migration: existing biomax users' `biomax.session_token` cookies become invalid the moment this flips. Consider supporting both prefixes during a deprecation window, or treat the rename as a one-time forced re-login on cutover.
 - **Size:** small (the rename), medium (the migration tail).
 
@@ -50,7 +50,7 @@ For each pattern in slice §"Scope of search", a `grep -rn` was run across `app/
 - **Location:** `lib/auth.ts:207`
 - **Pattern:** `twoFactor({ issuer: "Biomax", ... })`
 - **Current behavior:** Authenticator apps show "Biomax" as the issuer label on every TOTP entry.
-- **Why it's biomax-specific:** The TOTP issuer should be the tenant's brand (so a customer with TOTP on three different shops on Korg sees three distinct entries).
+- **Why it's biomax-specific:** The TOTP issuer should be the tenant's brand (so a customer with TOTP on three different shops on Kine sees three distinct entries).
 - **Category proposal:** TENANT-CONFIG
 - **Reasoning:** Either pull from `currentTenant().name` if the instance can read tenant at config time, or scope per-tenant by minting org-specific TOTP secrets with the tenant name baked in at enrolment time. Better Auth's `twoFactor` plugin issuer is module-level — extracting needs an architectural decision (one issuer per platform, or dynamic at enrolment).
 - **Open questions:** Are TOTP secrets re-encoded if issuer changes? Existing biomax 2FA enrolments will still display "Biomax" — that's fine since they migrated as such.
@@ -62,7 +62,7 @@ For each pattern in slice §"Scope of search", a `grep -rn` was run across `app/
 - **Current behavior:** Trusted origin fallback in production.
 - **Why it's biomax-specific:** Hard fallback URL.
 - **Category proposal:** PARAMETERIZE
-- **Reasoning:** In a multi-tenant world `trustedOrigins` is a wildcard list (`*.korg.nu`, plus custom domains). The `?? "https://www.biomax.nu"` should be removed or replaced with `*.korg.nu` once domain registry exists.
+- **Reasoning:** In a multi-tenant world `trustedOrigins` is a wildcard list (`*.kine.se`, plus custom domains). The `?? "https://www.biomax.nu"` should be removed or replaced with `*.kine.se` once domain registry exists.
 - **Size:** small
 
 ### Finding 4 — Auto-enrol every customer into "Familjen Biomax" loyalty
@@ -86,7 +86,7 @@ For each pattern in slice §"Scope of search", a `grep -rn` was run across `app/
 ### Finding 6 — `DEFAULT_TENANT_SLUG = "biomax"` resolution fallback
 - **Location:** `lib/tenant/host.ts:16`, `lib/tenant/index.ts:46-62`
 - **Pattern:** `export const DEFAULT_TENANT_SLUG = "biomax";`
-- **Current behavior:** Unrecognised host (apex korg.nu, localhost, IPs, unknown subdomain after suspension) → biomax. Tenant zero is fail-safe target until 3b lock-down flip.
+- **Current behavior:** Unrecognised host (apex kine.se, localhost, IPs, unknown subdomain after suspension) → biomax. Tenant zero is fail-safe target until 3b lock-down flip.
 - **Why it's biomax-specific:** Platform fallback hardcodes a tenant slug.
 - **Category proposal:** UNCLEAR
 - **Reasoning:** Already intentionally documented as transitional ("fail-safe to tenant zero so the storefront's behaviour is unchanged while the platform is incrementally tenant-scoped"). Post-cutover the platform should NOT default to any tenant — unknown host → 404. Flag for explicit decision: keep biomax as fallback forever, or refactor to "no tenant resolved → reject"?
@@ -105,8 +105,8 @@ For each pattern in slice §"Scope of search", a `grep -rn` was run across `app/
 - **Location:** `lib/cart-store.ts:192`
 - **Pattern:** `name: "biomax-cart",`
 - **Category proposal:** PARAMETERIZE
-- **Reasoning:** Cart key should be `korg-cart` or scoped per tenant slug (`korg-cart-${slug}`). Currently a customer who visits two Korg tenants in one browser would share cart contents (a real cross-tenant bug, not just naming). Worth highlighting.
-- **Open questions:** Is the cart store actually cross-tenant-leaky today? Check: if Customer is on `tenantA.korg.nu` then visits `tenantB.korg.nu`, do they see tenantA's cart items? Very likely yes — same localStorage key, no tenant scope.
+- **Reasoning:** Cart key should be `kine-cart` or scoped per tenant slug (`kine-cart-${slug}`). Currently a customer who visits two Kine tenants in one browser would share cart contents (a real cross-tenant bug, not just naming). Worth highlighting.
+- **Open questions:** Is the cart store actually cross-tenant-leaky today? Check: if Customer is on `tenantA.kine.se` then visits `tenantB.kine.se`, do they see tenantA's cart items? Very likely yes — same localStorage key, no tenant scope.
 - **Size:** small (rename + scope), but the bug it surfaces is medium.
 
 ### Finding 9 — Consent storage keys + DOM event names
@@ -116,14 +116,14 @@ For each pattern in slice §"Scope of search", a `grep -rn` was run across `app/
   - `components/site/cookie-consent.tsx:63,134-135` — DOM events `biomax:consent-changed`, `biomax:open-consent`
   - `components/site/cookie-settings-link.tsx:14` — dispatches `biomax:open-consent`
 - **Category proposal:** PARAMETERIZE
-- **Reasoning:** Same cross-tenant localStorage hazard as the cart. Rename to `korg-consent` + namespace per-tenant if consent decisions are tenant-specific (GDPR controller is the tenant, so likely yes).
-- **Open questions:** Per-tenant consent or per-platform? Decision affects whether key should be `korg-consent-${slug}` or just `korg-consent`.
+- **Reasoning:** Same cross-tenant localStorage hazard as the cart. Rename to `kine-consent` + namespace per-tenant if consent decisions are tenant-specific (GDPR controller is the tenant, so likely yes).
+- **Open questions:** Per-tenant consent or per-platform? Decision affects whether key should be `kine-consent-${slug}` or just `kine-consent`.
 - **Size:** small
 
 ### Finding 10 — Admin overview widgets localStorage key `"biomax-admin-overview-widgets"`
 - **Location:** `lib/admin/widget-prefs.ts:47`
 - **Category proposal:** PARAMETERIZE
-- **Reasoning:** Cross-tenant admin layout sharing isn't terrible but the name is wrong. Rename to `korg-admin-overview-widgets`.
+- **Reasoning:** Cross-tenant admin layout sharing isn't terrible but the name is wrong. Rename to `kine-admin-overview-widgets`.
 - **Size:** small
 
 ### Finding 11 — Admin packlista checked-items localStorage `"biomax-packlista-checked"`
@@ -147,7 +147,7 @@ For each pattern in slice §"Scope of search", a `grep -rn` was run across `app/
   - `app/globals.css:122-184` — every `.prose-biomax {...}` rule
   - All consumers: `components/product/product-content.tsx:79`, `components/product/product-hero.tsx:122`, `components/ui/rich-text-editor.tsx:133`, `components/site/legal-page.tsx:62`, `app/om-oss/page.tsx:36`
 - **Category proposal:** PARAMETERIZE
-- **Reasoning:** Rename to `prose-korg` (or just `prose`). It's platform-default rich-text typography — no per-tenant difference.
+- **Reasoning:** Rename to `prose-kine` (or just `prose`). It's platform-default rich-text typography — no per-tenant difference.
 - **Size:** small
 
 ### Finding 15 — `<BiomaxLogo />` component name + import
@@ -356,7 +356,7 @@ For each pattern in slice §"Scope of search", a `grep -rn` was run across `app/
 - **Location:** `app/admin/etiketter/page.tsx:52,76`
 - **Pattern:** Page about label artwork mentioning "konsekvens mot biomax.nu" and "mg-värden ska bekräftas av Rockland-deklaration innan tryck".
 - **Category proposal:** PLUGIN
-- **Reasoning:** Whole "etiketter" admin page is biomax-Rockland workflow (printing supplement bottle labels). No other Korg tenant needs this. Move entire `app/admin/etiketter/` + `components/admin/label-preview.tsx` into `plugins/biomax-rockland/`.
+- **Reasoning:** Whole "etiketter" admin page is biomax-Rockland workflow (printing supplement bottle labels). No other Kine tenant needs this. Move entire `app/admin/etiketter/` + `components/admin/label-preview.tsx` into `plugins/biomax-rockland/`.
 - **Size:** medium
 
 ### Finding 45 — `components/admin/label-preview.tsx` BIOMAX_LINES + Rockland sub-brand
@@ -393,15 +393,15 @@ For each pattern in slice §"Scope of search", a `grep -rn` was run across `app/
 ### Finding 50 — Backup script filename prefix `biomax-`
 - **Locations:** `scripts/backup-postgres.sh:14-15,34-36,62,90`, and `app/admin/system/backups/page.tsx:31` (`f.startsWith("biomax-")`)
 - **Pattern:** Dumps named `biomax-${DATE}.dump`; admin UI filters by `biomax-` prefix.
-- **Category proposal:** PARAMETERIZE (rename to `korg-${tenantSlug}-...` per tenant, or `korg-platform-` for platform-wide dumps)
-- **Reasoning:** In a multi-tenant world either per-tenant dumps (with tenant slug in filename) or platform-wide (with `korg` prefix). The admin UI prefix filter then becomes a per-tenant view.
+- **Category proposal:** PARAMETERIZE (rename to `kine-${tenantSlug}-...` per tenant, or `kine-platform-` for platform-wide dumps)
+- **Reasoning:** In a multi-tenant world either per-tenant dumps (with tenant slug in filename) or platform-wide (with `kine` prefix). The admin UI prefix filter then becomes a per-tenant view.
 - **Size:** medium
 
 ### Finding 51 — Cron emails reference biomax.nu admin URLs
 - **Locations:** `app/api/cron/auth-expiry/route.ts:154,169`, `app/api/cron/low-stock-alert/route.ts:147`
 - **Pattern:** Hardcoded `https://www.biomax.nu/admin/ordrar` and `/admin/produkter` links in email bodies.
-- **Category proposal:** TENANT-CONFIG (use tenant host) / PARAMETERIZE (platform admin URL once admin moves to `admin.korg.nu`)
-- **Open questions:** With ADR 0031 the admin pane is at `admin.korg.nu` — should these emails link there or to the tenant storefront? Different URLs depending.
+- **Category proposal:** TENANT-CONFIG (use tenant host) / PARAMETERIZE (platform admin URL once admin moves to `admin.kine.se`)
+- **Open questions:** With ADR 0031 the admin pane is at `admin.kine.se` — should these emails link there or to the tenant storefront? Different URLs depending.
 - **Size:** small
 
 ### Finding 52 — Webhook + uptime + import scripts assume biomax.nu URL
@@ -411,9 +411,9 @@ For each pattern in slice §"Scope of search", a `grep -rn` was run across `app/
 
 ### Finding 53 — Auth-platform-client comment references biomax cookie isolation
 - **Location:** `lib/auth-platform.ts:13` (comment)
-- **Pattern:** Comment text only — "the `biomax`-prefixed storefront or any `*.korg.nu` tenant cookie."
+- **Pattern:** Comment text only — "the `biomax`-prefixed storefront or any `*.kine.se` tenant cookie."
 - **Category proposal:** UNCLEAR (comment will be stale once Finding 1 is resolved)
-- **Reasoning:** Update the comment when the prefix becomes `korg`. Otherwise this comment alone is harmless.
+- **Reasoning:** Update the comment when the prefix becomes `kine`. Otherwise this comment alone is harmless.
 - **Size:** trivial
 
 ### Finding 54 — Trustpilot integration env var description
@@ -521,13 +521,13 @@ JSON-LD, OG metadata, sitemap/robots, feeds, `llms.txt`, email templates, invoic
 `app/design/page.tsx` (1648 lines) is a static reference page rendering biomax homepage variants for design QA. Contains every brand string, founder image, copy block. It is NOT user-facing in production routing semantics but it IS in the bundle. Decision: keep as biomax-tenant-only design system documentation (move to `plugins/biomax/` or `docs/design-reference/`), or delete from platform repo.
 
 ### O3 — The cross-tenant cart/consent localStorage hazard (Findings 8, 9)
-The `biomax-cart` and `biomax-consent` localStorage keys are not just cosmetic — they are *shared across tenants* in a multi-tenant world (a customer visiting `tenantA.korg.nu` and then `tenantB.korg.nu` would share cart contents and consent decisions). This is a real correctness bug surfaced by the audit, not just naming. Fixing the name fixes the bug only if the rename includes per-tenant scoping (`korg-cart-${slug}`).
+The `biomax-cart` and `biomax-consent` localStorage keys are not just cosmetic — they are *shared across tenants* in a multi-tenant world (a customer visiting `tenantA.kine.se` and then `tenantB.kine.se` would share cart contents and consent decisions). This is a real correctness bug surfaced by the audit, not just naming. Fixing the name fixes the bug only if the rename includes per-tenant scoping (`kine-cart-${slug}`).
 
 ### O4 — The "Familjen Biomax" loyalty program is structurally tenant content
 The program name, copy, route slug (`/konto/familjen`), DB-schema header comment (`prisma/schema.prisma:1476` — "Familjen Biomax (loyalty)"), constants file, account-sidebar label, checkout strings, order/admin/invoice cards all hardcode the program name. This is more than copy — `Familjen` ("the family") is a route segment, model section header, and constant name. A clean lift needs ADR-level decision: platform ships loyalty as a generic feature with per-tenant program name + earn/burn config (TENANT-CONFIG, see Finding 5).
 
 ### O5 — Rockland is a real PLUGIN candidate
-Rockland sub-brand surfaces (label-preview, etiketter admin, Rockland seed scripts, label-system-brief.md) form a coherent feature that no other Korg tenant will ever need. This is exactly the use-case for `plugins/biomax-rockland/` per the slice brief.
+Rockland sub-brand surfaces (label-preview, etiketter admin, Rockland seed scripts, label-system-brief.md) form a coherent feature that no other Kine tenant will ever need. This is exactly the use-case for `plugins/biomax-rockland/` per the slice brief.
 
 ### O6 — The Swedish-only assumption is also baked
 While not in scope, observed: `html lang="sv"` in email layout, all copy is Swedish, locale defaulted `"sv-SE"` in Better Auth user additionalFields. If kine ever onboards a non-Swedish tenant, this becomes a third axis (platform / tenant / locale). Flag for ADR consideration.
