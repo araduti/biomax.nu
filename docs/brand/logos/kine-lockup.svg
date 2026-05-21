@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 180" width="460" height="180">
+  <title>kine · primary lockup · horizontal</title>
+  <g transform="translate(80, 90) rotate(-120)">
+    <path d="M -43 30 A 52 52 0 1 1 43 30" fill="none" stroke="#4A7C5C" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="43" cy="30" r="5" fill="#4A7C5C"/>
+    <path d="M -29.5 20.66 A 36 36 0 1 1 29.5 20.66" fill="none" stroke="#1B4332" stroke-width="6" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(155, 30)">
+    <text x="0" y="105" font-family="-apple-system, Inter, Helvetica, sans-serif" font-size="120" font-weight="300" letter-spacing="-3" fill="#1B4332">k</text>
+    <polygon points="60,105 66,105 66,38 60,42" fill="#1B4332"/>
+    <text x="69" y="105" font-family="-apple-system, Inter, Helvetica, sans-serif" font-size="120" font-weight="300" letter-spacing="-3.8" fill="#1B4332">ne</text>
+  </g>
+</svg>

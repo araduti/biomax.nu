@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 280" width="320" height="280">
+  <title>kine · stacked lockup · for square contexts</title>
+  <g transform="translate(160, 85) rotate(-120)">
+    <path d="M -43 30 A 52 52 0 1 1 43 30" fill="none" stroke="#4A7C5C" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="43" cy="30" r="5" fill="#4A7C5C"/>
+    <path d="M -29.5 20.66 A 36 36 0 1 1 29.5 20.66" fill="none" stroke="#1B4332" stroke-width="6" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(72, 175)">
+    <text x="0" y="80" font-family="-apple-system, Inter, Helvetica, sans-serif" font-size="92" font-weight="300" letter-spacing="-2.3" fill="#1B4332">k</text>
+    <polygon points="46,80 51,80 51,29 46,32" fill="#1B4332"/>
+    <text x="53" y="80" font-family="-apple-system, Inter, Helvetica, sans-serif" font-size="92" font-weight="300" letter-spacing="-3" fill="#1B4332">ne</text>
+  </g>
+</svg>

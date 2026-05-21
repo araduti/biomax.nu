@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <title>kine · favicon · 256×256 · app icon</title>
+  <rect width="256" height="256" rx="32" fill="#1B4332"/>
+  <g transform="translate(128, 128) rotate(-120) scale(1.7)">
+    <path d="M -43 30 A 52 52 0 1 1 43 30" fill="none" stroke="#4A7C5C" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="43" cy="30" r="4" fill="#4A7C5C"/>
+    <path d="M -29.5 20.66 A 36 36 0 1 1 29.5 20.66" fill="none" stroke="#F8F5F0" stroke-width="4.5" stroke-linecap="round"/>
+  </g>
+</svg>

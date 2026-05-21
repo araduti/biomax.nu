@@ -1,0 +1,160 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1900" width="1400" height="1900">
+  <rect width="1400" height="1900" fill="#F8F5F0"/>
+
+  <text x="60" y="60" font-family="-apple-system, Inter, sans-serif" font-size="11" font-weight="600" letter-spacing="2.5" fill="#1B4332" opacity="0.55">KINE · BRAND IDENTITY</text>
+  <text x="60" y="90" font-family="-apple-system, Inter, sans-serif" font-size="20" font-weight="500" fill="#1B4332">The multi-tenant commerce platform for Swedish small shops.</text>
+
+  <g transform="translate(80, 220) rotate(-120)">
+    <path d="M -43 30 A 52 52 0 1 1 43 30" fill="none" stroke="#4A7C5C" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="43" cy="30" r="5" fill="#4A7C5C"/>
+    <path d="M -29.5 20.66 A 36 36 0 1 1 29.5 20.66" fill="none" stroke="#1B4332" stroke-width="6" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(155, 160)">
+    <text x="0" y="105" font-family="-apple-system, Inter, sans-serif" font-size="120" font-weight="300" letter-spacing="-3" fill="#1B4332">k</text>
+    <polygon points="60,105 66,105 66,38 60,42" fill="#1B4332"/>
+    <text x="69" y="105" font-family="-apple-system, Inter, sans-serif" font-size="120" font-weight="300" letter-spacing="-3.8" fill="#1B4332">ne</text>
+  </g>
+
+  <line x1="60" y1="310" x2="1340" y2="310" stroke="#1B4332" stroke-width="0.5" opacity="0.15"/>
+  <text x="60" y="345" font-family="-apple-system, Inter, sans-serif" font-size="11" font-weight="600" letter-spacing="2" fill="#1B4332" opacity="0.55">LOGO SYSTEM</text>
+
+  <text x="60" y="385" font-family="-apple-system, Inter, sans-serif" font-size="11" font-weight="500" fill="#1B4332" opacity="0.6">PRIMARY LOCKUP · HORIZONTAL</text>
+  <g transform="translate(140, 470) rotate(-120) scale(0.7)">
+    <path d="M -43 30 A 52 52 0 1 1 43 30" fill="none" stroke="#4A7C5C" stroke-width="3.6" stroke-linecap="round"/>
+    <circle cx="43" cy="30" r="7" fill="#4A7C5C"/>
+    <path d="M -29.5 20.66 A 36 36 0 1 1 29.5 20.66" fill="none" stroke="#1B4332" stroke-width="8.5" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(195, 430)">
+    <text x="0" y="74" font-family="-apple-system, Inter, sans-serif" font-size="84" font-weight="300" letter-spacing="-2.1" fill="#1B4332">k</text>
+    <polygon points="42,74 46.2,74 46.2,27 42,30" fill="#1B4332"/>
+    <text x="48.3,74" font-family="-apple-system, Inter, sans-serif" font-size="84" font-weight="300" letter-spacing="-2.66" fill="#1B4332">
+    </text>
+    <text x="48" y="74" font-family="-apple-system, Inter, sans-serif" font-size="84" font-weight="300" letter-spacing="-2.66" fill="#1B4332">ne</text>
+  </g>
+
+  <text x="500" y="385" font-family="-apple-system, Inter, sans-serif" font-size="11" font-weight="500" fill="#1B4332" opacity="0.6">STACKED · FOR SQUARE CONTEXTS</text>
+  <g transform="translate(610, 425) rotate(-120) scale(0.55)">
+    <path d="M -43 30 A 52 52 0 1 1 43 30" fill="none" stroke="#4A7C5C" stroke-width="4.5" stroke-linecap="round"/>
+    <circle cx="43" cy="30" r="9" fill="#4A7C5C"/>
+    <path d="M -29.5 20.66 A 36 36 0 1 1 29.5 20.66" fill="none" stroke="#1B4332" stroke-width="11" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(548, 470)">
+    <text x="0" y="60" font-family="-apple-system, Inter, sans-serif" font-size="70" font-weight="300" letter-spacing="-1.75" fill="#1B4332">k</text>
+    <polygon points="35,60 38.5,60 38.5,22 35,24.5" fill="#1B4332"/>
+    <text x="40.5" y="60" font-family="-apple-system, Inter, sans-serif" font-size="70" font-weight="300" letter-spacing="-2.2" fill="#1B4332">ne</text>
+  </g>
+
+  <text x="830" y="385" font-family="-apple-system, Inter, sans-serif" font-size="11" font-weight="500" fill="#1B4332" opacity="0.6">MARK STANDALONE</text>
+  <g transform="translate(910, 470) rotate(-120) scale(0.7)">
+    <path d="M -43 30 A 52 52 0 1 1 43 30" fill="none" stroke="#4A7C5C" stroke-width="3.6" stroke-linecap="round"/>
+    <circle cx="43" cy="30" r="7" fill="#4A7C5C"/>
+    <path d="M -29.5 20.66 A 36 36 0 1 1 29.5 20.66" fill="none" stroke="#1B4332" stroke-width="8.5" stroke-linecap="round"/>
+  </g>
+
+  <text x="1080" y="385" font-family="-apple-system, Inter, sans-serif" font-size="11" font-weight="500" fill="#1B4332" opacity="0.6">WORDMARK ONLY</text>
+  <g transform="translate(1080, 430)">
+    <text x="0" y="74" font-family="-apple-system, Inter, sans-serif" font-size="84" font-weight="300" letter-spacing="-2.1" fill="#1B4332">k</text>
+    <polygon points="42,74 46.2,74 46.2,27 42,30" fill="#1B4332"/>
+    <text x="48" y="74" font-family="-apple-system, Inter, sans-serif" font-size="84" font-weight="300" letter-spacing="-2.66" fill="#1B4332">ne</text>
+  </g>
+
+  <line x1="60" y1="560" x2="1340" y2="560" stroke="#1B4332" stroke-width="0.5" opacity="0.15"/>
+  <text x="60" y="595" font-family="-apple-system, Inter, sans-serif" font-size="11" font-weight="600" letter-spacing="2" fill="#1B4332" opacity="0.55">SCALE STUDY · FAVICON SURVIVAL TEST</text>
+
+  <g transform="translate(80, 620)">
+    <rect width="32" height="32" rx="4" fill="#1B4332"/>
+    <g transform="translate(16, 16) rotate(-120) scale(0.22)">
+      <path d="M -43 30 A 52 52 0 1 1 43 30" fill="none" stroke="#4A7C5C" stroke-width="9" stroke-linecap="round"/>
+      <circle cx="43" cy="30" r="14" fill="#4A7C5C"/>
+      <path d="M -29.5 20.66 A 36 36 0 1 1 29.5 20.66" fill="none" stroke="#F8F5F0" stroke-width="22" stroke-linecap="round"/>
+    </g>
+  </g>
+  <text x="80" y="680" font-family="-apple-system, Inter, sans-serif" font-size="10" fill="#1B4332" opacity="0.5">32px · TRUE</text>
+
+  <g transform="translate(160, 620)">
+    <rect width="64" height="64" rx="8" fill="#1B4332"/>
+    <g transform="translate(32, 32) rotate(-120) scale(0.44)">
+      <path d="M -43 30 A 52 52 0 1 1 43 30" fill="none" stroke="#4A7C5C" stroke-width="5.5" stroke-linecap="round"/>
+      <circle cx="43" cy="30" r="11" fill="#4A7C5C"/>
+      <path d="M -29.5 20.66 A 36 36 0 1 1 29.5 20.66" fill="none" stroke="#F8F5F0" stroke-width="13" stroke-linecap="round"/>
+    </g>
+  </g>
+  <text x="160" y="710" font-family="-apple-system, Inter, sans-serif" font-size="10" fill="#1B4332" opacity="0.5">64px</text>
+
+  <g transform="translate(270, 620)">
+    <rect width="128" height="128" rx="16" fill="#1B4332"/>
+    <g transform="translate(64, 64) rotate(-120) scale(0.88)">
+      <path d="M -43 30 A 52 52 0 1 1 43 30" fill="none" stroke="#4A7C5C" stroke-width="2.8" stroke-linecap="round"/>
+      <circle cx="43" cy="30" r="5.5" fill="#4A7C5C"/>
+      <path d="M -29.5 20.66 A 36 36 0 1 1 29.5 20.66" fill="none" stroke="#F8F5F0" stroke-width="6.5" stroke-linecap="round"/>
+    </g>
+  </g>
+  <text x="270" y="775" font-family="-apple-system, Inter, sans-serif" font-size="10" fill="#1B4332" opacity="0.5">128px · APP ICON</text>
+
+  <g transform="translate(450, 620)">
+    <rect width="256" height="256" rx="32" fill="#1B4332"/>
+    <g transform="translate(128, 128) rotate(-120) scale(1.7)">
+      <path d="M -43 30 A 52 52 0 1 1 43 30" fill="none" stroke="#4A7C5C" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="43" cy="30" r="4" fill="#4A7C5C"/>
+      <path d="M -29.5 20.66 A 36 36 0 1 1 29.5 20.66" fill="none" stroke="#F8F5F0" stroke-width="4.5" stroke-linecap="round"/>
+    </g>
+  </g>
+  <text x="450" y="905" font-family="-apple-system, Inter, sans-serif" font-size="10" fill="#1B4332" opacity="0.5">256px · LARGE APP ICON</text>
+
+  <line x1="60" y1="940" x2="1340" y2="940" stroke="#1B4332" stroke-width="0.5" opacity="0.15"/>
+  <text x="60" y="975" font-family="-apple-system, Inter, sans-serif" font-size="11" font-weight="600" letter-spacing="2" fill="#1B4332" opacity="0.55">PALETTE</text>
+
+  <g transform="translate(60, 1010)">
+    <rect width="100" height="100" rx="8" fill="#1B4332"/>
+    <text x="0" y="125" font-family="-apple-system, Inter, sans-serif" font-size="13" font-weight="600" fill="#1B4332">Forest · #1B4332</text>
+    <text x="0" y="143" font-family="-apple-system, Inter, sans-serif" font-size="11" fill="#1B4332" opacity="0.6">Primary ink · 90% of all type · inner arc</text>
+    <text x="0" y="158" font-family="-apple-system, Inter, sans-serif" font-size="11" fill="#1B4332" opacity="0.6">rgb(27, 67, 50)</text>
+  </g>
+  <g transform="translate(290, 1010)">
+    <rect width="100" height="100" rx="8" fill="#4A7C5C"/>
+    <text x="0" y="125" font-family="-apple-system, Inter, sans-serif" font-size="13" font-weight="600" fill="#1B4332">Sage · #4A7C5C</text>
+    <text x="0" y="143" font-family="-apple-system, Inter, sans-serif" font-size="11" fill="#1B4332" opacity="0.6">Orbital path · accent · dot</text>
+    <text x="0" y="158" font-family="-apple-system, Inter, sans-serif" font-size="11" fill="#1B4332" opacity="0.6">rgb(74, 124, 92)</text>
+  </g>
+  <g transform="translate(520, 1010)">
+    <rect width="100" height="100" rx="8" fill="#E8DFC8"/>
+    <text x="0" y="125" font-family="-apple-system, Inter, sans-serif" font-size="13" font-weight="600" fill="#1B4332">Sand · #E8DFC8</text>
+    <text x="0" y="143" font-family="-apple-system, Inter, sans-serif" font-size="11" fill="#1B4332" opacity="0.6">Secondary surfaces · cards · borders</text>
+    <text x="0" y="158" font-family="-apple-system, Inter, sans-serif" font-size="11" fill="#1B4332" opacity="0.6">rgb(232, 223, 200)</text>
+  </g>
+  <g transform="translate(750, 1010)">
+    <rect width="100" height="100" rx="8" fill="#F8F5F0" stroke="#1B4332" stroke-width="0.5" stroke-opacity="0.2"/>
+    <text x="0" y="125" font-family="-apple-system, Inter, sans-serif" font-size="13" font-weight="600" fill="#1B4332">Paper · #F8F5F0</text>
+    <text x="0" y="143" font-family="-apple-system, Inter, sans-serif" font-size="11" fill="#1B4332" opacity="0.6">Primary canvas · light-mode bg</text>
+    <text x="0" y="158" font-family="-apple-system, Inter, sans-serif" font-size="11" fill="#1B4332" opacity="0.6">rgb(248, 245, 240)</text>
+  </g>
+
+  <line x1="60" y1="1200" x2="1340" y2="1200" stroke="#1B4332" stroke-width="0.5" opacity="0.15"/>
+  <text x="60" y="1235" font-family="-apple-system, Inter, sans-serif" font-size="11" font-weight="600" letter-spacing="2" fill="#1B4332" opacity="0.55">DARK MODE LOCKUP</text>
+
+  <g transform="translate(60, 1265)">
+    <rect width="900" height="190" rx="14" fill="#1B4332"/>
+    <g transform="translate(110, 95) rotate(-120) scale(0.85)">
+      <path d="M -43 30 A 52 52 0 1 1 43 30" fill="none" stroke="#E8DFC8" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="43" cy="30" r="6" fill="#4A7C5C"/>
+      <path d="M -29.5 20.66 A 36 36 0 1 1 29.5 20.66" fill="none" stroke="#F8F5F0" stroke-width="7" stroke-linecap="round"/>
+    </g>
+    <g transform="translate(195, 40)">
+      <text x="0" y="100" font-family="-apple-system, Inter, sans-serif" font-size="110" font-weight="300" letter-spacing="-2.75" fill="#F8F5F0">k</text>
+      <polygon points="55,100 60.5,100 60.5,38 55,42" fill="#F8F5F0"/>
+      <text x="63" y="100" font-family="-apple-system, Inter, sans-serif" font-size="110" font-weight="300" letter-spacing="-3.48" fill="#F8F5F0">ne</text>
+    </g>
+  </g>
+
+  <line x1="60" y1="1510" x2="1340" y2="1510" stroke="#1B4332" stroke-width="0.5" opacity="0.15"/>
+  <text x="60" y="1545" font-family="-apple-system, Inter, sans-serif" font-size="11" font-weight="600" letter-spacing="2" fill="#1B4332" opacity="0.55">TYPOGRAPHY · INTER</text>
+
+  <text x="60" y="1605" font-family="-apple-system, Inter, sans-serif" font-size="56" font-weight="300" letter-spacing="-1.5" fill="#1B4332">Display · Inter Light 300</text>
+  <text x="60" y="1655" font-family="-apple-system, Inter, sans-serif" font-size="32" font-weight="400" letter-spacing="-0.8" fill="#1B4332">Heading · Inter Regular 400</text>
+  <text x="60" y="1695" font-family="-apple-system, Inter, sans-serif" font-size="18" font-weight="400" fill="#1B4332">Body · Inter Regular 400 · for paragraphs and standard UI text</text>
+  <text x="60" y="1725" font-family="-apple-system, Inter, sans-serif" font-size="14" font-weight="500" letter-spacing="0.5" fill="#1B4332">UI · Inter Medium 500 · for buttons, labels, small caps</text>
+  <text x="60" y="1755" font-family="-apple-system, Inter, sans-serif" font-size="11" font-weight="600" letter-spacing="2" fill="#1B4332" opacity="0.6">EYEBROW · INTER SEMIBOLD 600 · TRACKED · OPACITY 60%</text>
+
+  <line x1="60" y1="1810" x2="1340" y2="1810" stroke="#1B4332" stroke-width="0.5" opacity="0.15"/>
+  <text x="60" y="1845" font-family="-apple-system, Inter, sans-serif" font-size="11" font-weight="500" fill="#1B4332" opacity="0.5">kine · v1 · 2026-05-21 · see docs/brand/identity.md for usage rules</text>
+</svg>
