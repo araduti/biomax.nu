@@ -86,10 +86,10 @@ function loadPrismaClientClass(): typeof PrismaClient {
 
 function createClient(): PrismaClient {
   // Runtime connects as the least-privilege, RLS-enforced role
-  // (APP_DATABASE_URL → korg_app). Falls back to DATABASE_URL (the
+  // (APP_DATABASE_URL → kine_app). Falls back to DATABASE_URL (the
   // privileged/migrate role) when unset, so nothing breaks before the
   // role split is applied — RLS is simply bypassed until APP_DATABASE_URL
-  // points at korg_app (ADR 0028 D1 / 0029). Prisma CLI/migrations keep
+  // points at kine_app (ADR 0028 D1 / 0029). Prisma CLI/migrations keep
   // using DATABASE_URL regardless.
   const runtimeUrl =
     process.env.APP_DATABASE_URL ?? process.env.DATABASE_URL;

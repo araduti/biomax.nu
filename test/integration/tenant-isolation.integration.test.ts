@@ -6,12 +6,12 @@ import { PrismaPg } from "@prisma/adapter-pg";
  * Cross-tenant isolation suite (ADR 0032 D5) — the permanent
  * regression gate for the RLS guarantee.
  *
- * MUST connect as the least-privilege `korg_app` role: under the test
+ * MUST connect as the least-privilege `kine_app` role: under the test
  * DB's default superuser role Postgres bypasses RLS entirely and this
- * suite would FALSELY PASS. We build a dedicated korg_app client here
+ * suite would FALSELY PASS. We build a dedicated kine_app client here
  * (the shared test `prisma` is superuser).
  *
- * Skips with a clear message if the test DB lacks korg_app / Product
+ * Skips with a clear message if the test DB lacks kine_app / Product
  * RLS (same "assumes a migrated test DB" contract as the rest of the
  * integration suite, plus the role).
  */
@@ -21,7 +21,7 @@ const TEST_DB =
   "postgresql://biomax:biomax@localhost:5433/biomax_test";
 const APP_TEST_DB = TEST_DB.replace(
   /\/\/[^@]+@/,
-  "//korg_app:korgapp_dev_only@"
+  "//kine_app:kineapp_dev_only@"
 );
 
 const A = `iso-a-${Date.now()}`;
@@ -74,7 +74,7 @@ beforeAll(async () => {
     usable = true;
   } catch (err) {
     console.warn(
-      "[tenant-isolation] skipped — test DB needs korg_app + Product RLS. " +
+      "[tenant-isolation] skipped — test DB needs kine_app + Product RLS. " +
         String(err).slice(0, 200)
     );
   }
@@ -97,7 +97,7 @@ afterAll(async () => {
   if (app) await app.$disconnect();
 });
 
-describe("cross-tenant isolation (RLS, korg_app role)", () => {
+describe("cross-tenant isolation (RLS, kine_app role)", () => {
   it("A's scope sees only A's products, never B's", () => {
     if (!usable) return;
     return scoped(A, async (tx) => {

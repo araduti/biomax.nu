@@ -13,7 +13,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
  * production tx from this test (a forgotten table, a swapped order)
  * will surface as a non-erased row at the end.
  *
- * Connects as the least-privilege `korg_app` role under FORCE RLS so a
+ * Connects as the least-privilege `kine_app` role under FORCE RLS so a
  * forgotten `tenantId` GUC would fail-closed (zero rows) instead of
  * silently leaking, matching the cross-tenant isolation suite contract.
  */
@@ -23,7 +23,7 @@ const TEST_DB =
   "postgresql://biomax:biomax@localhost:5433/biomax_test";
 const APP_TEST_DB = TEST_DB.replace(
   /\/\/[^@]+@/,
-  "//korg_app:korgapp_dev_only@"
+  "//kine_app:kineapp_dev_only@"
 );
 
 const T = `gdpr-t-${Date.now()}`;
@@ -85,7 +85,7 @@ beforeAll(async () => {
     usable = true;
   } catch (err) {
     console.warn(
-      "[gdpr-anonymize] skipped — test DB needs korg_app + RLS + seedable schema. " +
+      "[gdpr-anonymize] skipped — test DB needs kine_app + RLS + seedable schema. " +
         String(err).slice(0, 200)
     );
   }
