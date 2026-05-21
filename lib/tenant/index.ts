@@ -13,11 +13,17 @@ export { DEFAULT_TENANT_SLUG, TENANT_HEADER } from "./host";
  * runtime, prisma allowed). Memoised per request via React.cache so
  * layouts/pages/actions can call it freely.
  *
- * Fail-safe: an unknown/suspended slug falls back to **tenant zero**
- * (`biomax`) so the storefront's behaviour is unchanged while the
- * platform is incrementally tenant-scoped. The ADR 0028 D1 increment
- * (tenantId on owned models + RLS) makes resolution authoritative for
- * data isolation; slice 1 is identity/branding only.
+ * Fail-safe: an unknown/suspended slug falls back to the configured
+ * tenant zero (env `KINE_TENANT_ZERO_SLUG`; see `./host.ts`). When
+ * tenant zero is **unconfigured** and the resolved slug doesn't
+ * match an ACTIVE tenant, we throw — explicit failure beats a silent
+ * default. The ADR 0028 D1 increment (tenantId on owned models +
+ * RLS) makes resolution authoritative for data isolation; slice 1
+ * is identity/branding only.
+ *
+ * **#22 / #16 audit Finding 6.** Platform code does not name a
+ * specific tenant. `biomax.nu` sets `KINE_TENANT_ZERO_SLUG=biomax`
+ * in `.env.local` to preserve its single-tenant behaviour.
  */
 
 export type CurrentTenant = {
@@ -43,21 +49,26 @@ async function loadBySlug(slug: string): Promise<CurrentTenant | null> {
 }
 
 export const currentTenant = cache(async (): Promise<CurrentTenant> => {
-  let slug = DEFAULT_TENANT_SLUG;
+  let slug: string | null = DEFAULT_TENANT_SLUG;
   try {
     const requested = (await headers()).get(TENANT_HEADER);
     if (requested) slug = requested;
   } catch {
-    /* headers unavailable (non-request context) → tenant zero */
+    /* headers unavailable (non-request context) → tenant zero (or null) */
   }
 
-  const resolved =
-    (await loadBySlug(slug)) ??
-    (slug === DEFAULT_TENANT_SLUG ? null : await loadBySlug(DEFAULT_TENANT_SLUG));
+  const directHit = slug ? await loadBySlug(slug) : null;
+  const tenantZeroFallback =
+    !directHit && DEFAULT_TENANT_SLUG && slug !== DEFAULT_TENANT_SLUG
+      ? await loadBySlug(DEFAULT_TENANT_SLUG)
+      : null;
+  const resolved = directHit ?? tenantZeroFallback;
 
   if (!resolved) {
     throw new Error(
-      `Tenant zero "${DEFAULT_TENANT_SLUG}" is missing. Run \`npm run db:seed\`.`
+      DEFAULT_TENANT_SLUG
+        ? `Tenant zero "${DEFAULT_TENANT_SLUG}" is missing. Run \`npm run db:seed\`.`
+        : `Tenant resolution failed for slug "${slug ?? "<none>"}" and no KINE_TENANT_ZERO_SLUG is configured.`
     );
   }
   return resolved;

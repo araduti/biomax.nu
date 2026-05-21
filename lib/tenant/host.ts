@@ -4,16 +4,31 @@
  *
  * Mapping (ADR 0026 §2):
  *   {slug}.kine.se          → slug
- *   www.kine.se / kine.se   → tenant zero ("biomax")
+ *   www.kine.se / kine.se   → tenant zero
  *   {slug}.localhost:PORT   → slug          (dev)
  *   localhost / 127.0.0.1   → tenant zero   (dev, behaviour unchanged)
  *
  * Custom merchant domains (butik.example.se) come later — they'll be a
  * Domain table lookup, which can't run on the edge, so that resolution
  * will move server-side. Slice 1 is subdomain-only.
+ *
+ * **Tenant zero — biomax-free contract (#22 / #16 audit Finding 6 +
+ * OQ7).** The platform code must not name a specific tenant. The
+ * tenant-zero slug is supplied via the `KINE_TENANT_ZERO_SLUG` env
+ * var. In `biomax.nu` it's set to `"biomax"` so behaviour is
+ * unchanged; in the extracted kine repo the variable is per-deploy
+ * (production = the operator's chosen apex tenant; dev = a seeded
+ * test tenant). If unset, edge resolution returns `null` and Server
+ * Components throw — explicit failure beats a silent biomax-shaped
+ * default.
  */
 
-export const DEFAULT_TENANT_SLUG = "biomax";
+/** Edge-safe tenant-zero slug. Read once at module load; the edge
+ *  runtime evaluates `process.env` at request time but does not hot-
+ *  reload mid-process. Returns `null` when unset → callers treat
+ *  unset as "no fallback available" and 404. */
+export const DEFAULT_TENANT_SLUG: string | null =
+  process.env.KINE_TENANT_ZERO_SLUG?.trim() || null;
 export const TENANT_HEADER = "x-kine-tenant";
 /** Set to "1" by middleware when the request is on the platform host
  *  (admin.kine.se / admin.localhost) — ADR 0031. The platform surface
@@ -37,7 +52,14 @@ export function isPlatformHost(host: string | null | undefined): boolean {
 
 const IPV4 = /^\d{1,3}(\.\d{1,3}){3}$/;
 
-export function tenantSlugFromHost(host: string | null | undefined): string {
+/**
+ * Resolve a slug from the Host header. Returns `null` when the Host
+ * doesn't carry a recognisable subdomain *and* no tenant-zero is
+ * configured — callers must 404 in that case rather than guess.
+ */
+export function tenantSlugFromHost(
+  host: string | null | undefined
+): string | null {
   if (!host) return DEFAULT_TENANT_SLUG;
   const hostname = host.split(":")[0].trim().toLowerCase();
   if (!hostname || hostname === "localhost" || IPV4.test(hostname)) {
@@ -58,7 +80,7 @@ export function tenantSlugFromHost(host: string | null | undefined): string {
   return DEFAULT_TENANT_SLUG;
 }
 
-function normalize(slug: string): string {
+function normalize(slug: string): string | null {
   const s = slug.replace(/[^a-z0-9-]/g, "");
   return s.length > 0 ? s : DEFAULT_TENANT_SLUG;
 }

@@ -41,7 +41,13 @@ export function proxy(req: NextRequest) {
       return NextResponse.redirect(url);
     }
   } else {
-    headers.set(TENANT_HEADER, tenantSlugFromHost(host));
+    // tenantSlugFromHost may return null when the Host is unrecognised
+    // AND no KINE_TENANT_ZERO_SLUG is configured. We forward the
+    // header only when we have something to forward; currentTenant()
+    // throws downstream if the header is absent and tenant-zero is
+    // also unconfigured — explicit failure beats a silent default.
+    const resolvedSlug = tenantSlugFromHost(host);
+    if (resolvedSlug) headers.set(TENANT_HEADER, resolvedSlug);
   }
   return NextResponse.next({ request: { headers } });
 }
