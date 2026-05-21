@@ -41,7 +41,7 @@ export default async function AdminOrderInvoice({
 }) {
   const { orderNumber } = await params;
   const order = await hostTenantScope((tx) =>
-    tx.order.findUnique({
+    tx.order.findFirst({
       where: { orderNumber },
       include: {
         items: {

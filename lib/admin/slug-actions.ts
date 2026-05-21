@@ -39,13 +39,13 @@ export async function renameProductSlug(
   let outcome: RenameOutcome;
   try {
     outcome = await tenantScope(tenantId, async (tx): Promise<RenameOutcome> => {
-      const existing = await tx.product.findUnique({
+      const existing = await tx.product.findFirst({
         where: { slug: oldSlug },
         select: { id: true },
       });
       if (!existing) return { kind: "missing" };
 
-      const collision = await tx.product.findUnique({
+      const collision = await tx.product.findFirst({
         where: { slug: next },
         select: { id: true },
       });
@@ -59,7 +59,7 @@ export async function renameProductSlug(
       // prevents redirect chains.
       await tx.redirect.deleteMany({ where: { fromPath: newPath } });
       await tx.redirect.upsert({
-        where: { fromPath: oldPath },
+        where: { tenantId_fromPath: { tenantId, fromPath: oldPath } },
         create: {
           fromPath: oldPath,
           toPath: newPath,

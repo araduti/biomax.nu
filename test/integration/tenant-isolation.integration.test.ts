@@ -113,7 +113,11 @@ describe("cross-tenant isolation (RLS, korg_app role)", () => {
   it("A cannot read B's product by slug", () => {
     if (!usable) return;
     return scoped(A, async (tx) => {
-      const b = await tx.product.findUnique({ where: { slug: `p-${B}` } });
+      // After #3e: slug is no longer a global @unique — it's composite
+      // (tenantId, slug). findFirst is the appropriate API for this RLS
+      // isolation test (we're scoped to A; even searching by B's slug
+      // should return null because the row isn't visible).
+      const b = await tx.product.findFirst({ where: { slug: `p-${B}` } });
       expect(b).toBeNull();
     });
   });

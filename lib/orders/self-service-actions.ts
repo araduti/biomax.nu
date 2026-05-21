@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { hostTenantScope } from "@/lib/tenant/db";
+import { currentTenant } from "@/lib/tenant";
 import type { Prisma } from "@prisma/client";
 import { currentUser } from "@/lib/session";
 import { cuidSchema, postalCodeSchema, fail } from "@/lib/validation/shared";
@@ -66,6 +67,7 @@ export async function updateShippingAddress(
   const user = await currentUser();
   if (!user) return { ok: false, error: "Logga in först." };
 
+  const { id: tenantId } = await currentTenant();
   try {
     const result = await hostTenantScope(async (tx) => {
       const order = await loadOwnedOrder(tx, parsed.data.orderId, user.id);
@@ -81,6 +83,7 @@ export async function updateShippingAddress(
       }
       const newAddress = await tx.address.create({
         data: {
+          tenantId,
           userId: user.id,
           fullName: parsed.data.fullName,
           street: parsed.data.street,

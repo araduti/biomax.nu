@@ -89,7 +89,7 @@ export async function updateOrderStatus(
   // network call to Kustom — that would pin a DB connection through a
   // potentially slow HTTP round-trip.
   const order = await tenantScope(tenantId, (tx) =>
-    tx.order.findUnique({
+    tx.order.findFirst({
       where: { orderNumber },
       select: {
         id: true,

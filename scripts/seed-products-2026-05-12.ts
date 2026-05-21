@@ -329,8 +329,10 @@ const SEEDS: Seed[] = [
 ];
 
 async function main() {
+  const tenant = await prisma.tenant.findFirstOrThrow({ where: { slug: "biomax" } });
+  const tenantId = tenant.id;
   for (const s of SEEDS) {
-    const category = await prisma.category.findUnique({
+    const category = await prisma.category.findFirst({
       where: { slug: s.categorySlug },
       select: { id: true },
     });
@@ -348,8 +350,9 @@ async function main() {
     };
 
     await prisma.product.upsert({
-      where: { slug: s.slug },
+      where: { tenantId_slug: { tenantId, slug: s.slug } },
       create: {
+        tenantId,
         slug: s.slug,
         sku: s.sku,
         name: s.name,

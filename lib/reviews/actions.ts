@@ -88,7 +88,7 @@ export async function submitReview(raw: unknown): Promise<SubmitReviewResult> {
   let created: boolean;
   try {
     created = await tenantScope(tenantId, async (tx) => {
-      const product = await tx.product.findUnique({
+      const product = await tx.product.findFirst({
         where: { slug: input.productSlug },
         select: { id: true },
       });

@@ -25,6 +25,7 @@ async function main() {
       name: true,
       stock: true,
       manageStock: true,
+      tenantId: true,
       variants: { select: { id: true, label: true } },
     },
   });
@@ -45,9 +46,13 @@ async function main() {
   const baseSku = product.sku;
   const carryStock = product.stock || 0;
 
+  // Biomax tenant content — variant rows live under the same tenant
+  // as their parent product (post-#3e tenantId is NOT NULL).
+  const tenantId = product.tenantId;
   await prisma.productVariant.createMany({
     data: [
       {
+        tenantId,
         productId: product.id,
         sku: `${baseSku}-30`,
         label: "30 kapslar",
@@ -58,6 +63,7 @@ async function main() {
         isDefault: true,
       },
       {
+        tenantId,
         productId: product.id,
         sku: `${baseSku}-90`,
         label: "90 kapslar",

@@ -13,7 +13,7 @@ export default async function AdminCouponEditPage({
 }) {
   const { code } = await params;
   const coupon = await hostTenantScope((tx) =>
-    tx.coupon.findUnique({
+    tx.coupon.findFirst({
       where: { code: code.toUpperCase() },
       select: {
         code: true,

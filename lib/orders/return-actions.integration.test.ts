@@ -22,11 +22,13 @@ vi.mock("@/lib/session", () => ({ currentUser: vi.fn(async () => null) }));
 const { recordRefund } = await import("@/lib/orders/return-actions");
 
 let seq = 0;
+const TEST_TENANT_ID = "ttesttenant0";
 async function seedRefundable(orderStatus: "PAID" | "CANCELLED", stock = 10) {
   seq++;
   const tag = `${Date.now()}-${seq}`;
   const product = await prisma.product.create({
     data: {
+      tenantId: TEST_TENANT_ID,
       sku: `SKU-${tag}`,
       slug: `slug-${tag}`,
       name: "Björkglukos",
@@ -41,6 +43,7 @@ async function seedRefundable(orderStatus: "PAID" | "CANCELLED", stock = 10) {
   });
   const order = await prisma.order.create({
     data: {
+      tenantId: TEST_TENANT_ID,
       orderNumber: `BMX-${tag}`,
       email: "kund@example.com",
       status: orderStatus,
@@ -49,6 +52,7 @@ async function seedRefundable(orderStatus: "PAID" | "CANCELLED", stock = 10) {
       taxRateBp: 600,
       items: {
         create: {
+          tenantId: TEST_TENANT_ID,
           productId: product.id,
           productName: product.name,
           productSku: product.sku,
@@ -62,10 +66,13 @@ async function seedRefundable(orderStatus: "PAID" | "CANCELLED", stock = 10) {
   });
   const ret = await prisma.return.create({
     data: {
+      tenantId: TEST_TENANT_ID,
       returnNumber: `BMX-RET-${tag}`,
       orderId: order.id,
       status: "RECEIVED",
-      items: { create: { orderItemId: order.items[0]!.id, quantity: 2 } },
+      items: {
+        create: { tenantId: TEST_TENANT_ID, orderItemId: order.items[0]!.id, quantity: 2 },
+      },
     },
   });
   return { product, order, ret };

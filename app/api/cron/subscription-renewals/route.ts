@@ -248,6 +248,7 @@ export async function GET(req: Request) {
                 // an ad-hoc checkout.
                 await tx.order.create({
                   data: {
+                    tenantId: tenant.id,
                     orderNumber,
                     subscriptionId: sub.id,
                     userId: sub.userId,
@@ -266,6 +267,7 @@ export async function GET(req: Request) {
                     billingAddressId: sub.billingAddressId,
                     items: {
                       create: resolved.map((r) => ({
+                        tenantId: tenant.id,
                         productId: r.productId,
                         variantId: r.variantId,
                         variantLabel: r.variantLabel,

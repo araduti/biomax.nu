@@ -80,7 +80,7 @@ export async function setRelatedProducts(
   let outcome: SetOutcome;
   try {
     outcome = await tenantScope(tenantId, async (tx): Promise<SetOutcome> => {
-      const source = await tx.product.findUnique({
+      const source = await tx.product.findFirst({
         where: { slug: sourceSlug },
         select: { id: true },
       });

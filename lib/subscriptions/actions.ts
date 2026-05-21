@@ -177,12 +177,12 @@ export async function finalizePaidSubscription(
     billingAddressId: string | null;
     /**
      * Tenant to stamp on the Subscription + its line (ADR 0032 D7 /
-     * WITH-CHECK readiness). Callers run this inside the paid-order
-     * `withTenantRLS` tx (or the stub equivalent), so the stamped rows
-     * satisfy WITH CHECK once strict. `null` only on the legacy
-     * env/tenant-zero fallback where the surrounding tx is unscoped.
+     * WITH-CHECK readiness). Post-#3e tenantId is NOT NULL on
+     * Subscription + SubscriptionLine — required parameter, not
+     * optional. Callers must pass the resolved tenant of the
+     * underlying order; legacy unscoped paths must resolve first.
      */
-    tenantId: string | null;
+    tenantId: string;
   }
 ): Promise<string> {
   const existing = await tx.subscription.findFirst({

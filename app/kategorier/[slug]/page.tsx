@@ -35,7 +35,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const category = await hostTenantScope((tx) =>
-    tx.category.findUnique({ where: { slug } })
+    tx.category.findFirst({ where: { slug } })
   );
   if (!category) return { title: "Hälsoområde hittades inte" };
   const meta = categoryMetaBySlug(slug);
@@ -56,7 +56,7 @@ export default async function CategoryPage({
   const { slug } = await params;
   const { id: tenantId } = await currentTenant();
   const category = await tenantScope(tenantId, (tx) =>
-    tx.category.findUnique({
+    tx.category.findFirst({
       where: { slug },
       select: {
         id: true,
@@ -69,7 +69,7 @@ export default async function CategoryPage({
   if (!category) {
     const hit = await tenantScope(tenantId, (tx) =>
       tx.redirect.findUnique({
-        where: { fromPath: `/kategorier/${slug}` },
+        where: { tenantId_fromPath: { tenantId, fromPath: `/kategorier/${slug}` } },
         select: { toPath: true },
       })
     );

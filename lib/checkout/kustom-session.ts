@@ -461,7 +461,7 @@ export async function startSubscriptionCheckout(
 
     try {
       const created = await tenantScope(tenant.id, (tx) =>
-        tx.order.findUnique({
+        tx.order.findFirst({
           where: { orderNumber },
           select: { id: true },
         })

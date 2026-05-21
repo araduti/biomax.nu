@@ -2,7 +2,8 @@
 
 import { z } from "zod";
 import { headers } from "next/headers";
-import { hostTenantScope } from "@/lib/tenant/db";
+import { tenantScope } from "@/lib/tenant/db";
+import { currentTenant } from "@/lib/tenant";
 import { currentUser } from "@/lib/session";
 import { CONSENT_POLICY_VERSION } from "./constants";
 
@@ -49,9 +50,11 @@ export async function recordConsent(raw: unknown): Promise<void> {
       /* headers unavailable — log without forensic fields */
     }
 
-    await hostTenantScope((tx) =>
+    const { id: tenantId } = await currentTenant();
+    await tenantScope(tenantId, (tx) =>
       tx.consentEvent.create({
         data: {
+          tenantId,
           subjectKey,
           userId: user?.id ?? null,
           analytics,

@@ -44,7 +44,7 @@ export async function buildUserExport(
     // Rows without a userId FK are keyed on email.
     const [newsletter, stockNotifications, cartSnapshots, consentEvents] =
       await Promise.all([
-        tx.newsletterSubscriber.findUnique({
+        tx.newsletterSubscriber.findFirst({
           where: { email: user.email },
         }),
         tx.stockNotificationRequest.findMany({

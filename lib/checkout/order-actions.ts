@@ -520,7 +520,7 @@ export async function placeOrder(
   if (redeemedPoints > 0 || isStub) {
     try {
       const created = await tenantScope(tenantId, (tx) =>
-        tx.order.findUnique({
+        tx.order.findFirst({
           where: { orderNumber },
           select: { id: true },
         })
@@ -625,7 +625,7 @@ export async function getOrderForConfirmation(orderNumber: string) {
   // resolved tenant via the seam (ADR 0032 D2). hostTenantScope
   // resolves currentTenant() then runs withTenantRLS.
   return hostTenantScope((tx) =>
-    tx.order.findUnique({
+    tx.order.findFirst({
     where: { orderNumber },
     select: {
       orderNumber: true,
@@ -912,7 +912,7 @@ export async function ensureOrderFromKustomOrder(
   // registered user. No match → genuine guest order.
   let linkedUserId: string | null = redeemUserId ?? subscriptionUserId;
   if (!linkedUserId && email) {
-    const u = await prisma.user.findUnique({
+    const u = await prisma.user.findFirst({
       where: { email },
       select: { id: true },
     });
@@ -941,6 +941,19 @@ export async function ensureOrderFromKustomOrder(
   ): Promise<T> =>
     scopeTenantId ? withTenantRLS(scopeTenantId, fn) : prisma.$transaction(fn);
 
+  // After #3e: tenantId is NOT NULL on Address/Order/OrderItem. The
+  // scopeTenantId-null fallback path (Kustom webhook without
+  // merchant_data marker) cannot persist an order under the new
+  // schema. Throwing here is the correct strict posture; #3f makes
+  // this DB-impossible at the RLS layer too.
+  if (!scopeTenantId) {
+    throw new Error(
+      "Cannot finalize order without resolved tenantId. " +
+        "Webhook payload missing merchant_data tenant marker (ADR 0034). " +
+        "Resolve via per-tenant payment credentials before retrying."
+    );
+  }
+  const orderTenantId: string = scopeTenantId;
   try {
     await runOrderTx(async (tx) => {
       const address = await tx.address.create({
@@ -952,7 +965,7 @@ export async function ensureOrderFromKustomOrder(
           city: addr.city ?? "",
           countryCode: (addr.country ?? "SE").toUpperCase(),
           phone: addr.phone ?? null,
-          tenantId: scopeTenantId,
+          tenantId: orderTenantId,
         },
       });
       const createdOrder = await tx.order.create({
@@ -980,9 +993,10 @@ export async function ensureOrderFromKustomOrder(
           shippingAddressId: address.id,
           billingAddressId: address.id,
           legacySource: null,
-          tenantId: scopeTenantId,
+          tenantId: orderTenantId,
           items: {
             create: resolved.map((r) => ({
+              tenantId: orderTenantId,
               productId: r.productId,
               variantId: r.variantId,
               variantLabel: r.variantLabel,
@@ -991,7 +1005,6 @@ export async function ensureOrderFromKustomOrder(
               quantity: r.quantity,
               unitPrice: r.unitPrice,
               totalPrice: r.totalPrice,
-              tenantId: scopeTenantId,
             })),
           },
         },

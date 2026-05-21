@@ -63,7 +63,7 @@ export async function updateProduct(
   const { tenantId } = actor;
 
   const existing = await tenantScope(tenantId, (tx) =>
-    tx.product.findUnique({
+    tx.product.findFirst({
       where: { slug: input.slug },
       select: { id: true, stock: true, manageStock: true, status: true },
     })
@@ -265,13 +265,23 @@ export async function updateProduct(
   // join-table for this product with the given slugs. Sent in a separate
   // step from `data` because Prisma's many-to-many update shape is nested.
   let categorySet:
-    | { categories: { set: { slug: string }[] } }
+    | {
+        categories: {
+          set: { tenantId_slug: { tenantId: string; slug: string } }[];
+        };
+      }
     | Record<string, never> = {};
   if (input.categorySlugs !== undefined) {
     const slugs = Array.from(
       new Set(input.categorySlugs.map((s) => s.trim()).filter(Boolean))
     );
-    categorySet = { categories: { set: slugs.map((slug) => ({ slug })) } };
+    // After #3e: Category.slug is no longer globally @unique — the
+    // `set` connector must use the composite (tenantId, slug) key.
+    categorySet = {
+      categories: {
+        set: slugs.map((slug) => ({ tenantId_slug: { tenantId, slug } })),
+      },
+    };
   }
 
   try {

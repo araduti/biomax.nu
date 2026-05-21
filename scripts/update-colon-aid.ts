@@ -78,8 +78,19 @@ const SHORT_DESCRIPTION =
   "Vegansk örtblandning för mage och tarm — slemalm, aloe ferox, vit ekbark, gentianarot och blå verbena. Två kapslar per dag.";
 
 async function main() {
-  const result = await prisma.product.update({
+  // After #3e: slug is no longer globally @unique — it's composite
+  // (tenantId, slug). Lookup-then-update-by-id is the cleanest pattern.
+  // This whole script is biomax-tenant content that #16 will flag for
+  // SEED-DATA categorization.
+  const existing = await prisma.product.findFirst({
     where: { slug: SLUG },
+    select: { id: true },
+  });
+  if (!existing) {
+    throw new Error(`Product slug "${SLUG}" not found.`);
+  }
+  const result = await prisma.product.update({
+    where: { id: existing.id },
     data: {
       price: 226,
       shortDescription: SHORT_DESCRIPTION,

@@ -118,7 +118,7 @@ export async function redeemPointsForOrder(input: {
 
     const account = await c.loyaltyAccount.findUnique({
       where: { userId: input.userId },
-      select: { id: true, balance: true },
+      select: { id: true, balance: true, tenantId: true },
     });
     if (!account) return 0;
 
@@ -159,6 +159,12 @@ export async function redeemPointsForOrder(input: {
     // intentionally bypass postTransaction here because it does an
     // *unconditional* increment — the conditional guard above is the
     // whole point, and it has already mutated the account.
+    //
+    // Post-#3e: tenantId on LoyaltyTransaction is NOT NULL. Callers
+    // that didn't supply tenantId (standalone-tx path) fall back to
+    // the loyalty account's tenantId — guaranteed to exist since
+    // LoyaltyAccount is itself tenant-scoped.
+    const ledgerTenantId = input.tenantId ?? account.tenantId;
     await c.loyaltyTransaction.create({
       data: {
         accountId: account.id,
@@ -167,7 +173,7 @@ export async function redeemPointsForOrder(input: {
         points: -input.points,
         orderId: input.orderId,
         description: "Använda poäng vid kassan",
-        tenantId: input.tenantId ?? null,
+        tenantId: ledgerTenantId,
       },
     });
     return input.points;

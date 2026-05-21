@@ -39,7 +39,7 @@ export async function createBundle(input: {
   let outcome: CreateOutcome;
   try {
     outcome = await tenantScope(tenantId, async (tx): Promise<CreateOutcome> => {
-      const collision = await tx.bundle.findUnique({
+      const collision = await tx.bundle.findFirst({
         where: { slug },
         select: { id: true },
       });
@@ -126,7 +126,7 @@ export async function updateBundle(input: {
   let outcome: UpdateOutcome;
   try {
     outcome = await tenantScope(tenantId, async (tx): Promise<UpdateOutcome> => {
-      const existing = await tx.bundle.findUnique({
+      const existing = await tx.bundle.findFirst({
         where: { slug: input.slug },
         select: { id: true },
       });
@@ -176,7 +176,7 @@ export async function deleteBundle(
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const { tenantId } = await requireTenantRole("admin");
   const found = await tenantScope(tenantId, async (tx) => {
-    const row = await tx.bundle.findUnique({
+    const row = await tx.bundle.findFirst({
       where: { slug },
       select: { id: true },
     });
